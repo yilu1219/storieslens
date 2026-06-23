@@ -9,6 +9,14 @@ const html = read("index.html");
 const visibleHtml = html.replace(/&amp;/g, "&");
 const css = read("styles.css");
 const js = read("script.js");
+const packageJson = JSON.parse(read("package.json"));
+const serverJs = fs.existsSync(path.join(root, "server.js")) ? read("server.js") : "";
+
+assert.strictEqual(packageJson.scripts?.start, "node server.js", "Railway/Railpack should have a start command");
+assert.strictEqual(packageJson.main, "server.js", "Package entry should point to the static server");
+assert(serverJs.includes("process.env.PORT"), "Static server should bind to Railway's PORT environment variable");
+assert(serverJs.includes("createServer"), "Static server should create an HTTP server");
+assert(serverJs.includes("index.html"), "Static server should serve the homepage");
 
 const requiredAssets = [
   "assets/storieslens-logo.png",
