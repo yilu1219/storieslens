@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StoriesLens 语镜故事</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-shell">
+      <header class="site-header" aria-label="StoriesLens navigation">
+        <a class="brand" href="#" aria-label="StoriesLens home">
+          <span class="brand-mark">
+            <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
+          </span>
+          <span>StoriesLens 语镜故事</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="#visual-read">Visual Read</a>
+          <a href="#visual-write">Visual Write</a>
+          <a href="#works">Works</a>
+          <a href="#word-book">Word Book</a>
+          <a href="#settings">Settings</a>
+        </nav>
+
+        <div class="header-actions">
+          <a class="subscription-entry" id="subscription" href="#subscription" aria-label="Subscription payment entrance">
+            <span>Subscription</span>
+          </a>
+          <a class="top-cta" href="#visual-write">
+            <span>Start Creating</span>
+          </a>
+        </div>
+      </header>
+
+      <section class="hero hero-visual-only" aria-label="StoriesLens visual preview">
+        <div class="hero-stage" aria-label="Visual learning preview">
+          <div class="hero-artboard">
+            <img
+              class="hero-composite-image"
+              src="assets/hero-full-scene-portal-book.png"
+              alt="Student writing with Visual Vocabulary, Movie Scene, Illustrated Book, and Avatar Animation preview cards"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="workflow-grid" id="works" aria-label="Learning entrances">
+        <article class="workflow-panel read-panel" id="visual-read">
+          <div class="panel-heading">
+            <div>
+              <h2>Visual Read · 学习入口</h2>
+              <p>Follow the reading journey from text to understanding.</p>
+            </div>
+          </div>
+
+          <div class="flow-steps">
+            <div class="flow-item">
+              <div class="flow-visual paper" aria-hidden="true"></div>
+              <span>Teacher Text</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual vocabulary-image">
+                <img src="assets/vocab-lighthouse-card.png" alt="Visual Vocabulary lighthouse card" />
+              </div>
+              <span>Visual Vocabulary</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual quiz" aria-hidden="true"></div>
+              <span>Quiz &amp; Practice</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual ccss-skill-card">
+                <img src="assets/ccss-skill-card.png" alt="CCSS skill card with a glowing key and pencil" />
+              </div>
+              <span>CCSS Skill Card · Imitate Writing</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual storybook-image">
+                <img src="assets/storybook-portal-book.png" alt="Storybook image with a blocky portal adventure" />
+              </div>
+              <span>Storybook Image</span>
+            </div>
+          </div>
+
+          <a class="panel-button blue" href="#visual-read">
+            <span>Start Visual Read</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </article>
+
+        <article class="workflow-panel write-panel" id="visual-write">
+          <div class="panel-heading">
+            <div>
+              <h2>Visual Write · 创作入口</h2>
+              <p>Turn ideas into stories you can see, read, and share.</p>
+            </div>
+          </div>
+
+          <div class="flow-steps">
+            <div class="flow-item">
+              <div class="flow-visual prompt-list" aria-hidden="true"></div>
+              <span>CCSS Prompts</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual movie-image">
+                <img src="assets/movie-scene.png" alt="AI Movie dragon scene" />
+              </div>
+              <span>AI Movie</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual illustrated-book-image">
+                <img src="assets/book-spread.png" alt="Illustrated Book lighthouse spread" />
+              </div>
+              <span>Illustrated Book</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual real-person-image">
+                <img src="assets/avatar-scene.png" alt="Real-person Animation girl avatar" />
+              </div>
+              <span>Real-person Animation</span>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-item">
+              <div class="flow-visual publish-share-card" aria-hidden="true">
+                <span class="publish-book-icon"></span>
+                <span class="publish-play-icon"></span>
+                <span class="publish-book">Print Your Book</span>
+                <span class="publish-video">Share Your Video</span>
+              </div>
+              <span>Print Your Book · Share Your Video</span>
+            </div>
+          </div>
+
+          <a class="panel-button purple" href="#visual-write">
+            <span>Create a Story</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </article>
+      </section>
+
+      <section class="literacy-loop" aria-label="Learning loop">
+        <span>A full literacy loop:</span>
+        <strong>Read</strong>
+        <span aria-hidden="true">→</span>
+        <strong>Vocabulary</strong>
+        <span aria-hidden="true">→</span>
+        <strong>Guided Writing</strong>
+        <span aria-hidden="true">→</span>
+        <strong>Visual Creation.</strong>
+      </section>
+
+      <section class="feature-grid" aria-label="Platform promises">
+        <article class="feature-card">
+          <div class="feature-icon book-icon" aria-hidden="true"></div>
+          <div>
+            <h2>CCSS Learning</h2>
+            <p>CCSS-Aligned. K12 Literacy. Full Stop.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon movie-icon" aria-hidden="true"></div>
+          <div>
+            <h2>From Reading to AI Movies</h2>
+            <p>In One Class.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon homework-icon" aria-hidden="true"></div>
+          <div>
+            <h2>Upload Any Text</h2>
+            <p>Teachers and parents can upload reading text and turn it into visual lessons.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon tutor-image">
+            <img src="assets/lobster-ai-tutor.png" alt="Lobster AI Tutor" />
+          </div>
+          <div>
+            <h2>Lobster AI Tutor</h2>
+            <p>Feedback in Seconds.</p>
+          </div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon privacy-protection-icon" aria-hidden="true"></div>
+          <div>
+            <h2>Privacy Protection</h2>
+            <p>Choose to store work on your own computer.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="student-showcase" aria-label="Student story showcase">
+        <div class="showcase-header">
+          <div class="showcase-title-group">
+            <h2><span>✦</span> Student Story Showcase <small>孩子的英文故事作品集</small></h2>
+            <p>Illustrated books, AI movies, avatar stories, and visual worlds created from English writing.</p>
+          </div>
+          <div class="showcase-controls" aria-label="Showcase controls">
+            <button class="showcase-nav" type="button" aria-label="Previous stories">←</button>
+            <button class="showcase-nav" type="button" aria-label="Next stories">→</button>
+            <div class="showcase-dots" aria-hidden="true">
+              <span class="showcase-dot active"></span>
+              <span class="showcase-dot"></span>
+              <span class="showcase-dot"></span>
+              <span class="showcase-dot"></span>
+              <span class="showcase-dot"></span>
+            </div>
+            <a class="showcase-all-works" href="#works">
+              <span>View all works</span>
+              <span class="spark-icon" aria-hidden="true"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="story-film-reel">
+          <button class="reel-edge previous" type="button" aria-label="Previous story">‹</button>
+          <div class="story-card-track">
+            <article class="story-card">
+              <img src="assets/showcase-star-keeper.png" alt="The Star Keeper student work" />
+              <h3>The Star Keeper</h3>
+              <div class="story-tags">
+                <span class="story-kind">Illustrated Book</span>
+                <span class="story-style">Storybook style</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-block-castle.png" alt="Block Castle Quest student work" />
+              <h3>Block Castle Quest</h3>
+              <div class="story-tags">
+                <span class="story-kind">Visual World</span>
+                <span class="story-style">Block World style</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-dragon-movie.png" alt="Dragon Movie Scene student work" />
+              <h3>Dragon Movie Scene</h3>
+              <div class="story-tags">
+                <span class="story-kind">AI Movie</span>
+                <span class="story-style">Cinematic Fantasy</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-space-adventure.png" alt="My Space Adventure student work" />
+              <h3>My Space Adventure</h3>
+              <div class="story-tags">
+                <span class="story-kind">Avatar Animation</span>
+                <span class="story-style">Sci-Fi Avatar</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-ocean-lantern.png" alt="The Ocean Lantern student work" />
+              <h3>The Ocean Lantern</h3>
+              <div class="story-tags">
+                <span class="story-kind">Illustrated Book</span>
+                <span class="story-style">Watercolor</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-robot-friend.png" alt="Robot's First Friend student work" />
+              <h3>Robot's First Friend</h3>
+              <div class="story-tags">
+                <span class="story-kind">Comic Story</span>
+                <span class="story-style">Comic</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-garden-door.png" alt="The Secret Garden Door student work" />
+              <h3>The Secret Garden Door</h3>
+              <div class="story-tags">
+                <span class="story-kind">Illustrated Book</span>
+                <span class="story-style">Classic Fairy Tale</span>
+              </div>
+            </article>
+            <article class="story-card">
+              <img src="assets/showcase-time-train.png" alt="Time Train to Tomorrow student work" />
+              <h3>Time Train to Tomorrow</h3>
+              <div class="story-tags">
+                <span class="story-kind">AI Movie</span>
+                <span class="story-style">Futuristic</span>
+              </div>
+            </article>
+
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-star-keeper.png" alt="" />
+              <h3>The Star Keeper</h3>
+              <div class="story-tags">
+                <span class="story-kind">Illustrated Book</span>
+                <span class="story-style">Storybook style</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-block-castle.png" alt="" />
+              <h3>Block Castle Quest</h3>
+              <div class="story-tags">
+                <span class="story-kind">Visual World</span>
+                <span class="story-style">Block World style</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-dragon-movie.png" alt="" />
+              <h3>Dragon Movie Scene</h3>
+              <div class="story-tags">
+                <span class="story-kind">AI Movie</span>
+                <span class="story-style">Cinematic Fantasy</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-space-adventure.png" alt="" />
+              <h3>My Space Adventure</h3>
+              <div class="story-tags">
+                <span class="story-kind">Avatar Animation</span>
+                <span class="story-style">Sci-Fi Avatar</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-ocean-lantern.png" alt="" />
+              <h3>The Ocean Lantern</h3>
+              <div class="story-tags">
+                <span class="story-kind">Illustrated Book</span>
+                <span class="story-style">Watercolor</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-robot-friend.png" alt="" />
+              <h3>Robot's First Friend</h3>
+              <div class="story-tags">
+                <span class="story-kind">Comic Story</span>
+                <span class="story-style">Comic</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-garden-door.png" alt="" />
+              <h3>The Secret Garden Door</h3>
+              <div class="story-tags">
+                <span class="story-kind">Illustrated Book</span>
+                <span class="story-style">Classic Fairy Tale</span>
+              </div>
+            </article>
+            <article class="story-card" aria-hidden="true">
+              <img src="assets/showcase-time-train.png" alt="" />
+              <h3>Time Train to Tomorrow</h3>
+              <div class="story-tags">
+                <span class="story-kind">AI Movie</span>
+                <span class="story-style">Futuristic</span>
+              </div>
+            </article>
+          </div>
+          <button class="reel-edge next" type="button" aria-label="Next story">›</button>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <nav aria-label="Teacher links">
+          <a href="#settings">Teacher Dashboard</a>
+          <span>·</span>
+          <a href="#settings">Upload Custom Text</a>
+          <span>·</span>
+          <a href="#settings">Export to LMS</a>
+          <span>·</span>
+          <a href="#settings">Class Progress</a>
+        </nav>
+        <p>© StoriesLens 语镜故事 · Patent Pending · All data stored locally. No cloud auto-upload.</p>
+        <span class="footer-shield" aria-hidden="true"></span>
+      </footer>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
