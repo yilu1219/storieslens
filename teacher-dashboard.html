@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teacher Dashboard | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+
+    <main class="teacher-dashboard-page page-shell">
+      <header class="site-header" aria-label="StoriesLens teacher navigation">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark">
+            <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
+          </span>
+          <span>StoriesLens AI语镜故事</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="visual-read.html">Visual Read</a>
+          <a href="visual-write.html">Visual Write</a>
+          <a href="group-write.html">Group Write</a>
+          <a href="index.html#works">Works</a>
+          <a href="index.html#word-book">Word Book</a>
+          <a class="nav-active" href="teacher-dashboard.html">Teacher Dashboard</a>
+        </nav>
+
+        <div class="header-actions write-header-actions">
+          <div class="mode-switch" aria-label="Identity mode switch">
+            <button class="mode-toggle" type="button" data-mode-toggle="student" aria-pressed="false">Student Mode</button>
+            <button class="mode-toggle active" type="button" data-mode-toggle="teacher" aria-pressed="true">Teacher Mode</button>
+          </div>
+          <a class="top-cta" href="visual-write.html">
+            <span>Back to Visual Write</span>
+          </a>
+        </div>
+      </header>
+
+      <section class="dashboard-hero" aria-label="Teacher Dashboard overview">
+        <div>
+          <span>Domestic classroom mode</span>
+          <h1>Teacher Dashboard</h1>
+          <p>Classroom management, CCSS writing assignments, batch review, student works archive, and local export for schools, training centers, and private tutors.</p>
+        </div>
+        <div class="dashboard-hero-card">
+          <strong>Overseas option</strong>
+          <p>Google Classroom sync can stay as an international connector, while China deployment uses Excel, DingTalk / WeCom, Seewo, and WPS.</p>
+        </div>
+      </section>
+
+      <section class="dashboard-grid" aria-label="Teacher Dashboard modules">
+        <article class="dashboard-card">
+          <span>01</span>
+          <h2>Classroom Setup</h2>
+          <p>Create classes, import students, assign grade levels, and prepare grouped writing rooms.</p>
+          <div class="dashboard-actions">
+            <button type="button" data-dashboard-action="class-create">Create Class</button>
+            <button type="button" data-dashboard-action="excel-import">Excel Bulk Import</button>
+          </div>
+        </article>
+
+        <article class="dashboard-card">
+          <span>02</span>
+          <h2>Domestic Platform Connectors</h2>
+          <p>Replace one-platform dependency with school-friendly local options.</p>
+          <div class="dashboard-actions">
+            <button type="button" data-dashboard-action="dingtalk">DingTalk / WeCom Class Import</button>
+            <button type="button" data-dashboard-action="seewo">Seewo Classroom Sync</button>
+            <button type="button" data-dashboard-action="wps">WPS Export</button>
+          </div>
+        </article>
+
+        <article class="dashboard-card">
+          <span>03</span>
+          <h2>CCSS Writing Assignment</h2>
+          <p>Create Writing Task: Set grade, CCSS skill, theme, word count, and media permissions, then send one prompt to the whole class.</p>
+          <div class="dashboard-actions">
+            <button type="button" data-dashboard-action="assign-ccss">Assign Grade CCSS Task</button>
+            <button type="button" data-dashboard-action="group-writing">Create Group Co-Writing Task</button>
+          </div>
+        </article>
+
+        <article class="dashboard-card">
+          <span>04</span>
+          <h2>Open Claw Batch Review</h2>
+          <p>Batch Review every Student Submission with one CCSS rubric, then return Glow, Grow, and Next Step feedback.</p>
+          <div class="dashboard-meter">
+            <strong>28</strong>
+            <small>drafts waiting for batch feedback</small>
+          </div>
+        </article>
+
+        <article class="dashboard-card">
+          <span>05</span>
+          <h2>Class CCSS Skill Report</h2>
+          <p>Track Completion, score trends, Weakest Skill, outstanding student works, and export-ready class evidence.</p>
+          <div class="dashboard-skill-bars" aria-hidden="true">
+            <i style="--bar: 82%"></i>
+            <i style="--bar: 74%"></i>
+            <i style="--bar: 68%"></i>
+            <i style="--bar: 79%"></i>
+            <i style="--bar: 61%"></i>
+          </div>
+        </article>
+
+        <article class="dashboard-card">
+          <span>06</span>
+          <h2>Student Illustration &amp; Movie Archive</h2>
+          <p>Collect every student's illustrated book, poster, and 10-15s movie into a classroom showcase library.</p>
+          <div class="dashboard-mini-gallery">
+            <img src="assets/showcase-block-castle.png" alt="" />
+            <img src="assets/showcase-dragon-movie.png" alt="" />
+            <img src="assets/showcase-ocean-lantern.png" alt="" />
+          </div>
+        </article>
+      </section>
+
+      <section class="teacher-workflow-panel" aria-label="Teacher writing workflow">
+        <article>
+          <span>1</span>
+          <strong>Create Writing Task</strong>
+          <p>Set grade, CCSS skill, theme, word count, and media permissions.</p>
+        </article>
+        <article>
+          <span>2</span>
+          <strong>Send to Class</strong>
+          <p>Push the task to the class roster or a temporary co-writing room.</p>
+        </article>
+        <article>
+          <span>3</span>
+          <strong>Student Submission</strong>
+          <p>Collect draft, selected art style, generated media, and revision history.</p>
+        </article>
+        <article>
+          <span>4</span>
+          <strong>Batch Review</strong>
+          <p>Open Claw scores the whole class with the same CCSS rubric.</p>
+        </article>
+        <article>
+          <span>5</span>
+          <strong>Class Report</strong>
+          <p>Show Completion, Weakest Skill, strong examples, and exportable PDF / Excel evidence.</p>
+        </article>
+      </section>
+
+      <section class="dashboard-export-panel" aria-label="Learning report export">
+        <div>
+          <h2>Export Learning PDF Report</h2>
+          <p>Export classroom progress, CCSS skill mastery, writing feedback, and the class story anthology as PDF or Excel for school records.</p>
+        </div>
+        <button type="button" data-dashboard-action="export-pdf">Export Learning PDF Report</button>
+      </section>
+
+      <div class="write-toast" hidden role="status" aria-live="polite"></div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

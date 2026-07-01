@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Group Write | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+
+    <main class="group-write-page page-shell">
+      <header class="site-header" aria-label="StoriesLens navigation">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark">
+            <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
+          </span>
+          <span>StoriesLens AI语镜故事</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="visual-read.html">Visual Read</a>
+          <a href="visual-write.html">Visual Write</a>
+          <a class="nav-active" href="group-write.html">Group Write</a>
+          <a href="index.html#works">Works</a>
+          <a href="index.html#word-book">Word Book</a>
+          <a href="teacher-dashboard.html">Teacher Dashboard</a>
+        </nav>
+
+        <div class="header-actions write-header-actions">
+          <a class="subscription-entry" href="index.html#subscription">
+            <span>Subscription</span>
+          </a>
+          <a class="top-cta" href="#group-project">
+            <span>Create Group Book</span>
+          </a>
+        </div>
+      </header>
+
+      <section class="teacher-login-bar" aria-label="Teacher login entrance">
+        <div>
+          <h2>Teacher login entrance</h2>
+          <p>Choose the classroom environment before creating a group storybook. Demo mode stores teacher identity locally; production mode uses the configured Google or WeChat backend.</p>
+        </div>
+        <div class="login-btn-group">
+          <button id="googleClassLoginBtn" class="btn-google" type="button">Google Classroom overseas teacher login</button>
+          <button id="wechatWebLoginBtn" class="btn-wechat" type="button">WeChat web scan login</button>
+        </div>
+        <div class="teacher-login-notes">
+          <span>Google branch: OAuth + Google Classroom assignment sync.</span>
+          <span>WeChat branch: PC scan login + WeChat class group distribution.</span>
+          <span>Demo mode · Production mode uses WeChat Open Platform.</span>
+        </div>
+        <div id="loginStatusBox" class="login-status" hidden></div>
+      </section>
+
+      <div id="wxQrModal" class="wx-login-modal" hidden role="dialog" aria-modal="true" aria-labelledby="wx-login-title">
+        <div class="wx-modal-content">
+          <button class="close-modal" type="button" aria-label="Close WeChat login">×</button>
+          <h3 id="wx-login-title">WeChat scan login for teacher dashboard</h3>
+          <div id="wxQrContainer" class="wx-qr-container"></div>
+          <p class="tip">Use WeChat scan authorization to sync class students and distribute group room codes.</p>
+          <p class="demo-tip">Demo mode does not call external APIs. Production mode requires a WeChat Open Platform website AppID and backend callback.</p>
+        </div>
+      </div>
+
+      <section class="group-hero" aria-label="Group Novel Studio overview">
+        <div>
+          <span>Classroom co-writing</span>
+          <h1>Group Novel Studio · 小组共创英文故事书</h1>
+          <p>One book, many independent chapters. Each student claims one chapter, writes in English, creates one illustration, and keeps a permanent Writer signature for classroom submission.</p>
+        </div>
+        <div class="group-hero-card">
+          <strong>Final output</strong>
+          <p>Merge every chapter into a signed English storybook, export TXT locally, generate one cover poster, and save the book to Works.</p>
+        </div>
+      </section>
+
+      <section class="group-setup-grid" id="group-project" aria-label="Group project setup">
+        <article class="group-project-panel">
+          <div class="write-panel-title">
+            <span>Create a classroom storybook</span>
+            <small>Local prototype · no cloud auto-upload</small>
+          </div>
+          <div class="group-project-form">
+            <label>
+              <span>Book / assignment title</span>
+              <input data-group-book-title type="text" value="The Golden Key Adventure" maxlength="80" />
+            </label>
+            <label>
+              <span>Chapter Count</span>
+              <select data-group-chapter-count>
+                <option value="3">3 chapters</option>
+                <option value="5" selected>5 chapters</option>
+                <option value="8">8 chapters</option>
+                <option value="10">10 chapters</option>
+              </select>
+            </label>
+            <label>
+              <span>Student signature</span>
+              <input data-group-student-name type="text" placeholder="Enter classroom name, e.g. Louis Chen" maxlength="50" />
+            </label>
+            <label class="group-role-toggle">
+              <input data-group-creator-toggle type="checkbox" />
+              <span>Teacher / leader</span>
+            </label>
+          </div>
+          <div class="group-project-actions">
+            <button type="button" data-group-action="create-project">Create Group Book</button>
+            <button type="button" data-group-action="load-project">Load Existing Project</button>
+            <button type="button" data-group-action="save-member">Save Student Signature</button>
+          </div>
+        </article>
+
+        <article class="group-chat-panel">
+          <div class="write-panel-title">
+            <span>Group Chat</span>
+            <small>BroadcastChannel sync between tabs</small>
+          </div>
+          <div class="group-chat-log" data-group-chat-log aria-live="polite"></div>
+          <div class="group-chat-composer">
+            <input data-group-chat-input type="text" placeholder="Message your group..." maxlength="180" />
+            <button type="button" data-group-action="send-chat">Send</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="chapter-board" aria-label="Chapter Board">
+        <div class="write-panel-title">
+          <span>Chapter Board</span>
+          <small><span data-group-summary>No group book loaded yet.</span> · Claim Chapter · Enter Editor · Mark Finished · Recall Chapter</small>
+        </div>
+        <div class="chapter-grid" data-group-chapter-grid>
+          <article class="chapter-empty-state">
+            <strong>Create or load a group book</strong>
+            <p>Teachers create chapters first. Students enter their classroom name, then claim one open chapter.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="chapter-editor-panel" data-group-editor hidden aria-label="Chapter Editor">
+        <div class="write-panel-title">
+          <span data-group-editor-title>Chapter Editor</span>
+          <small data-group-editor-writer>Writer: Not assigned</small>
+        </div>
+        <div class="group-editor-layout">
+          <label class="group-editor-text">
+            <span>Chapter text</span>
+            <textarea data-group-editor-text maxlength="2000" placeholder="Write this chapter in English..."></textarea>
+          </label>
+          <aside class="group-editor-art">
+            <div class="group-style-grid" aria-label="Chapter art style">
+              <button class="active" type="button" data-group-style="Storybook">Storybook</button>
+              <button type="button" data-group-style="Watercolor">Watercolor</button>
+              <button type="button" data-group-style="Comic">Comic</button>
+              <button type="button" data-group-style="Block World">Block World</button>
+            </div>
+            <figure class="group-chapter-preview">
+              <img data-group-chapter-image src="assets/showcase-star-keeper.png" alt="Chapter illustration preview" />
+              <figcaption data-group-image-status>Generate a chapter illustration after writing.</figcaption>
+            </figure>
+            <div class="group-editor-actions">
+              <button type="button" data-group-action="voice-chapter">Voice Input</button>
+              <button type="button" data-group-action="read-chapter">Read Aloud</button>
+              <button type="button" data-group-action="generate-chapter-image">Generate Chapter Illustration</button>
+              <button type="button" data-group-action="save-chapter">Save Chapter Draft</button>
+              <button type="button" data-group-action="finish-chapter">Mark Finished</button>
+              <button type="button" data-group-action="exit-editor">Exit Editor</button>
+            </div>
+            <p class="group-signature-lock">本章作者：<strong data-group-author-lock>Not assigned</strong> · Writer name is locked to the claimed chapter.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="group-assembly-panel" aria-label="Full Book Assembly">
+        <div class="write-panel-title">
+          <span>Full Book Assembly</span>
+          <small>Every chapter automatically ends with Writer: student name.</small>
+        </div>
+        <div class="group-assembly-layout">
+          <pre class="full-book-preview" data-group-full-preview>No merged book yet.</pre>
+          <aside class="group-book-output">
+            <figure>
+              <img data-group-poster-preview src="assets/storybook-portal-book.png" alt="Group book cover poster preview" />
+              <figcaption data-group-poster-status>Generate a cover poster after chapters are ready.</figcaption>
+            </figure>
+            <div class="group-book-actions">
+              <button type="button" data-group-action="merge-book">Merge Full Book</button>
+              <button type="button" data-group-action="export-book">Export Signed TXT</button>
+              <button type="button" data-group-action="generate-poster">Generate Cover Poster</button>
+              <button type="button" data-group-action="save-book">Save Book to Works</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="group-toast" data-group-toast hidden role="status" aria-live="polite"></div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

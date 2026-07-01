@@ -1,0 +1,487 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visual Write | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+
+    <main class="visual-write-page page-shell">
+      <header class="site-header" aria-label="StoriesLens navigation">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark">
+            <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
+          </span>
+          <span>StoriesLens AI语镜故事</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="visual-read.html">Visual Read</a>
+          <a class="nav-active" href="visual-write.html">Visual Write</a>
+          <a href="group-write.html">Group Write</a>
+          <a href="index.html#works">Works</a>
+          <a href="index.html#word-book">Word Book</a>
+          <a href="index.html#settings">Settings</a>
+          <a class="teacher-dashboard-link teacher-only" href="teacher-dashboard.html" data-mode-scope="teacher">Teacher Dashboard</a>
+        </nav>
+
+        <div class="header-actions write-header-actions">
+          <label class="write-grade-select">
+            <span>Select Grade Level</span>
+            <select data-write-grade-selector aria-label="Select grade level">
+              <option value="K">K</option>
+              <option value="1">Grade 1</option>
+              <option value="2">Grade 2</option>
+              <option value="3" selected>Grade 3</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+              <option value="7">Grade 7</option>
+              <option value="8">Grade 8</option>
+              <option value="9">Grade 9</option>
+              <option value="10">Grade 10</option>
+              <option value="11">Grade 11</option>
+              <option value="12">Grade 12</option>
+            </select>
+          </label>
+          <button class="teacher-upload-shortcut teacher-only" type="button" data-mode-scope="teacher" data-write-action="upload-class-prompt">
+            Upload Writing Prompt for Class
+          </button>
+          <div class="mode-switch" aria-label="Identity mode switch">
+            <button class="mode-toggle active" type="button" data-mode-toggle="student" aria-pressed="true">Student Mode</button>
+            <button class="mode-toggle" type="button" data-mode-toggle="teacher" aria-pressed="false">Teacher Mode</button>
+          </div>
+          <a class="top-cta" href="#story-draft">
+            <span>Start Creating</span>
+          </a>
+          <div class="user-avatar-menu">
+            <button class="user-avatar-button" type="button" data-user-menu-toggle aria-label="Open user menu">
+              <img src="assets/avatar-scene.png" alt="" />
+            </button>
+            <div class="user-menu-popover" data-user-menu>
+              <a class="teacher-menu-entry teacher-only" href="teacher-dashboard.html" data-mode-scope="teacher">Teacher Dashboard</a>
+              <button type="button" data-write-action="personal-settings">Personal Settings</button>
+              <button type="button" data-write-action="log-out">Log Out</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="write-hero" aria-label="Visual Write overview">
+        <div class="write-hero-copy">
+          <div class="write-eyebrow"></div>
+          <h1>Visual Write · 故事艺术与动画创作</h1>
+          <p>Write English stories aligned with CCSS, generate consistent character illustrations, and shape 10-15s animated short films.</p>
+          <div class="write-badges" aria-label="Visual Write features">
+            <span>CCSS Grade-Level Prompts</span>
+            <span>4 Art Styles</span>
+            <span>AI Pictures + Short Movies</span>
+          </div>
+        </div>
+        <button class="write-hero-art" type="button" data-write-action="hero-preview" aria-label="Open Visual Write preview">
+          <img src="assets/hero-student.png" alt="" />
+          <span class="write-magic-swirl"></span>
+        </button>
+      </section>
+
+      <section class="write-workspace free-create-studio" data-free-create-studio aria-label="Free Create Studio">
+        <div class="free-create-header">
+          <div>
+            <span>Free Create</span>
+            <h2>Free Create Studio</h2>
+            <p>Write freely first. StoriesLens maps the draft to CCSS after the student has a real story.</p>
+          </div>
+          <button class="open-claw-inline" type="button" data-write-action="check-story">Open Claw AI Tutor · Check My Story</button>
+        </div>
+        <aside class="write-skills-panel" aria-label="CCSS writing skill cards">
+          <div class="write-panel-title">
+            <span>CCSS Writing Skills</span>
+            <strong data-write-grade-summary>Grade 3 · Narrative Writing</strong>
+          </div>
+
+          <div class="write-skill-list" data-write-skill-card-grid>
+            <button class="write-skill-card active" type="button" data-write-action="skill-detail" data-skill-title="Narrative Sequence" data-skill-body="CCSS.ELA-LITERACY.W.3.3a asks students to establish a situation and introduce a narrator or characters.">
+              <span class="skill-number">1</span>
+              <span class="skill-copy">
+                <strong>Narrative Sequence <em>叙事顺序</em></strong>
+                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.3a</small>
+                <span>Standard: Establish a situation and introduce characters.</span>
+                <b>I Can: order events with time words.</b>
+              </span>
+              <span class="skill-check" aria-hidden="true">&#10003;</span>
+            </button>
+            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Character & Setting" data-skill-body="Students describe who is in the story, where it happens, and what details help readers imagine it.">
+              <span class="skill-number">2</span>
+              <span class="skill-copy">
+                <strong>Character &amp; Setting <em>人物与场景</em></strong>
+                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.3b</small>
+                <span>Standard: Use details to develop experiences and events.</span>
+                <b>I Can: describe characters and setting in detail.</b>
+              </span>
+              <span class="skill-check" aria-hidden="true">&#10003;</span>
+            </button>
+            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Dialogue" data-skill-body="Dialogue should move the story forward and reveal what characters want or feel.">
+              <span class="skill-number">3</span>
+              <span class="skill-copy">
+                <strong>Dialogue <em>角色对话</em></strong>
+                <small>CCSS Code: CCSS.ELA-LITERACY.W.4.3b</small>
+                <span>Standard: Use dialogue and description to develop events.</span>
+                <b>I Can: add dialogue between characters.</b>
+              </span>
+              <span class="skill-check" aria-hidden="true">&#10003;</span>
+            </button>
+            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Descriptive Details" data-skill-body="Students add sensory words and precise details so the picture and movie prompt have enough information.">
+              <span class="skill-number">4</span>
+              <span class="skill-copy">
+                <strong>Descriptive Details <em>感官细节</em></strong>
+                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.3d</small>
+                <span>Standard: Provide a sense of closure.</span>
+                <b>I Can: use sight, sound, touch, and emotion.</b>
+              </span>
+              <span class="skill-check" aria-hidden="true">&#10003;</span>
+            </button>
+            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Opinion + Reason" data-skill-body="Opinion writing gives students a simple reason paragraph after the story, useful for reflection and sharing.">
+              <span class="skill-number">5</span>
+              <span class="skill-copy">
+                <strong>Opinion + Reason <em>观点与理由</em></strong>
+                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.1a</small>
+                <span>Standard: Introduce an opinion and support it with reasons.</span>
+                <b>I Can: explain what my story teaches.</b>
+              </span>
+              <span class="skill-check" aria-hidden="true">&#10003;</span>
+            </button>
+          </div>
+          <p class="standards-footnote">Examples scale from W.3.3 to W.4.3b as the grade changes.</p>
+        </aside>
+
+        <section class="studio-window writing-window story-draft-panel" aria-label="Writing Window story draft editor">
+          <div class="write-panel-title">
+            <span>Writing Window</span>
+            <small><i></i> Story Draft · Auto-saved · storieslens_writeDraft</small>
+          </div>
+
+          <label class="draft-editor-shell">
+            <span class="sr-only">Story draft</span>
+            <textarea id="story-draft" data-story-draft rows="16">Louis was seven years old. His best friend was Max, a fluffy golden puppy.
+
+One sunny weekend morning, Dad pulled out their tiny white sailboat by the lake.
+
+"Can we sail across the lake together?" Louis asked happily.
+
+Max wagged his tail and barked, as if saying "Yes!"
+
+They carried buckets, fruit snacks and a little blue flag onto the boat.
+
+The soft wind blew the white sail wide. The boat glided gently over the sparkling water.
+
+Suddenly, a light cloud covered the sun. The wind slowed down a little.
+
+"Don't worry," Louis whispered to Max. "We can move the sail to catch more wind."
+
+When they reached the green grassy island in the middle of the lake, both of them cheered loudly.
+
+Louis learned that day: Adventure is much more fun when you have a loyal friend beside you.</textarea>
+            <span class="draft-count" data-draft-count>0 / 2000</span>
+          </label>
+
+          <div class="draft-tools" aria-label="Writing input tools">
+            <button type="button" data-write-action="keyboard">Keyboard · 键盘输入</button>
+            <button type="button" data-write-action="voice">Voice Input · 语音录入</button>
+            <button type="button" data-write-action="read-aloud">Read Aloud · 全文朗读</button>
+          </div>
+
+          <div class="input-status-panel" aria-live="polite">
+            <span data-input-status>Keyboard ready. Type in the Story Draft, or use Voice Input to speak your story.</span>
+            <audio data-voice-playback controls hidden></audio>
+          </div>
+
+          <section class="studio-window visual-output-window art-direction-panel media-output-panel" data-media-output-panel aria-label="Visual Output Window Generate Image / Video panel">
+            <div class="write-panel-title">
+              <span>Visual Output Window</span>
+              <small data-style-status>Generate Image / Video · Watercolor selected</small>
+            </div>
+
+            <div class="output-primary-actions" aria-label="Generate image or video">
+              <button class="output-action image-primary" type="button" data-write-action="generate-illustration">
+                <span class="action-icon image-action"></span>
+                <strong>Generate Image</strong>
+                <small>Turn the draft into one picture</small>
+              </button>
+              <button class="output-action video-primary" type="button" data-write-action="generate-movie">
+                <span class="action-icon movie-action"></span>
+                <strong>Generate Video</strong>
+                <small>Make a 10-15s short movie</small>
+              </button>
+            </div>
+
+            <section class="art-style-grid" aria-label="Choose art style">
+              <button class="art-style-card" type="button" data-write-style="Storybook" data-preview="assets/showcase-star-keeper.png">
+                <img src="assets/showcase-star-keeper.png" alt="" />
+                <span>Storybook</span>
+                <small>Classic storybook</small>
+              </button>
+              <button class="art-style-card active" type="button" data-write-style="Watercolor" data-preview="assets/showcase-ocean-lantern.png">
+                <img src="assets/showcase-ocean-lantern.png" alt="" />
+                <span>Watercolor</span>
+                <small>Soft watercolor</small>
+              </button>
+              <button class="art-style-card" type="button" data-write-style="Comic" data-preview="assets/showcase-robot-friend.png">
+                <img src="assets/showcase-robot-friend.png" alt="" />
+                <span>Comic</span>
+                <small>Comic style</small>
+              </button>
+              <button class="art-style-card" type="button" data-write-style="Block World" data-preview="assets/showcase-block-castle.png">
+                <img src="assets/showcase-block-castle.png" alt="" />
+                <span>Block World</span>
+                <small>Block world</small>
+              </button>
+            </section>
+
+            <section class="illustration-preview" aria-label="Illustration preview">
+              <div class="section-mini-title"><span>2</span> Illustration Preview</div>
+              <button type="button" data-write-action="open-illustration">
+                <img src="assets/showcase-ocean-lantern.png" alt="AI generated watercolor illustration preview" data-illustration-preview />
+                <span>AI Generated Illustration</span>
+              </button>
+              <p class="image-generation-status" data-image-status>Write a story, choose a style, then generate an image.</p>
+              <div class="generated-image-actions" aria-label="Generated image actions">
+                <button type="button" data-generated-image-save disabled>Save Image to Works</button>
+                <a data-generated-image-download href="assets/showcase-ocean-lantern.png" download="storieslens-generated-image.png">Download Image</a>
+              </div>
+            </section>
+
+            <section class="movie-preview" aria-label="Movie preview">
+              <div class="section-mini-title"><span>3</span> Movie Preview (10-15s)</div>
+              <button type="button" data-write-action="play-movie">
+                <img src="assets/showcase-dragon-movie.png" alt="AI movie preview" />
+                <span class="play-badge">▶</span>
+                <small>0:12</small>
+              </button>
+            </section>
+
+            <section class="media-strip" aria-label="Recent media">
+              <div class="section-mini-title"><span>4</span> Recent Media</div>
+              <div class="media-thumbs">
+                <button type="button" data-write-action="media-select"><img src="assets/showcase-ocean-lantern.png" alt="" /></button>
+                <button type="button" data-write-action="media-select"><img src="assets/showcase-block-castle.png" alt="" /></button>
+                <button type="button" data-write-action="media-select"><img src="assets/showcase-dragon-movie.png" alt="" /></button>
+                <button type="button" data-write-action="media-select"><img src="assets/showcase-robot-friend.png" alt="" /></button>
+              </div>
+            </section>
+          </section>
+
+          <section class="write-action-toolbar" aria-label="Draft quick actions">
+            <button type="button" data-write-action="start-group-writing">
+              <span class="action-icon group-action"></span>
+              <strong>Start Group Co-Writing</strong>
+              <small>Start group writing</small>
+            </button>
+            <button type="button" data-write-action="switch-style">
+              <span class="action-icon palette-action"></span>
+              <strong>Switch Art Style</strong>
+              <small>Change art style</small>
+            </button>
+            <button type="button" data-write-action="save-draft">
+              <span class="action-icon save-action"></span>
+              <strong>Save Draft</strong>
+              <small>Save current draft</small>
+            </button>
+            <button type="button" data-write-action="final-save">
+              <span class="action-icon poster-action"></span>
+              <strong>Final Save + Poster</strong>
+              <small>Save work + export poster</small>
+            </button>
+            <button type="button" data-write-action="clear-text">
+              <span class="action-icon clear-action"></span>
+              <strong>Clear Text</strong>
+              <small>Clear story draft</small>
+            </button>
+          </section>
+        </section>
+
+        
+      </section>
+
+      <section class="ccss-diagnostic-panel" aria-label="CCSS Skill Check">
+        <div class="write-panel-title">
+          <span>CCSS Skill Check</span>
+          <small>Automatically maps the draft to five grade-level writing skills.</small>
+        </div>
+
+        <div class="diagnostic-summary">
+          <strong data-write-grade-summary>Grade 3 · Narrative Writing</strong>
+          <p>Students create first. Then Open Claw reads the draft and marks each skill as Strong, Needs Work, or Missing.</p>
+        </div>
+
+        <div class="ccss-diagnostic-grid" data-ccss-diagnostic-grid>
+          <article class="ccss-diagnostic-card strong">
+            <span>Narrative Sequence</span>
+            <strong>Strong</strong>
+            <p>Events move from beginning to ending.</p>
+          </article>
+          <article class="ccss-diagnostic-card needs-work">
+            <span>Character &amp; Setting</span>
+            <strong>Needs Work</strong>
+            <p>Add one vivid place detail.</p>
+          </article>
+          <article class="ccss-diagnostic-card missing">
+            <span>Dialogue</span>
+            <strong>Missing</strong>
+            <p>Add one line a character says.</p>
+          </article>
+          <article class="ccss-diagnostic-card needs-work">
+            <span>Descriptive Details</span>
+            <strong>Needs Work</strong>
+            <p>Add sight, sound, or feeling words.</p>
+          </article>
+          <article class="ccss-diagnostic-card strong">
+            <span>Opinion + Reason</span>
+            <strong>Strong</strong>
+            <p>The ending explains what the story teaches.</p>
+          </article>
+        </div>
+
+        <section class="open-claw-feedback" data-open-claw-feedback aria-label="Open Claw writing feedback">
+          <div>
+            <span>Glow</span>
+            <p data-feedback-glow>Your story has a clear beginning and friendly characters.</p>
+          </div>
+          <div>
+            <span>Grow</span>
+            <p data-feedback-grow>Add one line of dialogue so readers can hear the characters.</p>
+          </div>
+          <div>
+            <span>Next Step</span>
+            <p data-feedback-next>Try: "Max barked, 'Let's keep going!'"</p>
+          </div>
+          <div class="feedback-actions">
+            <button type="button" data-write-action="check-story">Check My Story</button>
+            <button type="button" data-write-action="apply-suggestion">Apply Suggestion</button>
+          </div>
+        </section>
+
+        <article class="api-contract-card">
+          <strong>AI Feedback API Contract</strong>
+          <p>Frontend sends studentDraft, grade, selected CCSS skills, and teacherTask to the backend. The backend calls the model and returns skillScores, sentenceComments, Glow, Grow, and Next Step.</p>
+          <code>{ "studentDraft": "...", "teacherTask": "...", "skillScores": [], "sentenceComments": [] }</code>
+        </article>
+      </section>
+
+      <section class="group-writing-panel" aria-label="Group co-writing experiment">
+        <div class="write-panel-title">
+          <span>Group Co-Writing Lab</span>
+          <small>One shared story, four student roles, one consistent visual world.</small>
+        </div>
+        <div class="group-writing-grid">
+          <article>
+            <strong>Create a temporary co-writing room</strong>
+            <p>Students can join a shared draft from class, home, or a temporary room code.</p>
+          </article>
+          <article>
+            <strong>Assign CCSS roles</strong>
+            <p>Student A writes Narrative Sequence, B shapes Character &amp; Setting, C adds Dialogue, and D polishes Details &amp; Opinion.</p>
+          </article>
+          <article>
+            <strong>Lock character consistency</strong>
+            <p>Louis, Max, and the selected art style stay consistent across illustration, movie, poster, and class anthology.</p>
+          </article>
+          <article>
+            <strong>Student contribution colors</strong>
+            <p>Each student writes in a dedicated color, with contribution progress available to the teacher.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="video-editor-panel" aria-label="Simple video editor">
+        <div class="write-panel-title">
+          <span>Simple Video Studio · 简易视频剪辑台</span>
+          <small>Trim scenes, split clips, add captions, then export a classroom-ready short video.</small>
+        </div>
+
+        <div class="video-editor-layout">
+          <button class="video-preview-screen" type="button" data-video-action="play" aria-label="Play video preview">
+            <img src="assets/showcase-dragon-movie.png" alt="Video preview frame" />
+            <span class="video-play-indicator">鈻?/span>
+            <small data-video-status>Ready · 12s</small>
+          </button>
+
+          <div class="video-edit-controls" aria-label="Video edit controls">
+            <button type="button" data-video-action="play">Play / Pause</button>
+            <button type="button" data-video-action="trim">Trim Clip</button>
+            <button type="button" data-video-action="split">Split Scene</button>
+            <button type="button" data-video-action="caption">Add Caption</button>
+            <button type="button" data-video-action="export">Export Video</button>
+          </div>
+
+          <div class="video-timeline" aria-label="Video timeline">
+            <button class="timeline-clip active" type="button" data-video-action="select-clip">
+              <span>Scene 1</span>
+              <img src="assets/showcase-ocean-lantern.png" alt="" />
+            </button>
+            <button class="timeline-clip" type="button" data-video-action="select-clip">
+              <span>Scene 2</span>
+              <img src="assets/showcase-block-castle.png" alt="" />
+            </button>
+            <button class="timeline-clip" type="button" data-video-action="select-clip">
+              <span>Scene 3</span>
+              <img src="assets/showcase-dragon-movie.png" alt="" />
+            </button>
+            <div class="timeline-audio" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="write-progress-panel" aria-label="Writing progress">
+        <div>
+          <span>Your Progress</span>
+          <strong data-write-progress>80%</strong>
+        </div>
+        <div class="write-progress-track" aria-hidden="true"><span></span></div>
+        <p>From Reading to AI Movies. In One Class.</p>
+        <small>All data stored locally · No cloud auto-upload</small>
+      </section>
+
+      <button class="write-lobster-tutor" type="button" data-write-action="lobster-tutor" aria-label="Open Lobster AI Tutor">
+        <img src="assets/lobster-ai-tutor.png" alt="Lobster AI Tutor" />
+        <span>Open Claw<br />AI Tutor</span>
+      </button>
+
+      <div id="write-modal" class="write-modal" hidden role="dialog" aria-modal="true" aria-labelledby="write-modal-title">
+        <div class="write-modal-backdrop" data-write-action="close-modal"></div>
+        <section class="write-modal-card" role="document">
+          <button class="write-modal-close" type="button" data-write-action="close-modal" aria-label="Close">脳</button>
+          <span data-write-modal-chip>Visual Write</span>
+          <h2 id="write-modal-title" data-write-modal-title>Visual Write</h2>
+          <p data-write-modal-body>Select a skill, art style, AI action, or video editing control to preview how the creation workflow responds.</p>
+        </section>
+      </div>
+
+      <div id="teacher-prompt-modal" class="teacher-prompt-modal write-modal" hidden role="dialog" aria-modal="true" aria-labelledby="teacher-prompt-title">
+        <div class="write-modal-backdrop" data-write-action="close-teacher-prompt"></div>
+        <section class="write-modal-card teacher-prompt-card" role="document">
+          <button class="write-modal-close" type="button" data-write-action="close-teacher-prompt" aria-label="Close">脳</button>
+          <span>Teacher Mode</span>
+          <h2 id="teacher-prompt-title">Upload Writing Prompt for Class</h2>
+          <p>Upload a model text, bind a grade-level CCSS writing skill, then send the same task to the whole class.</p>
+          <div class="teacher-prompt-options">
+            <button type="button" data-write-action="teacher-prompt-demo">Excel Bulk Import</button>
+            <button type="button" data-write-action="teacher-prompt-demo">DingTalk / WeCom Class Import</button>
+            <button type="button" data-write-action="teacher-prompt-demo">Seewo Classroom Sync</button>
+            <button type="button" data-write-action="teacher-prompt-demo">WPS Export</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="write-toast" hidden role="status" aria-live="polite"></div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

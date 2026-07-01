@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visual Read | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+
+    <main class="visual-read-page page-shell">
+      <header class="site-header" aria-label="StoriesLens navigation">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark">
+            <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
+          </span>
+          <span>StoriesLens AI语镜故事</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a class="nav-active" href="visual-read.html">Visual Read</a>
+          <a href="visual-write.html">Visual Write</a>
+          <a href="group-write.html">Group Write</a>
+          <a href="index.html#works">Works</a>
+          <a href="index.html#word-book">Word Book</a>
+          <a href="index.html#settings">Settings</a>
+        </nav>
+
+        <div class="header-actions">
+          <a class="subscription-entry" href="index.html#subscription" aria-label="Subscription payment entrance">
+            <span>Subscription</span>
+          </a>
+          <a class="top-cta" href="visual-write.html">
+            <span>Start Creating</span>
+          </a>
+        </div>
+      </header>
+
+      <section class="read-hero" aria-label="Visual Read overview">
+        <div class="read-hero-copy">
+          <div class="read-eyebrow" aria-hidden="true"></div>
+          <h1>Visual Read · 可视化阅读</h1>
+          <p>Close reading, visual vocabulary, guided writing, CCSS skills, and AI-generated storybook illustration.</p>
+          <div class="read-badges" aria-label="Reading lesson features">
+            <span>CCSS-Aligned</span>
+            <span>Locked Learning Flow</span>
+            <span>Classic Storybook Only</span>
+            <a href="#teacher-upload">Teacher Custom Upload</a>
+            <span>Source: Teacher Uploaded Text</span>
+          </div>
+
+          <section class="grade-selector" data-grade-selector aria-label="K12 and CCSS grade selector">
+            <div class="grade-selector-copy">
+              <span>K12 / CCSS Grade Level</span>
+              <strong data-grade-summary>Grade 3 · Literature</strong>
+              <p data-ccss-standard>CCSS.ELA-LITERACY.RL.3.1 · Ask and answer questions using evidence from the text.</p>
+            </div>
+            <div class="grade-chip-row" role="group" aria-label="Choose grade level">
+              <button class="grade-chip" type="button" data-grade="K" data-standard="CCSS.ELA-LITERACY.RL.K.1" data-focus="Ask and answer questions about key details in a text.">K</button>
+              <button class="grade-chip" type="button" data-grade="1" data-standard="CCSS.ELA-LITERACY.RL.1.1" data-focus="Ask and answer questions about key details in a story.">1</button>
+              <button class="grade-chip" type="button" data-grade="2" data-standard="CCSS.ELA-LITERACY.RL.2.1" data-focus="Use who, what, where, when, why, and how questions.">2</button>
+              <button class="grade-chip active" type="button" data-grade="3" data-standard="CCSS.ELA-LITERACY.RL.3.1" data-focus="Ask and answer questions using evidence from the text." aria-pressed="true">3</button>
+              <button class="grade-chip" type="button" data-grade="4" data-standard="CCSS.ELA-LITERACY.RL.4.1" data-focus="Refer to details and examples when explaining the text.">4</button>
+              <button class="grade-chip" type="button" data-grade="5" data-standard="CCSS.ELA-LITERACY.RL.5.1" data-focus="Quote accurately when explaining what the text says.">5</button>
+              <button class="grade-chip" type="button" data-grade="6" data-standard="CCSS.ELA-LITERACY.RL.6.1" data-focus="Cite textual evidence to support analysis.">6</button>
+              <button class="grade-chip" type="button" data-grade="7" data-standard="CCSS.ELA-LITERACY.RL.7.1" data-focus="Cite several pieces of evidence and analyze how story elements interact.">7</button>
+              <button class="grade-chip" type="button" data-grade="8" data-standard="CCSS.ELA-LITERACY.RL.8.1" data-focus="Cite the strongest textual evidence and analyze craft choices.">8</button>
+              <button class="grade-chip" type="button" data-grade="9" data-standard="CCSS.ELA-LITERACY.RL.9-10.1" data-focus="Cite strong and thorough evidence for literary analysis.">9</button>
+              <button class="grade-chip" type="button" data-grade="10" data-standard="CCSS.ELA-LITERACY.RL.9-10.1" data-focus="Build stronger, more independent evidence-based analysis.">10</button>
+              <button class="grade-chip" type="button" data-grade="11" data-standard="CCSS.ELA-LITERACY.RL.11-12.1" data-focus="Analyze complex texts, including ambiguity and uncertainty.">11</button>
+              <button class="grade-chip" type="button" data-grade="12" data-standard="CCSS.ELA-LITERACY.RL.11-12.1" data-focus="Use strong evidence to support mature literary interpretation.">12</button>
+            </div>
+          </section>
+        </div>
+        <button class="read-hero-art" type="button" data-open-panel="story" data-panel-title="Visual Read Preview" data-panel-body="This image opens the full reading loop: teacher text, visual vocabulary, CCSS skill card, guided writing, and storybook image." aria-label="Open Visual Read preview">
+          <img src="assets/hero-student.png" alt="" />
+          <span class="read-orbit"></span>
+          <span class="read-lens"></span>
+        </button>
+      </section>
+
+      <section class="ccss-skill-board" aria-label="Grade aligned CCSS skill cards">
+        <div class="skill-board-heading">
+          <span>CCSS Skill Cards</span>
+          <h2 data-skill-board-title>Grade 3 Visual Read Framework</h2>
+          <p data-skill-board-note>Five cards map the lesson flow to grade-level CCSS skills. Hover or focus a card to see the explanation side.</p>
+        </div>
+        <div class="skill-card-grid" data-skill-card-grid>
+          <button class="ccss-flip-card" type="button" data-open-panel="ccss" data-panel-title="RL.3.1 · Text Evidence" data-panel-body="Ask and answer questions by referring explicitly to the text as the basis for answers.">
+            <span class="skill-card-inner">
+              <span class="skill-card-front">
+                <small>Read Story</small>
+                <strong>Text Evidence</strong>
+                <em>RL.3.1</em>
+              </span>
+              <span class="skill-card-back">
+                <strong>What it means</strong>
+                <span>Students answer questions by pointing back to exact story details.</span>
+                <small>Task: tap one sentence that proves your answer.</small>
+              </span>
+            </span>
+          </button>
+          <button class="ccss-flip-card" type="button" data-open-panel="ccss" data-panel-title="RL.3.2 · Message" data-panel-body="Recount the story and explain how key details convey the central message or lesson.">
+            <span class="skill-card-inner">
+              <span class="skill-card-front">
+                <small>CCSS Skill Card</small>
+                <strong>Central Message</strong>
+                <em>RL.3.2</em>
+              </span>
+              <span class="skill-card-back">
+                <strong>What it means</strong>
+                <span>Students retell the important events and connect them to the lesson.</span>
+                <small>Task: choose three details that show the message.</small>
+              </span>
+            </span>
+          </button>
+          <button class="ccss-flip-card" type="button" data-open-panel="ela" data-panel-title="RL.3.4 · Word Meaning" data-panel-body="Determine word and phrase meaning, including literal and nonliteral language.">
+            <span class="skill-card-inner">
+              <span class="skill-card-front">
+                <small>ELA Skill</small>
+                <strong>Literal / Nonliteral</strong>
+                <em>RL.3.4</em>
+              </span>
+              <span class="skill-card-back">
+                <strong>What it means</strong>
+                <span>Students use context to decide what a word or phrase means in the story.</span>
+                <small>Task: explain why the author chose the word.</small>
+              </span>
+            </span>
+          </button>
+          <button class="ccss-flip-card" type="button" data-open-panel="writing" data-panel-title="W.3.3 · Narrative Writing" data-panel-body="Write narratives with characters, event sequence, dialogue, descriptions, and closure.">
+            <span class="skill-card-inner">
+              <span class="skill-card-front">
+                <small>Guided Writing</small>
+                <strong>Narrative Imitation</strong>
+                <em>W.3.3</em>
+              </span>
+              <span class="skill-card-back">
+                <strong>What it means</strong>
+                <span>Students imitate the story's event sequence with dialogue or description.</span>
+                <small>Task: write one sentence showing action and feeling.</small>
+              </span>
+            </span>
+          </button>
+          <button class="ccss-flip-card" type="button" data-open-panel="storybook" data-panel-title="RL.3.7 · Illustration Meaning" data-panel-body="Explain how illustrations contribute to what is conveyed by the words in a story.">
+            <span class="skill-card-inner">
+              <span class="skill-card-front">
+                <small>Storybook Image</small>
+                <strong>Picture + Text</strong>
+                <em>RL.3.7</em>
+              </span>
+              <span class="skill-card-back">
+                <strong>What it means</strong>
+                <span>Students explain how an image creates mood or shows character and setting.</span>
+                <small>Task: pick a story detail the picture must show.</small>
+              </span>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="story-library-panel" data-story-library-panel aria-label="StoriesLens CCSS Story Library">
+        <div class="story-library-heading">
+          <div>
+            <span>CCSS Skill Story Pack</span>
+            <h2>StoriesLens CCSS Story Library</h2>
+          </div>
+          <button class="story-library-toggle" type="button" data-story-library-toggle aria-expanded="false" aria-controls="story-library-body">Open Grade Library</button>
+        </div>
+        <p class="story-library-intro">Each grade opens a safe reading pack: Grade Level, CCSS Skill, Source Type, Reading Passage, 5-question Quiz, Vocabulary Card, Imitation Sentence, and Generate Image / Generate Video output. Sources are Original, Public Domain Adaptation, or Teacher Upload.</p>
+        <div class="story-library-summary" data-story-library-summary>
+          <span>Currently loaded</span>
+          <strong>Grade 3 · The Fox and the Moonlit Bridge</strong>
+          <small>Source Type: Original · Key Details / Ask &amp; Answer with Evidence · Reading Passage · 5-question Quiz · Vocabulary Card · Imitation Sentence</small>
+        </div>
+        <div class="story-library-body" id="story-library-body" data-story-library-body hidden>
+          <div class="story-pack-grid" data-story-pack-grid>
+            <section class="story-pack-group" data-story-pack-group="elementary">
+              <div class="story-pack-group-heading">
+                <h3>Elementary K-5</h3>
+                <p>Grade K · The Lost Star · Grade 1 · The Lion and the Mouse · Grade 2 · The Tale of Peter Rabbit · Grade 3 · The Fox and the Moonlit Bridge · Grade 4 · The Wonderful Wizard of Oz · Grade 5 · The Brave Tin Soldier</p>
+              </div>
+              <div class="story-pack-group-grid">
+                <button class="story-pack-card active" type="button" data-story-pack-card="3">
+                  <img src="assets/showcase-ocean-lantern.png" alt="" />
+                  <span class="story-pack-meta" data-story-pack-source>Grade 3 · Source Type: Original</span>
+                  <strong data-story-pack-title>The Fox and the Moonlit Bridge</strong>
+                  <em data-story-pack-skill>Key Details · Ask &amp; Answer with Evidence · RL.3.1</em>
+                  <p class="story-pack-preview">Open the library to choose a grade-level story pack.</p>
+                  <span class="story-pack-quiz-list" data-story-pack-quiz>Reading Passage · 5-question Quiz · Vocabulary Card · Imitation Sentence · Generate Image / Generate Video</span>
+                </button>
+              </div>
+            </section>
+            <section class="story-pack-group" data-story-pack-group="middle">
+              <div class="story-pack-group-heading">
+                <h3>Middle School 6-8</h3>
+                <p>Grade 6 · Alice in Wonderland · Grade 7 · The Happy Prince · Grade 8 · Sherlock Holmes: The Hidden Clue</p>
+              </div>
+            </section>
+            <section class="story-pack-group" data-story-pack-group="high">
+              <div class="story-pack-group-heading">
+                <h3>High School 9-12</h3>
+                <p>Grade 9 · The Lantern Heart · Grade 10 · The Gift of the Magi · Grade 11 · The Scarlet Letter · Grade 12 · Pride and Prejudice Seminar Passage</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="read-progress" aria-label="Visual Read learning flow">
+        <button class="read-step active" type="button" data-open-panel="story" data-panel-title="Read Story" data-panel-body="Read the teacher-uploaded story, tap highlighted words, listen aloud, and collect evidence from the text.">
+          <span class="step-icon book-step"></span>
+          <strong>1</strong>
+          <span class="step-copy">Read Story<br /><small>精读故事</small></span>
+        </button>
+        <span class="step-connector" aria-hidden="true">→</span>
+        <button class="read-step locked" type="button" data-open-panel="ccss" data-panel-title="CCSS Skill Card" data-panel-body="The lesson extracts a grade-aligned CCSS skill from the story and turns it into a short skill card.">
+          <span class="lock-dot"></span>
+          <strong>2</strong>
+          <span class="step-copy">CCSS Skill Card<br /><small>课标技能卡</small></span>
+        </button>
+        <span class="step-connector" aria-hidden="true">→</span>
+        <button class="read-step locked" type="button" data-open-panel="ela" data-panel-title="ELA Skill" data-panel-body="Students practice a reading technique, such as finding evidence, identifying character traits, or explaining theme.">
+          <span class="lock-dot"></span>
+          <strong>3</strong>
+          <span class="step-copy">ELA Skill<br /><small>技法学习</small></span>
+        </button>
+        <span class="step-connector" aria-hidden="true">→</span>
+        <button class="read-step locked" type="button" data-open-panel="writing" data-panel-title="Guided Writing" data-panel-body="Students imitate one sentence pattern from the story, then receive quick Lobster AI Tutor feedback.">
+          <span class="lock-dot"></span>
+          <strong>4</strong>
+          <span class="step-copy">Guided Writing<br /><small>引导仿写</small></span>
+        </button>
+        <span class="step-connector" aria-hidden="true">→</span>
+        <button class="read-step locked" type="button" data-open-panel="storybook" data-panel-title="Storybook Image" data-panel-body="Generate one classic children's storybook illustration matched to the uploaded reading text.">
+          <span class="lock-dot"></span>
+          <strong>5</strong>
+          <span class="step-copy">Storybook Image<br /><small>绘本插画</small></span>
+        </button>
+      </section>
+
+      <p class="unlock-note">Complete the current step to unlock the next one.</p>
+
+      <section class="reading-workspace" aria-label="Read story and vocabulary workspace">
+        <article class="story-reading-card">
+          <div class="section-title-row">
+            <h2>Read Story <span>精读故事</span></h2>
+          </div>
+          <div class="story-title-row">
+            <h3>The Clever Fox and the Moonlit Bridge</h3>
+            <span class="source-pill">Source: Teacher Uploaded Text</span>
+          </div>
+          <div class="story-body">
+            <p>One quiet night, a <button class="inline-word" type="button" data-open-panel="vocabulary" data-word="clever">clever</button> fox came to a river. He wanted to cross to the other side, but the <button class="inline-word selected" type="button" data-open-panel="vocabulary" data-word="bridge">bridge</button> was narrow and the water below rushed quickly.</p>
+            <p>The fox sat down and thought for a while. "If I run, I might fall," he <button class="inline-word" type="button" data-open-panel="vocabulary" data-word="whispered">whispered</button>.</p>
+            <p>Then he looked up at the moon. "I will be <button class="inline-word" type="button" data-open-panel="vocabulary" data-word="brave">brave</button> and go slowly."</p>
+            <p>The fox stepped carefully onto the bridge. Halfway across, the bridge creaked, but he kept going.</p>
+            <p>He stopped, took a deep breath, and kept going. At last, he reached the other side.</p>
+            <p>He looked back and smiled. "I made a <button class="inline-word" type="button" data-open-panel="vocabulary" data-word="promise">promise</button> to myself, and I kept it."</p>
+            <p>From that night on, the fox knew that being clever is good, but being brave and keeping a promise is even better.</p>
+          </div>
+          <div class="word-popover" aria-label="Selected word actions">
+            <button type="button" data-read-action="word-book" data-word="bridge">Add to Word Book</button>
+            <button type="button" data-read-action="ai-picture" data-word="bridge">+ AI Picture</button>
+          </div>
+          <div class="read-audio-bar" aria-label="Reading audio controls">
+            <button type="button" data-read-action="read-aloud" data-read-aloud-button>Read Aloud</button>
+            <button type="button" data-read-action="speed">1.0x</button>
+            <span data-read-aloud-status>Ready to read</span>
+            <div class="audio-track"><span></span></div>
+            <button type="button" aria-label="Fullscreen" data-open-panel="story">⛶</button>
+          </div>
+          <section class="reading-recording-panel" aria-label="Record your reading practice">
+            <div class="recording-header">
+              <div>
+                <small>Read Story -> Listen -> Record -> AI Fluency Feedback</small>
+                <h3>Record My Reading</h3>
+              </div>
+              <span data-recording-status>Local only until you save.</span>
+            </div>
+            <div class="recording-control-grid">
+              <button type="button" data-record-action="start-recording">Start Recording</button>
+              <button type="button" data-record-action="stop-recording" disabled>Stop</button>
+              <button type="button" data-record-action="replay-recording" disabled>Replay</button>
+              <button type="button" data-record-action="save-recording" disabled>Save Recording</button>
+              <button type="button" data-record-action="ai-fluency-feedback" disabled>Ask Lobster AI for Fluency Feedback</button>
+            </div>
+            <audio class="recording-playback" data-recording-playback controls hidden></audio>
+            <article class="recording-feedback-card" data-recording-feedback>
+              <strong>AI Fluency Feedback</strong>
+              <p>Record the passage first. Lobster AI will compare your reading with the original story and give gentle feedback on fluency, pacing, and missed words.</p>
+            </article>
+            <div class="recording-history">
+              <h4>Saved Reading Practice</h4>
+              <div class="recording-history-list" data-recording-list></div>
+            </div>
+          </section>
+        </article>
+
+        <aside class="vocabulary-panel" aria-label="Visual vocabulary and quick check">
+          <div class="vocab-check-grid">
+            <article class="vocab-card">
+              <div class="section-title-row">
+                <h2>Visual Vocabulary <span>可视化词汇</span></h2>
+              </div>
+              <button class="visual-vocab-image-card" type="button" data-open-panel="vocabulary" data-word="lighthouse" aria-label="Open generated visual vocabulary card">
+                <img src="assets/vocab-lighthouse-card.png" alt="Generated visual vocabulary card for lighthouse" />
+              </button>
+              <div class="vocab-card-actions">
+                <span data-current-word>lighthouse</span>
+                <button class="gold-action" type="button" data-read-action="word-book" data-word="lighthouse">Add to Word Book</button>
+              </div>
+            </article>
+
+            <article class="quick-check-card">
+              <h3>Quick Check <span>小测验</span></h3>
+              <button class="quick-check-visual" type="button" data-open-panel="vocabulary" data-word="bridge" aria-label="Open bridge visual vocabulary preview">
+                <img src="assets/showcase-ocean-lantern.png" alt="Vocabulary quick check prompt" />
+                <span>bridge</span>
+              </button>
+              <div class="quick-check-row">
+                <div>
+                  <p>Look at the picture. What is it?</p>
+                  <label>
+                    <span class="sr-only">Type your answer</span>
+                    <input id="quick-check-input" type="text" placeholder="Type your answer..." />
+                  </label>
+                </div>
+                <button type="button" aria-label="Check answer" data-read-action="quick-check">✓</button>
+              </div>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section class="locked-next-panel" aria-label="Upcoming locked learning steps">
+        <div class="locked-heading">
+          <span class="lock-dot"></span>
+          <div>
+            <h2>Coming Next: CCSS Skill Card, ELA Skill, Guided Writing &amp; Storybook Image <span>即将解锁：课标技能卡、技法学习、引导仿写与绘本插画</span></h2>
+            <p>Complete the current step to unlock the next ones.</p>
+          </div>
+        </div>
+
+        <div class="imitation-flow-panel" data-imitation-flow>
+          <article class="imitation-stage-card skill-match-card">
+            <small>1 · CCSS Skill Card</small>
+            <h3 data-ccss-skill-code>W.3.3 · Narrative Imitation</h3>
+            <p data-ccss-skill-note>Use descriptions of actions, thoughts, and feelings to develop a story event.</p>
+          </article>
+
+          <article class="imitation-stage-card example-card">
+            <small>2 · Article Example</small>
+            <blockquote data-example-sentence>"I will be brave and go slowly."</blockquote>
+            <p>Students see one sentence from the article before writing their own.</p>
+          </article>
+
+          <article class="imitation-stage-card imitation-card">
+            <small>3 · Speak or Write Your Sentence</small>
+            <p data-imitation-template>The ___ moved ___ toward the ___.</p>
+            <div class="fill-pattern-grid" aria-label="Fill the Pattern">
+              <label>
+                <span>Fill the Pattern · feeling</span>
+                <input type="text" data-fill-slot="feeling" placeholder="careful" />
+              </label>
+              <label>
+                <span>Fill the Pattern · action</span>
+                <input type="text" data-fill-slot="action" placeholder="walk" />
+              </label>
+            </div>
+            <div class="word-choice-bank" aria-label="Word Bank">
+              <span>Word Bank</span>
+              <button type="button" data-word-chip="brave" data-fill-target="feeling">brave</button>
+              <button type="button" data-word-chip="careful" data-fill-target="feeling">careful</button>
+              <button type="button" data-word-chip="curious" data-fill-target="feeling">curious</button>
+              <button type="button" data-word-chip="walk" data-fill-target="action">walk</button>
+              <button type="button" data-word-chip="sail" data-fill-target="action">sail</button>
+              <button type="button" data-word-chip="open" data-fill-target="action">open</button>
+            </div>
+            <label>
+              <span>Type My Sentence</span>
+              <textarea rows="3" data-imitation-input placeholder="I will be careful and walk slowly across the bridge."></textarea>
+            </label>
+            <div class="voice-imitation-panel">
+              <button class="hold-speak-button" type="button" data-read-action="start-imitation-speech">Hold to Speak</button>
+              <span data-speech-status>Say: I will be careful and walk slowly across the bridge.</span>
+            </div>
+            <article class="transcript-review-card">
+              <small>AI Transcription</small>
+              <p data-imitation-transcript>I will be careful and walk slowly across the bridge.</p>
+              <div class="transcript-action-row">
+                <button type="button" data-read-action="use-transcript-sentence">Use This Sentence</button>
+                <button type="button" data-read-action="try-speech-again">Try Again</button>
+                <button type="button" data-read-action="edit-transcript">Edit Text</button>
+              </div>
+            </article>
+            <div class="imitation-action-row">
+              <button type="button" data-read-action="use-example-sentence">Use Example Pattern</button>
+              <button type="button" data-read-action="build-fill-sentence">Build From Fill</button>
+              <button type="button" data-read-action="check-imitation">Check Sentence</button>
+            </div>
+            <article class="tutor-checklist" aria-label="Lobster AI Tutor Check">
+              <strong>Lobster AI Tutor Check</strong>
+              <ul>
+                <li data-tutor-check="subject">Subject</li>
+                <li data-tutor-check="action">Action</li>
+                <li data-tutor-check="place">Picture place</li>
+                <li data-tutor-check="feeling">Feeling or manner</li>
+                <li data-tutor-check="ready">Ready for image/video</li>
+              </ul>
+            </article>
+            <p class="imitation-feedback" data-imitation-feedback>Write or say one clear action sentence, then ask Lobster AI to check it.</p>
+          </article>
+
+          <article class="imitation-stage-card output-card">
+            <small>4 · Generate Image First</small>
+            <p class="output-guidance">Write one clear action sentence, then turn it into a picture or short video.</p>
+            <div class="imitation-output-options">
+              <button type="button" data-read-action="generate-imitation-image">Generate Image</button>
+              <button class="make-video-button" type="button" data-read-action="make-imitation-video" data-video-gate disabled>Make Short Video</button>
+            </div>
+            <div class="imitation-preview-card" data-imitation-preview>
+              <img src="assets/storybook-portal-book.png" alt="Generated imitation preview" />
+              <div>
+                <strong>Visual Proof</strong>
+                <p>Your sentence will generate here. If the image is unclear, add stronger action, setting, or feeling words.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+        <section class="visual-drafts-shelf" aria-label="Generated visual drafts">
+          <div class="visual-drafts-heading">
+            <div>
+              <small>Saved locally first</small>
+              <h3>My Visual Drafts</h3>
+            </div>
+            <p>Each draft keeps the Original Article, Matched CCSS, Example Sentence, Student Sentence, and Generated Output.</p>
+          </div>
+          <div class="visual-drafts-list" data-visual-drafts-list></div>
+          <p class="visual-drafts-empty" data-empty-drafts>Generate an Image or Short Video to collect the first learning draft here.</p>
+        </section>
+        <p class="story-style-note">Reading illustrations always use classic children's storybook style.</p>
+      </section>
+
+      <section class="teacher-upload-panel" id="teacher-upload" aria-label="Teacher and parent upload">
+        <div>
+          <span class="upload-kicker">Teacher Custom Upload</span>
+          <h2>Upload reading text, then build a CCSS visual lesson.</h2>
+          <p>Teachers and parents can paste or upload a passage. The prototype shows how the lesson would become Read Story, Visual Vocabulary, CCSS Skill Card, ELA Skill, Guided Writing, and Storybook Image.</p>
+        </div>
+        <form class="teacher-upload-form ccss-upload-builder">
+          <label class="upload-field">
+            <span>Upload Article</span>
+            <input type="file" accept=".txt,.md,.pdf,.doc,.docx" data-upload-file />
+          </label>
+          <label class="upload-grade-select">
+            <span>Choose grade level</span>
+            <select data-upload-grade-selector>
+              <option value="K">K</option>
+              <option value="1">Grade 1</option>
+              <option value="2">Grade 2</option>
+              <option value="3" selected>Grade 3</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+              <option value="7">Grade 7</option>
+              <option value="8">Grade 8</option>
+              <option value="9">Grade 9</option>
+              <option value="10">Grade 10</option>
+              <option value="11">Grade 11</option>
+              <option value="12">Grade 12</option>
+            </select>
+          </label>
+          <label class="upload-passage-field">
+            <span>Paste reading passage</span>
+            <textarea rows="6" data-upload-text placeholder="Paste a story, article, or teacher reading text here...">One quiet night, a clever fox came to a river. He wanted to cross to the other side, but the bridge was narrow and the water below rushed quickly. The fox looked up at the moon and whispered, "I will be brave and go slowly." At last, he reached the other side.</textarea>
+          </label>
+          <div class="upload-action-row">
+            <button type="button" data-read-action="match-ccss">Auto-match CCSS Skill Cards</button>
+            <button type="button" data-read-action="upload-preview">Generate Visual Read Flow</button>
+          </div>
+          <section class="ccss-match-output" data-ccss-match-output aria-live="polite">
+            <h3>Matched CCSS Skill Cards</h3>
+            <article class="matched-skill-card">
+              <strong>RL.3.1 · Text Evidence</strong>
+              <p>Paste or upload a passage, choose a grade, then match the best CCSS reading and writing skills.</p>
+            </article>
+          </section>
+        </form>
+      </section>
+
+      <a class="lobster-tutor-bubble" href="#teacher-upload" data-read-action="lobster-tutor" aria-label="Open Lobster AI Tutor">
+        <img src="assets/lobster-ai-tutor.png" alt="Lobster AI Tutor" />
+        <span>Lobster<br />AI Tutor</span>
+      </a>
+
+      <div id="read-modal" class="read-modal" hidden role="dialog" aria-modal="true" aria-labelledby="read-modal-title">
+        <div class="read-modal-backdrop" data-read-action="close-modal"></div>
+        <section class="read-modal-card" role="document">
+          <button class="read-modal-close" type="button" data-read-action="close-modal" aria-label="Close">×</button>
+          <span class="modal-chip" data-modal-chip>Visual Read</span>
+          <h2 id="read-modal-title" data-modal-title>Visual Read</h2>
+          <p data-modal-body>Select any step, word, card, or upload action to preview how the real learning flow will work.</p>
+        </section>
+      </div>
+
+      <div class="toast-message" id="read-toast" hidden role="status" aria-live="polite"></div>
+
+      <footer class="read-page-footer">
+        <span>From Reading to AI Movies. In One Class.</span>
+        <span>All data stored locally · No cloud auto-upload</span>
+      </footer>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

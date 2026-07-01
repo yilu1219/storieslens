@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeChat Login Callback | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+    <main class="group-write-page page-shell wx-callback-page">
+      <section class="teacher-login-bar">
+        <h1>Completing WeChat teacher login...</h1>
+        <p>StoriesLens is reading the WeChat authorization code and returning you to Group Write.</p>
+        <div id="loginStatusBox" class="login-status">Waiting for WeChat authorization code...</div>
+      </section>
+    </main>
+    <script src="script.js"></script>
+    <script>
+      handleWxCallback();
+    </script>
+  </body>
+</html>
