@@ -167,11 +167,110 @@ async function handleGenerateImage(request, response) {
   }
 }
 
+async function handleAIReport(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    sendJson(response, 501, {
+      error: "OPENROUTER_API_KEY is not configured. Add it to .env or set it before running npm start."
+    });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(request);
+    const studentDraft = String(body.studentDraft || "").trim();
+    if (!studentDraft) {
+      sendJson(response, 400, { error: "Student draft is required" });
+      return;
+    }
+
+    const grade = String(body.grade || "3");
+    const customPrompt = String(body.prompt || "").trim();
+    const avatarModel = String(body.avatarModel || "Ivy Mentor");
+    const ccssSkill = String(body.ccssSkill || "Narrative Writing");
+    const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
+    const model = body.model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+
+    const systemPrompt = [
+      "You are Ivy, the StoriesLens AI Report tutor for K12 English writing.",
+      "Give kind, specific, classroom-safe feedback for a student.",
+      "Use short sentences and do not rewrite the whole essay for the child.",
+      "Return strict JSON with keys: overall, glow, grow, nextStep, ccssNotes, sentenceComments, videoScript.",
+      "ccssNotes must be an array of objects with skill, rating, evidence, and suggestion.",
+      "sentenceComments must be an array of objects with quote and comment.",
+      "videoScript must be a 45-60 second explainer script for the selected digital human avatar."
+    ].join(" ");
+
+    const userPrompt = [
+      `Grade: ${grade}`,
+      `CCSS focus: ${ccssSkill}`,
+      `Digital human avatar: ${avatarModel}`,
+      customPrompt ? `Teacher prompt: ${customPrompt}` : "Teacher prompt: Give a concise writing report.",
+      "Student draft:",
+      studentDraft.slice(0, 6000)
+    ].join("\n");
+
+    const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
+        "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: Number(body.temperature ?? 0.35),
+        response_format: { type: "json_object" }
+      })
+    });
+
+    const upstreamData = await upstreamResponse.json().catch(() => ({}));
+    if (!upstreamResponse.ok) {
+      sendJson(response, upstreamResponse.status, {
+        error: upstreamData?.error?.message || `OpenRouter AI report failed with status ${upstreamResponse.status}`,
+        details: upstreamData?.error || null
+      });
+      return;
+    }
+
+    const content = upstreamData?.choices?.[0]?.message?.content || "{}";
+    let report;
+    try {
+      report = JSON.parse(content);
+    } catch (error) {
+      report = { overall: content, glow: "", grow: "", nextStep: "", ccssNotes: [], sentenceComments: [], videoScript: "" };
+    }
+
+    sendJson(response, 200, {
+      model,
+      report,
+      usage: upstreamData.usage || null
+    });
+  } catch (error) {
+    sendJson(response, 500, { error: error.message || "AI report failed" });
+  }
+}
+
 const server = http.createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
 
   if (requestUrl.pathname === "/api/generate-image") {
     handleGenerateImage(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/ai-report") {
+    handleAIReport(request, response);
     return;
   }
 

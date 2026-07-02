@@ -4751,6 +4751,117 @@ body[data-identity-mode="teacher"] .student-only {
   max-height: 42px;
 }
 
+.ivy-report-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 14px;
+  border: 1px solid rgba(154, 176, 255, 0.34);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 12% 0, rgba(255, 217, 145, 0.12), transparent 15rem),
+    linear-gradient(180deg, rgba(14, 29, 66, 0.86), rgba(5, 11, 29, 0.86));
+}
+
+.ivy-report-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+  gap: 12px;
+}
+
+.ivy-prompt-box,
+.ivy-avatar-selector {
+  display: grid;
+  gap: 6px;
+  color: rgba(231, 237, 255, 0.78);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ivy-prompt-box textarea,
+.ivy-avatar-selector select {
+  border: 1px solid rgba(145, 170, 255, 0.28);
+  border-radius: 8px;
+  outline: none;
+  color: #fff;
+  background: rgba(4, 11, 31, 0.72);
+  font: inherit;
+}
+
+.ivy-prompt-box textarea {
+  min-height: 118px;
+  padding: 12px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.ivy-avatar-selector select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.ivy-report-controls {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.ivy-report-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.ivy-report-actions button {
+  min-height: 40px;
+  border: 1px solid rgba(154, 176, 255, 0.42);
+  border-radius: 8px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(44, 104, 244, 0.86), rgba(132, 67, 231, 0.86));
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.ivy-report-output {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ivy-report-output article,
+.ivy-video-script {
+  padding: 12px;
+  border: 1px solid rgba(145, 170, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(7, 15, 38, 0.58);
+}
+
+.ivy-report-output strong,
+.ivy-video-script strong {
+  color: #ffd991;
+}
+
+.ivy-report-output p,
+.ivy-video-script p {
+  margin: 6px 0 0;
+  color: rgba(226, 234, 255, 0.74);
+  line-height: 1.45;
+}
+
+.ivy-video-script {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.36fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.ivy-video-script pre {
+  margin: 0;
+  color: rgba(250, 252, 255, 0.86);
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
 .write-action-toolbar {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

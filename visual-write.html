@@ -198,6 +198,56 @@ Louis learned that day: Adventure is much more fun when you have a loyal friend 
             <audio data-voice-playback controls hidden></audio>
           </div>
 
+          <section class="ivy-report-panel" data-ivy-report-panel aria-label="Ivy AI Report writing feedback">
+            <div class="write-panel-title">
+              <span>Ivy AI Report · 艾薇 AI Report</span>
+              <small>OpenRouter ChatGPT model · Mastra agent ready</small>
+            </div>
+            <div class="ivy-report-layout">
+              <label class="ivy-prompt-box">
+                <span>Report Prompt</span>
+                <textarea data-ivy-prompt rows="6">You are Ivy, a senior K12 English writing tutor. Give a warm report for this student story. Focus on CCSS narrative writing, sentence clarity, visual details for image/video generation, and one next revision step. Keep feedback encouraging and specific.</textarea>
+              </label>
+              <aside class="ivy-report-controls">
+                <label class="ivy-avatar-selector">
+                  <span>Choose Ivy avatar</span>
+                  <select data-ivy-avatar-model>
+                    <option value="Ivy Mentor">Ivy Mentor · calm teacher</option>
+                    <option value="Lobster Tutor">Lobster Tutor · playful coach</option>
+                    <option value="Story Director">Story Director · video guide</option>
+                    <option value="Classroom Presenter">Classroom Presenter · report speaker</option>
+                  </select>
+                </label>
+                <div class="ivy-report-actions">
+                  <button type="button" data-write-action="generate-ai-report">Generate Ivy Report</button>
+                  <button type="button" data-write-action="generate-report-video">Generate Explainer Video Script</button>
+                </div>
+                <p class="image-generation-status" data-ai-report-status>Write a draft, then generate a tutor report.</p>
+              </aside>
+            </div>
+            <div class="ivy-report-output" data-ai-report-output>
+              <article>
+                <strong>Glow</strong>
+                <p>Ivy will name what the student did well.</p>
+              </article>
+              <article>
+                <strong>Grow</strong>
+                <p>Ivy will suggest one clear improvement.</p>
+              </article>
+              <article>
+                <strong>Next Step</strong>
+                <p>The next revision action will appear here.</p>
+              </article>
+            </div>
+            <section class="ivy-video-script" aria-label="Digital human explainer script">
+              <div>
+                <strong>Digital human explainer</strong>
+                <p>Later, Mastra agent can turn this structured report into a full rubric report and a short avatar video explanation.</p>
+              </div>
+              <pre data-report-video-script>Select an Ivy avatar and generate a report first.</pre>
+            </section>
+          </section>
+
           <section class="studio-window visual-output-window art-direction-panel media-output-panel" data-media-output-panel aria-label="Visual Output Window Generate Image / Video panel">
             <div class="write-panel-title">
               <span>Visual Output Window</span>

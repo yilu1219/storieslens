@@ -30,12 +30,18 @@ assert(serverJs.includes("createServer"), "Static server should create an HTTP s
 assert(serverJs.includes("index.html"), "Static server should serve the homepage");
 [
   "/api/generate-image",
+  "/api/ai-report",
   "AIMS_API_KEY",
+  "OPENROUTER_API_KEY",
+  "OPENROUTER_MODEL",
+  "https://openrouter.ai/api/v1",
+  "/chat/completions",
   "https://aimodelshow.com/api/v1",
   "/images/generations",
   "AIMS-2",
   "response_format",
   "Authorization",
+  "handleAIReport",
   "readJsonBody",
   "sendJson",
   "loadLocalEnv"
@@ -44,6 +50,7 @@ assert(serverJs.includes("index.html"), "Static server should serve the homepage
 });
 assert(gitIgnore.includes(".env"), ".env should be ignored so the AIMS API key is not committed");
 assert(envExample.includes("AIMS_API_KEY="), ".env.example should document the AIMS API key variable");
+assert(envExample.includes("OPENROUTER_API_KEY="), ".env.example should document the OpenRouter API key variable");
 assert(!envExample.includes("aims_"), ".env.example should not contain a real AIMS API key");
 
 const requiredAssets = [
@@ -163,6 +170,23 @@ assert(visualWriteHtml.includes('href="group-write.html"'), "Visual Write page s
   "Keyboard",
   "Voice Input",
   "Read Aloud",
+  "Ivy AI Report",
+  "艾薇 AI Report",
+  "OpenRouter ChatGPT model",
+  "Mastra agent ready",
+  "Digital human explainer",
+  "Choose Ivy avatar",
+  "Generate Ivy Report",
+  "Generate Explainer Video Script",
+  "Report Prompt",
+  'data-ivy-report-panel',
+  'data-ivy-prompt',
+  'data-ivy-avatar-model',
+  'data-ai-report-status',
+  'data-ai-report-output',
+  'data-report-video-script',
+  'data-write-action="generate-ai-report"',
+  'data-write-action="generate-report-video"',
   'data-input-status',
   'data-voice-playback',
   'class="input-status-panel"',
@@ -247,6 +271,12 @@ assert(generateVideoStart > visualOutputStart && generateVideoStart < draftToolb
   ".art-style-card.active",
   ".write-action-toolbar",
   ".input-status-panel",
+  ".ivy-report-panel",
+  ".ivy-report-layout",
+  ".ivy-prompt-box",
+  ".ivy-report-output",
+  ".ivy-avatar-selector",
+  ".ivy-video-script",
   ".input-status-panel audio",
   ".draft-tools button.is-active",
   ".video-editor-panel",
@@ -277,6 +307,14 @@ assert(generateVideoStart > visualOutputStart && generateVideoStart < draftToolb
   "startWriteVoiceInput",
   "stopWriteVoiceInput",
   "readWriteDraftAloud",
+  "buildIvyReportPrompt",
+  "generateIvyAIReport",
+  "renderIvyAIReport",
+  "generateIvyReportVideoScript",
+  "setIvyReportStatus",
+  "data-ai-report-status",
+  "data-report-video-script",
+  "/api/ai-report",
   "appendDictationToDraft",
   "setWriteInputStatus",
   "SpeechRecognition",

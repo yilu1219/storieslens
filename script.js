@@ -2418,6 +2418,129 @@ function readWriteDraftAloud(page = document) {
   speechSynthesis.speak(writeReadUtterance);
 }
 
+function setIvyReportStatus(page = document, message = "") {
+  const status = page.querySelector("[data-ai-report-status]");
+  if (status) status.textContent = message;
+}
+
+function buildIvyReportPrompt(page = document) {
+  const prompt = page.querySelector("[data-ivy-prompt]")?.value.trim() || "";
+  const grade = page.querySelector("[data-write-grade-selector]")?.value || "3";
+  const avatarModel = page.querySelector("[data-ivy-avatar-model]")?.value || "Ivy Mentor";
+  const gradeProfile = writeGradeSkillMap[grade] || writeGradeSkillMap[3];
+  return {
+    prompt,
+    grade,
+    avatarModel,
+    ccssSkill: gradeProfile?.summary || "Narrative Writing"
+  };
+}
+
+function renderIvyAIReport(page = document, report = {}) {
+  const output = page.querySelector("[data-ai-report-output]");
+  if (!output) return;
+
+  const ccssNotes = Array.isArray(report.ccssNotes) ? report.ccssNotes : [];
+  const sentenceComments = Array.isArray(report.sentenceComments) ? report.sentenceComments : [];
+  const noteMarkup = ccssNotes.length
+    ? `<ul>${ccssNotes.slice(0, 3).map((note) => `<li><strong>${escapeHtml(note.skill || "Skill")}</strong>: ${escapeHtml(note.rating || "")} - ${escapeHtml(note.suggestion || note.evidence || "")}</li>`).join("")}</ul>`
+    : "";
+  const sentenceMarkup = sentenceComments.length
+    ? `<ul>${sentenceComments.slice(0, 2).map((item) => `<li>"${escapeHtml(item.quote || "")}" - ${escapeHtml(item.comment || "")}</li>`).join("")}</ul>`
+    : "";
+
+  output.innerHTML = `
+    <article>
+      <strong>Glow</strong>
+      <p>${escapeHtml(report.glow || report.overall || "Ivy sees a clear student draft.")}</p>
+      ${sentenceMarkup}
+    </article>
+    <article>
+      <strong>Grow</strong>
+      <p>${escapeHtml(report.grow || "Add one stronger detail so the story is easier to picture.")}</p>
+      ${noteMarkup}
+    </article>
+    <article>
+      <strong>Next Step</strong>
+      <p>${escapeHtml(report.nextStep || "Choose one sentence and add a vivid action, place, or feeling word.")}</p>
+    </article>
+  `;
+
+  const videoScript = page.querySelector("[data-report-video-script]");
+  if (videoScript) {
+    videoScript.textContent = report.videoScript || "Generate an explainer video script after Ivy writes the report.";
+  }
+}
+
+async function generateIvyAIReport(page = document) {
+  const draft = page.querySelector("[data-story-draft]")?.value.trim() || "";
+  if (!draft) {
+    openWriteModal("Ivy AI Report", "Write or paste a student story first. Ivy needs the draft to create feedback.", "AI Report");
+    return;
+  }
+
+  if (window.location.protocol === "file:") {
+    openWriteModal(
+      "Start Local Server",
+      "Ivy AI Report needs the local backend proxy. Run npm start, then open http://localhost:3000/visual-write.html.",
+      "OpenRouter"
+    );
+    setIvyReportStatus(page, "Open this page through http://localhost:3000 to call OpenRouter safely.");
+    return;
+  }
+
+  const trigger = page.querySelector('[data-write-action="generate-ai-report"]');
+  const reportRequest = buildIvyReportPrompt(page);
+  try {
+    if (trigger) trigger.disabled = true;
+    setIvyReportStatus(page, "Ivy is reading the draft with OpenRouter...");
+    showWriteToast("Generating Ivy AI Report...");
+
+    const response = await fetch("/api/ai-report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentDraft: draft,
+        ...reportRequest
+      })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Ivy AI Report failed");
+    }
+
+    renderIvyAIReport(page, result.report || {});
+    setIvyReportStatus(page, `Ivy report ready via ${result.model || "OpenRouter"}.`);
+    showWriteToast("Ivy AI Report ready");
+  } catch (error) {
+    const message = error.message || "Ivy AI Report failed";
+    setIvyReportStatus(page, message);
+    openWriteModal("Ivy AI Report Failed", message, "OpenRouter");
+  } finally {
+    if (trigger) trigger.disabled = false;
+  }
+}
+
+function generateIvyReportVideoScript(page = document) {
+  const draft = page.querySelector("[data-story-draft]")?.value.trim() || "";
+  const avatarModel = page.querySelector("[data-ivy-avatar-model]")?.value || "Ivy Mentor";
+  const scriptNode = page.querySelector("[data-report-video-script]");
+  if (!scriptNode) return;
+
+  const reportText = page.querySelector("[data-ai-report-output]")?.textContent.trim() || "";
+  const fallbackScript = [
+    `${avatarModel}: Hi, I am Ivy from StoriesLens.`,
+    "Today I will explain your story report.",
+    draft ? "Your story has a clear beginning and a friendly main character." : "Write a draft first so I can explain your report.",
+    reportText ? "One strong point and one next step are shown in the report cards." : "After you generate an Ivy Report, I can turn it into a short video explanation.",
+    "For the next revision, improve one sentence with a clearer action, picture place, or feeling word."
+  ].join("\n");
+
+  scriptNode.textContent = fallbackScript;
+  setIvyReportStatus(page, "Digital human explainer script prepared. Later this can feed Mastra + avatar video API.");
+  showWriteToast("Explainer video script ready");
+}
+
 function setImageGenerationStatus(page = document, message = "") {
   const status = page.querySelector("[data-image-status]");
   if (status) status.textContent = message;
@@ -3635,6 +3758,16 @@ function initVisualWriteInteractions() {
 
       if (action === "read-aloud") {
         readWriteDraftAloud(page);
+        return;
+      }
+
+      if (action === "generate-ai-report") {
+        generateIvyAIReport(page);
+        return;
+      }
+
+      if (action === "generate-report-video") {
+        generateIvyReportVideoScript(page);
         return;
       }
 
