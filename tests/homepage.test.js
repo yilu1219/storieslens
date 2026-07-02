@@ -107,6 +107,9 @@ assert(visualReadHtml.includes('href="index.html"'), "Visual Read page should in
 assert(visualWriteHtml.includes("<title>Visual Write | StoriesLens</title>"), "Visual Write page should exist with a clear title");
 assert(visualWriteHtml.includes('href="index.html"'), "Visual Write page should include a link back to the homepage");
 assert(visualWriteHtml.includes('href="group-write.html"'), "Visual Write page should link to the Group Write page");
+const visualWriteHeaderMarkup = visualWriteHtml.match(/<header class="site-header"[\s\S]*?<\/header>/)?.[0] || "";
+const visualWriteTopCtaMarkup = visualWriteHeaderMarkup.match(/<a class="top-cta"[\s\S]*?<\/a>/)?.[0] || "";
+assert(visualWriteTopCtaMarkup.includes('href="visual-write.html"'), "Visual Write Start Creating should link directly to the Visual Write page");
 [
   "visual-write-page",
   'class="write-hero"',
