@@ -2,6 +2,95 @@ const canvas = document.getElementById("star-canvas");
 const ctx = canvas.getContext("2d");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+const billingPlans = {
+  free: {
+    label: "Free",
+    price: "$0",
+    limits: {
+      visualWritingProjects: 1,
+      classBooks: 1,
+      classes: 0,
+      students: 1,
+      teacherSeats: 0,
+      pdfExport: false,
+      watermark: true,
+      parentShareLinks: false,
+      classMoviePublishing: false,
+      exportReports: false
+    },
+    credits: {
+      image: 12,
+      video: 0
+    }
+  },
+  teacherPro: {
+    label: "Teacher Pro",
+    price: "$19 / month",
+    limits: {
+      visualWritingProjects: 20,
+      classBooks: 8,
+      classes: 3,
+      students: 90,
+      teacherSeats: 1,
+      pdfExport: true,
+      watermark: false,
+      parentShareLinks: true,
+      classMoviePublishing: true,
+      exportReports: false
+    },
+    credits: {
+      image: 200,
+      video: 24
+    }
+  },
+  classroomStudio: {
+    label: "Classroom Studio",
+    price: "$69 / month",
+    limits: {
+      visualWritingProjects: 100,
+      classBooks: 30,
+      classes: 12,
+      students: 360,
+      teacherSeats: 5,
+      pdfExport: true,
+      watermark: false,
+      parentShareLinks: true,
+      classMoviePublishing: true,
+      exportReports: true
+    },
+    credits: {
+      image: 1000,
+      video: 120
+    }
+  }
+};
+
+const quotaMessages = {
+  imageEmpty: "You have no image credits left this month. Upgrade to Teacher Pro or wait until your credits reset.",
+  videoLow: "This class movie needs 8 video credits. You have 5 credits left. Buy 3 more video credits or upgrade your plan.",
+  pdfRestricted: "Upgrade to Teacher Pro to export PDFs without watermark.",
+  movieRestricted: "Class movie publishing is available in Teacher Pro and Classroom Studio."
+};
+
+window.StoriesLensQuota = {
+  plans: billingPlans,
+  messages: quotaMessages,
+  imageCost: 1,
+  sceneVideoCost: 1,
+  estimateClassMovie(sceneCount) {
+    return Number(sceneCount) || 0;
+  },
+  canGenerateImage(remainingCredits) {
+    return Number(remainingCredits) >= this.imageCost;
+  },
+  canGenerateSceneVideo(remainingCredits) {
+    return Number(remainingCredits) >= this.sceneVideoCost;
+  },
+  canGenerateClassMovie(remainingVideoCredits, sceneCount) {
+    return Number(remainingVideoCredits) >= this.estimateClassMovie(sceneCount);
+  }
+};
+
 let stars = [];
 let width = 0;
 let height = 0;

@@ -3,376 +3,452 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StoriesLens AI语镜故事</title>
+    <title>StoriesLens | Classroom Co-Creation Studio</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .home-product-page {
+        width: min(94vw, 1480px);
+      }
+
+      .product-hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 28px;
+        align-items: start;
+        min-height: auto;
+        padding: 32px 0 18px;
+      }
+
+      .product-eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border: 1px solid rgba(145, 172, 255, 0.28);
+        border-radius: 999px;
+        color: rgba(234, 239, 255, 0.78);
+        background: rgba(10, 18, 42, 0.62);
+      }
+
+      .product-eyebrow::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: #93ffcf;
+        box-shadow: 0 0 18px rgba(147, 255, 207, 0.72);
+      }
+
+      .product-hero h1 {
+        margin: 18px 0 16px;
+        max-width: 980px;
+        color: #fff;
+        font-size: clamp(46px, 5.2vw, 76px);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .product-hero p {
+        max-width: 820px;
+        margin: 0;
+        color: rgba(239, 244, 255, 0.82);
+        font-size: clamp(17px, 1.45vw, 21px);
+        line-height: 1.58;
+      }
+
+      .product-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 13px;
+        margin-top: 26px;
+      }
+
+      .product-actions a,
+      .product-small-button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
+        border: 1px solid rgba(151, 176, 255, 0.28);
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.07);
+        font-weight: 850;
+        text-decoration: none;
+      }
+
+      .product-actions a.primary,
+      .product-small-button.primary {
+        border: 0;
+        background: linear-gradient(135deg, #3478ff, #8a4cff);
+        box-shadow: 0 16px 40px rgba(80, 112, 255, 0.28);
+      }
+
+      .product-actions a.secondary {
+        border-color: rgba(154, 255, 210, 0.34);
+        background: rgba(50, 125, 102, 0.16);
+      }
+
+      .product-preview-board {
+        position: relative;
+        width: min(100%, 1180px);
+        min-height: 520px;
+        overflow: hidden;
+        border-radius: 26px;
+        background: rgba(4, 8, 22, 0.2);
+        box-shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
+        justify-self: center;
+      }
+
+      .hero-classroom-image {
+        width: 100%;
+        height: 100%;
+        min-height: 520px;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 26px;
+        border: 1px solid rgba(151, 176, 255, 0.22);
+      }
+
+      .hero-visual-caption {
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        bottom: 20px;
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 18px;
+        background: rgba(6, 10, 24, 0.68);
+        backdrop-filter: blur(14px);
+      }
+
+      .hero-visual-caption strong {
+        color: #fff;
+        font-size: 17px;
+      }
+
+      .hero-visual-caption p {
+        margin: 0;
+        color: rgba(234, 239, 255, 0.76);
+      }
+
+      .hero-flow-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .hero-flow-pills span {
+        padding: 7px 9px;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.1);
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .product-section {
+        margin: 22px 0;
+        padding: 28px;
+        border: 1px solid rgba(145, 172, 255, 0.22);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(16, 28, 65, 0.82), rgba(8, 13, 31, 0.76));
+      }
+
+      .product-section > header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 20px;
+      }
+
+      .product-section h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(28px, 3vw, 44px);
+        letter-spacing: 0;
+      }
+
+      .product-section header p {
+        max-width: 720px;
+        margin: 8px 0 0;
+        color: rgba(234, 239, 255, 0.74);
+        line-height: 1.55;
+      }
+
+      .product-card-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .product-card-grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .product-card-grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .product-card,
+      .scene-card,
+      .pricing-card {
+        padding: 18px;
+        border: 1px solid rgba(151, 176, 255, 0.2);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .pricing-card {
+        display: flex;
+        min-height: 360px;
+        flex-direction: column;
+      }
+
+      .product-card span,
+      .scene-card span,
+      .pricing-card span {
+        color: #ffd991;
+        font-weight: 900;
+      }
+
+      .product-card h3,
+      .scene-card h3,
+      .pricing-card h3 {
+        margin: 9px 0 8px;
+        color: #fff;
+      }
+
+      .product-card p,
+      .scene-card p,
+      .pricing-card p,
+      .product-card li,
+      .pricing-card li {
+        color: rgba(234, 239, 255, 0.72);
+        line-height: 1.5;
+      }
+
+      .product-card p,
+      .scene-card p,
+      .pricing-card p {
+        margin: 0;
+      }
+
+      .product-card ul,
+      .pricing-card ul {
+        margin: 12px 0 0;
+        padding-left: 18px;
+      }
+
+      .pricing-card .product-small-button {
+        width: 100%;
+        margin-top: auto;
+      }
+
+      .steps-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .steps-strip article {
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid rgba(151, 176, 255, 0.18);
+      }
+
+      .steps-strip strong {
+        display: block;
+        color: #fff;
+        margin: 8px 0 4px;
+      }
+
+      .trust-band {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        align-items: center;
+      }
+
+      @media (max-width: 1060px) {
+        .product-hero,
+        .product-card-grid,
+        .product-card-grid.three,
+        .product-card-grid.two,
+        .steps-strip,
+        .trust-band {
+          grid-template-columns: 1fr;
+        }
+
+        .product-preview-board,
+        .hero-classroom-image {
+          min-height: 360px;
+        }
+
+        .product-section > header {
+          display: block;
+        }
+      }
+    </style>
   </head>
   <body>
     <canvas id="star-canvas" aria-hidden="true"></canvas>
 
-    <main class="page-shell">
+    <main class="page-shell home-product-page">
       <header class="site-header" aria-label="StoriesLens navigation">
-        <a class="brand" href="#" aria-label="StoriesLens home">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
           <span class="brand-mark">
             <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
           </span>
-          <span>StoriesLens AI语镜故事</span>
+          <span>StoriesLens</span>
         </a>
 
         <nav class="main-nav" aria-label="Primary navigation">
-          <a href="#visual-read">Visual Read</a>
+          <a href="index.html">Home</a>
+          <a href="create-reading-project.html">Create</a>
           <a href="visual-write.html">Visual Write</a>
-          <a href="group-write.html">Group Write</a>
-          <a href="#works">Works</a>
-          <a href="#word-book">Word Book</a>
-          <a href="#settings">Settings</a>
+          <a href="teacher-dashboard.html">Teacher</a>
+          <a href="#pricing">Pricing</a>
         </nav>
 
         <div class="header-actions">
-          <a class="subscription-entry" id="subscription" href="#subscription" aria-label="Subscription payment entrance">
-            <span>Subscription</span>
-          </a>
-          <a class="top-cta" href="visual-write.html">
-            <span>Start Creating</span>
+          <a class="top-cta" href="create-reading-project.html">
+            <span>Create from Reading Text</span>
           </a>
         </div>
       </header>
 
-      <section class="hero hero-visual-only" aria-label="StoriesLens visual preview">
-        <div class="hero-stage" aria-label="Visual learning preview">
-          <div class="hero-artboard">
-            <img
-              class="hero-composite-image"
-              src="assets/hero-full-scene-portal-book.png"
-              alt="Student writing with Visual Vocabulary, Movie Scene, Illustrated Book, and Avatar Animation preview cards"
-            />
+      <section class="product-hero" aria-label="StoriesLens classroom co-creation hero">
+        <div>
+          <span class="product-eyebrow">Classroom Co-Creation Studio</span>
+          <h1>Turn reading into writing, and writing into visual stories.</h1>
+          <p>StoriesLens helps teachers upload any reading text, align it with CCSS skills, and turn student writing into whole-class storybooks and AI movies.</p>
+          <div class="product-actions">
+            <a class="primary" href="create-reading-project.html">Create from Reading Text</a>
+            <a href="visual-write.html">Start Visual Writing</a>
+          </div>
+        </div>
+
+        <div class="product-preview-board" aria-label="Visual story creation preview">
+          <img class="hero-classroom-image" src="assets/hero-classroom-creation.png" alt="Student writing that becomes vocabulary, illustrated book, movie scene, and avatar animation" />
+          <div class="hero-visual-caption">
+            <strong>From one reading text to a whole-class visual story.</strong>
+            <p>Students write scenes, generate visuals, and publish a shared book or movie.</p>
+            <div class="hero-flow-pills" aria-label="Product flow">
+              <span>Reading Text</span>
+              <span>CCSS Match</span>
+              <span>Student Scenes</span>
+              <span>Class Book / Movie</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="workflow-grid" id="works" aria-label="Learning entrances">
-        <article class="workflow-panel read-panel" id="visual-read">
-          <div class="panel-heading">
-            <div>
-              <h2>Visual Read · 学习入口</h2>
-              <p>Follow the reading journey from text to understanding.</p>
-            </div>
-          </div>
-
-          <div class="flow-steps">
-            <div class="flow-item">
-              <div class="flow-visual paper" aria-hidden="true"></div>
-              <span>Teacher Text</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual vocabulary-image">
-                <img src="assets/vocab-lighthouse-card.png" alt="Visual Vocabulary lighthouse card" />
-              </div>
-              <span>Visual Vocabulary</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual quiz" aria-hidden="true"></div>
-              <span>Quiz &amp; Practice</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual ccss-skill-card">
-                <img src="assets/ccss-skill-card.png" alt="CCSS skill card with a glowing key and pencil" />
-              </div>
-              <span>CCSS Skill Card · Imitate Writing</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual storybook-image">
-                <img src="assets/storybook-portal-book.png" alt="Storybook image with a blocky portal adventure" />
-              </div>
-              <span>Storybook Image</span>
-            </div>
-          </div>
-
-          <a class="panel-button blue" href="visual-read.html">
-            <span>Start Visual Read</span>
-            <span aria-hidden="true">→</span>
-          </a>
-        </article>
-
-        <article class="workflow-panel write-panel" id="visual-write">
-          <div class="panel-heading">
-            <div>
-              <h2>Visual Write · 创作入口</h2>
-              <p>Turn ideas into stories you can see, read, and share.</p>
-            </div>
-          </div>
-
-          <div class="flow-steps">
-            <div class="flow-item">
-              <div class="flow-visual prompt-list" aria-hidden="true"></div>
-              <span>CCSS Prompts</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual movie-image">
-                <img src="assets/movie-scene.png" alt="AI Movie dragon scene" />
-              </div>
-              <span>AI Movie</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual illustrated-book-image">
-                <img src="assets/book-spread.png" alt="Illustrated Book lighthouse spread" />
-              </div>
-              <span>Illustrated Book</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual real-person-image">
-                <img src="assets/avatar-scene.png" alt="Real-person Animation girl avatar" />
-              </div>
-              <span>Real-person Animation</span>
-            </div>
-            <div class="flow-arrow" aria-hidden="true">→</div>
-            <div class="flow-item">
-              <div class="flow-visual publish-share-card" aria-hidden="true">
-                <span class="publish-book-icon"></span>
-                <span class="publish-play-icon"></span>
-                <span class="publish-book">Print Your Book</span>
-                <span class="publish-video">Share Your Video</span>
-              </div>
-              <span>Print Your Book · Share Your Video</span>
-            </div>
-          </div>
-
-          <a class="panel-button purple" href="visual-write.html">
-            <span>Create a Story</span>
-            <span aria-hidden="true">→</span>
-          </a>
-        </article>
-      </section>
-
-      <section class="literacy-loop" aria-label="Learning loop">
-        <span>A full literacy loop:</span>
-        <strong>Read</strong>
-        <span aria-hidden="true">→</span>
-        <strong>Vocabulary</strong>
-        <span aria-hidden="true">→</span>
-        <strong>Guided Writing</strong>
-        <span aria-hidden="true">→</span>
-        <strong>Visual Creation.</strong>
-      </section>
-
-      <section class="feature-grid" aria-label="Platform promises">
-        <article class="feature-card">
-          <div class="feature-icon book-icon" aria-hidden="true"></div>
+      <section class="product-section" aria-label="Teacher and student value">
+        <header>
           <div>
-            <h2>CCSS Learning</h2>
-            <p>CCSS-Aligned. K12 Literacy. Full Stop.</p>
+            <h2>Built for teachers and students.</h2>
+            <p>Teachers see a lesson-to-project workflow. Students feel like they are building a real story world.</p>
           </div>
-        </article>
-        <article class="feature-card">
-          <div class="feature-icon movie-icon" aria-hidden="true"></div>
-          <div>
-            <h2>From Reading to AI Movies</h2>
-            <p>In One Class.</p>
-          </div>
-        </article>
-        <article class="feature-card">
-          <div class="feature-icon homework-icon" aria-hidden="true"></div>
-          <div>
-            <h2>Upload Any Text</h2>
-            <p>Teachers and parents can upload reading text and turn it into visual lessons.</p>
-          </div>
-        </article>
-        <article class="feature-card">
-          <div class="feature-icon tutor-image">
-            <img src="assets/lobster-ai-tutor.png" alt="Lobster AI Tutor" />
-          </div>
-          <div>
-            <h2>Lobster AI Tutor</h2>
-            <p>Feedback in Seconds.</p>
-          </div>
-        </article>
-        <article class="feature-card">
-          <div class="feature-icon privacy-protection-icon" aria-hidden="true"></div>
-          <div>
-            <h2>Privacy Protection</h2>
-            <p>Choose to store work on your own computer.</p>
-          </div>
-        </article>
-      </section>
-
-      <section class="student-showcase" aria-label="Student story showcase">
-        <div class="showcase-header">
-          <div class="showcase-title-group">
-            <h2><span>✦</span> Student Story Showcase <small>孩子的英文故事作品集</small></h2>
-            <p>Illustrated books, AI movies, avatar stories, and visual worlds created from English writing.</p>
-          </div>
-          <div class="showcase-controls" aria-label="Showcase controls">
-            <button class="showcase-nav" type="button" aria-label="Previous stories">←</button>
-            <button class="showcase-nav" type="button" aria-label="Next stories">→</button>
-            <div class="showcase-dots" aria-hidden="true">
-              <span class="showcase-dot active"></span>
-              <span class="showcase-dot"></span>
-              <span class="showcase-dot"></span>
-              <span class="showcase-dot"></span>
-              <span class="showcase-dot"></span>
-            </div>
-            <a class="showcase-all-works" href="#works">
-              <span>View all works</span>
-              <span class="spark-icon" aria-hidden="true"></span>
-            </a>
-          </div>
+        </header>
+        <div class="product-card-grid two">
+          <article class="product-card">
+            <span>For Teachers</span>
+            <h3>From lesson plan to class project in minutes.</h3>
+            <ul>
+              <li>Upload any reading text</li>
+              <li>Match CCSS skills</li>
+              <li>Generate imitation writing tasks</li>
+              <li>Assign chapters or scenes</li>
+              <li>Review student writing</li>
+              <li>Publish a class book or movie</li>
+            </ul>
+          </article>
+          <article class="product-card">
+            <span>For Students</span>
+            <h3>Writing feels like creating a real story world.</h3>
+            <ul>
+              <li>Read the source text</li>
+              <li>Write your chapter or scene</li>
+              <li>Get Glow / Grow / Next Step feedback</li>
+              <li>Generate images</li>
+              <li>Create video scenes</li>
+              <li>See your work in the class project</li>
+            </ul>
+          </article>
         </div>
+      </section>
 
-        <div class="story-film-reel">
-          <button class="reel-edge previous" type="button" aria-label="Previous story">‹</button>
-          <div class="story-card-track">
-            <article class="story-card">
-              <img src="assets/showcase-star-keeper.png" alt="The Star Keeper student work" />
-              <h3>The Star Keeper</h3>
-              <div class="story-tags">
-                <span class="story-kind">Illustrated Book</span>
-                <span class="story-style">Storybook style</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-block-castle.png" alt="Block Castle Quest student work" />
-              <h3>Block Castle Quest</h3>
-              <div class="story-tags">
-                <span class="story-kind">Visual World</span>
-                <span class="story-style">Block World style</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-dragon-movie.png" alt="Dragon Movie Scene student work" />
-              <h3>Dragon Movie Scene</h3>
-              <div class="story-tags">
-                <span class="story-kind">AI Movie</span>
-                <span class="story-style">Cinematic Fantasy</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-space-adventure.png" alt="My Space Adventure student work" />
-              <h3>My Space Adventure</h3>
-              <div class="story-tags">
-                <span class="story-kind">Avatar Animation</span>
-                <span class="story-style">Sci-Fi Avatar</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-ocean-lantern.png" alt="The Ocean Lantern student work" />
-              <h3>The Ocean Lantern</h3>
-              <div class="story-tags">
-                <span class="story-kind">Illustrated Book</span>
-                <span class="story-style">Watercolor</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-robot-friend.png" alt="Robot's First Friend student work" />
-              <h3>Robot's First Friend</h3>
-              <div class="story-tags">
-                <span class="story-kind">Comic Story</span>
-                <span class="story-style">Comic</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-garden-door.png" alt="The Secret Garden Door student work" />
-              <h3>The Secret Garden Door</h3>
-              <div class="story-tags">
-                <span class="story-kind">Illustrated Book</span>
-                <span class="story-style">Classic Fairy Tale</span>
-              </div>
-            </article>
-            <article class="story-card">
-              <img src="assets/showcase-time-train.png" alt="Time Train to Tomorrow student work" />
-              <h3>Time Train to Tomorrow</h3>
-              <div class="story-tags">
-                <span class="story-kind">AI Movie</span>
-                <span class="story-style">Futuristic</span>
-              </div>
-            </article>
-
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-star-keeper.png" alt="" />
-              <h3>The Star Keeper</h3>
-              <div class="story-tags">
-                <span class="story-kind">Illustrated Book</span>
-                <span class="story-style">Storybook style</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-block-castle.png" alt="" />
-              <h3>Block Castle Quest</h3>
-              <div class="story-tags">
-                <span class="story-kind">Visual World</span>
-                <span class="story-style">Block World style</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-dragon-movie.png" alt="" />
-              <h3>Dragon Movie Scene</h3>
-              <div class="story-tags">
-                <span class="story-kind">AI Movie</span>
-                <span class="story-style">Cinematic Fantasy</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-space-adventure.png" alt="" />
-              <h3>My Space Adventure</h3>
-              <div class="story-tags">
-                <span class="story-kind">Avatar Animation</span>
-                <span class="story-style">Sci-Fi Avatar</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-ocean-lantern.png" alt="" />
-              <h3>The Ocean Lantern</h3>
-              <div class="story-tags">
-                <span class="story-kind">Illustrated Book</span>
-                <span class="story-style">Watercolor</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-robot-friend.png" alt="" />
-              <h3>Robot's First Friend</h3>
-              <div class="story-tags">
-                <span class="story-kind">Comic Story</span>
-                <span class="story-style">Comic</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-garden-door.png" alt="" />
-              <h3>The Secret Garden Door</h3>
-              <div class="story-tags">
-                <span class="story-kind">Illustrated Book</span>
-                <span class="story-style">Classic Fairy Tale</span>
-              </div>
-            </article>
-            <article class="story-card" aria-hidden="true">
-              <img src="assets/showcase-time-train.png" alt="" />
-              <h3>Time Train to Tomorrow</h3>
-              <div class="story-tags">
-                <span class="story-kind">AI Movie</span>
-                <span class="story-style">Futuristic</span>
-              </div>
-            </article>
+      <section class="product-section" id="pricing">
+        <header>
+          <div>
+            <h2>Pricing built around publishing.</h2>
+            <p>Core value comes from class books, class movies, exports, and share links.</p>
           </div>
-          <button class="reel-edge next" type="button" aria-label="Next story">›</button>
+        </header>
+        <div class="product-card-grid three">
+          <article class="pricing-card">
+            <span>Free</span>
+            <h3>$0</h3>
+            <ul>
+              <li>1 visual writing project / month</li>
+              <li>1 sample class book</li>
+              <li>12 image credits</li>
+              <li>Watermark included</li>
+            </ul>
+            <a class="product-small-button" href="visual-write.html">Start Free</a>
+          </article>
+          <article class="pricing-card">
+            <span>Teacher Pro</span>
+            <h3>$19 / month</h3>
+            <ul>
+              <li>20 visual writing projects</li>
+              <li>8 class books</li>
+              <li>200 image credits</li>
+              <li>24 video credits</li>
+              <li>PDF export</li>
+              <li>No watermark</li>
+              <li>Parent share links</li>
+            </ul>
+            <a class="product-small-button primary" href="teacher-dashboard.html">Upgrade to Pro</a>
+          </article>
+          <article class="pricing-card">
+            <span>Classroom Studio</span>
+            <h3>$69 / month</h3>
+            <ul>
+              <li>100 visual writing projects</li>
+              <li>30 class books</li>
+              <li>1,000 image credits</li>
+              <li>120 video credits</li>
+              <li>Multiple classes</li>
+              <li>Class movie publishing</li>
+              <li>Parent share links</li>
+              <li>Export reports</li>
+            </ul>
+            <a class="product-small-button" href="teacher-dashboard.html">Contact / Start Studio</a>
+          </article>
         </div>
+      </section>
+
+      <section class="product-section trust-band" id="settings">
+        <div>
+          <h2>Designed for classroom writing.</h2>
+          <p>Teachers control student projects, submissions, and publishing. StoriesLens is designed as a creative layer for classroom reading and writing projects.</p>
+        </div>
+        <a class="product-small-button primary" href="teacher-dashboard.html">Open Teacher Studio</a>
       </section>
 
       <footer class="site-footer">
-        <nav aria-label="Teacher links">
-          <a href="#settings">Teacher Dashboard</a>
-          <span>·</span>
-          <a href="#settings">Upload Custom Text</a>
-          <span>·</span>
-          <a href="#settings">Export to LMS</a>
-          <span>·</span>
-          <a href="#settings">Class Progress</a>
-        </nav>
-        <p>© StoriesLens AI语镜故事 · Patent Pending · All data stored locally. No cloud auto-upload.</p>
-        <span class="footer-shield" aria-hidden="true"></span>
+        <span>Teacher Dashboard</span>
+        <span>Upload Reading Text</span>
+        <span>Export Class Book</span>
+        <p>© StoriesLens · Classroom Co-Creation Studio</p>
       </footer>
     </main>
 

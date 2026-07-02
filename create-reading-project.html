@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create from Reading Text | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .create-project-page {
+        width: min(94vw, 1480px);
+      }
+
+      .create-hero,
+      .project-builder,
+      .project-output {
+        border: 1px solid rgba(145, 172, 255, 0.22);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(16, 28, 65, 0.86), rgba(8, 13, 31, 0.78));
+      }
+
+      .create-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.45fr);
+        gap: 22px;
+        align-items: center;
+        margin: 26px 0 18px;
+        padding: 30px;
+      }
+
+      .create-hero span {
+        color: #93ffcf;
+        font-weight: 900;
+      }
+
+      .create-hero h1 {
+        margin: 8px 0 12px;
+        color: #fff;
+        font-size: clamp(42px, 5vw, 72px);
+        letter-spacing: 0;
+      }
+
+      .create-hero p {
+        margin: 0;
+        color: rgba(234, 239, 255, 0.78);
+        font-size: 19px;
+        line-height: 1.55;
+      }
+
+      .create-flow-mini {
+        display: grid;
+        gap: 10px;
+      }
+
+      .create-flow-mini article {
+        padding: 13px;
+        border: 1px solid rgba(151, 176, 255, 0.2);
+        border-radius: 14px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .project-builder {
+        display: grid;
+        grid-template-columns: minmax(0, 0.75fr) minmax(480px, 1fr);
+        gap: 20px;
+        padding: 24px;
+      }
+
+      .project-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .project-form label {
+        display: grid;
+        gap: 8px;
+        color: rgba(234, 239, 255, 0.76);
+        font-weight: 800;
+      }
+
+      .project-form input,
+      .project-form select,
+      .project-form textarea {
+        width: 100%;
+        border: 1px solid rgba(145, 172, 255, 0.26);
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(4, 9, 24, 0.7);
+        font: inherit;
+      }
+
+      .project-form input,
+      .project-form select {
+        min-height: 46px;
+        padding: 0 13px;
+      }
+
+      .project-form textarea {
+        min-height: 330px;
+        resize: vertical;
+        padding: 14px;
+        line-height: 1.65;
+      }
+
+      .project-form button {
+        min-height: 50px;
+        border: 0;
+        border-radius: 13px;
+        color: #fff;
+        background: linear-gradient(135deg, #3478ff, #8a4cff);
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .upload-choice-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .upload-choice-row button {
+        min-height: 42px;
+        border: 1px solid rgba(151, 176, 255, 0.24);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .project-preview-card {
+        padding: 20px;
+        border: 1px solid rgba(151, 176, 255, 0.2);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .project-preview-card h2 {
+        margin: 0 0 12px;
+        color: #fff;
+      }
+
+      .project-preview-card p {
+        color: rgba(234, 239, 255, 0.72);
+        line-height: 1.58;
+      }
+
+      .project-pill-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .project-pill-grid span {
+        padding: 8px 10px;
+        border: 1px solid rgba(151, 176, 255, 0.22);
+        border-radius: 999px;
+        color: rgba(234, 239, 255, 0.86);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .project-output {
+        margin: 18px 0 32px;
+        padding: 24px;
+      }
+
+      .project-output[hidden] {
+        display: none;
+      }
+
+      .output-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .output-card,
+      .plan-card {
+        padding: 17px;
+        border: 1px solid rgba(151, 176, 255, 0.2);
+        border-radius: 16px;
+        color: rgba(234, 239, 255, 0.74);
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .output-card strong,
+      .plan-card strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #fff;
+      }
+
+      .output-card p,
+      .plan-card p {
+        margin: 0;
+        line-height: 1.52;
+      }
+
+      .project-plan {
+        margin-top: 18px;
+      }
+
+      .project-plan h2 {
+        color: #fff;
+      }
+
+      .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .plan-card span {
+        color: #ffd991;
+        font-weight: 900;
+      }
+
+      .plan-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 14px;
+      }
+
+      .plan-actions button,
+      .plan-actions a {
+        min-height: 38px;
+        padding: 0 12px;
+        border: 1px solid rgba(151, 176, 255, 0.24);
+        border-radius: 10px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.07);
+        text-decoration: none;
+        font-weight: 800;
+      }
+
+      @media (max-width: 1000px) {
+        .create-hero,
+        .project-builder,
+        .output-grid,
+        .plan-grid,
+        .upload-choice-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="star-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-shell create-project-page">
+      <header class="site-header" aria-label="StoriesLens navigation">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="StoriesLens logo" /></span>
+          <span>StoriesLens</span>
+        </a>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="index.html">Home</a>
+          <a class="nav-active" href="create-reading-project.html">Create</a>
+          <a href="index.html#class-movie">Class Movie</a>
+          <a href="visual-write.html">Visual Write</a>
+          <a href="index.html#works">Works</a>
+          <a href="teacher-dashboard.html">Teacher</a>
+          <a href="index.html#pricing">Pricing</a>
+        </nav>
+        <div class="header-actions">
+          <a class="top-cta" href="#builder"><span>Generate Project</span></a>
+        </div>
+      </header>
+
+      <section class="create-hero">
+        <div>
+          <span>Teacher Upload Reading Text</span>
+          <h1>Create from Reading Text</h1>
+          <p>Upload any reading passage and turn it into a CCSS-aligned class book or class movie project.</p>
+        </div>
+        <div class="create-flow-mini">
+          <article>Reading Text</article>
+          <article>CCSS Alignment</article>
+          <article>Writing Project</article>
+          <article>Class Book / Class Movie</article>
+        </div>
+      </section>
+
+      <section class="project-builder" id="builder">
+        <form class="project-form" data-project-form>
+          <label>
+            Project Title
+            <input name="projectTitle" value="The Mystery of the Lost Map" />
+          </label>
+          <label>
+            Grade Level
+            <select name="gradeLevel">
+              <option>Grade 3</option>
+              <option selected>Grade 4</option>
+              <option>Grade 5</option>
+              <option>Grade 6</option>
+            </select>
+          </label>
+          <label id="project-type">
+            Project Type
+            <select name="projectType">
+              <option>Class Book</option>
+              <option selected>Class Movie</option>
+              <option>Individual Writing</option>
+            </select>
+          </label>
+          <label>
+            Class Size
+            <input name="classSize" value="24 students" />
+          </label>
+          <label>
+            Writing Goal
+            <input name="writingGoal" value="Write narrative scenes with clear setting, character goal, sequence, and descriptive details." />
+          </label>
+          <div class="upload-choice-row" aria-label="Upload options">
+            <button type="button" data-upload-choice=".txt">Paste text</button>
+            <button type="button" data-upload-choice=".docx">Upload .docx</button>
+            <button type="button" data-upload-choice=".pdf">Upload .pdf</button>
+          </div>
+          <label>
+            Reading Text
+            <textarea name="readingText">In the school library, a group of students found an old map hidden inside a dusty book. The map showed a path from the library window to the garden, then across the playground to a locked wooden door under a large tree. The students wondered who had drawn the map and what secret might be waiting at the end.</textarea>
+          </label>
+          <button type="submit">Generate Project</button>
+        </form>
+
+        <aside class="project-preview-card">
+          <h2>What StoriesLens will generate</h2>
+          <p>A teacher-ready project plan that connects the reading passage to CCSS skills, imitation writing, student checklists, chapter or scene assignments, and publish-ready classroom output.</p>
+          <div class="project-pill-grid">
+            <span>Reading Summary</span>
+            <span>Text Level</span>
+            <span>Vocabulary Focus</span>
+            <span>CCSS Reading Focus</span>
+            <span>CCSS Writing Focus</span>
+            <span>Imitation Prompt</span>
+            <span>Student Checklist</span>
+            <span>Class Project Plan</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="project-output" data-project-output hidden>
+        <div class="output-grid">
+          <article class="output-card"><strong>Reading Summary</strong><p>This text is about a group of students who discover a mysterious map in the school library.</p></article>
+          <article class="output-card"><strong>Text Level</strong><p>Recommended for Grade 4 narrative reading and writing practice.</p></article>
+          <article class="output-card"><strong>Vocabulary Focus</strong><p>mysterious, discover, clue, journey, hidden</p></article>
+          <article class="output-card"><strong>CCSS Reading Focus</strong><p>RL.4.3 - Describe in depth a character, setting, or event in a story.</p></article>
+          <article class="output-card"><strong>CCSS Writing Focus</strong><p>W.4.3 - Write narratives using effective technique, descriptive details, and clear event sequences.</p></article>
+          <article class="output-card"><strong>Why this text matches</strong><p>The reading text includes a clear setting, character motivation, and a sequence of events suitable for narrative imitation writing.</p></article>
+          <article class="output-card"><strong>Imitation Writing Prompt</strong><p>Write your own adventure story about a character who finds a strange object and follows clues to solve a mystery.</p></article>
+          <article class="output-card"><strong>Student Checklist</strong><p>I introduced a clear character. I described the setting. I used sequence words. I included a problem and solution. I added descriptive details.</p></article>
+          <article class="output-card"><strong>Class Project Plan</strong><p data-plan-summary>Class Movie · 6 scenes · 24 students · ready for assignment.</p></article>
+        </div>
+
+        <section class="project-plan" data-book-plan hidden>
+          <h2>Class Book Plan</h2>
+          <div class="plan-grid">
+            <article class="plan-card"><span>Chapter 1</span><strong>The Discovery</strong><p>A student finds a mysterious map in the library.</p></article>
+            <article class="plan-card"><span>Chapter 2</span><strong>The First Clue</strong><p>The class follows the first clue to the school garden.</p></article>
+            <article class="plan-card"><span>Chapter 3</span><strong>Into the Forest</strong><p>The students enter a quiet forest behind the playground.</p></article>
+            <article class="plan-card"><span>Chapter 4</span><strong>The Hidden Door</strong><p>They discover a secret door under an old tree.</p></article>
+            <article class="plan-card"><span>Chapter 5</span><strong>The Big Choice</strong><p>The group must decide whether to continue or go back.</p></article>
+            <article class="plan-card"><span>Chapter 6</span><strong>The Treasure Revealed</strong><p>The class finds the treasure and learns an important lesson.</p></article>
+          </div>
+        </section>
+
+        <section class="project-plan" data-movie-plan>
+          <h2>Class Movie Plan</h2>
+          <div class="plan-grid">
+            <article class="plan-card"><span>Scene 1</span><strong>Opening</strong><p>The school library feels quiet and mysterious.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Image</button><button>Review Scene</button></div></article>
+            <article class="plan-card"><span>Scene 2</span><strong>The Discovery</strong><p>A student finds an old map inside a dusty book.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Image</button><button>Generate Scene Video</button></div></article>
+            <article class="plan-card"><span>Scene 3</span><strong>The First Clue</strong><p>The class follows the first clue to the garden.</p><div class="plan-actions"><button>Assign Scene</button><button>Review Scene</button></div></article>
+            <article class="plan-card"><span>Scene 4</span><strong>The Journey</strong><p>The students work together to solve the map.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Image</button></div></article>
+            <article class="plan-card"><span>Scene 5</span><strong>The Challenge</strong><p>The group faces a difficult choice.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Video</button></div></article>
+            <article class="plan-card"><span>Scene 6</span><strong>The Ending</strong><p>The mystery is solved and the class celebrates.</p><div class="plan-actions"><button>Review Scene</button><button>Publish Movie</button></div></article>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+      (() => {
+        const form = document.querySelector("[data-project-form]");
+        const output = document.querySelector("[data-project-output]");
+        const moviePlan = document.querySelector("[data-movie-plan]");
+        const bookPlan = document.querySelector("[data-book-plan]");
+        const summary = document.querySelector("[data-plan-summary]");
+
+        document.querySelectorAll("[data-upload-choice]").forEach((button) => {
+          button.addEventListener("click", () => {
+            button.textContent = `${button.dataset.uploadChoice} ready`;
+          });
+        });
+
+        form?.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const type = new FormData(form).get("projectType");
+          const isBook = type === "Class Book";
+          output.hidden = false;
+          moviePlan.hidden = isBook;
+          bookPlan.hidden = !isBook;
+          summary.textContent = isBook ? "Class Book · 6 chapters · 24 students · ready for assignment." : "Class Movie · 6 scenes · 24 students · ready for assignment.";
+          output.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      })();
+    </script>
+  </body>
+</html>

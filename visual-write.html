@@ -1,10 +1,359 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Visual Write | StoriesLens</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .visual-write-page {
+        max-width: 1440px;
+      }
+
+      .student-write-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 32px;
+        align-items: end;
+        padding: 36px 0 22px;
+      }
+
+      .student-write-kicker {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        gap: 10px;
+        padding: 8px 12px;
+        border: 1px solid rgba(143, 171, 255, 0.28);
+        border-radius: 999px;
+        color: var(--muted);
+        background: rgba(11, 18, 42, 0.54);
+      }
+
+      .student-write-kicker::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #7aa9ff, #d687ff);
+        box-shadow: 0 0 18px rgba(151, 121, 255, 0.9);
+      }
+
+      .student-write-hero h1 {
+        margin: 18px 0 10px;
+        font-size: clamp(44px, 7vw, 86px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .student-write-hero p {
+        margin: 0;
+        max-width: 760px;
+        color: rgba(246, 248, 255, 0.82);
+        font-size: clamp(18px, 2vw, 25px);
+      }
+
+      .student-write-hero img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        border-radius: 18px;
+        border: 1px solid rgba(143, 171, 255, 0.28);
+        box-shadow: 0 22px 72px rgba(58, 91, 255, 0.18);
+      }
+
+      .writing-choice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin: 18px 0 22px;
+      }
+
+      .writing-choice-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 220px;
+        padding: 24px;
+        border: 1px solid rgba(143, 171, 255, 0.26);
+        border-radius: 18px;
+        color: #fff;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(102, 139, 255, 0.22), transparent 34%),
+          linear-gradient(180deg, rgba(16, 28, 65, 0.9), rgba(8, 13, 31, 0.86));
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 58px rgba(0, 0, 0, 0.22);
+      }
+
+      .writing-choice-card[data-choice="teacher"] {
+        background:
+          radial-gradient(circle at 20% 0%, rgba(210, 137, 255, 0.2), transparent 34%),
+          linear-gradient(180deg, rgba(38, 24, 68, 0.92), rgba(10, 13, 32, 0.88));
+      }
+
+      .writing-choice-card.is-active {
+        border-color: rgba(126, 164, 255, 0.72);
+        box-shadow: 0 0 0 2px rgba(71, 126, 255, 0.26), 0 22px 74px rgba(70, 99, 255, 0.2);
+      }
+
+      .writing-choice-card span {
+        display: inline-flex;
+        width: 48px;
+        height: 48px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        font-size: 24px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .writing-choice-card h2 {
+        margin: 18px 0 8px;
+        font-size: 28px;
+      }
+
+      .writing-choice-card p {
+        margin: 0 0 22px;
+        color: rgba(246, 248, 255, 0.78);
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      .writing-choice-card button {
+        width: fit-content;
+        margin-top: auto;
+        padding: 13px 18px;
+        border: 0;
+        border-radius: 12px;
+        color: #fff;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+        box-shadow: 0 14px 32px rgba(71, 126, 255, 0.24);
+      }
+
+      .student-writing-workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1.06fr) minmax(360px, 0.94fr);
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+
+      .student-writing-panel {
+        border: 1px solid rgba(143, 171, 255, 0.24);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(16, 28, 65, 0.88), rgba(8, 13, 31, 0.82));
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+      }
+
+      .student-writing-panel h2,
+      .student-writing-panel h3 {
+        margin: 0;
+      }
+
+      .student-writing-panel header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        padding: 20px 22px 0;
+      }
+
+      .student-writing-panel header p {
+        margin: 7px 0 0;
+        color: rgba(246, 248, 255, 0.68);
+      }
+
+      .student-writing-form {
+        display: grid;
+        gap: 14px;
+        padding: 20px 22px 22px;
+      }
+
+      .student-writing-form label {
+        display: grid;
+        gap: 8px;
+        color: rgba(246, 248, 255, 0.72);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .student-writing-form input,
+      .student-writing-form select,
+      .student-writing-form textarea {
+        width: 100%;
+        border: 1px solid rgba(143, 171, 255, 0.26);
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(4, 9, 24, 0.74);
+        font: inherit;
+      }
+
+      .student-writing-form input,
+      .student-writing-form select {
+        min-height: 46px;
+        padding: 0 13px;
+      }
+
+      .student-writing-form textarea {
+        min-height: 300px;
+        resize: vertical;
+        padding: 15px;
+        line-height: 1.7;
+      }
+
+      .student-writing-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .student-action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-top: 2px;
+      }
+
+      .student-action-row button,
+      .student-action-row a {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 15px;
+        border: 1px solid rgba(143, 171, 255, 0.24);
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.07);
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .student-action-row button.primary {
+        border: 0;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+      }
+
+      .student-action-row button.credit-action {
+        min-height: 54px;
+        flex-direction: column;
+        gap: 2px;
+        line-height: 1.15;
+      }
+
+      .student-action-row button.credit-action small {
+        color: rgba(246, 248, 255, 0.66);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .student-output-stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .student-feedback-card,
+      .student-preview-card,
+      .student-next-card {
+        padding: 20px;
+        border: 1px solid rgba(143, 171, 255, 0.24);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(16, 28, 65, 0.88), rgba(8, 13, 31, 0.82));
+      }
+
+      .student-feedback-grid {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .student-feedback-grid article {
+        padding: 14px;
+        border: 1px solid rgba(143, 171, 255, 0.18);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .student-feedback-grid strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #f6f8ff;
+      }
+
+      .student-feedback-grid p {
+        margin: 0;
+        color: rgba(246, 248, 255, 0.74);
+        line-height: 1.5;
+      }
+
+      .student-preview-frame {
+        display: grid;
+        place-items: center;
+        min-height: 280px;
+        margin-top: 14px;
+        border: 1px solid rgba(143, 171, 255, 0.22);
+        border-radius: 16px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(111, 145, 255, 0.2), transparent 42%),
+          rgba(4, 9, 24, 0.74);
+      }
+
+      .student-preview-frame img {
+        width: 100%;
+        height: 100%;
+        min-height: 280px;
+        object-fit: cover;
+      }
+
+      .student-preview-empty {
+        padding: 22px;
+        color: rgba(246, 248, 255, 0.68);
+        text-align: center;
+      }
+
+      .student-next-card ol {
+        margin: 14px 0 0;
+        padding-left: 20px;
+        color: rgba(246, 248, 255, 0.74);
+        line-height: 1.7;
+      }
+
+      .student-toast {
+        position: fixed;
+        right: 28px;
+        bottom: 28px;
+        z-index: 20;
+        max-width: 360px;
+        padding: 14px 16px;
+        border: 1px solid rgba(143, 171, 255, 0.34);
+        border-radius: 14px;
+        color: #fff;
+        background: rgba(12, 18, 38, 0.94);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+      }
+
+      .student-writing-workspace[hidden],
+      .student-toast[hidden] {
+        display: none;
+      }
+
+      @media (max-width: 980px) {
+        .student-write-hero,
+        .writing-choice-grid,
+        .student-writing-workspace,
+        .student-writing-row {
+          grid-template-columns: 1fr;
+        }
+
+        .student-write-hero img {
+          max-height: 280px;
+        }
+      }
+    </style>
   </head>
   <body>
     <canvas id="star-canvas" aria-hidden="true"></canvas>
@@ -15,523 +364,343 @@
           <span class="brand-mark">
             <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
           </span>
-          <span>StoriesLens AI语镜故事</span>
+          <span>StoriesLens</span>
         </a>
 
         <nav class="main-nav" aria-label="Primary navigation">
-          <a href="visual-read.html">Visual Read</a>
+          <a href="index.html">Home</a>
+          <a href="create-reading-project.html">Create</a>
+          <a href="index.html#class-movie">Class Movie</a>
           <a class="nav-active" href="visual-write.html">Visual Write</a>
-          <a href="group-write.html">Group Write</a>
           <a href="index.html#works">Works</a>
-          <a href="index.html#word-book">Word Book</a>
-          <a href="index.html#settings">Settings</a>
-          <a class="teacher-dashboard-link teacher-only" href="teacher-dashboard.html" data-mode-scope="teacher">Teacher Dashboard</a>
+          <a href="teacher-dashboard.html">Teacher</a>
+          <a href="index.html#pricing">Pricing</a>
         </nav>
 
         <div class="header-actions write-header-actions">
-          <label class="write-grade-select">
-            <span>Select Grade Level</span>
-            <select data-write-grade-selector aria-label="Select grade level">
-              <option value="K">K</option>
-              <option value="1">Grade 1</option>
-              <option value="2">Grade 2</option>
-              <option value="3" selected>Grade 3</option>
-              <option value="4">Grade 4</option>
-              <option value="5">Grade 5</option>
-              <option value="6">Grade 6</option>
-              <option value="7">Grade 7</option>
-              <option value="8">Grade 8</option>
-              <option value="9">Grade 9</option>
-              <option value="10">Grade 10</option>
-              <option value="11">Grade 11</option>
-              <option value="12">Grade 12</option>
-            </select>
-          </label>
-          <button class="teacher-upload-shortcut teacher-only" type="button" data-mode-scope="teacher" data-write-action="upload-class-prompt">
-            Upload Writing Prompt for Class
-          </button>
-          <div class="mode-switch" aria-label="Identity mode switch">
-            <button class="mode-toggle active" type="button" data-mode-toggle="student" aria-pressed="true">Student Mode</button>
-            <button class="mode-toggle" type="button" data-mode-toggle="teacher" aria-pressed="false">Teacher Mode</button>
-          </div>
-          <a class="top-cta" href="visual-write.html">
-            <span>Start Creating</span>
+          <a class="top-cta" href="create-reading-project.html">
+            <span>Create from Reading Text</span>
           </a>
-          <div class="user-avatar-menu">
-            <button class="user-avatar-button" type="button" data-user-menu-toggle aria-label="Open user menu">
-              <img src="assets/avatar-scene.png" alt="" />
-            </button>
-            <div class="user-menu-popover" data-user-menu>
-              <a class="teacher-menu-entry teacher-only" href="teacher-dashboard.html" data-mode-scope="teacher">Teacher Dashboard</a>
-              <button type="button" data-write-action="personal-settings">Personal Settings</button>
-              <button type="button" data-write-action="log-out">Log Out</button>
-            </div>
-          </div>
         </div>
       </header>
 
-      <section class="write-hero" aria-label="Visual Write overview">
-        <div class="write-hero-copy">
-          <div class="write-eyebrow"></div>
-          <h1>Visual Write · 故事艺术与动画创作</h1>
-          <p>Write English stories aligned with CCSS, generate consistent character illustrations, and shape 10-15s animated short films.</p>
-          <div class="write-badges" aria-label="Visual Write features">
-            <span>CCSS Grade-Level Prompts</span>
-            <span>4 Art Styles</span>
-            <span>AI Pictures + Short Movies</span>
-          </div>
+      <section class="student-write-hero write-hero" aria-label="Visual Write overview">
+        <div>
+          <span class="student-write-kicker">Student Writing</span>
+          <h1>Visual Write</h1>
+          <p>Choose how you want to start writing today.</p>
         </div>
-        <button class="write-hero-art" type="button" data-write-action="hero-preview" aria-label="Open Visual Write preview">
-          <img src="assets/hero-student.png" alt="" />
-          <span class="write-magic-swirl"></span>
-        </button>
+        <img src="assets/hero-student.png" alt="" />
       </section>
 
-      <section class="write-workspace free-create-studio" data-free-create-studio aria-label="Free Create Studio">
-        <div class="free-create-header">
-          <div>
-            <span>Free Create</span>
-            <h2>Free Create Studio</h2>
-            <p>Write freely first. StoriesLens maps the draft to CCSS after the student has a real story.</p>
-          </div>
-          <button class="open-claw-inline" type="button" data-write-action="check-story">Open Claw AI Tutor · Check My Story</button>
-        </div>
-        <aside class="write-skills-panel" aria-label="CCSS writing skill cards">
-          <div class="write-panel-title">
-            <span>CCSS Writing Skills</span>
-            <strong data-write-grade-summary>Grade 3 · Narrative Writing</strong>
-          </div>
+      <section class="writing-choice-grid" aria-label="Choose a writing mode">
+        <article class="writing-choice-card is-active" data-choice="free">
+          <span aria-hidden="true">✦</span>
+          <h2>Free Creation</h2>
+          <p>Start your own story from an idea, picture, or prompt.</p>
+          <button type="button" data-open-writing-mode="free">Start Free Writing</button>
+        </article>
 
-          <div class="write-skill-list" data-write-skill-card-grid>
-            <button class="write-skill-card active" type="button" data-write-action="skill-detail" data-skill-title="Narrative Sequence" data-skill-body="CCSS.ELA-LITERACY.W.3.3a asks students to establish a situation and introduce a narrator or characters.">
-              <span class="skill-number">1</span>
-              <span class="skill-copy">
-                <strong>Narrative Sequence <em>叙事顺序</em></strong>
-                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.3a</small>
-                <span>Standard: Establish a situation and introduce characters.</span>
-                <b>I Can: order events with time words.</b>
-              </span>
-              <span class="skill-check" aria-hidden="true">&#10003;</span>
-            </button>
-            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Character & Setting" data-skill-body="Students describe who is in the story, where it happens, and what details help readers imagine it.">
-              <span class="skill-number">2</span>
-              <span class="skill-copy">
-                <strong>Character &amp; Setting <em>人物与场景</em></strong>
-                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.3b</small>
-                <span>Standard: Use details to develop experiences and events.</span>
-                <b>I Can: describe characters and setting in detail.</b>
-              </span>
-              <span class="skill-check" aria-hidden="true">&#10003;</span>
-            </button>
-            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Dialogue" data-skill-body="Dialogue should move the story forward and reveal what characters want or feel.">
-              <span class="skill-number">3</span>
-              <span class="skill-copy">
-                <strong>Dialogue <em>角色对话</em></strong>
-                <small>CCSS Code: CCSS.ELA-LITERACY.W.4.3b</small>
-                <span>Standard: Use dialogue and description to develop events.</span>
-                <b>I Can: add dialogue between characters.</b>
-              </span>
-              <span class="skill-check" aria-hidden="true">&#10003;</span>
-            </button>
-            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Descriptive Details" data-skill-body="Students add sensory words and precise details so the picture and movie prompt have enough information.">
-              <span class="skill-number">4</span>
-              <span class="skill-copy">
-                <strong>Descriptive Details <em>感官细节</em></strong>
-                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.3d</small>
-                <span>Standard: Provide a sense of closure.</span>
-                <b>I Can: use sight, sound, touch, and emotion.</b>
-              </span>
-              <span class="skill-check" aria-hidden="true">&#10003;</span>
-            </button>
-            <button class="write-skill-card" type="button" data-write-action="skill-detail" data-skill-title="Opinion + Reason" data-skill-body="Opinion writing gives students a simple reason paragraph after the story, useful for reflection and sharing.">
-              <span class="skill-number">5</span>
-              <span class="skill-copy">
-                <strong>Opinion + Reason <em>观点与理由</em></strong>
-                <small>CCSS Code: CCSS.ELA-LITERACY.W.3.1a</small>
-                <span>Standard: Introduce an opinion and support it with reasons.</span>
-                <b>I Can: explain what my story teaches.</b>
-              </span>
-              <span class="skill-check" aria-hidden="true">&#10003;</span>
-            </button>
-          </div>
-          <p class="standards-footnote">Examples scale from W.3.3 to W.4.3b as the grade changes.</p>
-        </aside>
-
-        <section class="studio-window writing-window story-draft-panel" aria-label="Writing Window story draft editor">
-          <div class="write-panel-title">
-            <span>Writing Window</span>
-            <small><i></i> Story Draft · Auto-saved · storieslens_writeDraft</small>
-          </div>
-
-          <label class="draft-editor-shell">
-            <span class="sr-only">Story draft</span>
-            <textarea id="story-draft" data-story-draft rows="16">Louis was seven years old. His best friend was Max, a fluffy golden puppy.
-
-One sunny weekend morning, Dad pulled out their tiny white sailboat by the lake.
-
-"Can we sail across the lake together?" Louis asked happily.
-
-Max wagged his tail and barked, as if saying "Yes!"
-
-They carried buckets, fruit snacks and a little blue flag onto the boat.
-
-The soft wind blew the white sail wide. The boat glided gently over the sparkling water.
-
-Suddenly, a light cloud covered the sun. The wind slowed down a little.
-
-"Don't worry," Louis whispered to Max. "We can move the sail to catch more wind."
-
-When they reached the green grassy island in the middle of the lake, both of them cheered loudly.
-
-Louis learned that day: Adventure is much more fun when you have a loyal friend beside you.</textarea>
-            <span class="draft-count" data-draft-count>0 / 2000</span>
-          </label>
-
-          <div class="draft-tools" aria-label="Writing input tools">
-            <button type="button" data-write-action="keyboard">Keyboard · 键盘输入</button>
-            <button type="button" data-write-action="voice">Voice Input · 语音录入</button>
-            <button type="button" data-write-action="read-aloud">Read Aloud · 全文朗读</button>
-          </div>
-
-          <div class="input-status-panel" aria-live="polite">
-            <span data-input-status>Keyboard ready. Type in the Story Draft, or use Voice Input to speak your story.</span>
-            <audio data-voice-playback controls hidden></audio>
-          </div>
-
-          <section class="ivy-report-panel" data-ivy-report-panel aria-label="Ivy AI Report writing feedback">
-            <div class="write-panel-title">
-              <span>Ivy AI Report · 艾薇 AI Report</span>
-              <small>OpenRouter ChatGPT model · Mastra agent ready</small>
-            </div>
-            <div class="ivy-report-layout">
-              <label class="ivy-prompt-box">
-                <span>Report Prompt</span>
-                <textarea data-ivy-prompt rows="6">You are Ivy, a senior K12 English writing tutor. Give a warm report for this student story. Focus on CCSS narrative writing, sentence clarity, visual details for image/video generation, and one next revision step. Keep feedback encouraging and specific.</textarea>
-              </label>
-              <aside class="ivy-report-controls">
-                <label class="ivy-avatar-selector">
-                  <span>Choose Ivy avatar</span>
-                  <select data-ivy-avatar-model>
-                    <option value="Ivy Mentor">Ivy Mentor · calm teacher</option>
-                    <option value="Lobster Tutor">Lobster Tutor · playful coach</option>
-                    <option value="Story Director">Story Director · video guide</option>
-                    <option value="Classroom Presenter">Classroom Presenter · report speaker</option>
-                  </select>
-                </label>
-                <div class="ivy-report-actions">
-                  <button type="button" data-write-action="generate-ai-report">Generate Ivy Report</button>
-                  <button type="button" data-write-action="generate-report-video">Generate Explainer Video Script</button>
-                </div>
-                <p class="image-generation-status" data-ai-report-status>Write a draft, then generate a tutor report.</p>
-              </aside>
-            </div>
-            <div class="ivy-report-output" data-ai-report-output>
-              <article>
-                <strong>Glow</strong>
-                <p>Ivy will name what the student did well.</p>
-              </article>
-              <article>
-                <strong>Grow</strong>
-                <p>Ivy will suggest one clear improvement.</p>
-              </article>
-              <article>
-                <strong>Next Step</strong>
-                <p>The next revision action will appear here.</p>
-              </article>
-            </div>
-            <section class="ivy-video-script" aria-label="Digital human explainer script">
-              <div>
-                <strong>Digital human explainer</strong>
-                <p>Later, Mastra agent can turn this structured report into a full rubric report and a short avatar video explanation.</p>
-              </div>
-              <pre data-report-video-script>Select an Ivy avatar and generate a report first.</pre>
-            </section>
-          </section>
-
-          <section class="studio-window visual-output-window art-direction-panel media-output-panel" data-media-output-panel aria-label="Visual Output Window Generate Image / Video panel">
-            <div class="write-panel-title">
-              <span>Visual Output Window</span>
-              <small data-style-status>Generate Image / Video · Watercolor selected</small>
-            </div>
-
-            <div class="output-primary-actions" aria-label="Generate image or video">
-              <button class="output-action image-primary" type="button" data-write-action="generate-illustration">
-                <span class="action-icon image-action"></span>
-                <strong>Generate Image</strong>
-                <small>Turn the draft into one picture</small>
-              </button>
-              <button class="output-action video-primary" type="button" data-write-action="generate-movie">
-                <span class="action-icon movie-action"></span>
-                <strong>Generate Video</strong>
-                <small>Make a 10-15s short movie</small>
-              </button>
-            </div>
-
-            <section class="art-style-grid" aria-label="Choose art style">
-              <button class="art-style-card" type="button" data-write-style="Storybook" data-preview="assets/showcase-star-keeper.png">
-                <img src="assets/showcase-star-keeper.png" alt="" />
-                <span>Storybook</span>
-                <small>Classic storybook</small>
-              </button>
-              <button class="art-style-card active" type="button" data-write-style="Watercolor" data-preview="assets/showcase-ocean-lantern.png">
-                <img src="assets/showcase-ocean-lantern.png" alt="" />
-                <span>Watercolor</span>
-                <small>Soft watercolor</small>
-              </button>
-              <button class="art-style-card" type="button" data-write-style="Comic" data-preview="assets/showcase-robot-friend.png">
-                <img src="assets/showcase-robot-friend.png" alt="" />
-                <span>Comic</span>
-                <small>Comic style</small>
-              </button>
-              <button class="art-style-card" type="button" data-write-style="Block World" data-preview="assets/showcase-block-castle.png">
-                <img src="assets/showcase-block-castle.png" alt="" />
-                <span>Block World</span>
-                <small>Block world</small>
-              </button>
-            </section>
-
-            <section class="illustration-preview" aria-label="Illustration preview">
-              <div class="section-mini-title"><span>2</span> Illustration Preview</div>
-              <button type="button" data-write-action="open-illustration">
-                <img src="assets/showcase-ocean-lantern.png" alt="AI generated watercolor illustration preview" data-illustration-preview />
-                <span>AI Generated Illustration</span>
-              </button>
-              <p class="image-generation-status" data-image-status>Write a story, choose a style, then generate an image.</p>
-              <div class="generated-image-actions" aria-label="Generated image actions">
-                <button type="button" data-generated-image-save disabled>Save Image to Works</button>
-                <a data-generated-image-download href="assets/showcase-ocean-lantern.png" download="storieslens-generated-image.png">Download Image</a>
-              </div>
-            </section>
-
-            <section class="movie-preview" aria-label="Movie preview">
-              <div class="section-mini-title"><span>3</span> Movie Preview (10-15s)</div>
-              <button type="button" data-write-action="play-movie">
-                <img src="assets/showcase-dragon-movie.png" alt="AI movie preview" />
-                <span class="play-badge">▶</span>
-                <small>0:12</small>
-              </button>
-            </section>
-
-            <section class="media-strip" aria-label="Recent media">
-              <div class="section-mini-title"><span>4</span> Recent Media</div>
-              <div class="media-thumbs">
-                <button type="button" data-write-action="media-select"><img src="assets/showcase-ocean-lantern.png" alt="" /></button>
-                <button type="button" data-write-action="media-select"><img src="assets/showcase-block-castle.png" alt="" /></button>
-                <button type="button" data-write-action="media-select"><img src="assets/showcase-dragon-movie.png" alt="" /></button>
-                <button type="button" data-write-action="media-select"><img src="assets/showcase-robot-friend.png" alt="" /></button>
-              </div>
-            </section>
-          </section>
-
-          <section class="write-action-toolbar" aria-label="Draft quick actions">
-            <button type="button" data-write-action="start-group-writing">
-              <span class="action-icon group-action"></span>
-              <strong>Start Group Co-Writing</strong>
-              <small>Start group writing</small>
-            </button>
-            <button type="button" data-write-action="switch-style">
-              <span class="action-icon palette-action"></span>
-              <strong>Switch Art Style</strong>
-              <small>Change art style</small>
-            </button>
-            <button type="button" data-write-action="save-draft">
-              <span class="action-icon save-action"></span>
-              <strong>Save Draft</strong>
-              <small>Save current draft</small>
-            </button>
-            <button type="button" data-write-action="final-save">
-              <span class="action-icon poster-action"></span>
-              <strong>Final Save + Poster</strong>
-              <small>Save work + export poster</small>
-            </button>
-            <button type="button" data-write-action="clear-text">
-              <span class="action-icon clear-action"></span>
-              <strong>Clear Text</strong>
-              <small>Clear story draft</small>
-            </button>
-          </section>
-        </section>
-
-        
-      </section>
-
-      <section class="ccss-diagnostic-panel" aria-label="CCSS Skill Check">
-        <div class="write-panel-title">
-          <span>CCSS Skill Check</span>
-          <small>Automatically maps the draft to five grade-level writing skills.</small>
-        </div>
-
-        <div class="diagnostic-summary">
-          <strong data-write-grade-summary>Grade 3 · Narrative Writing</strong>
-          <p>Students create first. Then Open Claw reads the draft and marks each skill as Strong, Needs Work, or Missing.</p>
-        </div>
-
-        <div class="ccss-diagnostic-grid" data-ccss-diagnostic-grid>
-          <article class="ccss-diagnostic-card strong">
-            <span>Narrative Sequence</span>
-            <strong>Strong</strong>
-            <p>Events move from beginning to ending.</p>
-          </article>
-          <article class="ccss-diagnostic-card needs-work">
-            <span>Character &amp; Setting</span>
-            <strong>Needs Work</strong>
-            <p>Add one vivid place detail.</p>
-          </article>
-          <article class="ccss-diagnostic-card missing">
-            <span>Dialogue</span>
-            <strong>Missing</strong>
-            <p>Add one line a character says.</p>
-          </article>
-          <article class="ccss-diagnostic-card needs-work">
-            <span>Descriptive Details</span>
-            <strong>Needs Work</strong>
-            <p>Add sight, sound, or feeling words.</p>
-          </article>
-          <article class="ccss-diagnostic-card strong">
-            <span>Opinion + Reason</span>
-            <strong>Strong</strong>
-            <p>The ending explains what the story teaches.</p>
-          </article>
-        </div>
-
-        <section class="open-claw-feedback" data-open-claw-feedback aria-label="Open Claw writing feedback">
-          <div>
-            <span>Glow</span>
-            <p data-feedback-glow>Your story has a clear beginning and friendly characters.</p>
-          </div>
-          <div>
-            <span>Grow</span>
-            <p data-feedback-grow>Add one line of dialogue so readers can hear the characters.</p>
-          </div>
-          <div>
-            <span>Next Step</span>
-            <p data-feedback-next>Try: "Max barked, 'Let's keep going!'"</p>
-          </div>
-          <div class="feedback-actions">
-            <button type="button" data-write-action="check-story">Check My Story</button>
-            <button type="button" data-write-action="apply-suggestion">Apply Suggestion</button>
-          </div>
-        </section>
-
-        <article class="api-contract-card">
-          <strong>AI Feedback API Contract</strong>
-          <p>Frontend sends studentDraft, grade, selected CCSS skills, and teacherTask to the backend. The backend calls the model and returns skillScores, sentenceComments, Glow, Grow, and Next Step.</p>
-          <code>{ "studentDraft": "...", "teacherTask": "...", "skillScores": [], "sentenceComments": [] }</code>
+        <article class="writing-choice-card" data-choice="teacher">
+          <span aria-hidden="true">✓</span>
+          <h2>Teacher Assignment</h2>
+          <p>Continue a chapter or scene assigned by your teacher.</p>
+          <button type="button" data-open-writing-mode="teacher">Open Teacher Task</button>
         </article>
       </section>
 
-      <section class="group-writing-panel" aria-label="Group co-writing experiment">
-        <div class="write-panel-title">
-          <span>Group Co-Writing Lab</span>
-          <small>One shared story, four student roles, one consistent visual world.</small>
-        </div>
-        <div class="group-writing-grid">
-          <article>
-            <strong>Create a temporary co-writing room</strong>
-            <p>Students can join a shared draft from class, home, or a temporary room code.</p>
-          </article>
-          <article>
-            <strong>Assign CCSS roles</strong>
-            <p>Student A writes Narrative Sequence, B shapes Character &amp; Setting, C adds Dialogue, and D polishes Details &amp; Opinion.</p>
-          </article>
-          <article>
-            <strong>Lock character consistency</strong>
-            <p>Louis, Max, and the selected art style stay consistent across illustration, movie, poster, and class anthology.</p>
-          </article>
-          <article>
-            <strong>Student contribution colors</strong>
-            <p>Each student writes in a dedicated color, with contribution progress available to the teacher.</p>
-          </article>
-        </div>
-      </section>
+      <section class="student-writing-workspace" data-writing-workspace="free" aria-label="Free Creation writing workspace">
+        <section class="student-writing-panel">
+          <header>
+            <div>
+              <h2>Writing Task</h2>
+              <p>Build a story from your own idea, then turn it into a visual draft.</p>
+            </div>
+          </header>
 
-      <section class="video-editor-panel" aria-label="Simple video editor">
-        <div class="write-panel-title">
-          <span>Simple Video Studio · 简易视频剪辑台</span>
-          <small>Trim scenes, split clips, add captions, then export a classroom-ready short video.</small>
-        </div>
+          <div class="student-writing-form">
+            <div class="student-writing-row">
+              <label>
+                Grade Level
+                <select data-write-grade-selector data-writing-field="free-grade">
+                  <option value="K">K</option>
+                  <option value="1">Grade 1</option>
+                  <option value="2">Grade 2</option>
+                  <option value="3" selected>Grade 3</option>
+                  <option value="4">Grade 4</option>
+                  <option value="5">Grade 5</option>
+                  <option value="6">Grade 6</option>
+                  <option value="7">Grade 7</option>
+                  <option value="8">Grade 8</option>
+                  <option value="9">Grade 9</option>
+                  <option value="10">Grade 10</option>
+                  <option value="11">Grade 11</option>
+                  <option value="12">Grade 12</option>
+                </select>
+              </label>
 
-        <div class="video-editor-layout">
-          <button class="video-preview-screen" type="button" data-video-action="play" aria-label="Play video preview">
-            <img src="assets/showcase-dragon-movie.png" alt="Video preview frame" />
-            <span class="video-play-indicator">鈻?/span>
-            <small data-video-status>Ready · 12s</small>
-          </button>
+              <label>
+                Skill Focus
+                <input data-writing-field="free-skill" value="Narrative writing, character, setting" />
+              </label>
+            </div>
 
-          <div class="video-edit-controls" aria-label="Video edit controls">
-            <button type="button" data-video-action="play">Play / Pause</button>
-            <button type="button" data-video-action="trim">Trim Clip</button>
-            <button type="button" data-video-action="split">Split Scene</button>
-            <button type="button" data-video-action="caption">Add Caption</button>
-            <button type="button" data-video-action="export">Export Video</button>
-          </div>
+            <label>
+              Story Idea
+              <input data-writing-field="free-idea" value="A child finds a glowing key near a moonlit bridge." />
+            </label>
 
-          <div class="video-timeline" aria-label="Video timeline">
-            <button class="timeline-clip active" type="button" data-video-action="select-clip">
-              <span>Scene 1</span>
-              <img src="assets/showcase-ocean-lantern.png" alt="" />
-            </button>
-            <button class="timeline-clip" type="button" data-video-action="select-clip">
-              <span>Scene 2</span>
-              <img src="assets/showcase-block-castle.png" alt="" />
-            </button>
-            <button class="timeline-clip" type="button" data-video-action="select-clip">
-              <span>Scene 3</span>
-              <img src="assets/showcase-dragon-movie.png" alt="" />
-            </button>
-            <div class="timeline-audio" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
+            <label>
+              Writing Editor
+              <textarea id="story-draft" data-story-draft data-writing-field="free-draft">Louis found a glowing key beside the moonlit bridge. He felt nervous, but he stepped forward slowly. The key began to shine, and a hidden door opened in the stones.</textarea>
+            </label>
+
+            <div class="student-action-row">
+              <button class="primary" type="button" data-student-action="feedback" data-mode-target="free">Get AI Feedback</button>
+              <button class="credit-action" type="button" data-student-action="image" data-mode-target="free"><span>Generate Image</span><small>1 image credit</small></button>
+              <button class="credit-action" type="button" data-student-action="video" data-mode-target="free"><span>Generate Scene Video</span><small>1 video credit</small></button>
+              <button type="button" data-student-action="save" data-mode-target="free">Save Work</button>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section class="write-progress-panel" aria-label="Writing progress">
-        <div>
-          <span>Your Progress</span>
-          <strong data-write-progress>80%</strong>
-        </div>
-        <div class="write-progress-track" aria-hidden="true"><span></span></div>
-        <p>From Reading to AI Movies. In One Class.</p>
-        <small>All data stored locally · No cloud auto-upload</small>
-      </section>
-
-      <button class="write-lobster-tutor" type="button" data-write-action="lobster-tutor" aria-label="Open Lobster AI Tutor">
-        <img src="assets/lobster-ai-tutor.png" alt="Lobster AI Tutor" />
-        <span>Open Claw<br />AI Tutor</span>
-      </button>
-
-      <div id="write-modal" class="write-modal" hidden role="dialog" aria-modal="true" aria-labelledby="write-modal-title">
-        <div class="write-modal-backdrop" data-write-action="close-modal"></div>
-        <section class="write-modal-card" role="document">
-          <button class="write-modal-close" type="button" data-write-action="close-modal" aria-label="Close">脳</button>
-          <span data-write-modal-chip>Visual Write</span>
-          <h2 id="write-modal-title" data-write-modal-title>Visual Write</h2>
-          <p data-write-modal-body>Select a skill, art style, AI action, or video editing control to preview how the creation workflow responds.</p>
         </section>
-      </div>
 
-      <div id="teacher-prompt-modal" class="teacher-prompt-modal write-modal" hidden role="dialog" aria-modal="true" aria-labelledby="teacher-prompt-title">
-        <div class="write-modal-backdrop" data-write-action="close-teacher-prompt"></div>
-        <section class="write-modal-card teacher-prompt-card" role="document">
-          <button class="write-modal-close" type="button" data-write-action="close-teacher-prompt" aria-label="Close">脳</button>
-          <span>Teacher Mode</span>
-          <h2 id="teacher-prompt-title">Upload Writing Prompt for Class</h2>
-          <p>Upload a model text, bind a grade-level CCSS writing skill, then send the same task to the whole class.</p>
-          <div class="teacher-prompt-options">
-            <button type="button" data-write-action="teacher-prompt-demo">Excel Bulk Import</button>
-            <button type="button" data-write-action="teacher-prompt-demo">DingTalk / WeCom Class Import</button>
-            <button type="button" data-write-action="teacher-prompt-demo">Seewo Classroom Sync</button>
-            <button type="button" data-write-action="teacher-prompt-demo">WPS Export</button>
+        <aside class="student-output-stack" aria-label="Free Creation feedback and preview">
+          <section class="student-feedback-card">
+            <h3>AI Feedback</h3>
+            <div class="student-feedback-grid">
+              <article>
+                <strong>Glow</strong>
+                <p data-feedback-glow data-output="free-glow">Your story has a clear character and a magical object.</p>
+              </article>
+              <article>
+                <strong>Grow</strong>
+                <p data-feedback-grow data-output="free-grow">Add one sentence that shows how the character feels.</p>
+              </article>
+              <article>
+                <strong>Next Step</strong>
+                <p data-feedback-next data-output="free-next">Revise one sentence so the reader can picture the setting.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="student-preview-card">
+            <h3>Visual Preview</h3>
+            <div class="student-preview-frame" data-output="free-preview">
+              <div class="student-preview-empty">Write a few sentences, then generate an image or short video preview.</div>
+            </div>
+          </section>
+
+          <section class="student-next-card">
+            <h3>Next Step</h3>
+            <ol>
+              <li>Write or revise your story.</li>
+              <li>Get AI feedback.</li>
+              <li>Generate a picture or short video.</li>
+              <li>Save your work.</li>
+            </ol>
+          </section>
+        </aside>
+      </section>
+
+      <section class="student-writing-workspace" data-writing-workspace="teacher" aria-label="Teacher Assignment writing workspace" hidden>
+        <section class="student-writing-panel">
+          <header>
+            <div>
+              <h2>Writing Task</h2>
+              <p>Use the teacher task details below, then submit your finished draft.</p>
+            </div>
+          </header>
+
+          <div class="student-writing-form">
+            <label>
+              Task Code
+              <input data-writing-field="teacher-code" value="MAP-3A" />
+            </label>
+
+            <label>
+              Assignment Title
+              <input data-writing-field="teacher-title" value="Scene 3: The Hidden Door" />
+            </label>
+
+            <label>
+              Teacher Instructions
+              <textarea data-writing-field="teacher-instructions" rows="4">You are writing Scene 3 for your class movie. Write a 150-word scene where the class follows the map and finds a hidden door under an old tree.</textarea>
+            </label>
+
+            <div class="student-writing-row">
+              <label>
+                Grade Level
+                <select data-writing-field="teacher-grade">
+                  <option>Grade 3</option>
+                  <option>Grade 4</option>
+                  <option>Grade 5</option>
+                  <option>Grade 6</option>
+                </select>
+              </label>
+
+              <label>
+                Skill Focus
+                <input data-writing-field="teacher-skill" value="RL.4.3 / W.4.3 · setting, sequence, character goal, descriptive details" />
+              </label>
+            </div>
+
+            <label>
+              Writing Editor
+              <textarea data-writing-field="teacher-draft">Mia held the map carefully as the class walked toward the oldest tree in the garden. A small golden mark glowed on the paper. Under the roots, the students saw the shape of a hidden wooden door.</textarea>
+            </label>
+
+            <div class="student-action-row">
+              <button class="primary" type="button" data-student-action="feedback" data-mode-target="teacher">Get AI Feedback</button>
+              <button class="credit-action" type="button" data-student-action="image" data-mode-target="teacher"><span>Generate Image</span><small>1 image credit</small></button>
+              <button class="credit-action" type="button" data-student-action="video" data-mode-target="teacher"><span>Generate Scene Video</span><small>1 video credit</small></button>
+              <button type="button" data-student-action="submit" data-mode-target="teacher">Submit to Teacher</button>
+            </div>
           </div>
         </section>
-      </div>
 
-      <div class="write-toast" hidden role="status" aria-live="polite"></div>
+        <aside class="student-output-stack" aria-label="Teacher Assignment feedback and preview">
+          <section class="student-next-card">
+            <h3>My Role in the Class Project</h3>
+            <ol>
+              <li>Project: The Mystery of the Lost Map</li>
+              <li>Part: Scene 3 · The Hidden Door</li>
+              <li>Writing goal: Write one clear scene with setting, sequence, and descriptive details.</li>
+              <li>Submit this scene to your teacher for the class movie.</li>
+            </ol>
+          </section>
+
+          <section class="student-feedback-card">
+            <h3>AI Feedback</h3>
+            <div class="student-feedback-grid">
+              <article>
+                <strong>Glow</strong>
+                <p data-output="teacher-glow">Your draft follows the teacher task and starts with a clear discovery.</p>
+              </article>
+              <article>
+                <strong>Grow</strong>
+                <p data-output="teacher-grow">Add one middle event before the ending so the adventure feels complete.</p>
+              </article>
+              <article>
+                <strong>Next Step</strong>
+                <p data-output="teacher-next">Write what the character sees on the map.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="student-preview-card">
+            <h3>Visual Preview</h3>
+            <div class="student-preview-frame" data-output="teacher-preview">
+              <div class="student-preview-empty">Generate a visual after your teacher-task draft is ready.</div>
+            </div>
+          </section>
+
+          <section class="student-next-card">
+            <h3>Next Step</h3>
+            <ol>
+              <li>Read the teacher instructions.</li>
+              <li>Finish your draft.</li>
+              <li>Get AI feedback.</li>
+              <li>Submit to your teacher.</li>
+            </ol>
+          </section>
+        </aside>
+      </section>
+
+      <div class="student-toast" data-student-toast hidden role="status" aria-live="polite"></div>
     </main>
 
     <script src="script.js"></script>
+    <script>
+      (() => {
+        const cards = [...document.querySelectorAll("[data-choice]")];
+        const workspaces = [...document.querySelectorAll("[data-writing-workspace]")];
+        const toast = document.querySelector("[data-student-toast]");
+        const previewImages = {
+          free: "assets/storybook-portal-book.png",
+          teacher: "assets/showcase-block-castle.png"
+        };
+
+        function showToast(message) {
+          if (!toast) return;
+          toast.textContent = message;
+          toast.hidden = false;
+          window.clearTimeout(showToast.timer);
+          showToast.timer = window.setTimeout(() => {
+            toast.hidden = true;
+          }, 2600);
+        }
+
+        function setMode(mode) {
+          cards.forEach((card) => {
+            card.classList.toggle("is-active", card.dataset.choice === mode);
+          });
+          workspaces.forEach((workspace) => {
+            workspace.hidden = workspace.dataset.writingWorkspace !== mode;
+          });
+        }
+
+        function getDraft(mode) {
+          const selector = mode === "teacher" ? '[data-writing-field="teacher-draft"]' : "[data-story-draft]";
+          return document.querySelector(selector)?.value.trim() || "";
+        }
+
+        function setFeedback(mode) {
+          const draft = getDraft(mode);
+          const hasSetting = /\b(bridge|map|forest|library|castle|sea|school|island|door|woods)\b/i.test(draft);
+          const hasFeeling = /\b(brave|nervous|happy|careful|curious|afraid|excited|slowly|quietly)\b/i.test(draft);
+          const hasMiddle = draft.split(/[.!?]+/).filter((part) => part.trim().length > 8).length >= 3;
+
+          document.querySelector(`[data-output="${mode}-glow"]`).textContent = hasMiddle
+            ? "Your story has a beginning, middle, and ending that a reader can follow."
+            : "You have a clear story idea and a character who is ready for an adventure.";
+          document.querySelector(`[data-output="${mode}-grow"]`).textContent = hasSetting
+            ? "Your setting is visible. Add one action that moves the story forward."
+            : "Add one place detail so the reader can picture where the story happens.";
+          document.querySelector(`[data-output="${mode}-next"]`).textContent = hasFeeling
+            ? "Now add one sentence of dialogue between two characters."
+            : "Add one feeling or manner word, such as bravely, carefully, nervous, or excited.";
+
+          showToast("AI feedback is ready.");
+        }
+
+        function generatePreview(mode, mediaType = "image") {
+          const preview = document.querySelector(`[data-output="${mode}-preview"]`);
+          if (!preview) return;
+          preview.innerHTML = `<img src="${previewImages[mode]}" alt="Generated story visual preview" />`;
+          showToast(mediaType === "video" ? "Scene video preview prepared. 1 video credit used." : "Image preview generated. 1 image credit used.");
+        }
+
+        function saveWork(mode) {
+          const payload = {
+            mode,
+            savedAt: new Date().toISOString(),
+            draft: getDraft(mode)
+          };
+          localStorage.setItem("storieslens_student_visual_write", JSON.stringify(payload));
+          showToast("Work saved on this device.");
+        }
+
+        document.querySelectorAll("[data-open-writing-mode]").forEach((button) => {
+          button.addEventListener("click", () => setMode(button.dataset.openWritingMode));
+        });
+
+        document.querySelectorAll("[data-student-action]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const mode = button.dataset.modeTarget || "free";
+            const action = button.dataset.studentAction;
+            if (action === "feedback") setFeedback(mode);
+            if (action === "image") generatePreview(mode, "image");
+            if (action === "video") generatePreview(mode, "video");
+            if (action === "save") saveWork(mode);
+            if (action === "submit") {
+              saveWork(mode);
+              showToast("Teacher task is ready for review.");
+            }
+          });
+        });
+
+        setMode("free");
+      })();
+    </script>
   </body>
 </html>
