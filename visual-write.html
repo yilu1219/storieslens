@@ -63,7 +63,7 @@
       }
 
       .writing-choice-grid {
-        display: grid;
+        display: none;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
         margin: 18px 0 22px;
@@ -139,6 +139,88 @@
         margin-bottom: 28px;
       }
 
+      .student-writing-workspace.assignment-workspace {
+        grid-template-columns: minmax(260px, 0.72fr) minmax(360px, 1fr) minmax(320px, 0.82fr);
+      }
+
+      .assignment-workspace > .student-writing-panel {
+        grid-column: 1 / span 2;
+      }
+
+      .assignment-workspace .student-writing-form {
+        grid-template-columns: minmax(240px, 0.76fr) minmax(320px, 1fr);
+        align-items: start;
+      }
+
+      .assignment-workspace .task-info-list,
+      .assignment-workspace .student-writing-form > label,
+      .assignment-workspace .student-writing-form > .student-writing-row {
+        grid-column: 1;
+      }
+
+      .assignment-workspace .student-writing-form > label:nth-of-type(3) {
+        grid-column: 2;
+        grid-row: 1 / span 4;
+      }
+
+      .assignment-workspace .student-writing-form > label:nth-of-type(3) textarea {
+        min-height: 430px;
+      }
+
+      .assignment-workspace .student-action-row {
+        grid-column: 2;
+      }
+
+      .assignment-code-panel {
+        margin: 18px 0 22px;
+        padding: 24px;
+        border: 1px solid rgba(143, 171, 255, 0.26);
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 12% 0%, rgba(96, 142, 255, 0.22), transparent 36%),
+          linear-gradient(180deg, rgba(16, 28, 65, 0.9), rgba(8, 13, 31, 0.84));
+      }
+
+      .assignment-code-panel h2 {
+        margin: 0 0 8px;
+        color: #fff;
+        font-size: 30px;
+      }
+
+      .assignment-code-panel p {
+        margin: 0 0 18px;
+        color: rgba(246, 248, 255, 0.74);
+      }
+
+      .assignment-code-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .assignment-code-form input {
+        min-width: min(100%, 320px);
+        min-height: 48px;
+        padding: 0 14px;
+        border: 1px solid rgba(143, 171, 255, 0.26);
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(4, 9, 24, 0.74);
+        font: inherit;
+      }
+
+      .assignment-code-form button {
+        min-height: 48px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 12px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+        font: inherit;
+        font-weight: 850;
+        cursor: pointer;
+      }
+
       .student-writing-panel {
         border: 1px solid rgba(143, 171, 255, 0.24);
         border-radius: 18px;
@@ -206,6 +288,45 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
+      }
+
+      .skill-focus-card,
+      .task-info-list {
+        border: 1px solid rgba(143, 171, 255, 0.2);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .skill-focus-card {
+        padding: 14px;
+      }
+
+      .skill-focus-card span,
+      .task-info-list span {
+        display: block;
+        margin-bottom: 6px;
+        color: #ffd991;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .skill-focus-card strong {
+        color: #fff;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+
+      .task-info-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 14px;
+      }
+
+      .task-info-list p {
+        margin: 0;
+        color: rgba(246, 248, 255, 0.78);
+        line-height: 1.45;
       }
 
       .student-action-row {
@@ -337,6 +458,7 @@
       }
 
       .student-writing-workspace[hidden],
+      .assignment-code-panel[hidden],
       .student-toast[hidden] {
         display: none;
       }
@@ -370,9 +492,7 @@
         <nav class="main-nav" aria-label="Primary navigation">
           <a href="index.html">Home</a>
           <a href="create-reading-project.html">Create</a>
-          <a href="index.html#class-movie">Class Movie</a>
           <a class="nav-active" href="visual-write.html">Visual Write</a>
-          <a href="index.html#works">Works</a>
           <a href="teacher-dashboard.html">Teacher</a>
           <a href="index.html#pricing">Pricing</a>
         </nav>
@@ -386,9 +506,9 @@
 
       <section class="student-write-hero write-hero" aria-label="Visual Write overview">
         <div>
-          <span class="student-write-kicker">Student Writing</span>
-          <h1>Visual Write</h1>
-          <p>Choose how you want to start writing today.</p>
+          <span class="student-write-kicker" data-mode-kicker>Student Writing</span>
+          <h1 data-mode-title>Start your own visual story.</h1>
+          <p data-mode-subtitle>Write your own story, get feedback, and turn it into images or video.</p>
         </div>
         <img src="assets/hero-student.png" alt="" />
       </section>
@@ -413,8 +533,8 @@
         <section class="student-writing-panel">
           <header>
             <div>
-              <h2>Writing Task</h2>
-              <p>Build a story from your own idea, then turn it into a visual draft.</p>
+              <h2>Free Creation</h2>
+              <p>Write your own story, get feedback, and turn it into images or video.</p>
             </div>
           </header>
 
@@ -439,27 +559,27 @@
                 </select>
               </label>
 
-              <label>
-                Skill Focus
-                <input data-writing-field="free-skill" value="Narrative writing, character, setting" />
-              </label>
+              <div class="skill-focus-card" aria-label="Skill focus">
+                <span>Skill Focus</span>
+                <strong data-free-skill-focus>character, setting, sequence, descriptive details</strong>
+              </div>
             </div>
 
             <label>
               Story Idea
-              <input data-writing-field="free-idea" value="A child finds a glowing key near a moonlit bridge." />
+              <input data-writing-field="free-idea" placeholder="A story about a lost robot in the school library..." />
             </label>
 
             <label>
               Writing Editor
-              <textarea id="story-draft" data-story-draft data-writing-field="free-draft">Louis found a glowing key beside the moonlit bridge. He felt nervous, but he stepped forward slowly. The key began to shine, and a hidden door opened in the stones.</textarea>
+              <textarea id="story-draft" data-story-draft data-writing-field="free-draft" placeholder="Start writing your visual story here...">Louis found a glowing key beside the moonlit bridge. He felt nervous, but he stepped forward slowly. The key began to shine, and a hidden door opened in the stones.</textarea>
             </label>
 
             <div class="student-action-row">
               <button class="primary" type="button" data-student-action="feedback" data-mode-target="free">Get AI Feedback</button>
               <button class="credit-action" type="button" data-student-action="image" data-mode-target="free"><span>Generate Image</span><small>1 image credit</small></button>
               <button class="credit-action" type="button" data-student-action="video" data-mode-target="free"><span>Generate Scene Video</span><small>1 video credit</small></button>
-              <button type="button" data-student-action="save" data-mode-target="free">Save Work</button>
+              <button type="button" data-student-action="save" data-mode-target="free">Save Story</button>
             </div>
           </div>
         </section>
@@ -470,15 +590,15 @@
             <div class="student-feedback-grid">
               <article>
                 <strong>Glow</strong>
-                <p data-feedback-glow data-output="free-glow">Your story has a clear character and a magical object.</p>
+                <p data-feedback-glow data-output="free-glow">What you did well.</p>
               </article>
               <article>
                 <strong>Grow</strong>
-                <p data-feedback-grow data-output="free-grow">Add one sentence that shows how the character feels.</p>
+                <p data-feedback-grow data-output="free-grow">What you can improve.</p>
               </article>
               <article>
                 <strong>Next Step</strong>
-                <p data-feedback-next data-output="free-next">Revise one sentence so the reader can picture the setting.</p>
+                <p data-feedback-next data-output="free-next">One thing to revise now.</p>
               </article>
             </div>
           </section>
@@ -486,7 +606,7 @@
           <section class="student-preview-card">
             <h3>Visual Preview</h3>
             <div class="student-preview-frame" data-output="free-preview">
-              <div class="student-preview-empty">Write a few sentences, then generate an image or short video preview.</div>
+              <div class="student-preview-empty">Generated image / video preview will appear here.</div>
             </div>
           </section>
 
@@ -496,26 +616,65 @@
               <li>Write or revise your story.</li>
               <li>Get AI feedback.</li>
               <li>Generate a picture or short video.</li>
-              <li>Save your work.</li>
+              <li>Save your story.</li>
             </ol>
           </section>
         </aside>
       </section>
 
-      <section class="student-writing-workspace" data-writing-workspace="teacher" aria-label="Teacher Assignment writing workspace" hidden>
+      <section class="assignment-code-panel" data-assignment-gate hidden aria-label="Enter class code">
+        <h2>Enter Class Code</h2>
+        <p>Use the class code from your teacher to open your scene or chapter task.</p>
+        <div class="assignment-code-form">
+          <input data-assignment-code-input placeholder="Example: MAP-4832" />
+          <button type="button" data-open-assignment-task>Open My Task</button>
+        </div>
+      </section>
+
+      <section class="student-writing-workspace assignment-workspace" data-writing-workspace="assignment" aria-label="Teacher Assignment writing workspace" hidden>
         <section class="student-writing-panel">
           <header>
             <div>
-              <h2>Writing Task</h2>
-              <p>Use the teacher task details below, then submit your finished draft.</p>
+              <h2>My Class Task</h2>
+              <p data-assignment-status>You are writing Scene 3 for your class movie.</p>
             </div>
           </header>
 
           <div class="student-writing-form">
-            <label>
-              Task Code
-              <input data-writing-field="teacher-code" value="MAP-3A" />
-            </label>
+            <div class="task-info-list">
+              <div>
+                <span>My Role in the Class Project</span>
+                <p>You are writing Scene 3 for your class movie.</p>
+              </div>
+              <div>
+                <span>Scene / Chapter title</span>
+                <p>The Hidden Door</p>
+              </div>
+              <div>
+                <span>Scene / Chapter goal</span>
+                <p>Show the moment when the class follows the map and finds a hidden door.</p>
+              </div>
+              <div>
+                <span>Source text reminder</span>
+                <p>The class read "The Mystery of the Lost Map."</p>
+              </div>
+              <div>
+                <span>Skill Focus</span>
+                <p>character, setting, sequence, details</p>
+              </div>
+              <div>
+                <span>Model Sentence</span>
+                <p>"The library was quiet, but something unusual caught Mia's eye."</p>
+              </div>
+              <div>
+                <span>Try this pattern</span>
+                <p>"The ______ was quiet, but something unusual caught ______'s eye."</p>
+              </div>
+              <div>
+                <span>Your Task</span>
+                <p>Write your scene using the pattern.</p>
+              </div>
+            </div>
 
             <label>
               Assignment Title
@@ -540,7 +699,7 @@
 
               <label>
                 Skill Focus
-                <input data-writing-field="teacher-skill" value="RL.4.3 / W.4.3 · setting, sequence, character goal, descriptive details" />
+                <input data-writing-field="teacher-skill" value="character, setting, sequence, descriptive details" />
               </label>
             </div>
 
@@ -550,10 +709,10 @@
             </label>
 
             <div class="student-action-row">
-              <button class="primary" type="button" data-student-action="feedback" data-mode-target="teacher">Get AI Feedback</button>
-              <button class="credit-action" type="button" data-student-action="image" data-mode-target="teacher"><span>Generate Image</span><small>1 image credit</small></button>
-              <button class="credit-action" type="button" data-student-action="video" data-mode-target="teacher"><span>Generate Scene Video</span><small>1 video credit</small></button>
-              <button type="button" data-student-action="submit" data-mode-target="teacher">Submit to Teacher</button>
+              <button class="primary" type="button" data-student-action="feedback" data-mode-target="assignment">Get AI Feedback</button>
+              <button class="credit-action" type="button" data-student-action="image" data-mode-target="assignment"><span>Generate Image</span><small>1 image credit</small></button>
+              <button class="credit-action" type="button" data-student-action="video" data-mode-target="assignment"><span>Generate Scene Video</span><small>1 video credit</small></button>
+              <button type="button" data-student-action="submit" data-mode-target="assignment">Submit to Teacher</button>
             </div>
           </div>
         </section>
@@ -574,22 +733,22 @@
             <div class="student-feedback-grid">
               <article>
                 <strong>Glow</strong>
-                <p data-output="teacher-glow">Your draft follows the teacher task and starts with a clear discovery.</p>
+                <p data-output="assignment-glow">Your draft follows the teacher task and starts with a clear discovery.</p>
               </article>
               <article>
                 <strong>Grow</strong>
-                <p data-output="teacher-grow">Add one middle event before the ending so the adventure feels complete.</p>
+                <p data-output="assignment-grow">Add one middle event before the ending so the adventure feels complete.</p>
               </article>
               <article>
                 <strong>Next Step</strong>
-                <p data-output="teacher-next">Write what the character sees on the map.</p>
+                <p data-output="assignment-next">Write what the character sees on the map.</p>
               </article>
             </div>
           </section>
 
           <section class="student-preview-card">
             <h3>Visual Preview</h3>
-            <div class="student-preview-frame" data-output="teacher-preview">
+            <div class="student-preview-frame" data-output="assignment-preview">
               <div class="student-preview-empty">Generate a visual after your teacher-task draft is ready.</div>
             </div>
           </section>
@@ -612,13 +771,48 @@
     <script src="script.js"></script>
     <script>
       (() => {
-        const cards = [...document.querySelectorAll("[data-choice]")];
         const workspaces = [...document.querySelectorAll("[data-writing-workspace]")];
+        const assignmentGate = document.querySelector("[data-assignment-gate]");
+        const assignmentOpenButton = document.querySelector("[data-open-assignment-task]");
+        const modeTitle = document.querySelector("[data-mode-title]");
+        const modeSubtitle = document.querySelector("[data-mode-subtitle]");
+        const modeKicker = document.querySelector("[data-mode-kicker]");
+        const freeGradeSelect = document.querySelector('[data-writing-field="free-grade"]');
+        const freeSkillFocus = document.querySelector("[data-free-skill-focus]");
         const toast = document.querySelector("[data-student-toast]");
         const previewImages = {
           free: "assets/storybook-portal-book.png",
-          teacher: "assets/showcase-block-castle.png"
+          assignment: "assets/showcase-block-castle.png"
         };
+        const modeCopy = {
+          free: {
+            kicker: "Free Creation",
+            title: "Start your own visual story.",
+            subtitle: "Write your own story, get feedback, and turn it into images or video."
+          },
+          assignment: {
+            kicker: "Class Project",
+            title: "Join a class project.",
+            subtitle: "Enter your class code, open your teacher task, and write your scene or chapter."
+          }
+        };
+        const gradeSkillFocus = {
+          K: "character, setting, key details",
+          1: "character, setting, beginning-middle-end",
+          2: "sequence, thoughts, feelings, closure",
+          3: "character, setting, sequence, dialogue",
+          4: "character, setting, sequence, descriptive details",
+          5: "theme, challenge, sequence, descriptive details",
+          6: "plot, pacing, dialogue, precise words",
+          7: "point of view, setting, dialogue, reflection",
+          8: "plot, dialogue, pacing, reflection",
+          9: "problem, point of view, tone, details",
+          10: "scene craft, suspense, reflection, tone",
+          11: "multiple perspectives, pacing, tone, reflection",
+          12: "complex structure, tone, outcome, reflection"
+        };
+        let activeMode = "free";
+        let assignmentOpened = false;
 
         function showToast(message) {
           if (!toast) return;
@@ -630,17 +824,34 @@
           }, 2600);
         }
 
+        function normalizeMode(mode) {
+          return mode === "assignment" || mode === "teacher" ? "assignment" : "free";
+        }
+
         function setMode(mode) {
-          cards.forEach((card) => {
-            card.classList.toggle("is-active", card.dataset.choice === mode);
-          });
+          activeMode = normalizeMode(mode);
+          const copy = modeCopy[activeMode];
+          if (modeKicker) modeKicker.textContent = copy.kicker;
+          if (modeTitle) modeTitle.textContent = copy.title;
+          if (modeSubtitle) modeSubtitle.textContent = copy.subtitle;
           workspaces.forEach((workspace) => {
-            workspace.hidden = workspace.dataset.writingWorkspace !== mode;
+            const isActive = workspace.dataset.writingWorkspace === activeMode;
+            workspace.hidden = !isActive || (activeMode === "assignment" && !assignmentOpened);
           });
+          if (assignmentGate) {
+            assignmentGate.hidden = activeMode !== "assignment" || assignmentOpened;
+          }
+          updateFreeSkillFocus();
+        }
+
+        function updateFreeSkillFocus() {
+          if (!freeGradeSelect || !freeSkillFocus) return;
+          freeSkillFocus.textContent = gradeSkillFocus[freeGradeSelect.value] || gradeSkillFocus[3];
         }
 
         function getDraft(mode) {
-          const selector = mode === "teacher" ? '[data-writing-field="teacher-draft"]' : "[data-story-draft]";
+          const normalizedMode = normalizeMode(mode);
+          const selector = normalizedMode === "assignment" ? '[data-writing-field="teacher-draft"]' : "[data-story-draft]";
           return document.querySelector(selector)?.value.trim() || "";
         }
 
@@ -677,16 +888,24 @@
             draft: getDraft(mode)
           };
           localStorage.setItem("storieslens_student_visual_write", JSON.stringify(payload));
-          showToast("Work saved on this device.");
+          showToast(mode === "assignment" ? "Teacher task draft saved on this device." : "Story saved on this device.");
         }
 
         document.querySelectorAll("[data-open-writing-mode]").forEach((button) => {
           button.addEventListener("click", () => setMode(button.dataset.openWritingMode));
         });
 
+        freeGradeSelect?.addEventListener("change", updateFreeSkillFocus);
+
+        assignmentOpenButton?.addEventListener("click", () => {
+          assignmentOpened = true;
+          setMode("assignment");
+          showToast("Class task opened. You are writing Scene 3 for your class movie.");
+        });
+
         document.querySelectorAll("[data-student-action]").forEach((button) => {
           button.addEventListener("click", () => {
-            const mode = button.dataset.modeTarget || "free";
+            const mode = normalizeMode(button.dataset.modeTarget || activeMode);
             const action = button.dataset.studentAction;
             if (action === "feedback") setFeedback(mode);
             if (action === "image") generatePreview(mode, "image");
@@ -699,7 +918,8 @@
           });
         });
 
-        setMode("free");
+        const initialMode = normalizeMode(new URLSearchParams(window.location.search).get("mode"));
+        setMode(initialMode);
       })();
     </script>
   </body>

@@ -2,6 +2,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/homepage.test.js"
+    "test": "node tests/homepage.test.js",
+    "extract:ccss": "node scripts/extract-ccss.js"
   }
 }

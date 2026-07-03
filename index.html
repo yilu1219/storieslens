@@ -91,6 +91,65 @@
         background: rgba(50, 125, 102, 0.16);
       }
 
+      .entry-card-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+        gap: 18px;
+      }
+
+      .entry-card {
+        display: flex;
+        min-height: 330px;
+        flex-direction: column;
+        padding: 28px;
+        border: 1px solid rgba(151, 176, 255, 0.24);
+        border-radius: 20px;
+        background:
+          radial-gradient(circle at 10% 0%, rgba(99, 134, 255, 0.2), transparent 36%),
+          linear-gradient(180deg, rgba(16, 28, 65, 0.88), rgba(8, 13, 31, 0.8));
+      }
+
+      .entry-card.teacher-entry {
+        border-color: rgba(119, 161, 255, 0.58);
+        background:
+          radial-gradient(circle at 14% 0%, rgba(83, 131, 255, 0.36), transparent 38%),
+          linear-gradient(180deg, rgba(29, 58, 125, 0.96), rgba(9, 17, 40, 0.88));
+        box-shadow: 0 26px 70px rgba(53, 102, 255, 0.2);
+      }
+
+      .entry-card span {
+        color: #ffd991;
+        font-weight: 900;
+      }
+
+      .entry-card h2 {
+        margin: 10px 0 8px;
+        color: #fff;
+        font-size: clamp(30px, 3vw, 46px);
+      }
+
+      .entry-card p {
+        max-width: 680px;
+        margin: 0;
+        color: rgba(234, 239, 255, 0.78);
+        font-size: 18px;
+        line-height: 1.5;
+      }
+
+      .entry-card ul {
+        margin: 18px 0 24px;
+        padding-left: 19px;
+        color: rgba(234, 239, 255, 0.76);
+        line-height: 1.55;
+      }
+
+      .entry-card .entry-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: auto;
+      }
+
       .product-preview-board {
         position: relative;
         width: min(100%, 1180px);
@@ -110,6 +169,29 @@
         object-position: center;
         border-radius: 26px;
         border: 1px solid rgba(151, 176, 255, 0.22);
+      }
+
+      .hero-image-copy {
+        position: absolute;
+        left: 36px;
+        top: 42px;
+        z-index: 2;
+        max-width: min(46%, 520px);
+        padding: 20px 22px;
+        border: 1px solid rgba(33, 63, 112, 0.12);
+        border-radius: 18px;
+        color: rgba(13, 28, 54, 0.88);
+        background: rgba(255, 255, 255, 0.54);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 22px 60px rgba(84, 116, 166, 0.16);
+      }
+
+      .hero-image-copy p {
+        margin: 0;
+        font-size: clamp(18px, 1.75vw, 28px);
+        line-height: 1.34;
+        font-weight: 850;
+        letter-spacing: 0;
       }
 
       .hero-visual-caption {
@@ -278,6 +360,7 @@
 
       @media (max-width: 1060px) {
         .product-hero,
+        .entry-card-grid,
         .product-card-grid,
         .product-card-grid.three,
         .product-card-grid.two,
@@ -289,6 +372,14 @@
         .product-preview-board,
         .hero-classroom-image {
           min-height: 360px;
+        }
+
+        .hero-image-copy {
+          left: 18px;
+          right: 18px;
+          top: 18px;
+          max-width: none;
+          padding: 14px;
         }
 
         .product-section > header {
@@ -328,15 +419,13 @@
         <div>
           <span class="product-eyebrow">Classroom Co-Creation Studio</span>
           <h1>Turn reading into writing, and writing into visual stories.</h1>
-          <p>StoriesLens helps teachers upload any reading text, align it with CCSS skills, and turn student writing into whole-class storybooks and AI movies.</p>
-          <div class="product-actions">
-            <a class="primary" href="create-reading-project.html">Create from Reading Text</a>
-            <a href="visual-write.html">Start Visual Writing</a>
-          </div>
         </div>
 
         <div class="product-preview-board" aria-label="Visual story creation preview">
           <img class="hero-classroom-image" src="assets/hero-classroom-creation.png" alt="Student writing that becomes vocabulary, illustrated book, movie scene, and avatar animation" />
+          <div class="hero-image-copy">
+            <p>StoriesLens helps teachers upload any reading text, align it with CCSS skills, and turn student writing into whole-class storybooks and AI movies.</p>
+          </div>
           <div class="hero-visual-caption">
             <strong>From one reading text to a whole-class visual story.</strong>
             <p>Students write scenes, generate visuals, and publish a shared book or movie.</p>
@@ -350,37 +439,38 @@
         </div>
       </section>
 
-      <section class="product-section" aria-label="Teacher and student value">
-        <header>
-          <div>
-            <h2>Built for teachers and students.</h2>
-            <p>Teachers see a lesson-to-project workflow. Students feel like they are building a real story world.</p>
-          </div>
-        </header>
-        <div class="product-card-grid two">
-          <article class="product-card">
+      <section class="product-section" aria-label="Teacher and student entry points">
+        <div class="entry-card-grid">
+          <article class="entry-card teacher-entry">
             <span>For Teachers</span>
-            <h3>From lesson plan to class project in minutes.</h3>
+            <h2>For Teachers</h2>
+            <p>Create a CCSS-aligned class book or movie from any reading text.</p>
             <ul>
-              <li>Upload any reading text</li>
+              <li>Upload reading text</li>
               <li>Match CCSS skills</li>
-              <li>Generate imitation writing tasks</li>
-              <li>Assign chapters or scenes</li>
+              <li>Generate scene or chapter tasks</li>
               <li>Review student writing</li>
               <li>Publish a class book or movie</li>
             </ul>
+            <div class="entry-actions">
+              <a class="product-small-button primary" href="create-reading-project.html">Create from Reading Text</a>
+            </div>
           </article>
-          <article class="product-card">
+          <article class="entry-card student-entry">
             <span>For Students</span>
-            <h3>Writing feels like creating a real story world.</h3>
+            <h2>For Students</h2>
+            <p>Join your class project or start your own visual story.</p>
             <ul>
-              <li>Read the source text</li>
+              <li>Enter a class code</li>
               <li>Write your chapter or scene</li>
               <li>Get Glow / Grow / Next Step feedback</li>
-              <li>Generate images</li>
-              <li>Create video scenes</li>
-              <li>See your work in the class project</li>
+              <li>Generate images or videos</li>
+              <li>Submit to teacher or save your story</li>
             </ul>
+            <div class="entry-actions">
+              <a class="product-small-button primary" href="visual-write.html?mode=assignment">Enter Class Code</a>
+              <a class="product-small-button" href="visual-write.html?mode=free">Start Free Writing</a>
+            </div>
           </article>
         </div>
       </section>

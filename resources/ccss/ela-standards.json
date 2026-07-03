@@ -1,0 +1,212 @@
+[
+  {
+    "grade": "Grade 2",
+    "domain": "Reading Literature",
+    "code": "RL.2.1",
+    "standard": "Ask and answer such questions as who, what, where, when, why, and how to demonstrate understanding of key details in a text.",
+    "studentFriendlySkill": "Ask and answer questions about important story details.",
+    "teacherUse": "Use when students need to identify key details before writing from a story.",
+    "keywords": ["question", "answer", "who", "what", "where", "when", "why", "how", "details"]
+  },
+  {
+    "grade": "Grade 2",
+    "domain": "Reading Literature",
+    "code": "RL.2.3",
+    "standard": "Describe how characters in a story respond to major events and challenges.",
+    "studentFriendlySkill": "Describe how characters respond to important events.",
+    "teacherUse": "Use when the reading passage has a clear character response, challenge, or problem.",
+    "keywords": ["character", "respond", "event", "challenge", "problem", "story"]
+  },
+  {
+    "grade": "Grade 2",
+    "domain": "Writing",
+    "code": "W.2.3",
+    "standard": "Write narratives in which they recount a well-elaborated event or short sequence of events, include details, and provide a sense of closure.",
+    "studentFriendlySkill": "Write a story with events, details, and an ending.",
+    "teacherUse": "Use for short story writing, chapter writing, and narrative responses.",
+    "keywords": ["narrative", "story", "events", "details", "closure", "ending"]
+  },
+  {
+    "grade": "Grade 2",
+    "domain": "Language",
+    "code": "L.2.4",
+    "standard": "Determine or clarify the meaning of unknown and multiple-meaning words and phrases.",
+    "studentFriendlySkill": "Use clues to understand new words.",
+    "teacherUse": "Use when a passage includes vocabulary that supports visual word study.",
+    "keywords": ["vocabulary", "meaning", "unknown words", "phrases", "clues"]
+  },
+  {
+    "grade": "Grade 3",
+    "domain": "Reading Literature",
+    "code": "RL.3.1",
+    "standard": "Ask and answer questions to demonstrate understanding of a text, referring explicitly to the text as the basis for the answers.",
+    "studentFriendlySkill": "Answer questions using evidence from the text.",
+    "teacherUse": "Use when students need to support reading-to-writing ideas with text evidence.",
+    "keywords": ["question", "answer", "evidence", "text", "details"]
+  },
+  {
+    "grade": "Grade 3",
+    "domain": "Reading Literature",
+    "code": "RL.3.3",
+    "standard": "Describe characters in a story and explain how their actions contribute to the sequence of events.",
+    "studentFriendlySkill": "Describe characters and how their actions move the story forward.",
+    "teacherUse": "Use for passages with character action, plot movement, and scene writing.",
+    "keywords": ["character", "actions", "sequence", "events", "story"]
+  },
+  {
+    "grade": "Grade 3",
+    "domain": "Writing",
+    "code": "W.3.3",
+    "standard": "Write narratives to develop real or imagined experiences or events using effective technique, descriptive details, and clear event sequences.",
+    "studentFriendlySkill": "Write a story with clear events, details, and sequence.",
+    "teacherUse": "Use for story scenes, class movie scenes, or chapter writing.",
+    "keywords": ["narrative", "story", "events", "details", "sequence", "writing"]
+  },
+  {
+    "grade": "Grade 3",
+    "domain": "Speaking and Listening",
+    "code": "SL.3.4",
+    "standard": "Report on a topic or text, tell a story, or recount an experience with appropriate facts and relevant, descriptive details.",
+    "studentFriendlySkill": "Tell a story using clear and helpful details.",
+    "teacherUse": "Use when students will present scenes or read their writing aloud.",
+    "keywords": ["tell", "story", "present", "details", "speaking"]
+  },
+  {
+    "grade": "Grade 4",
+    "domain": "Reading Literature",
+    "code": "RL.4.3",
+    "standard": "Describe in depth a character, setting, or event in a story or drama, drawing on specific details in the text.",
+    "studentFriendlySkill": "Describe characters, settings, and important events using details from the text.",
+    "teacherUse": "Use when the reading passage has clear characters, setting, and event sequence.",
+    "keywords": ["character", "setting", "event", "details", "story", "drama"]
+  },
+  {
+    "grade": "Grade 4",
+    "domain": "Writing",
+    "code": "W.4.3",
+    "standard": "Write narratives to develop real or imagined experiences or events using effective technique, descriptive details, and clear event sequences.",
+    "studentFriendlySkill": "Write a story with clear events, descriptive details, and sequence.",
+    "teacherUse": "Use when students are writing stories, scenes, chapters, or narrative responses.",
+    "keywords": ["narrative", "story", "sequence", "details", "events", "writing"]
+  },
+  {
+    "grade": "Grade 4",
+    "domain": "Writing",
+    "code": "W.4.5",
+    "standard": "With guidance and support, develop and strengthen writing as needed by planning, revising, and editing.",
+    "studentFriendlySkill": "Plan, revise, and improve your writing.",
+    "teacherUse": "Use when students will revise scenes after AI or teacher feedback.",
+    "keywords": ["plan", "revise", "edit", "feedback", "writing"]
+  },
+  {
+    "grade": "Grade 4",
+    "domain": "Language",
+    "code": "L.4.4",
+    "standard": "Determine or clarify the meaning of unknown and multiple-meaning words and phrases.",
+    "studentFriendlySkill": "Use context to understand new words and phrases.",
+    "teacherUse": "Use when extracting visual vocabulary from a reading passage.",
+    "keywords": ["vocabulary", "context", "meaning", "phrases", "words"]
+  },
+  {
+    "grade": "Grade 5",
+    "domain": "Reading Literature",
+    "code": "RL.5.2",
+    "standard": "Determine a theme of a story, drama, or poem from details in the text and summarize the text.",
+    "studentFriendlySkill": "Find the theme and summarize the story.",
+    "teacherUse": "Use when a passage has a clear lesson, message, or theme.",
+    "keywords": ["theme", "summary", "message", "lesson", "details"]
+  },
+  {
+    "grade": "Grade 5",
+    "domain": "Reading Literature",
+    "code": "RL.5.3",
+    "standard": "Compare and contrast two or more characters, settings, or events in a story or drama.",
+    "studentFriendlySkill": "Compare characters, settings, or events.",
+    "teacherUse": "Use when students compare scene choices or character reactions.",
+    "keywords": ["compare", "contrast", "character", "setting", "events"]
+  },
+  {
+    "grade": "Grade 5",
+    "domain": "Writing",
+    "code": "W.5.3",
+    "standard": "Write narratives to develop real or imagined experiences or events using effective technique, descriptive details, and clear event sequences.",
+    "studentFriendlySkill": "Write a story with technique, details, and clear sequence.",
+    "teacherUse": "Use for class book chapters, movie scenes, or narrative extensions.",
+    "keywords": ["narrative", "story", "sequence", "details", "events", "writing"]
+  },
+  {
+    "grade": "Grade 5",
+    "domain": "Speaking and Listening",
+    "code": "SL.5.4",
+    "standard": "Report on a topic or text or present an opinion, sequencing ideas logically and using appropriate facts and relevant, descriptive details.",
+    "studentFriendlySkill": "Present ideas in a logical order with strong details.",
+    "teacherUse": "Use when students present their class book or movie scenes.",
+    "keywords": ["present", "sequence", "details", "speaking", "report"]
+  },
+  {
+    "grade": "Grade 6",
+    "domain": "Reading Literature",
+    "code": "RL.6.2",
+    "standard": "Determine a theme or central idea of a text and how it is conveyed through particular details; provide a summary of the text.",
+    "studentFriendlySkill": "Find a theme or central idea and summarize it with details.",
+    "teacherUse": "Use for upper elementary or middle school reading-to-writing lessons.",
+    "keywords": ["theme", "central idea", "summary", "details", "text"]
+  },
+  {
+    "grade": "Grade 6",
+    "domain": "Reading Literature",
+    "code": "RL.6.3",
+    "standard": "Describe how a particular story's or drama's plot unfolds in a series of episodes as well as how the characters respond or change.",
+    "studentFriendlySkill": "Describe plot episodes and how characters change.",
+    "teacherUse": "Use for scene-based writing where students build plot and character change.",
+    "keywords": ["plot", "episodes", "character", "change", "respond"]
+  },
+  {
+    "grade": "Grade 6",
+    "domain": "Writing",
+    "code": "W.6.3",
+    "standard": "Write narratives to develop real or imagined experiences or events using effective technique, relevant descriptive details, and well-structured event sequences.",
+    "studentFriendlySkill": "Write a well-structured story with details and clear events.",
+    "teacherUse": "Use for class movie scenes and longer narrative projects.",
+    "keywords": ["narrative", "story", "sequence", "details", "structure", "events"]
+  },
+  {
+    "grade": "Grade 6",
+    "domain": "Language",
+    "code": "L.6.4",
+    "standard": "Determine or clarify the meaning of unknown and multiple-meaning words and phrases.",
+    "studentFriendlySkill": "Use context and word parts to understand new vocabulary.",
+    "teacherUse": "Use when the text includes words worth turning into visual vocabulary cards.",
+    "keywords": ["vocabulary", "context", "word parts", "meaning", "phrases"]
+  },
+  {
+    "grade": "K",
+    "domain": "Reading Literature",
+    "code": "RL.K.1",
+    "standard": "With prompting and support, ask and answer questions about key details in a text.",
+    "studentFriendlySkill": "Ask and answer questions about important story details.",
+    "teacherUse": "Use for early read-aloud lessons where students point to details before drawing or dictating.",
+    "keywords": ["questions", "answers", "key details", "read aloud", "story"],
+    "sourcePage": "PDF p. 11"
+  },
+  {
+    "grade": "K",
+    "domain": "Writing",
+    "code": "W.K.3",
+    "standard": "Use a combination of drawing, dictating, and writing to narrate a single event or several loosely linked events.",
+    "studentFriendlySkill": "Tell or draw one event in order.",
+    "teacherUse": "Use when younger students dictate a sentence before making a picture or class page.",
+    "keywords": ["drawing", "dictating", "writing", "event", "narrate"],
+    "sourcePage": "PDF p. 19"
+  },
+  {
+    "grade": "Grade 1",
+    "domain": "Reading Literature",
+    "code": "RL.1.3",
+    "standard": "Describe characters, settings, and major events in a story, using key details.",
+    "studentFriendlySkill": "Describe who is in the story, where it happens, and what happens.",
+    "teacherUse": "Use when the passage has a simple story structure students can retell or illustrate.",
+    "keywords": ["character", "setting", "events", "details", "story"],
+    "sourcePage": "PDF p. 11"
+  }
+]

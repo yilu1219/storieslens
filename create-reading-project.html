@@ -6,247 +6,822 @@
     <title>Create from Reading Text | StoriesLens</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
+      :root {
+        --ink: #152033;
+        --muted: #627089;
+        --line: #dbe5f5;
+        --soft: #f7faff;
+        --blue: #326cff;
+        --blue-soft: #eaf1ff;
+        --purple: #8357ff;
+        --green: #19b77a;
+        --green-soft: #e9fbf3;
+        --gold: #a56b00;
+        --gold-soft: #fff6df;
+        --card: rgba(255, 255, 255, 0.88);
+        --shadow: 0 18px 45px rgba(68, 88, 130, 0.12);
+      }
+
+      body {
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 16% 8%, rgba(214, 231, 255, 0.95), transparent 30%),
+          radial-gradient(circle at 86% 16%, rgba(237, 229, 255, 0.82), transparent 28%),
+          linear-gradient(180deg, #f8fbff 0%, #eef5ff 52%, #f9fbff 100%);
+      }
+
+      #star-canvas {
+        display: none;
+      }
+
       .create-project-page {
-        width: min(94vw, 1480px);
+        width: min(94vw, 1440px);
       }
 
-      .create-hero,
-      .project-builder,
-      .project-output {
-        border: 1px solid rgba(145, 172, 255, 0.22);
+      .create-light-header {
+        margin-top: 18px;
+        padding: 12px 14px;
+        border: 1px solid rgba(111, 143, 194, 0.18);
         border-radius: 22px;
-        background: linear-gradient(180deg, rgba(16, 28, 65, 0.86), rgba(8, 13, 31, 0.78));
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
       }
 
-      .create-hero {
+      .create-light-header .brand,
+      .create-light-header .main-nav a {
+        color: var(--ink);
+      }
+
+      .create-light-header .main-nav a {
+        opacity: 0.78;
+      }
+
+      .create-light-header .main-nav a.nav-active {
+        color: var(--blue);
+        opacity: 1;
+      }
+
+      .create-light-header .top-cta {
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+      }
+
+      .lesson-hero {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.45fr);
-        gap: 22px;
-        align-items: center;
-        margin: 26px 0 18px;
-        padding: 30px;
+        gap: 20px;
+        padding: 44px 4px 26px;
       }
 
-      .create-hero span {
-        color: #93ffcf;
+      .lesson-kicker {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid rgba(50, 108, 255, 0.18);
+        border-radius: 999px;
+        color: var(--blue);
+        background: rgba(255, 255, 255, 0.76);
         font-weight: 900;
       }
 
-      .create-hero h1 {
-        margin: 8px 0 12px;
-        color: #fff;
-        font-size: clamp(42px, 5vw, 72px);
+      .lesson-hero h1 {
+        max-width: 920px;
+        margin: 0;
+        color: var(--ink);
+        font-size: clamp(42px, 6vw, 82px);
+        line-height: 0.95;
         letter-spacing: 0;
       }
 
-      .create-hero p {
+      .lesson-hero p {
+        max-width: 790px;
         margin: 0;
-        color: rgba(234, 239, 255, 0.78);
-        font-size: 19px;
+        color: var(--muted);
+        font-size: 20px;
         line-height: 1.55;
       }
 
-      .create-flow-mini {
+      .stage-rail {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stage-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 54px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.68);
+        font-weight: 900;
+      }
+
+      .stage-pill.is-active {
+        color: var(--blue);
+        border-color: rgba(50, 108, 255, 0.28);
+        background: var(--blue-soft);
+      }
+
+      .stage-pill em {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+        font-style: normal;
+      }
+
+      .lesson-card,
+      .review-card,
+      .assign-card,
+      .teacher-pack-card,
+      .ready-card {
+        border: 1px solid rgba(111, 143, 194, 0.18);
+        border-radius: 24px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      .lesson-builder {
+        display: grid;
+        grid-template-columns: minmax(0, 0.62fr) minmax(360px, 0.38fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .lesson-card {
+        padding: 24px;
+      }
+
+      .lesson-card h2,
+      .review-card h3,
+      .assign-card h2,
+      .teacher-pack-card h2,
+      .ready-card h2 {
+        margin: 0 0 8px;
+        color: var(--ink);
+        letter-spacing: 0;
+      }
+
+      .lesson-card > p,
+      .review-card > p,
+      .assign-card > p,
+      .teacher-pack-card > p,
+      .ready-card > p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .tab-row,
+      .choice-grid,
+      .output-grid,
+      .grade-grid {
         display: grid;
         gap: 10px;
       }
 
-      .create-flow-mini article {
-        padding: 13px;
-        border: 1px solid rgba(151, 176, 255, 0.2);
+      .tab-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 14px;
+      }
+
+      .tab-button,
+      .grade-button,
+      .framework-card,
+      .output-card,
+      .small-action {
+        border: 1px solid var(--line);
         border-radius: 14px;
-        color: #fff;
-        background: rgba(255, 255, 255, 0.055);
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.86);
+        font: inherit;
+        font-weight: 850;
+        cursor: pointer;
       }
 
-      .project-builder {
-        display: grid;
-        grid-template-columns: minmax(0, 0.75fr) minmax(480px, 1fr);
-        gap: 20px;
-        padding: 24px;
+      .tab-button {
+        min-height: 44px;
       }
 
-      .project-form {
-        display: grid;
-        gap: 14px;
+      .tab-button.is-active,
+      .grade-button.is-selected,
+      .framework-card.is-selected,
+      .output-card.is-selected {
+        border-color: rgba(50, 108, 255, 0.34);
+        color: var(--blue);
+        background: var(--blue-soft);
       }
 
-      .project-form label {
-        display: grid;
-        gap: 8px;
-        color: rgba(234, 239, 255, 0.76);
-        font-weight: 800;
+      .text-tab {
+        display: none;
       }
 
-      .project-form input,
-      .project-form select,
-      .project-form textarea {
+      .text-tab.is-active {
+        display: block;
+      }
+
+      textarea,
+      input,
+      select {
         width: 100%;
-        border: 1px solid rgba(145, 172, 255, 0.26);
-        border-radius: 12px;
-        color: #fff;
-        background: rgba(4, 9, 24, 0.7);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        color: var(--ink);
+        background: #fff;
         font: inherit;
       }
 
-      .project-form input,
-      .project-form select {
-        min-height: 46px;
-        padding: 0 13px;
-      }
-
-      .project-form textarea {
-        min-height: 330px;
+      textarea {
+        min-height: 420px;
+        padding: 16px;
         resize: vertical;
-        padding: 14px;
         line-height: 1.65;
       }
 
-      .project-form button {
-        min-height: 50px;
-        border: 0;
-        border-radius: 13px;
-        color: #fff;
-        background: linear-gradient(135deg, #3478ff, #8a4cff);
+      input,
+      select {
+        min-height: 48px;
+        padding: 0 13px;
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+        color: var(--ink);
+        font-weight: 900;
+      }
+
+      .field-help {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .upload-drop {
+        display: grid;
+        place-items: center;
+        min-height: 260px;
+        padding: 24px;
+        border: 2px dashed #b6c8ea;
+        border-radius: 20px;
+        color: var(--muted);
+        background: #f9fbff;
+        text-align: center;
+      }
+
+      .upload-drop strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--ink);
+        font-size: 20px;
+      }
+
+      .sample-card {
+        display: grid;
+        gap: 12px;
+        min-height: 260px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: #fff;
+      }
+
+      .sample-card strong {
+        color: var(--ink);
+        font-size: 22px;
+      }
+
+      .setup-stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grade-grid {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+
+      .grade-button {
+        min-height: 42px;
+      }
+
+      .choice-grid,
+      .output-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .framework-card,
+      .output-card {
+        display: grid;
+        gap: 6px;
+        padding: 14px;
+        text-align: left;
+      }
+
+      .framework-card strong,
+      .output-card strong {
+        color: var(--ink);
+      }
+
+      .framework-card span,
+      .output-card span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .framework-card[aria-disabled="true"] {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .recommend-note,
+      .library-note,
+      .credit-note,
+      .status-note {
+        padding: 13px;
+        border-radius: 16px;
+        line-height: 1.5;
+      }
+
+      .recommend-note {
+        color: #165c42;
+        background: var(--green-soft);
+      }
+
+      .library-note {
+        color: #39455c;
+        background: #f3f6fb;
+      }
+
+      .credit-note {
+        color: #5a3b00;
+        background: var(--gold-soft);
+      }
+
+      .status-note {
+        color: #165c42;
+        background: var(--green-soft);
+      }
+
+      .primary-button,
+      .secondary-button,
+      .quiet-button {
+        min-height: 48px;
+        padding: 0 18px;
+        border-radius: 14px;
         font: inherit;
         font-weight: 900;
         cursor: pointer;
       }
 
-      .upload-choice-row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .upload-choice-row button {
-        min-height: 42px;
-        border: 1px solid rgba(151, 176, 255, 0.24);
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      .project-preview-card {
-        padding: 20px;
-        border: 1px solid rgba(151, 176, 255, 0.2);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .project-preview-card h2 {
-        margin: 0 0 12px;
+      .primary-button {
+        border: 0;
         color: #fff;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+        box-shadow: 0 12px 28px rgba(50, 108, 255, 0.22);
       }
 
-      .project-preview-card p {
-        color: rgba(234, 239, 255, 0.72);
-        line-height: 1.58;
+      .primary-button:disabled {
+        opacity: 0.52;
+        cursor: not-allowed;
+        box-shadow: none;
       }
 
-      .project-pill-grid {
-        display: flex;
-        flex-wrap: wrap;
+      .secondary-button {
+        border: 1px solid rgba(50, 108, 255, 0.28);
+        color: var(--blue);
+        background: var(--blue-soft);
+      }
+
+      .quiet-button,
+      .small-action {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: #fff;
+      }
+
+      .builder-footer {
+        display: grid;
         gap: 8px;
-      }
-
-      .project-pill-grid span {
-        padding: 8px 10px;
-        border: 1px solid rgba(151, 176, 255, 0.22);
-        border-radius: 999px;
-        color: rgba(234, 239, 255, 0.86);
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      .project-output {
-        margin: 18px 0 32px;
-        padding: 24px;
-      }
-
-      .project-output[hidden] {
-        display: none;
-      }
-
-      .output-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .output-card,
-      .plan-card {
-        padding: 17px;
-        border: 1px solid rgba(151, 176, 255, 0.2);
-        border-radius: 16px;
-        color: rgba(234, 239, 255, 0.74);
-        background: rgba(255, 255, 255, 0.055);
-      }
-
-      .output-card strong,
-      .plan-card strong {
-        display: block;
-        margin-bottom: 8px;
-        color: #fff;
-      }
-
-      .output-card p,
-      .plan-card p {
-        margin: 0;
-        line-height: 1.52;
-      }
-
-      .project-plan {
         margin-top: 18px;
       }
 
-      .project-plan h2 {
-        color: #fff;
+      .builder-footer small {
+        color: var(--muted);
       }
 
-      .plan-grid {
+      .review-section,
+      .assign-section,
+      .publish-section {
+        display: none;
+        margin-top: 24px;
+      }
+
+      .review-section.is-visible,
+      .assign-section.is-visible,
+      .publish-section.is-visible {
+        display: block;
+      }
+
+      .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin: 0 0 16px;
+      }
+
+      .section-heading h2 {
+        margin: 0 0 6px;
+        color: var(--ink);
+        font-size: clamp(28px, 4vw, 46px);
+        letter-spacing: 0;
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .review-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
       }
 
-      .plan-card span {
-        color: #ffd991;
-        font-weight: 900;
+      .review-card {
+        display: grid;
+        gap: 14px;
+        padding: 20px;
       }
 
-      .plan-actions {
+      .review-card h3 {
+        font-size: 24px;
+      }
+
+      .review-block {
+        display: grid;
+        gap: 7px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .review-block span {
+        color: var(--blue);
+        font-size: 13px;
+        font-weight: 950;
+        text-transform: uppercase;
+      }
+
+      .review-block p {
+        margin: 0;
+        color: var(--ink);
+        line-height: 1.55;
+      }
+
+      .model-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .model-list article {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .model-list blockquote {
+        margin: 0 0 10px;
+        padding-left: 12px;
+        border-left: 3px solid var(--green);
+        color: var(--ink);
+        line-height: 1.5;
+      }
+
+      .compact-plan {
+        display: grid;
+        gap: 10px;
+      }
+
+      .compact-plan article {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .compact-plan strong {
+        color: var(--ink);
+      }
+
+      .compact-plan p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .review-actions,
+      .assign-actions,
+      .publish-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 9px;
-        margin-top: 14px;
+        gap: 10px;
       }
 
-      .plan-actions button,
-      .plan-actions a {
-        min-height: 38px;
-        padding: 0 12px;
-        border: 1px solid rgba(151, 176, 255, 0.24);
-        border-radius: 10px;
-        color: #fff;
-        background: rgba(255, 255, 255, 0.07);
-        text-decoration: none;
-        font-weight: 800;
+      .assign-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+        gap: 16px;
+      }
+
+      .assign-card,
+      .teacher-pack-card,
+      .ready-card {
+        padding: 20px;
+      }
+
+      .student-name-box {
+        min-height: 210px;
+      }
+
+      .assignment-results {
+        display: grid;
+        gap: 10px;
+      }
+
+      .assignment-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .assignment-row b {
+        color: var(--ink);
+      }
+
+      .assignment-row span {
+        color: var(--muted);
+      }
+
+      .publish-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.55fr) minmax(0, 0.45fr);
+        gap: 16px;
+      }
+
+      .pack-list {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .pack-list li {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      .class-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 64px;
+        min-width: 180px;
+        margin: 12px 0;
+        border-radius: 18px;
+        color: var(--blue);
+        background: var(--blue-soft);
+        font-size: 30px;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+      }
+
+      /* Restore the original StoriesLens dark starfield mood for this page. */
+      :root {
+        --ink: #f8fbff;
+        --muted: #b9c4dc;
+        --line: rgba(150, 170, 235, 0.26);
+        --soft: rgba(9, 15, 35, 0.78);
+        --blue: #4f7cff;
+        --blue-soft: rgba(76, 112, 255, 0.18);
+        --purple: #8b5cff;
+        --green: #70f0be;
+        --green-soft: rgba(112, 240, 190, 0.13);
+        --gold: #ffd98a;
+        --gold-soft: rgba(255, 205, 120, 0.14);
+        --card: rgba(9, 15, 36, 0.84);
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+      }
+
+      body {
+        color: var(--ink);
+        background:
+          radial-gradient(1px 1px at 8% 18%, rgba(255, 255, 255, 0.9), transparent 55%),
+          radial-gradient(1px 1px at 21% 64%, rgba(255, 255, 255, 0.62), transparent 55%),
+          radial-gradient(1.5px 1.5px at 44% 12%, rgba(255, 255, 255, 0.82), transparent 55%),
+          radial-gradient(1px 1px at 63% 33%, rgba(255, 255, 255, 0.7), transparent 55%),
+          radial-gradient(1.2px 1.2px at 78% 74%, rgba(255, 255, 255, 0.72), transparent 55%),
+          radial-gradient(1px 1px at 92% 24%, rgba(255, 255, 255, 0.92), transparent 55%),
+          radial-gradient(circle at 18% 10%, rgba(37, 80, 180, 0.24), transparent 34%),
+          radial-gradient(circle at 72% 2%, rgba(129, 82, 255, 0.22), transparent 30%),
+          radial-gradient(circle at 50% 100%, rgba(31, 86, 210, 0.16), transparent 40%),
+          linear-gradient(180deg, #020716 0%, #060b1e 45%, #030716 100%);
+        background-attachment: fixed;
+      }
+
+      .create-light-header {
+        border-color: rgba(154, 174, 255, 0.2);
+        background: rgba(3, 8, 24, 0.72);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+      }
+
+      .create-light-header .brand,
+      .create-light-header .main-nav a {
+        color: #f8fbff;
+      }
+
+      .create-light-header .main-nav a {
+        opacity: 0.86;
+      }
+
+      .create-light-header .main-nav a.nav-active {
+        color: #ffd98a;
+        text-shadow: 0 0 18px rgba(255, 217, 138, 0.38);
+      }
+
+      .lesson-kicker,
+      .stage-pill,
+      .tab-button,
+      .grade-button,
+      .framework-card,
+      .output-card,
+      .small-action,
+      .quiet-button,
+      .secondary-button {
+        border-color: rgba(143, 162, 231, 0.26);
+        color: #f8fbff;
+        background: rgba(13, 22, 51, 0.72);
+      }
+
+      .lesson-kicker {
+        color: #a9c7ff;
+        background: rgba(69, 103, 255, 0.12);
+      }
+
+      .stage-pill {
+        color: rgba(248, 251, 255, 0.74);
+      }
+
+      .stage-pill.is-active,
+      .tab-button.is-active,
+      .grade-button.is-selected,
+      .framework-card.is-selected,
+      .output-card.is-selected {
+        border-color: rgba(118, 145, 255, 0.58);
+        color: #ffffff;
+        background: linear-gradient(135deg, rgba(48, 103, 255, 0.32), rgba(128, 78, 255, 0.24));
+        box-shadow: inset 0 0 18px rgba(121, 99, 255, 0.2), 0 12px 28px rgba(30, 70, 210, 0.16);
+      }
+
+      .lesson-hero h1,
+      .review-heading h2,
+      .lesson-card h2,
+      .review-card h3,
+      .assign-card h2,
+      .teacher-pack-card h2,
+      .ready-card h2,
+      label,
+      .sample-card strong,
+      .compact-plan strong,
+      .assignment-row b,
+      .pack-list li {
+        color: #ffffff;
+      }
+
+      .lesson-hero p,
+      .lesson-card > p,
+      .review-card > p,
+      .assign-card > p,
+      .teacher-pack-card > p,
+      .ready-card > p,
+      .field-help,
+      .framework-card span,
+      .output-card span,
+      .compact-plan p,
+      .assignment-row span,
+      .review-heading p {
+        color: var(--muted);
+      }
+
+      .lesson-card,
+      .review-card,
+      .assign-card,
+      .teacher-pack-card,
+      .ready-card {
+        border-color: rgba(143, 162, 231, 0.24);
+        background: linear-gradient(180deg, rgba(17, 28, 65, 0.88), rgba(8, 14, 34, 0.9));
+        box-shadow: var(--shadow);
+      }
+
+      textarea,
+      input,
+      select {
+        border-color: rgba(143, 162, 231, 0.25);
+        color: #f8fbff;
+        background: rgba(2, 7, 22, 0.74);
+      }
+
+      textarea::placeholder,
+      input::placeholder {
+        color: rgba(218, 226, 246, 0.54);
+      }
+
+      .upload-drop,
+      .sample-card,
+      .recommend-note,
+      .library-note,
+      .credit-note,
+      .status-note,
+      .review-block,
+      .model-list,
+      .compact-plan article,
+      .assignment-row,
+      .publish-grid article,
+      .pack-list li,
+      .class-code {
+        border-color: rgba(143, 162, 231, 0.22);
+        color: #f8fbff;
+        background: rgba(4, 10, 28, 0.62);
+      }
+
+      .library-note,
+      .credit-note,
+      .status-note,
+      .recommend-note {
+        color: var(--muted);
+      }
+
+      .review-block span {
+        color: #94b6ff;
+      }
+
+      .review-block p,
+      .model-list blockquote {
+        color: #f8fbff;
+      }
+
+      .class-code {
+        color: #a9c7ff;
       }
 
       @media (max-width: 1000px) {
-        .create-hero,
-        .project-builder,
-        .output-grid,
-        .plan-grid,
-        .upload-choice-row {
+        .lesson-builder,
+        .review-grid,
+        .assign-grid,
+        .publish-grid {
           grid-template-columns: 1fr;
+        }
+
+        .stage-rail {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .tab-row,
+        .stage-rail,
+        .grade-grid {
+          grid-template-columns: 1fr;
+        }
+
+        textarea {
+          min-height: 300px;
         }
       }
     </style>
   </head>
   <body>
-    <canvas id="star-canvas" aria-hidden="true"></canvas>
-
     <main class="page-shell create-project-page">
-      <header class="site-header" aria-label="StoriesLens navigation">
+      <header class="site-header create-light-header" aria-label="StoriesLens navigation">
         <a class="brand" href="index.html" aria-label="StoriesLens home">
           <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="StoriesLens logo" /></span>
           <span>StoriesLens</span>
@@ -254,154 +829,558 @@
         <nav class="main-nav" aria-label="Primary navigation">
           <a href="index.html">Home</a>
           <a class="nav-active" href="create-reading-project.html">Create</a>
-          <a href="index.html#class-movie">Class Movie</a>
           <a href="visual-write.html">Visual Write</a>
-          <a href="index.html#works">Works</a>
           <a href="teacher-dashboard.html">Teacher</a>
           <a href="index.html#pricing">Pricing</a>
         </nav>
         <div class="header-actions">
-          <a class="top-cta" href="#builder"><span>Generate Project</span></a>
+          <a class="top-cta" href="#lesson-builder"><span>Create Lesson</span></a>
         </div>
       </header>
 
-      <section class="create-hero">
-        <div>
-          <span>Teacher Upload Reading Text</span>
-          <h1>Create from Reading Text</h1>
-          <p>Upload any reading passage and turn it into a CCSS-aligned class book or class movie project.</p>
-        </div>
-        <div class="create-flow-mini">
-          <article>Reading Text</article>
-          <article>CCSS Alignment</article>
-          <article>Writing Project</article>
-          <article>Class Book / Class Movie</article>
+      <section class="lesson-hero">
+        <span class="lesson-kicker">Teacher lesson builder</span>
+        <h1>Create from Reading Text</h1>
+        <p>Upload a reading passage and turn it into a ready-to-teach visual writing project.</p>
+        <div class="stage-rail" aria-label="Teacher workflow stages">
+          <div class="stage-pill is-active" data-stage-pill="upload"><em>1</em>Upload</div>
+          <div class="stage-pill" data-stage-pill="review"><em>2</em>Review</div>
+          <div class="stage-pill" data-stage-pill="assign"><em>3</em>Assign</div>
+          <div class="stage-pill" data-stage-pill="publish"><em>4</em>Publish</div>
         </div>
       </section>
 
-      <section class="project-builder" id="builder">
-        <form class="project-form" data-project-form>
-          <label>
-            Project Title
-            <input name="projectTitle" value="The Mystery of the Lost Map" />
-          </label>
-          <label>
-            Grade Level
-            <select name="gradeLevel">
-              <option>Grade 3</option>
-              <option selected>Grade 4</option>
-              <option>Grade 5</option>
-              <option>Grade 6</option>
-            </select>
-          </label>
-          <label id="project-type">
-            Project Type
-            <select name="projectType">
-              <option>Class Book</option>
-              <option selected>Class Movie</option>
-              <option>Individual Writing</option>
-            </select>
-          </label>
-          <label>
-            Class Size
-            <input name="classSize" value="24 students" />
-          </label>
-          <label>
-            Writing Goal
-            <input name="writingGoal" value="Write narrative scenes with clear setting, character goal, sequence, and descriptive details." />
-          </label>
-          <div class="upload-choice-row" aria-label="Upload options">
-            <button type="button" data-upload-choice=".txt">Paste text</button>
-            <button type="button" data-upload-choice=".docx">Upload .docx</button>
-            <button type="button" data-upload-choice=".pdf">Upload .pdf</button>
-          </div>
-          <label>
-            Reading Text
-            <textarea name="readingText">In the school library, a group of students found an old map hidden inside a dusty book. The map showed a path from the library window to the garden, then across the playground to a locked wooden door under a large tree. The students wondered who had drawn the map and what secret might be waiting at the end.</textarea>
-          </label>
-          <button type="submit">Generate Project</button>
-        </form>
+      <section class="lesson-builder" id="lesson-builder">
+        <article class="lesson-card">
+          <h2>Reading Text</h2>
+          <p>Paste or upload a passage your class will use as the source text.</p>
 
-        <aside class="project-preview-card">
-          <h2>What StoriesLens will generate</h2>
-          <p>A teacher-ready project plan that connects the reading passage to CCSS skills, imitation writing, student checklists, chapter or scene assignments, and publish-ready classroom output.</p>
-          <div class="project-pill-grid">
-            <span>Reading Summary</span>
-            <span>Text Level</span>
-            <span>Vocabulary Focus</span>
-            <span>CCSS Reading Focus</span>
-            <span>CCSS Writing Focus</span>
-            <span>Imitation Prompt</span>
-            <span>Student Checklist</span>
-            <span>Class Project Plan</span>
+          <div class="tab-row" role="tablist" aria-label="Reading text input type">
+            <button class="tab-button is-active" type="button" data-text-tab-button="paste">Paste Text</button>
+            <button class="tab-button" type="button" data-text-tab-button="upload">Upload File</button>
+            <button class="tab-button" type="button" data-text-tab-button="sample">Try Sample</button>
+          </div>
+
+          <div class="text-tab is-active" data-text-tab="paste">
+            <label>
+              Paste Text
+              <textarea data-reading-text placeholder="Paste your reading passage here...">In the school library, Mia found an old map hidden inside a dusty book. The library was quiet, but something unusual caught her eye. A golden line on the map moved slowly toward the garden. Mia called her friends, and together they followed the clue across the playground. Under the oldest tree, they found a small wooden door. No one knew what was behind it, but the map glowed brighter when Mia stepped closer.</textarea>
+            </label>
+            <span class="field-help">Recommended length: 300-1,200 words for classroom projects.</span>
+          </div>
+
+          <div class="text-tab" data-text-tab="upload">
+            <label class="upload-drop" for="reading-file">
+              <span>
+                <strong>Drag and drop a file here</strong>
+                or click to upload<br />
+                <small>.txt, .docx, .pdf</small>
+              </span>
+              <input id="reading-file" type="file" accept=".txt,.docx,.pdf" data-reading-file hidden />
+            </label>
+            <div class="status-note" data-file-status hidden>File uploaded. Text extraction coming soon.</div>
+          </div>
+
+          <div class="text-tab" data-text-tab="sample">
+            <div class="sample-card">
+              <strong>Use Sample: The Mystery of the Lost Map</strong>
+              <p>Load a Grade 4 mystery adventure sample with CCSS-ready narrative structure.</p>
+              <button class="secondary-button" type="button" data-use-sample>Use Sample: The Mystery of the Lost Map</button>
+            </div>
+          </div>
+        </article>
+
+        <aside class="lesson-card">
+          <h2>Lesson Setup</h2>
+          <p>Choose the grade, teaching framework, output type, and class size.</p>
+
+          <div class="setup-stack">
+            <label>
+              Project Title
+              <input data-project-title placeholder="The Mystery of the Lost Map" value="The Mystery of the Lost Map" />
+              <span class="field-help">Optional. StoriesLens can suggest a title after analysis.</span>
+            </label>
+
+            <div>
+              <label>Grade Level</label>
+              <div class="grade-grid" data-grade-grid>
+                <button class="grade-button" type="button" data-grade="K">K</button>
+                <button class="grade-button" type="button" data-grade="Grade 1">1</button>
+                <button class="grade-button" type="button" data-grade="Grade 2">2</button>
+                <button class="grade-button" type="button" data-grade="Grade 3">3</button>
+                <button class="grade-button is-selected" type="button" data-grade="Grade 4">4</button>
+                <button class="grade-button" type="button" data-grade="Grade 5">5</button>
+                <button class="grade-button" type="button" data-grade="Grade 6">6</button>
+                <button class="grade-button" type="button" data-grade="Grade 7">7</button>
+                <button class="grade-button" type="button" data-grade="Grade 8">8</button>
+                <button class="grade-button" type="button" data-grade="Grade 9">9</button>
+                <button class="grade-button" type="button" data-grade="Grade 10">10</button>
+                <button class="grade-button" type="button" data-grade="Grade 11">11</button>
+                <button class="grade-button" type="button" data-grade="Grade 12">12</button>
+              </div>
+              <div class="recommend-note" data-grade-focus>Recommended focus: narrative writing, character, setting, sequence, descriptive details.</div>
+            </div>
+
+            <div>
+              <label>Teaching Framework</label>
+              <div class="choice-grid">
+                <button class="framework-card is-selected" type="button" data-framework="K12_CCSS">
+                  <strong>K12 CCSS</strong>
+                  <span>Best for standards-aligned classroom writing projects.</span>
+                </button>
+                <button class="framework-card" type="button" data-framework="CREATIVE_WRITING">
+                  <strong>Creative Writing</strong>
+                  <span>Best for story craft, scenes, characters, dialogue, and imagination.</span>
+                </button>
+                <button class="framework-card" type="button" aria-disabled="true" data-framework="CUSTOM_RUBRIC">
+                  <strong>Custom Rubric</strong>
+                  <span>Coming soon. Use your own writing rubric or course criteria.</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label>Output Type</label>
+              <div class="output-grid">
+                <button class="output-card is-selected" type="button" data-output-type="CLASS_BOOK" data-output-url="project-output.html?type=class-book">
+                  <strong>Class Book</strong>
+                  <span>Best for illustrated chapter writing. Click to open the class book workspace.</span>
+                </button>
+                <button class="output-card" type="button" data-output-type="CLASS_MOVIE" data-output-url="project-output.html?type=class-movie">
+                  <strong>Class Movie</strong>
+                  <span>Best for scene-based storytelling. Click to open the class movie workspace.</span>
+                </button>
+                <button class="output-card" type="button" data-output-type="INDIVIDUAL_WRITING" data-output-url="project-output.html?type=individual-writing">
+                  <strong>Individual Writing</strong>
+                  <span>Best for independent visual writing. Click to open the individual workspace.</span>
+                </button>
+              </div>
+            </div>
+
+            <label>
+              Class Size
+              <input data-class-size type="number" min="1" max="60" value="24" />
+              <span class="field-help">Used later to suggest chapters or scenes.</span>
+            </label>
+
+            <div class="library-note">
+              <strong>CCSS Standards Library</strong><br />
+              Runtime matching uses <code>resources/ccss/ela-standards.json</code>. Import source PDF once from <code>resources/source/ccss-ela-standards.pdf</code>.
+              <div class="review-actions" style="margin-top: 10px;">
+                <button class="quiet-button" type="button" data-import-ccss>Import CCSS PDF</button>
+              </div>
+              <span data-ccss-import-status>Standards ready for Grade 2-6 MVP matching.</span>
+            </div>
+          </div>
+
+          <div class="builder-footer">
+            <button class="primary-button" type="button" data-create-lesson>Create Lesson</button>
+            <small data-create-help>StoriesLens will create skill focus, model sentences, rewrite templates, and student writing tasks.</small>
           </div>
         </aside>
       </section>
 
-      <section class="project-output" data-project-output hidden>
-        <div class="output-grid">
-          <article class="output-card"><strong>Reading Summary</strong><p>This text is about a group of students who discover a mysterious map in the school library.</p></article>
-          <article class="output-card"><strong>Text Level</strong><p>Recommended for Grade 4 narrative reading and writing practice.</p></article>
-          <article class="output-card"><strong>Vocabulary Focus</strong><p>mysterious, discover, clue, journey, hidden</p></article>
-          <article class="output-card"><strong>CCSS Reading Focus</strong><p>RL.4.3 - Describe in depth a character, setting, or event in a story.</p></article>
-          <article class="output-card"><strong>CCSS Writing Focus</strong><p>W.4.3 - Write narratives using effective technique, descriptive details, and clear event sequences.</p></article>
-          <article class="output-card"><strong>Why this text matches</strong><p>The reading text includes a clear setting, character motivation, and a sequence of events suitable for narrative imitation writing.</p></article>
-          <article class="output-card"><strong>Imitation Writing Prompt</strong><p>Write your own adventure story about a character who finds a strange object and follows clues to solve a mystery.</p></article>
-          <article class="output-card"><strong>Student Checklist</strong><p>I introduced a clear character. I described the setting. I used sequence words. I included a problem and solution. I added descriptive details.</p></article>
-          <article class="output-card"><strong>Class Project Plan</strong><p data-plan-summary>Class Movie · 6 scenes · 24 students · ready for assignment.</p></article>
+      <section class="review-section" data-review-section>
+        <div class="section-heading">
+          <div>
+            <h2>Your lesson is ready.</h2>
+            <p>Review and adjust before assigning.</p>
+          </div>
+          <span class="lesson-kicker" data-review-mode>K12 CCSS</span>
         </div>
 
-        <section class="project-plan" data-book-plan hidden>
-          <h2>Class Book Plan</h2>
-          <div class="plan-grid">
-            <article class="plan-card"><span>Chapter 1</span><strong>The Discovery</strong><p>A student finds a mysterious map in the library.</p></article>
-            <article class="plan-card"><span>Chapter 2</span><strong>The First Clue</strong><p>The class follows the first clue to the school garden.</p></article>
-            <article class="plan-card"><span>Chapter 3</span><strong>Into the Forest</strong><p>The students enter a quiet forest behind the playground.</p></article>
-            <article class="plan-card"><span>Chapter 4</span><strong>The Hidden Door</strong><p>They discover a secret door under an old tree.</p></article>
-            <article class="plan-card"><span>Chapter 5</span><strong>The Big Choice</strong><p>The group must decide whether to continue or go back.</p></article>
-            <article class="plan-card"><span>Chapter 6</span><strong>The Treasure Revealed</strong><p>The class finds the treasure and learns an important lesson.</p></article>
-          </div>
-        </section>
+        <div class="review-grid">
+          <article class="review-card" data-skill-review-card>
+            <h3>CCSS Focus</h3>
+            <div class="review-block" data-ccss-focus>
+              <span>Reading Skill</span>
+              <p><strong>RL.4.3</strong> · Characters, setting, and events</p>
+            </div>
+            <div class="review-block" data-writing-focus>
+              <span>Writing Skill</span>
+              <p><strong>W.4.3</strong> · Narrative writing with clear sequence and details</p>
+            </div>
+            <div class="review-block">
+              <span>Why this matches</span>
+              <p data-match-reason>This text includes a clear setting, character motivation, and a sequence of events. It is suitable for narrative imitation writing.</p>
+            </div>
+            <div class="review-actions"><button class="secondary-button" type="button">Accept</button><button class="quiet-button" type="button">Edit</button></div>
+          </article>
 
-        <section class="project-plan" data-movie-plan>
-          <h2>Class Movie Plan</h2>
-          <div class="plan-grid">
-            <article class="plan-card"><span>Scene 1</span><strong>Opening</strong><p>The school library feels quiet and mysterious.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Image</button><button>Review Scene</button></div></article>
-            <article class="plan-card"><span>Scene 2</span><strong>The Discovery</strong><p>A student finds an old map inside a dusty book.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Image</button><button>Generate Scene Video</button></div></article>
-            <article class="plan-card"><span>Scene 3</span><strong>The First Clue</strong><p>The class follows the first clue to the garden.</p><div class="plan-actions"><button>Assign Scene</button><button>Review Scene</button></div></article>
-            <article class="plan-card"><span>Scene 4</span><strong>The Journey</strong><p>The students work together to solve the map.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Image</button></div></article>
-            <article class="plan-card"><span>Scene 5</span><strong>The Challenge</strong><p>The group faces a difficult choice.</p><div class="plan-actions"><button>Assign Scene</button><button>Generate Scene Video</button></div></article>
-            <article class="plan-card"><span>Scene 6</span><strong>The Ending</strong><p>The mystery is solved and the class celebrates.</p><div class="plan-actions"><button>Review Scene</button><button>Publish Movie</button></div></article>
+          <article class="review-card">
+            <h3>Model Sentences</h3>
+            <p>Useful sentences from the reading text that students can learn from.</p>
+            <div class="model-list">
+              <article>
+                <blockquote>"The library was quiet, but something unusual caught Mia's eye."</blockquote>
+                <div class="review-block"><span>Focus</span><p>Descriptive opening</p></div>
+                <div class="review-block"><span>Why it helps</span><p>This sentence sets the scene and creates curiosity.</p></div>
+                <div class="review-block"><span>Rewrite Pattern</span><p>"The ______ was quiet, but something unusual caught ______'s eye."</p></div>
+              </article>
+              <article>
+                <blockquote>"Together they followed the clue across the playground."</blockquote>
+                <div class="review-block"><span>Focus</span><p>Sequence and movement</p></div>
+                <div class="review-block"><span>Rewrite Pattern</span><p>"Together they followed the ______ across the ______."</p></div>
+              </article>
+            </div>
+            <div class="review-actions"><button class="secondary-button" type="button">Accept</button><button class="quiet-button" type="button">Edit</button></div>
+          </article>
+
+          <article class="review-card">
+            <h3>Student Rewrite Templates</h3>
+            <p>Sentence patterns students can use to start writing with confidence.</p>
+            <div class="review-block">
+              <span>Rewrite Pattern</span>
+              <p>"The ______ was quiet, but something unusual caught ______'s eye."</p>
+            </div>
+            <div class="review-block">
+              <span>Story Frame</span>
+              <p>At the beginning, ______ found ______.<br />Then, ______ followed a clue to ______.<br />After that, ______ faced ______.<br />In the end, ______ solved the problem by ______.</p>
+            </div>
+            <div class="review-actions"><button class="secondary-button" type="button">Accept</button><button class="quiet-button" type="button">Edit</button></div>
+          </article>
+
+          <article class="review-card">
+            <h3 data-project-plan-title>Class Book Plan</h3>
+            <div class="compact-plan" data-project-plan-list></div>
+            <div class="review-actions"><button class="secondary-button" type="button">Accept</button><button class="quiet-button" type="button">Edit</button></div>
+          </article>
+        </div>
+
+        <div class="credit-note" style="margin-top: 16px;">
+          <strong>This lesson uses 1 project credit.</strong><br />
+          Included: CCSS or writing skill match, model sentences, rewrite templates, and class book/movie plan.
+          Visual credits are only used later when images or videos are generated.
+        </div>
+
+        <div class="review-card" style="margin-top: 16px;">
+          <h3>Ready to assign this project?</h3>
+          <div class="review-actions">
+            <button class="primary-button" type="button" data-show-assign>Assign to Students</button>
+            <button class="quiet-button" type="button" data-regenerate-lesson>Regenerate Lesson</button>
           </div>
-        </section>
+        </div>
+      </section>
+
+      <section class="assign-section" data-assign-section>
+        <div class="section-heading">
+          <div>
+            <h2>Assign chapters or scenes.</h2>
+            <p>Paste student names, then auto assign each chapter or scene.</p>
+          </div>
+        </div>
+
+        <div class="assign-grid">
+          <article class="assign-card">
+            <h2>Student Names</h2>
+            <p>Use one name per line. Group names work too.</p>
+            <textarea class="student-name-box" data-student-names placeholder="Ava&#10;Leo&#10;Mia&#10;Noah&#10;Emma">Ava
+Leo
+Mia
+Noah
+Emma</textarea>
+            <div class="assign-actions" style="margin-top: 12px;">
+              <button class="primary-button" type="button" data-auto-assign>Auto Assign</button>
+              <button class="secondary-button" type="button" data-generate-links>Generate Student Links</button>
+            </div>
+          </article>
+
+          <article class="assign-card">
+            <h2>Assignment Results</h2>
+            <p>Assignments appear here after Auto Assign.</p>
+            <div class="assignment-results" data-assignment-results></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="publish-section" data-publish-section>
+        <div class="section-heading">
+          <div>
+            <h2>Student links are ready.</h2>
+            <p>Your class can now open the student writing page and start from the example pattern.</p>
+          </div>
+        </div>
+
+        <div class="publish-grid">
+          <article class="ready-card">
+            <h2>Class Code</h2>
+            <div class="class-code">MAP-4832</div>
+            <p><span data-slot-count>24 student slots</span> · <span data-part-count>5 chapters</span></p>
+            <div class="publish-actions">
+              <button class="secondary-button" type="button" data-copy-code>Copy Class Code</button>
+              <a class="quiet-button" href="visual-write.html?mode=assignment" style="display:inline-grid;place-items:center;text-decoration:none;">Open Student View</a>
+              <a class="primary-button" href="teacher-project.html?id=map-4832" style="display:inline-grid;place-items:center;text-decoration:none;">Go to Teacher Studio</a>
+            </div>
+          </article>
+
+          <article class="teacher-pack-card">
+            <h2>Teacher Pack</h2>
+            <p>Everything you need to run this visual writing lesson.</p>
+            <ul class="pack-list" data-pack-list>
+              <li>Student instructions</li>
+              <li>CCSS focus</li>
+              <li>Model sentences</li>
+              <li>Rewrite templates</li>
+              <li>Scene or chapter assignments</li>
+              <li>Student checklist</li>
+              <li>Class book/movie plan</li>
+            </ul>
+            <div class="publish-actions" style="margin-top: 14px;">
+              <button class="secondary-button" type="button" data-download-pack>Download Teacher Pack</button>
+              <span class="status-note" data-pack-status hidden>Teacher Pack preview ready.</span>
+            </div>
+          </article>
+        </div>
       </section>
     </main>
 
-    <script src="script.js"></script>
     <script>
       (() => {
-        const form = document.querySelector("[data-project-form]");
-        const output = document.querySelector("[data-project-output]");
-        const moviePlan = document.querySelector("[data-movie-plan]");
-        const bookPlan = document.querySelector("[data-book-plan]");
-        const summary = document.querySelector("[data-plan-summary]");
+        const state = {
+          grade: "Grade 4",
+          framework: "K12_CCSS",
+          outputType: "CLASS_BOOK",
+          classSize: 24
+        };
 
-        document.querySelectorAll("[data-upload-choice]").forEach((button) => {
+        const sampleText =
+          "In the school library, Mia found an old map hidden inside a dusty book. The library was quiet, but something unusual caught her eye. A golden line on the map moved slowly toward the garden. Mia called her friends, and together they followed the clue across the playground. Under the oldest tree, they found a small wooden door. No one knew what was behind it, but the map glowed brighter when Mia stepped closer.";
+
+        const planData = {
+          CLASS_BOOK: {
+            title: "Class Book Plan",
+            partLabel: "Chapter",
+            parts: [
+              ["The Discovery", "Introduce the main character and setting."],
+              ["The First Clue", "Use action and sequence to move the story."],
+              ["The Journey", "Add details and transitions."],
+              ["The Challenge", "Describe the problem."],
+              ["The Ending", "Write a clear solution."]
+            ]
+          },
+          CLASS_MOVIE: {
+            title: "Class Movie Plan",
+            partLabel: "Scene",
+            parts: [
+              ["Opening", "Introduce the setting and mystery."],
+              ["The Discovery", "Show the key object or clue."],
+              ["The First Clue", "Move the story forward with sequence words."],
+              ["The Challenge", "Show a problem or difficult choice."],
+              ["The Ending", "Resolve the story clearly."]
+            ]
+          },
+          INDIVIDUAL_WRITING: {
+            title: "Individual Writing Plan",
+            partLabel: "Task",
+            parts: [
+              ["Story Opening", "Introduce character, setting, and mystery."],
+              ["Middle Event", "Use sequence and action to move the story."],
+              ["Ending", "Resolve the problem clearly."]
+            ]
+          }
+        };
+
+        const gradeFocus = {
+          K: "Recommended focus: key details, characters, setting, and oral storytelling.",
+          "Grade 1": "Recommended focus: retell, beginning-middle-end, character action.",
+          "Grade 2": "Recommended focus: story structure, character response, details, closure.",
+          "Grade 3": "Recommended focus: ask and answer with evidence, sequence, dialogue.",
+          "Grade 4": "Recommended focus: narrative writing, character, setting, sequence, descriptive details.",
+          "Grade 5": "Recommended focus: theme, challenge, sequence, descriptive details.",
+          "Grade 6": "Recommended focus: plot development, pacing, dialogue, precise words."
+        };
+
+        const stagePills = document.querySelectorAll("[data-stage-pill]");
+        const readingText = document.querySelector("[data-reading-text]");
+        const projectTitle = document.querySelector("[data-project-title]");
+        const classSizeInput = document.querySelector("[data-class-size]");
+        const createHelp = document.querySelector("[data-create-help]");
+        const reviewSection = document.querySelector("[data-review-section]");
+        const assignSection = document.querySelector("[data-assign-section]");
+        const publishSection = document.querySelector("[data-publish-section]");
+        const projectPlanTitle = document.querySelector("[data-project-plan-title]");
+        const projectPlanList = document.querySelector("[data-project-plan-list]");
+        const assignmentResults = document.querySelector("[data-assignment-results]");
+
+        function setStage(stage) {
+          stagePills.forEach((pill) => pill.classList.toggle("is-active", pill.dataset.stagePill === stage));
+        }
+
+        function selectButton(buttons, activeButton, className = "is-selected") {
+          buttons.forEach((button) => button.classList.toggle(className, button === activeButton));
+        }
+
+        function updateGradeFocus() {
+          const note = document.querySelector("[data-grade-focus]");
+          if (note) note.textContent = gradeFocus[state.grade] || gradeFocus["Grade 4"];
+        }
+
+        function updateFrameworkReview() {
+          const card = document.querySelector("[data-skill-review-card]");
+          const mode = document.querySelector("[data-review-mode]");
+          const packList = document.querySelector("[data-pack-list]");
+          if (!card) return;
+          if (state.framework === "CREATIVE_WRITING") {
+            card.querySelector("h3").textContent = "Writing Craft Focus";
+            document.querySelector("[data-ccss-focus]").innerHTML = '<span>Craft Skill</span><p>Scene opening · setting · character action · suspense</p>';
+            document.querySelector("[data-writing-focus]").innerHTML = '<span>Why this matches</span><p>This text includes a strong setting, a discovery moment, and clear story movement. It is suitable for scene-based creative writing.</p>';
+            document.querySelector("[data-match-reason]").textContent = "Use this lesson to practice scene craft, suspense, setting details, and character action.";
+            if (mode) mode.textContent = "Creative Writing";
+            if (packList) packList.children[1].textContent = "Writing craft focus";
+          } else {
+            card.querySelector("h3").textContent = "CCSS Focus";
+            document.querySelector("[data-ccss-focus]").innerHTML = '<span>Reading Skill</span><p><strong>RL.4.3</strong> · Characters, setting, and events</p>';
+            document.querySelector("[data-writing-focus]").innerHTML = '<span>Writing Skill</span><p><strong>W.4.3</strong> · Narrative writing with clear sequence and details</p>';
+            document.querySelector("[data-match-reason]").textContent = "This text includes a clear setting, character motivation, and a sequence of events. It is suitable for narrative imitation writing.";
+            if (mode) mode.textContent = "K12 CCSS";
+            if (packList) packList.children[1].textContent = "CCSS focus";
+          }
+        }
+
+        function updateProjectPlan() {
+          const plan = planData[state.outputType];
+          if (projectPlanTitle) projectPlanTitle.textContent = plan.title;
+          if (projectPlanList) {
+            projectPlanList.innerHTML = plan.parts
+              .map((part, index) => `<article><strong>${plan.partLabel} ${index + 1} · ${part[0]}</strong><p>Goal: ${part[1]}</p></article>`)
+              .join("");
+          }
+          const partCount = document.querySelector("[data-part-count]");
+          if (partCount) partCount.textContent = `${plan.parts.length} ${plan.partLabel.toLowerCase()}s`;
+        }
+
+        function showReview() {
+          if (!readingText?.value.trim()) {
+            if (createHelp) createHelp.textContent = "Add a reading text to continue.";
+            return;
+          }
+          if (!state.grade) {
+            if (createHelp) createHelp.textContent = "Choose a grade level to continue.";
+            return;
+          }
+          state.classSize = Number(classSizeInput?.value || 24);
+          updateFrameworkReview();
+          updateProjectPlan();
+          reviewSection?.classList.add("is-visible");
+          setStage("review");
+          reviewSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function showAssign() {
+          assignSection?.classList.add("is-visible");
+          setStage("assign");
+          assignSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function autoAssign() {
+          const names = (document.querySelector("[data-student-names]")?.value || "")
+            .split(/\r?\n/)
+            .map((name) => name.trim())
+            .filter(Boolean);
+          const plan = planData[state.outputType];
+          if (!assignmentResults) return;
+          assignmentResults.innerHTML = plan.parts
+            .map((part, index) => {
+              const assigned = names[index % Math.max(names.length, 1)] || "Unassigned";
+              return `<div class="assignment-row"><b>${plan.partLabel} ${index + 1} · ${part[0]}</b><span>Assigned to ${assigned}</span></div>`;
+            })
+            .join("");
+        }
+
+        function showPublish() {
+          publishSection?.classList.add("is-visible");
+          setStage("publish");
+          const slot = document.querySelector("[data-slot-count]");
+          if (slot) slot.textContent = `${state.classSize || 24} student slots`;
+          publishSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        document.querySelectorAll("[data-text-tab-button]").forEach((button) => {
           button.addEventListener("click", () => {
-            button.textContent = `${button.dataset.uploadChoice} ready`;
+            selectButton(document.querySelectorAll("[data-text-tab-button]"), button, "is-active");
+            document.querySelectorAll("[data-text-tab]").forEach((tab) => {
+              tab.classList.toggle("is-active", tab.dataset.textTab === button.dataset.textTabButton);
+            });
           });
         });
 
-        form?.addEventListener("submit", (event) => {
-          event.preventDefault();
-          const type = new FormData(form).get("projectType");
-          const isBook = type === "Class Book";
-          output.hidden = false;
-          moviePlan.hidden = isBook;
-          bookPlan.hidden = !isBook;
-          summary.textContent = isBook ? "Class Book · 6 chapters · 24 students · ready for assignment." : "Class Movie · 6 scenes · 24 students · ready for assignment.";
-          output.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector("[data-reading-file]")?.addEventListener("change", () => {
+          const status = document.querySelector("[data-file-status]");
+          if (status) status.hidden = false;
         });
+
+        document.querySelector("[data-use-sample]")?.addEventListener("click", () => {
+          if (projectTitle) projectTitle.value = "The Mystery of the Lost Map";
+          if (readingText) readingText.value = sampleText;
+          state.grade = "Grade 4";
+          state.framework = "K12_CCSS";
+          state.outputType = "CLASS_MOVIE";
+          document.querySelectorAll("[data-grade]").forEach((button) => button.classList.toggle("is-selected", button.dataset.grade === "Grade 4"));
+          document.querySelectorAll("[data-framework]").forEach((button) => button.classList.toggle("is-selected", button.dataset.framework === "K12_CCSS"));
+          document.querySelectorAll("[data-output-type]").forEach((button) => button.classList.toggle("is-selected", button.dataset.outputType === "CLASS_MOVIE"));
+          updateGradeFocus();
+          updateProjectPlan();
+        });
+
+        document.querySelectorAll("[data-grade]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.grade = button.dataset.grade;
+            selectButton(document.querySelectorAll("[data-grade]"), button);
+            if (["K", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5"].includes(state.grade)) {
+              state.outputType = "CLASS_BOOK";
+            } else {
+              state.outputType = "CLASS_MOVIE";
+            }
+            document.querySelectorAll("[data-output-type]").forEach((item) => item.classList.toggle("is-selected", item.dataset.outputType === state.outputType));
+            updateGradeFocus();
+            updateProjectPlan();
+          });
+        });
+
+        document.querySelectorAll("[data-framework]").forEach((button) => {
+          button.addEventListener("click", () => {
+            if (button.getAttribute("aria-disabled") === "true") return;
+            state.framework = button.dataset.framework;
+            selectButton(document.querySelectorAll("[data-framework]"), button);
+          });
+        });
+
+        document.querySelectorAll("[data-output-type]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.outputType = button.dataset.outputType;
+            selectButton(document.querySelectorAll("[data-output-type]"), button);
+            updateProjectPlan();
+            if (button.dataset.outputUrl) {
+              window.location.href = button.dataset.outputUrl;
+            }
+          });
+        });
+
+        document.querySelector("[data-create-lesson]")?.addEventListener("click", showReview);
+        document.querySelector("[data-show-assign]")?.addEventListener("click", showAssign);
+        document.querySelector("[data-auto-assign]")?.addEventListener("click", autoAssign);
+        document.querySelector("[data-generate-links]")?.addEventListener("click", () => {
+          autoAssign();
+          showPublish();
+        });
+        document.querySelector("[data-copy-code]")?.addEventListener("click", () => {
+          navigator.clipboard?.writeText("MAP-4832");
+        });
+        document.querySelector("[data-download-pack]")?.addEventListener("click", () => {
+          const status = document.querySelector("[data-pack-status]");
+          if (status) status.hidden = false;
+        });
+        document.querySelector("[data-regenerate-lesson]")?.addEventListener("click", () => {
+          updateFrameworkReview();
+          updateProjectPlan();
+        });
+        document.querySelector("[data-import-ccss]")?.addEventListener("click", () => {
+          const status = document.querySelector("[data-ccss-import-status]");
+          if (status) status.textContent = "Import mock ready. Run scripts/extract-ccss.js to create draft JSON from the source PDF.";
+        });
+
+        updateGradeFocus();
+        updateProjectPlan();
       })();
     </script>
   </body>

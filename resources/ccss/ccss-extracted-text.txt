@@ -1,0 +1,3 @@
+No source PDF found at resources/source/ccss-ela-standards.pdf.
+Place the CCSS ELA PDF there, then rerun: node scripts/extract-ccss.js.
+For the first MVP, resources/ccss/ela-standards.json provides curated Grade 2-6 candidates.

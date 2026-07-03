@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teacher Project | StoriesLens</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root {
+        --ink: #152033;
+        --muted: #627089;
+        --line: #dbe5f5;
+        --blue: #326cff;
+        --purple: #8357ff;
+        --green: #18ad78;
+        --soft: #f6f9ff;
+        --card: rgba(255, 255, 255, 0.9);
+        --shadow: 0 18px 45px rgba(68, 88, 130, 0.12);
+      }
+
+      body {
+        color: var(--ink);
+        background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 48%, #fbfdff 100%);
+      }
+
+      #star-canvas {
+        display: none;
+      }
+
+      .teacher-project-page {
+        width: min(94vw, 1380px);
+      }
+
+      .project-header {
+        margin-top: 18px;
+        padding: 12px 14px;
+        border: 1px solid rgba(111, 143, 194, 0.18);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: var(--shadow);
+      }
+
+      .project-header .brand,
+      .project-header .main-nav a {
+        color: var(--ink);
+      }
+
+      .project-header .main-nav a.nav-active {
+        color: var(--blue);
+      }
+
+      .project-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.34fr);
+        gap: 18px;
+        align-items: end;
+        padding: 44px 4px 22px;
+      }
+
+      .project-hero h1 {
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-size: clamp(38px, 5vw, 70px);
+        letter-spacing: 0;
+        line-height: 0.96;
+      }
+
+      .project-hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 19px;
+        line-height: 1.5;
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-card,
+      .project-card,
+      .scene-card {
+        border: 1px solid rgba(111, 143, 194, 0.18);
+        border-radius: 22px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      .stat-card {
+        padding: 16px;
+      }
+
+      .stat-card span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .stat-card strong {
+        color: var(--ink);
+        font-size: 28px;
+      }
+
+      .project-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.68fr) minmax(340px, 0.32fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .project-card {
+        padding: 22px;
+      }
+
+      .project-card h2 {
+        margin: 0 0 8px;
+        color: var(--ink);
+      }
+
+      .project-card p {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .scene-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .scene-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      .scene-card h3 {
+        margin: 0 0 8px;
+        color: var(--ink);
+      }
+
+      .scene-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .tag-row,
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tag {
+        padding: 7px 10px;
+        border-radius: 999px;
+        color: #245d48;
+        background: #e8fbf3;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .button {
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        font-weight: 900;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .button.primary {
+        border: 0;
+        color: #fff;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+      }
+
+      .button.blue {
+        color: var(--blue);
+        background: #eaf1ff;
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .publish-panel {
+        display: grid;
+        gap: 10px;
+      }
+
+      @media (max-width: 980px) {
+        .project-hero,
+        .project-grid,
+        .scene-card {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell teacher-project-page">
+      <header class="site-header project-header" aria-label="StoriesLens navigation">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="StoriesLens logo" /></span>
+          <span>StoriesLens</span>
+        </a>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="index.html">Home</a>
+          <a href="create-reading-project.html">Create</a>
+          <a href="visual-write.html">Visual Write</a>
+          <a class="nav-active" href="teacher-project.html">Teacher Project</a>
+        </nav>
+      </header>
+
+      <section class="project-hero">
+        <div>
+          <h1>The Mystery of the Lost Map</h1>
+          <p>Class Movie · Grade 4. Review student submissions, generate visuals, and publish the final class project.</p>
+        </div>
+        <div class="status-grid">
+          <div class="stat-card"><span>Students</span><strong>24</strong></div>
+          <div class="stat-card"><span>Scenes</span><strong>6</strong></div>
+          <div class="stat-card"><span>Submitted</span><strong>0</strong></div>
+          <div class="stat-card"><span>Visuals ready</span><strong>0</strong></div>
+        </div>
+      </section>
+
+      <section class="project-grid">
+        <article class="project-card">
+          <h2>Student scenes</h2>
+          <p>Visual generation belongs here, after the lesson has been assigned and student writing is ready.</p>
+          <div class="scene-list">
+            <section class="scene-card">
+              <div>
+                <h3>Scene 1 · Opening</h3>
+                <p>Assigned to Ava. Introduce the setting and mystery.</p>
+                <div class="tag-row">
+                  <span class="tag">Waiting for submission</span>
+                  <span class="tag">Review needed</span>
+                </div>
+              </div>
+              <div class="action-row">
+                <button class="button blue" type="button">Generate Illustration · 1 image credit</button>
+                <button class="button" type="button">Generate Photo-style Scene · 2 image credits</button>
+                <button class="button" type="button">Generate Scene Video · 1 video credit</button>
+              </div>
+            </section>
+            <section class="scene-card">
+              <div>
+                <h3>Scene 2 · The Discovery</h3>
+                <p>Assigned to Leo. Show the key object or clue.</p>
+                <div class="tag-row">
+                  <span class="tag">Waiting for submission</span>
+                  <span class="tag">No visuals yet</span>
+                </div>
+              </div>
+              <div class="action-row">
+                <button class="button blue" type="button">Generate Illustration · 1 image credit</button>
+                <button class="button" type="button">Generate Photo-style Scene · 2 image credits</button>
+                <button class="button" type="button">Generate Scene Video · 1 video credit</button>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <aside class="side-stack">
+          <section class="project-card publish-panel">
+            <h2>Publish controls</h2>
+            <p>Use these after submissions and visuals are ready.</p>
+            <button class="button primary" type="button">Publish Class Book / Movie</button>
+            <button class="button" type="button">Export Teacher Report</button>
+            <button class="button" type="button">Download Student Writing</button>
+          </section>
+          <section class="project-card">
+            <h2>Lesson support</h2>
+            <p>CCSS focus, model sentences, rewrite templates, and assignment plan are saved from the Create page.</p>
+            <a class="button blue" href="create-reading-project.html">Back to Create Lesson</a>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
