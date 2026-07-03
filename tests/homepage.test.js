@@ -46,6 +46,7 @@ assert(!envExample.includes("AIMS"), "Environment example should not include ret
 assert(!envExample.includes("aimodelshow"), "Environment example should not include the retired aimodelshow URL");
 assert(envExample.includes("OPENROUTER_IMAGE_API_URL=https://openrouter.ai/api/v1/images"), "Environment example should include the OpenRouter image API URL");
 assert(envExample.includes("OPENROUTER_IMAGE_MODEL=bytedance-seed/seedream-4.5"), "Environment example should include the selected image model");
+assert(envExample.includes("IMAGE_SIZE=2560x1440"), "Environment example should use the minimum accepted 16:9 image size");
 assert(serverJs.includes("/api/ai-report"), "Static server should keep the AI report proxy route");
 assert(scriptJs.includes("StoriesLensQuota"), "Global quota model should be available for plan and credit checks");
 assert(scriptJs.includes("Generate 1 image = 1 image credit") || scriptJs.includes("imageCost"), "Quota model should include image credit cost");

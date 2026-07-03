@@ -1,3 +1,4 @@
 .superpowers/
 assets/_preview_*.png
 .env
+public/generated/

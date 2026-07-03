@@ -122,7 +122,8 @@ function getImageConfig() {
     provider: getConfigValue("IMAGE_PROVIDER", "image.provider") || "OPENROUTER",
     model: getConfigValue("IMAGE_MODEL", "OPENROUTER_IMAGE_MODEL", "image.model") || "bytedance-seed/seedream-4.5",
     aspectRatio: getConfigValue("IMAGE_ASPECT_RATIO", "image.aspectRatio") || "16:9",
-    resolution: getConfigValue("IMAGE_RESOLUTION", "image.resolution") || "2K",
+    size: getConfigValue("IMAGE_SIZE", "OPENROUTER_IMAGE_SIZE", "image.size") || "2560x1440",
+    resolution: getConfigValue("IMAGE_RESOLUTION", "image.resolution") || "",
     openRouterApiKey: getConfigValue("OPENROUTER_API_KEY", "openrouter.apiKey"),
     openRouterImageApiUrl: getConfigValue("OPENROUTER_IMAGE_API_URL", "openrouter.imageApiUrl") || `${baseUrl}/images`,
     siteUrl: process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
@@ -186,6 +187,7 @@ function createImageGenerationRequest(body, overrides = {}) {
     prompt,
     model: body.model || config.model,
     aspectRatio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
+    size: body.size || config.size,
     resolution: body.resolution || config.resolution,
     referenceImageUrls,
     outputFormat: body.outputFormat || body.output_format || "png",
@@ -260,9 +262,14 @@ class OpenRouterImageProvider {
     const payload = {
       model: imageRequest.model,
       prompt: imageRequest.prompt,
-      resolution: imageRequest.resolution,
-      aspect_ratio: imageRequest.aspectRatio
+      size: imageRequest.size,
+      aspect_ratio: imageRequest.aspectRatio,
+      response_format: "url"
     };
+
+    if (imageRequest.resolution) {
+      payload.resolution = imageRequest.resolution;
+    }
 
     if (imageRequest.referenceImageUrls.length) {
       payload.input_references = imageRequest.referenceImageUrls.map((url) => ({
