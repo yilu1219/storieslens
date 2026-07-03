@@ -291,7 +291,9 @@
       }
 
       .skill-focus-card,
-      .task-info-list {
+      .task-info-list,
+      .locked-character-box,
+      .scene-image-rules {
         border: 1px solid rgba(143, 171, 255, 0.2);
         border-radius: 14px;
         background: rgba(255, 255, 255, 0.045);
@@ -327,6 +329,52 @@
         margin: 0;
         color: rgba(246, 248, 255, 0.78);
         line-height: 1.45;
+      }
+
+      .locked-character-box,
+      .scene-image-rules {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .locked-character-box h3,
+      .scene-image-rules h3 {
+        margin: 0;
+        color: #fff;
+        font-size: 16px;
+      }
+
+      .locked-character-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .locked-character-list span,
+      .mood-choice span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 10px;
+        border: 1px solid rgba(143, 171, 255, 0.22);
+        border-radius: 999px;
+        color: #f6f8ff;
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .mood-choice {
+        display: grid;
+        gap: 8px;
+      }
+
+      .mood-choice label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
       }
 
       .student-action-row {
@@ -636,7 +684,7 @@
           <header>
             <div>
               <h2>My Class Task</h2>
-              <p data-assignment-status>You are writing Scene 3 for your class movie.</p>
+              <p data-assignment-status>You are writing Scene 3 for your class story movie.</p>
             </div>
           </header>
 
@@ -644,46 +692,71 @@
             <div class="task-info-list">
               <div>
                 <span>My Role in the Class Project</span>
-                <p>You are writing Scene 3 for your class movie.</p>
+                <p data-task-role>You are writing Scene 3 for your class story movie.</p>
+              </div>
+              <div>
+                <span>Characters in your scene</span>
+                <p>Mia and Leo. Their appearance is locked by your teacher.</p>
               </div>
               <div>
                 <span>Scene / Chapter title</span>
-                <p>The Hidden Door</p>
+                <p data-task-title>The Hidden Door</p>
               </div>
               <div>
                 <span>Scene / Chapter goal</span>
-                <p>Show the moment when the class follows the map and finds a hidden door.</p>
+                <p data-task-goal>Show the moment when the class follows the map and finds a hidden door.</p>
               </div>
               <div>
                 <span>Source text reminder</span>
-                <p>The class read "The Mystery of the Lost Map."</p>
+                <p data-task-source>The class read "The Mystery of the Lost Map."</p>
               </div>
               <div>
                 <span>Skill Focus</span>
-                <p>character, setting, sequence, details</p>
+                <p data-task-skill-focus>character, setting, sequence, details</p>
               </div>
               <div>
                 <span>Model Sentence</span>
-                <p>"The library was quiet, but something unusual caught Mia's eye."</p>
+                <p data-task-model-sentence>"The library was quiet, but something unusual caught Mia's eye."</p>
               </div>
               <div>
                 <span>Try this pattern</span>
-                <p>"The ______ was quiet, but something unusual caught ______'s eye."</p>
+                <p data-task-pattern>"The ______ was quiet, but something unusual caught ______'s eye."</p>
               </div>
               <div>
                 <span>Your Task</span>
-                <p>Write your scene using the pattern.</p>
+                <p data-task-student-task>Write your scene using the pattern.</p>
+              </div>
+            </div>
+
+            <div class="locked-character-box">
+              <h3>Approved Character References</h3>
+              <p>Mia and Leo must stay visually consistent with the teacher-approved Story Bible.</p>
+              <div class="locked-character-list" aria-label="Characters in this scene">
+                <span>Mia - yellow hoodie, round glasses, ponytail</span>
+                <span>Leo - green hoodie, backpack, curly hair</span>
+              </div>
+              <p>Students can write actions, setting, and mood, but cannot change hairstyle, clothing, age, face style, or role.</p>
+            </div>
+
+            <div class="scene-image-rules">
+              <h3>Scene Image Candidate</h3>
+              <p>Choose a mood, generate a candidate image, then submit it for teacher review and class voting.</p>
+              <div class="mood-choice" data-scene-mood>
+                <label><input type="radio" name="sceneMood" value="Mysterious" checked /> <span>Mysterious</span></label>
+                <label><input type="radio" name="sceneMood" value="Exciting" /> <span>Exciting</span></label>
+                <label><input type="radio" name="sceneMood" value="Warm" /> <span>Warm</span></label>
+                <label><input type="radio" name="sceneMood" value="Funny" /> <span>Funny</span></label>
               </div>
             </div>
 
             <label>
               Assignment Title
-              <input data-writing-field="teacher-title" value="Scene 3: The Hidden Door" />
+              <input data-writing-field="teacher-title" data-task-title-input value="Scene 3: The Hidden Door" />
             </label>
 
             <label>
               Teacher Instructions
-              <textarea data-writing-field="teacher-instructions" rows="4">You are writing Scene 3 for your class movie. Write a 150-word scene where the class follows the map and finds a hidden door under an old tree.</textarea>
+              <textarea data-writing-field="teacher-instructions" data-task-instructions rows="4">You are writing Scene 3 for your class story movie. Write a 150-word scene where the class follows the map and finds a hidden door under an old tree.</textarea>
             </label>
 
             <div class="student-writing-row">
@@ -699,7 +772,7 @@
 
               <label>
                 Skill Focus
-                <input data-writing-field="teacher-skill" value="character, setting, sequence, descriptive details" />
+                <input data-writing-field="teacher-skill" data-task-skill-input value="character, setting, sequence, descriptive details" />
               </label>
             </div>
 
@@ -710,7 +783,8 @@
 
             <div class="student-action-row">
               <button class="primary" type="button" data-student-action="feedback" data-mode-target="assignment">Get AI Feedback</button>
-              <button class="credit-action" type="button" data-student-action="image" data-mode-target="assignment"><span>Generate Image</span><small>1 image credit</small></button>
+              <button class="credit-action" type="button" data-student-action="image" data-mode-target="assignment"><span>Generate Scene Image</span><small>1 image credit</small></button>
+              <button type="button" data-student-action="submit-image" data-mode-target="assignment">Submit Image Candidate</button>
               <button class="credit-action" type="button" data-student-action="video" data-mode-target="assignment"><span>Generate Scene Video</span><small>1 video credit</small></button>
               <button type="button" data-student-action="submit" data-mode-target="assignment">Submit to Teacher</button>
             </div>
@@ -721,10 +795,10 @@
           <section class="student-next-card">
             <h3>My Role in the Class Project</h3>
             <ol>
-              <li>Project: The Mystery of the Lost Map</li>
+              <li data-side-project>Project: The Mystery of the Lost Map</li>
               <li>Part: Scene 3 · The Hidden Door</li>
-              <li>Writing goal: Write one clear scene with setting, sequence, and descriptive details.</li>
-              <li>Submit this scene to your teacher for the class movie.</li>
+              <li data-side-goal>Writing goal: Write one clear scene with setting, sequence, and descriptive details.</li>
+              <li data-side-submit>Submit this scene to your teacher for the class movie.</li>
             </ol>
           </section>
 
@@ -811,6 +885,40 @@
           11: "multiple perspectives, pacing, tone, reflection",
           12: "complex structure, tone, outcome, reflection"
         };
+        const assignmentTemplates = {
+          narrative: {
+            status: "You are writing Scene 3 for your class story movie.",
+            role: "You are writing Scene 3 for your class story movie.",
+            title: "Scene 3: The Hidden Door",
+            goal: "Show the moment when the class follows the map and finds a hidden door.",
+            source: 'The class read "The Mystery of the Lost Map."',
+            skill: "character, setting, sequence, descriptive details",
+            model: "\"The library was quiet, but something unusual caught Mia's eye.\"",
+            pattern: "\"The ______ was quiet, but something unusual caught ______'s eye.\"",
+            task: "Write your scene using the pattern.",
+            instructions: "You are writing Scene 3 for your class story movie. Write a 150-word scene where the class follows the map and finds a hidden door under an old tree.",
+            draft: "Mia held the map carefully as the class walked toward the oldest tree in the garden. A small golden mark glowed on the paper. Under the roots, the students saw the shape of a hidden wooden door.",
+            sideProject: "Project: The Mystery of the Lost Map",
+            sideGoal: "Writing goal: Write one clear scene with setting, sequence, and descriptive details.",
+            sideSubmit: "Submit this scene to your teacher for the class movie."
+          },
+          informational: {
+            status: "You are writing Page 3 for your class science explainer book.",
+            role: "You are writing Page 3 for your class science explainer book.",
+            title: "Page 3: What did radar discover?",
+            goal: "Explain what radar helped scientists discover and why that evidence matters.",
+            source: "The class read the teacher's science article.",
+            skill: "explaining scientific ideas with evidence",
+            model: "\"Researchers used radar images to study features hidden beneath the planet's thick clouds.\"",
+            pattern: "\"Scientists used ______ to study ______.\"",
+            task: "Write one page explaining what radar helped scientists discover.",
+            instructions: "You are writing Page 3 for your class science explainer book. Write 120-150 words explaining the radar discovery, using one fact from the reading and one science vocabulary word.",
+            draft: "Scientists used radar images to study hidden features on Venus. The radar helped them see through thick clouds and find shapes that may be lava tubes.",
+            sideProject: "Project: Class Science Explainer Book",
+            sideGoal: "Writing goal: Explain a scientific idea with facts, evidence, and domain vocabulary.",
+            sideSubmit: "Submit this page to your teacher for the class explainer book."
+          }
+        };
         let activeMode = "free";
         let assignmentOpened = false;
 
@@ -849,6 +957,46 @@
           freeSkillFocus.textContent = gradeSkillFocus[freeGradeSelect.value] || gradeSkillFocus[3];
         }
 
+        function applyAssignmentFromLesson() {
+          let lesson = null;
+          try {
+            lesson = JSON.parse(localStorage.getItem("storieslens_create_lesson_result") || "null");
+          } catch {
+            lesson = null;
+          }
+          const template = assignmentTemplates[lesson?.textType === "informational" ? "informational" : "narrative"];
+          const model = lesson?.modelSentences?.[0];
+          const projectPlan = lesson?.projectPlan;
+          const firstPart = projectPlan?.parts?.[2] || projectPlan?.parts?.[0];
+          const partLabel = projectPlan?.partLabel || (lesson?.textType === "informational" ? "Page" : "Scene");
+          const partTitle = firstPart ? `${partLabel} ${projectPlan.parts.indexOf(firstPart) + 1}: ${firstPart[0]}` : template.title;
+          const setText = (selector, value) => {
+            const element = document.querySelector(selector);
+            if (element) element.textContent = value;
+          };
+          const setValue = (selector, value) => {
+            const element = document.querySelector(selector);
+            if (element) element.value = value;
+          };
+
+          setText("[data-assignment-status]", template.status);
+          setText("[data-task-role]", template.role);
+          setText("[data-task-title]", firstPart?.[0] || template.title);
+          setText("[data-task-goal]", firstPart?.[1] || template.goal);
+          setText("[data-task-source]", template.source);
+          setText("[data-task-skill-focus]", lesson?.textType === "informational" ? "explaining scientific ideas with evidence" : template.skill);
+          setText("[data-task-model-sentence]", model ? `"${model.sentence}"` : template.model);
+          setText("[data-task-pattern]", model ? `"${model.rewritePattern}"` : template.pattern);
+          setText("[data-task-student-task]", lesson?.studentWritingTask || template.task);
+          setText("[data-side-project]", `Project: ${projectPlan?.title || template.sideProject.replace("Project: ", "")}`);
+          setText("[data-side-goal]", template.sideGoal);
+          setText("[data-side-submit]", template.sideSubmit);
+          setValue("[data-task-title-input]", partTitle);
+          setValue("[data-task-instructions]", lesson?.studentWritingTask || template.instructions);
+          setValue("[data-task-skill-input]", lesson?.textType === "informational" ? "explaining scientific ideas with evidence" : template.skill);
+          setValue('[data-writing-field="teacher-draft"]', template.draft);
+        }
+
         function getDraft(mode) {
           const normalizedMode = normalizeMode(mode);
           const selector = normalizedMode === "assignment" ? '[data-writing-field="teacher-draft"]' : "[data-story-draft]";
@@ -874,11 +1022,91 @@
           showToast("AI feedback is ready.");
         }
 
-        function generatePreview(mode, mediaType = "image") {
+        function buildImagePrompt(mode) {
+          const draft = getDraft(mode);
+          const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Mysterious";
+          const skill = normalizeMode(mode) === "assignment"
+            ? document.querySelector('[data-task-skill-input]')?.value || "character, setting, sequence, descriptive details"
+            : freeSkillFocus?.textContent || "visual storytelling";
+          const characterRules = normalizeMode(mode) === "assignment"
+            ? "Use the approved character references: Mia has a yellow hoodie, round glasses, and a ponytail; Leo has a green hoodie, backpack, and curly hair. Keep age, face style, clothing, hairstyle, and role consistent."
+            : "Create age-appropriate K12 storybook characters with consistent friendly design.";
+
+          return [
+            "Create one polished children's storybook illustration for StoriesLens.",
+            `Student writing: ${draft}`,
+            `Skill focus: ${skill}`,
+            `Mood: ${selectedMood}`,
+            characterRules,
+            "Visual style: warm cinematic storybook illustration, classroom-safe, expressive lighting, clear setting, no horror, no violence.",
+            "Composition: one clear scene, strong focal point, suitable for a class book or class movie storyboard.",
+            "Do not include readable text, captions, logos, watermarks, UI elements, or speech bubbles."
+          ].join("\n");
+        }
+
+        async function requestImageFromApi(mode) {
+          if (window.location.protocol === "file:") {
+            throw new Error("API calls need the local server. Run npm start and open http://localhost:3000/visual-write.html.");
+          }
+
+          const response = await fetch("/api/generate-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: buildImagePrompt(mode),
+              aspectRatio: "16:9",
+              resolution: "2K",
+              assetType: mode === "assignment" ? "SCENE_IMAGE" : "FREE_CREATE_IMAGE"
+            })
+          });
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.error || "Image generation failed.");
+          }
+          if (!data.imageUrl) {
+            throw new Error("The image API did not return an image URL.");
+          }
+          return data;
+        }
+
+        async function generatePreview(mode, mediaType = "image") {
           const preview = document.querySelector(`[data-output="${mode}-preview"]`);
           if (!preview) return;
+          const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Mysterious";
+          if (mediaType === "image") {
+            preview.innerHTML = '<div class="student-preview-empty">Generating image...</div>';
+            try {
+              const result = await requestImageFromApi(mode);
+              preview.innerHTML = `<img src="${result.imageUrl}" alt="Generated story visual preview" />`;
+              localStorage.setItem(`storieslens_${mode}_generated_image`, JSON.stringify({
+                imageUrl: result.imageUrl,
+                downloadUrl: result.downloadUrl || result.imageUrl,
+                taskId: result.taskId || null,
+                prompt: buildImagePrompt(mode),
+                savedAt: new Date().toISOString()
+              }));
+              showToast(
+                mode === "assignment"
+                  ? `Scene image candidate generated with ${selectedMood.toLowerCase()} mood and approved characters.`
+                  : "Image generated. 1 image credit used."
+              );
+              return;
+            } catch (error) {
+              preview.innerHTML = `<div class="student-preview-empty">${error.message}</div>`;
+              showToast(error.message);
+              return;
+            }
+          }
+
           preview.innerHTML = `<img src="${previewImages[mode]}" alt="Generated story visual preview" />`;
-          showToast(mediaType === "video" ? "Scene video preview prepared. 1 video credit used." : "Image preview generated. 1 image credit used.");
+          showToast(
+            mediaType === "video"
+              ? "Scene video preview prepared. 1 video credit used."
+              : mode === "assignment"
+                ? `Scene image candidate generated with ${selectedMood.toLowerCase()} mood and approved characters.`
+                : "Image preview generated. 1 image credit used."
+          );
         }
 
         function saveWork(mode) {
@@ -899,8 +1127,9 @@
 
         assignmentOpenButton?.addEventListener("click", () => {
           assignmentOpened = true;
+          applyAssignmentFromLesson();
           setMode("assignment");
-          showToast("Class task opened. You are writing Scene 3 for your class movie.");
+          showToast(document.querySelector("[data-assignment-status]")?.textContent || "Class task opened.");
         });
 
         document.querySelectorAll("[data-student-action]").forEach((button) => {
@@ -911,6 +1140,10 @@
             if (action === "image") generatePreview(mode, "image");
             if (action === "video") generatePreview(mode, "video");
             if (action === "save") saveWork(mode);
+            if (action === "submit-image") {
+              const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Mysterious";
+              showToast(`Image candidate submitted for teacher review and class voting. Mood: ${selectedMood}.`);
+            }
             if (action === "submit") {
               saveWork(mode);
               showToast("Teacher task is ready for review.");
@@ -919,6 +1152,7 @@
         });
 
         const initialMode = normalizeMode(new URLSearchParams(window.location.search).get("mode"));
+        if (initialMode === "assignment") applyAssignmentFromLesson();
         setMode(initialMode);
       })();
     </script>

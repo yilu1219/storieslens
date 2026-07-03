@@ -7,69 +7,103 @@
     <link rel="stylesheet" href="styles.css" />
     <style>
       :root {
-        --ink: #152033;
-        --muted: #627089;
-        --line: #dbe5f5;
-        --blue: #326cff;
-        --purple: #8357ff;
-        --green: #18ad78;
-        --soft: #f6f9ff;
-        --card: rgba(255, 255, 255, 0.9);
-        --shadow: 0 18px 45px rgba(68, 88, 130, 0.12);
+        --ink: #f8fbff;
+        --muted: #b8c4de;
+        --line: rgba(143, 171, 255, 0.24);
+        --blue: #4d7cff;
+        --purple: #8b5cff;
+        --gold: #ffd98a;
+        --green: #76f0bd;
+        --danger: #ff9da5;
+        --card: rgba(11, 18, 42, 0.86);
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
       }
 
       body {
         color: var(--ink);
-        background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 48%, #fbfdff 100%);
-      }
-
-      #star-canvas {
-        display: none;
+        background:
+          radial-gradient(1px 1px at 8% 18%, rgba(255, 255, 255, 0.82), transparent 55%),
+          radial-gradient(1px 1px at 32% 72%, rgba(255, 255, 255, 0.55), transparent 55%),
+          radial-gradient(1px 1px at 72% 22%, rgba(255, 255, 255, 0.78), transparent 55%),
+          radial-gradient(circle at 18% 10%, rgba(37, 80, 180, 0.24), transparent 34%),
+          radial-gradient(circle at 76% 0%, rgba(129, 82, 255, 0.2), transparent 32%),
+          linear-gradient(180deg, #020716 0%, #060b1e 48%, #030716 100%);
+        background-attachment: fixed;
       }
 
       .teacher-project-page {
-        width: min(94vw, 1380px);
+        width: min(94vw, 1440px);
       }
 
       .project-header {
         margin-top: 18px;
         padding: 12px 14px;
-        border: 1px solid rgba(111, 143, 194, 0.18);
+        border: 1px solid rgba(154, 174, 255, 0.2);
         border-radius: 22px;
-        background: rgba(255, 255, 255, 0.78);
-        box-shadow: var(--shadow);
+        background: rgba(3, 8, 24, 0.72);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(18px);
       }
 
       .project-header .brand,
       .project-header .main-nav a {
-        color: var(--ink);
+        color: #f8fbff;
       }
 
       .project-header .main-nav a.nav-active {
-        color: var(--blue);
+        color: var(--gold);
       }
 
       .project-hero {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.34fr);
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.34fr);
         gap: 18px;
         align-items: end;
-        padding: 44px 4px 22px;
+        padding: 42px 0 20px;
+      }
+
+      .project-kicker,
+      .status-pill,
+      .tag,
+      .rule-pill {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(13, 22, 51, 0.72);
+      }
+
+      .project-kicker {
+        gap: 9px;
+        padding: 8px 12px;
+        color: #a9c7ff;
+        font-weight: 900;
+      }
+
+      .project-kicker::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--green);
+        box-shadow: 0 0 18px rgba(118, 240, 189, 0.82);
       }
 
       .project-hero h1 {
-        margin: 0 0 10px;
-        color: var(--ink);
-        font-size: clamp(38px, 5vw, 70px);
-        letter-spacing: 0;
+        margin: 12px 0 10px;
+        color: #fff;
+        font-size: clamp(42px, 6vw, 78px);
         line-height: 0.96;
+        letter-spacing: 0;
       }
 
       .project-hero p {
+        max-width: 850px;
         margin: 0;
         color: var(--muted);
         font-size: 19px;
-        line-height: 1.5;
+        line-height: 1.55;
       }
 
       .status-grid {
@@ -80,10 +114,14 @@
 
       .stat-card,
       .project-card,
-      .scene-card {
-        border: 1px solid rgba(111, 143, 194, 0.18);
+      .mini-card,
+      .scene-card,
+      .candidate-card,
+      .character-card,
+      .builder-page {
+        border: 1px solid var(--line);
         border-radius: 22px;
-        background: var(--card);
+        background: linear-gradient(180deg, rgba(17, 28, 65, 0.9), rgba(8, 13, 31, 0.86));
         box-shadow: var(--shadow);
       }
 
@@ -99,109 +137,260 @@
       }
 
       .stat-card strong {
-        color: var(--ink);
-        font-size: 28px;
+        color: #fff;
+        font-size: 30px;
+      }
+
+      .tab-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin: 0 0 18px;
+      }
+
+      .tab-button {
+        min-height: 42px;
+        padding: 0 13px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: rgba(248, 251, 255, 0.76);
+        background: rgba(13, 22, 51, 0.72);
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .tab-button.is-active {
+        color: #fff;
+        border-color: rgba(118, 145, 255, 0.58);
+        background: linear-gradient(135deg, rgba(48, 103, 255, 0.34), rgba(128, 78, 255, 0.24));
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.is-active {
+        display: block;
+      }
+
+      .project-grid,
+      .two-column-grid,
+      .visual-grid,
+      .builder-grid {
+        display: grid;
+        gap: 16px;
       }
 
       .project-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 0.68fr) minmax(340px, 0.32fr);
-        gap: 18px;
+        grid-template-columns: minmax(0, 0.66fr) minmax(340px, 0.34fr);
         align-items: start;
       }
 
-      .project-card {
+      .two-column-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .visual-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .builder-grid {
+        grid-template-columns: minmax(0, 0.58fr) minmax(340px, 0.42fr);
+      }
+
+      .project-card,
+      .mini-card {
         padding: 22px;
       }
 
-      .project-card h2 {
+      .project-card h2,
+      .mini-card h3,
+      .scene-card h3,
+      .candidate-card h3,
+      .character-card h3,
+      .builder-page h3 {
         margin: 0 0 8px;
-        color: var(--ink);
+        color: #fff;
+        letter-spacing: 0;
       }
 
-      .project-card p {
-        color: var(--muted);
-        line-height: 1.5;
-      }
-
-      .scene-list {
-        display: grid;
-        gap: 12px;
-      }
-
-      .scene-card {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 14px;
-        padding: 16px;
-      }
-
-      .scene-card h3 {
-        margin: 0 0 8px;
-        color: var(--ink);
-      }
-
-      .scene-card p {
+      .project-card p,
+      .mini-card p,
+      .scene-card p,
+      .candidate-card p,
+      .character-card p,
+      .builder-page p,
+      .project-list {
         margin: 0;
         color: var(--muted);
-        line-height: 1.45;
+        line-height: 1.55;
       }
 
-      .tag-row,
-      .action-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
+      .project-list {
+        padding-left: 20px;
       }
 
-      .tag {
+      .status-pill,
+      .tag,
+      .rule-pill {
         padding: 7px 10px;
-        border-radius: 999px;
-        color: #245d48;
-        background: #e8fbf3;
+        color: var(--green);
         font-size: 13px;
         font-weight: 900;
       }
 
-      .button {
-        min-height: 40px;
-        padding: 0 12px;
+      .tag.warning,
+      .status-pill.warning {
+        color: var(--gold);
+      }
+
+      .tag.danger,
+      .status-pill.danger {
+        color: var(--danger);
+      }
+
+      .button,
+      .primary-button {
+        min-height: 42px;
+        padding: 0 13px;
         border-radius: 12px;
-        border: 1px solid var(--line);
-        color: var(--ink);
-        background: #fff;
         font: inherit;
         font-weight: 900;
         text-decoration: none;
         cursor: pointer;
       }
 
-      .button.primary {
+      .button {
+        border: 1px solid var(--line);
+        color: #fff;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .primary-button {
         border: 0;
         color: #fff;
         background: linear-gradient(135deg, var(--blue), var(--purple));
       }
 
-      .button.blue {
-        color: var(--blue);
-        background: #eaf1ff;
+      .button:disabled,
+      .primary-button:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
       }
 
-      .side-stack {
+      .action-row,
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .scene-list,
+      .character-list,
+      .candidate-list,
+      .publish-checklist {
         display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .scene-card,
+      .character-card,
+      .candidate-card,
+      .builder-page {
+        padding: 16px;
+      }
+
+      .character-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 190px;
         gap: 14px;
       }
 
-      .publish-panel {
+      .reference-frame,
+      .candidate-frame,
+      .cover-frame {
         display: grid;
-        gap: 10px;
+        place-items: center;
+        min-height: 150px;
+        border: 1px solid rgba(143, 171, 255, 0.2);
+        border-radius: 16px;
+        color: rgba(248, 251, 255, 0.72);
+        background:
+          radial-gradient(circle at 50% 0%, rgba(111, 145, 255, 0.2), transparent 42%),
+          rgba(4, 9, 24, 0.72);
+        text-align: center;
       }
 
-      @media (max-width: 980px) {
+      .candidate-frame {
+        min-height: 170px;
+      }
+
+      .candidate-frame img,
+      .cover-frame img {
+        width: 100%;
+        height: 100%;
+        min-height: 170px;
+        object-fit: cover;
+        border-radius: 16px;
+      }
+
+      .visual-rule-box {
+        padding: 14px;
+        border: 1px solid rgba(143, 171, 255, 0.22);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .prompt-box {
+        white-space: pre-wrap;
+        margin-top: 12px;
+        padding: 14px;
+        border: 1px solid rgba(143, 171, 255, 0.2);
+        border-radius: 16px;
+        color: rgba(248, 251, 255, 0.78);
+        background: rgba(4, 9, 24, 0.72);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .publish-check {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 13px;
+        border: 1px solid rgba(143, 171, 255, 0.2);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .teacher-toast {
+        position: fixed;
+        right: 26px;
+        bottom: 26px;
+        z-index: 30;
+        max-width: 360px;
+        padding: 14px 16px;
+        border: 1px solid rgba(143, 171, 255, 0.34);
+        border-radius: 14px;
+        color: #fff;
+        background: rgba(12, 18, 38, 0.96);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+      }
+
+      .teacher-toast[hidden] {
+        display: none;
+      }
+
+      @media (max-width: 1080px) {
         .project-hero,
         .project-grid,
-        .scene-card {
+        .two-column-grid,
+        .visual-grid,
+        .builder-grid,
+        .character-card {
           grid-template-columns: 1fr;
         }
       }
@@ -224,70 +413,412 @@
 
       <section class="project-hero">
         <div>
+          <span class="project-kicker">Consistent characters. Student-created scenes. Teacher-approved publishing.</span>
           <h1>The Mystery of the Lost Map</h1>
-          <p>Class Movie · Grade 4. Review student submissions, generate visuals, and publish the final class project.</p>
+          <p>Class Movie - Grade 4. Teacher controls consistency. Students create and vote. Class publishes together.</p>
         </div>
         <div class="status-grid">
           <div class="stat-card"><span>Students</span><strong>24</strong></div>
           <div class="stat-card"><span>Scenes</span><strong>6</strong></div>
-          <div class="stat-card"><span>Submitted</span><strong>0</strong></div>
-          <div class="stat-card"><span>Visuals ready</span><strong>0</strong></div>
+          <div class="stat-card"><span>Submitted</span><strong>18</strong></div>
+          <div class="stat-card"><span>Visuals ready</span><strong>9</strong></div>
         </div>
       </section>
 
-      <section class="project-grid">
+      <nav class="tab-row" aria-label="Teacher project tabs">
+        <button class="tab-button is-active" type="button" data-tab="overview">Overview</button>
+        <button class="tab-button" type="button" data-tab="story-bible">Story Bible</button>
+        <button class="tab-button" type="button" data-tab="characters">Characters</button>
+        <button class="tab-button" type="button" data-tab="submissions">Submissions</button>
+        <button class="tab-button" type="button" data-tab="visuals">Visuals</button>
+        <button class="tab-button" type="button" data-tab="voting">Voting</button>
+        <button class="tab-button" type="button" data-tab="book-builder">Book Builder</button>
+        <button class="tab-button" type="button" data-tab="movie-board">Movie Board</button>
+        <button class="tab-button" type="button" data-tab="publish">Publish</button>
+      </nav>
+
+      <section class="tab-panel is-active" data-tab-panel="overview">
+        <div class="project-grid">
+          <article class="project-card">
+            <h2>Project workflow</h2>
+            <p>Approve the Story Bible and character references before final scene visuals are generated. Students may submit candidate images and vote, but the teacher confirms what becomes part of the final class book or movie.</p>
+            <div class="scene-list">
+              <section class="scene-card">
+                <h3>1. Lock the world</h3>
+                <p>Story Bible, visual style, and character references define consistency for the whole project.</p>
+                <div class="tag-row"><span class="tag">Story Bible approved</span><span class="tag warning">Characters pending</span></div>
+              </section>
+              <section class="scene-card">
+                <h3>2. Students create scenes</h3>
+                <p>Each student writes one scene or chapter, then submits image candidates using the approved characters and visual style.</p>
+                <div class="tag-row"><span class="tag">18 submissions</span><span class="tag">9 visual candidates</span></div>
+              </section>
+              <section class="scene-card">
+                <h3>3. Teacher publishes</h3>
+                <p>Student votes recommend winners. The teacher chooses final scene covers, book cover, movie cover, and share link.</p>
+                <div class="tag-row"><span class="tag warning">Publish checks not complete</span></div>
+              </section>
+            </div>
+          </article>
+          <aside class="project-card">
+            <h2>Consistency rule</h2>
+            <p class="visual-rule-box"><strong>No approved characters means no final scene visuals.</strong><br />Character references must be approved before final scene visuals can be generated.</p>
+            <div class="action-row">
+              <button class="primary-button" type="button" data-jump-tab="story-bible">Approve Story Bible</button>
+              <button class="button" type="button" data-jump-tab="characters">Review Characters</button>
+              <button class="button" type="button" data-jump-tab="publish">Publish Checks</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="story-bible">
         <article class="project-card">
-          <h2>Student scenes</h2>
-          <p>Visual generation belongs here, after the lesson has been assigned and student writing is ready.</p>
+          <h2>Story Bible</h2>
+          <p>Keep characters, settings, and visual style consistent across the whole class project.</p>
+          <div class="two-column-grid" style="margin-top: 16px;">
+            <div class="mini-card">
+              <h3>Project Title</h3>
+              <p>The Mystery of the Lost Map</p>
+            </div>
+            <div class="mini-card">
+              <h3>Story Premise</h3>
+              <p>A group of students discover an old map in the school library and follow clues around the campus.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Main Characters</h3>
+              <p>Mia, Leo, Ava, Noah, and Emma. Students may write actions and dialogue, but not redesign characters.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Main Settings</h3>
+              <p>School library, playground, old garden tree, hidden door, and moonlit classroom finale.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Visual Style</h3>
+              <p>Warm storybook illustration, soft colors, cinematic classroom adventure, no readable text, no logos.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Tone</h3>
+              <p>Curious, safe, mysterious, hopeful, and classroom-friendly.</p>
+            </div>
+          </div>
+          <div class="two-column-grid" style="margin-top: 16px;">
+            <div class="mini-card">
+              <h3>Do</h3>
+              <ul class="project-list">
+                <li>Keep characters consistent.</li>
+                <li>Use school-friendly visuals.</li>
+                <li>Use the approved character reference images.</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>Don't</h3>
+              <ul class="project-list">
+                <li>Do not change character age, clothing, hairstyle, or face style.</li>
+                <li>Do not include real student names in images.</li>
+                <li>Do not add logos or readable text.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="primary-button" type="button" data-action="approve-bible">Approve Story Bible</button>
+            <button class="button" type="button">Edit Story Bible</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="characters">
+        <article class="project-card">
+          <h2>Character References</h2>
+          <p>Approve the character designs before students generate scene images.</p>
+          <div class="character-list">
+            <section class="character-card" data-character-card>
+              <div>
+                <h3>Mia</h3>
+                <p><strong>Role:</strong> Curious student leader</p>
+                <p><strong>Appearance:</strong> 10-year-old Asian girl, long black hair in a ponytail, round glasses, yellow hoodie, blue jeans, white sneakers.</p>
+                <p><strong>Visual Rule:</strong> Always keep the same hairstyle, glasses, yellow hoodie, age, and friendly storybook style.</p>
+                <div class="tag-row">
+                  <span class="tag warning" data-character-status>Generated</span>
+                  <span class="tag">Front view</span>
+                  <span class="tag">Full body</span>
+                </div>
+                <div class="action-row">
+                  <button class="button" type="button" data-action="generate-character">Generate Character Card</button>
+                  <button class="button" type="button">Regenerate</button>
+                  <button class="primary-button" type="button" data-action="approve-character">Approve Character</button>
+                </div>
+              </div>
+              <div class="reference-frame" data-character-frame>Mia reference image mock</div>
+            </section>
+
+            <section class="character-card" data-character-card>
+              <div>
+                <h3>Leo</h3>
+                <p><strong>Role:</strong> Careful clue reader</p>
+                <p><strong>Appearance:</strong> 10-year-old boy, short curly brown hair, green hoodie, backpack, dark jeans, warm expression.</p>
+                <p><strong>Visual Rule:</strong> Keep the same curly hair, green hoodie, backpack, age, and friendly classroom-adventure style.</p>
+                <div class="tag-row">
+                  <span class="tag warning" data-character-status>Not generated</span>
+                  <span class="tag">Front view</span>
+                </div>
+                <div class="action-row">
+                  <button class="button" type="button" data-action="generate-character">Generate Character Card</button>
+                  <button class="button" type="button">Regenerate</button>
+                  <button class="primary-button" type="button" data-action="approve-character">Approve Character</button>
+                </div>
+              </div>
+              <div class="reference-frame" data-character-frame>Character reference pending</div>
+            </section>
+          </div>
+          <p class="visual-rule-box" style="margin-top: 16px;" data-character-ready-message>Character references must be approved before final scene visuals can be generated.</p>
+        </article>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="submissions">
+        <article class="project-card">
+          <h2>Student Submissions</h2>
+          <p>Review writing before visual candidates become eligible for the final class project.</p>
           <div class="scene-list">
             <section class="scene-card">
-              <div>
-                <h3>Scene 1 · Opening</h3>
-                <p>Assigned to Ava. Introduce the setting and mystery.</p>
-                <div class="tag-row">
-                  <span class="tag">Waiting for submission</span>
-                  <span class="tag">Review needed</span>
-                </div>
-              </div>
-              <div class="action-row">
-                <button class="button blue" type="button">Generate Illustration · 1 image credit</button>
-                <button class="button" type="button">Generate Photo-style Scene · 2 image credits</button>
-                <button class="button" type="button">Generate Scene Video · 1 video credit</button>
-              </div>
+              <h3>Scene 1 - Opening</h3>
+              <p>Student: Ava. The library feels quiet and mysterious. Writing includes setting, action, and sequence.</p>
+              <div class="tag-row"><span class="tag">Writing approved</span><span class="tag">Image candidate submitted</span></div>
+              <div class="action-row"><button class="button">View Writing</button><button class="primary-button">Approve Writing</button></div>
             </section>
             <section class="scene-card">
-              <div>
-                <h3>Scene 2 · The Discovery</h3>
-                <p>Assigned to Leo. Show the key object or clue.</p>
-                <div class="tag-row">
-                  <span class="tag">Waiting for submission</span>
-                  <span class="tag">No visuals yet</span>
-                </div>
-              </div>
-              <div class="action-row">
-                <button class="button blue" type="button">Generate Illustration · 1 image credit</button>
-                <button class="button" type="button">Generate Photo-style Scene · 2 image credits</button>
-                <button class="button" type="button">Generate Scene Video · 1 video credit</button>
-              </div>
+              <h3>Scene 2 - The Discovery</h3>
+              <p>Student: Leo. A map appears inside a dusty book. Needs one more descriptive detail.</p>
+              <div class="tag-row"><span class="tag warning">Writing review</span><span class="tag warning">No selected cover</span></div>
+              <div class="action-row"><button class="button">View Writing</button><button class="primary-button">Approve Writing</button></div>
             </section>
           </div>
         </article>
-
-        <aside class="side-stack">
-          <section class="project-card publish-panel">
-            <h2>Publish controls</h2>
-            <p>Use these after submissions and visuals are ready.</p>
-            <button class="button primary" type="button">Publish Class Book / Movie</button>
-            <button class="button" type="button">Export Teacher Report</button>
-            <button class="button" type="button">Download Student Writing</button>
-          </section>
-          <section class="project-card">
-            <h2>Lesson support</h2>
-            <p>CCSS focus, model sentences, rewrite templates, and assignment plan are saved from the Create page.</p>
-            <a class="button blue" href="create-reading-project.html">Back to Create Lesson</a>
-          </section>
-        </aside>
       </section>
+
+      <section class="tab-panel" data-tab-panel="visuals">
+        <article class="project-card">
+          <h2>Scene Visual Candidates</h2>
+          <p>Student-generated candidates are grouped by scene or chapter. Teacher chooses the final Scene Cover.</p>
+          <div class="visual-grid">
+            <section class="candidate-card" data-candidate-card>
+              <div class="candidate-frame"><img src="assets/showcase-block-castle.png" alt="" /></div>
+              <h3>Candidate A</h3>
+              <p>Scene 3 - The First Clue<br />Generated by Ava<br /><strong>12 votes</strong></p>
+              <div class="tag-row"><span class="tag" data-cover-status>Top vote</span></div>
+              <div class="action-row">
+                <button class="primary-button" type="button" data-action="select-cover">Use as Scene Cover</button>
+                <button class="button" type="button">Approve Visual</button>
+                <button class="button" type="button">Reject Visual</button>
+              </div>
+            </section>
+            <section class="candidate-card" data-candidate-card>
+              <div class="candidate-frame"><img src="assets/storybook-portal-book.png" alt="" /></div>
+              <h3>Candidate B</h3>
+              <p>Scene 3 - The First Clue<br />Generated by Leo<br /><strong>8 votes</strong></p>
+              <div class="tag-row"><span class="tag warning" data-cover-status>Candidate</span></div>
+              <div class="action-row">
+                <button class="primary-button" type="button" data-action="select-cover">Use as Scene Cover</button>
+                <button class="button" type="button">Regenerate</button>
+              </div>
+            </section>
+            <section class="candidate-card" data-candidate-card>
+              <div class="candidate-frame">Candidate C preview</div>
+              <h3>Candidate C</h3>
+              <p>Scene 3 - The First Clue<br />Generated by Mia<br /><strong>5 votes</strong></p>
+              <div class="tag-row"><span class="tag warning" data-cover-status>Candidate</span></div>
+              <div class="action-row">
+                <button class="primary-button" type="button" data-action="select-cover">Use as Scene Cover</button>
+                <button class="button" type="button">Regenerate</button>
+              </div>
+            </section>
+          </div>
+          <p class="prompt-box">Prompt builder uses: Story Bible + approved character references + visual style guide + student writing + scene goal. Requirements keep hairstyle, clothing, age, face style, role, classroom safety, no readable text, and 16:9 aspect ratio.</p>
+        </article>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="voting">
+        <article class="project-card">
+          <h2>Class Vote</h2>
+          <p>Students can vote for the best visual candidate. The teacher makes the final decision.</p>
+          <div class="two-column-grid" style="margin-top: 16px;">
+            <div class="mini-card">
+              <h3>Scene 3: The First Clue</h3>
+              <p>Winner: Candidate A<br /><strong>12 votes</strong></p>
+              <div class="action-row">
+                <button class="primary-button" type="button">Use winner as Scene Cover</button>
+                <button class="button" type="button">Override selection</button>
+                <button class="button" type="button">Regenerate cover</button>
+              </div>
+            </div>
+            <div class="mini-card">
+              <h3>Book Cover Candidates</h3>
+              <p>Cover A: 15 votes<br />Cover B: 9 votes<br />Cover C: 4 votes</p>
+              <div class="action-row">
+                <button class="primary-button" type="button">Use as Final Cover</button>
+                <button class="button" type="button">Generate 3 cover candidates</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="book-builder">
+        <article class="project-card">
+          <h2>Book Builder</h2>
+          <p>Book Builder strings the project in order. First version keeps one student or group per page.</p>
+          <div class="builder-grid" style="margin-top: 16px;">
+            <div class="scene-list">
+              <section class="builder-page"><h3>Cover</h3><p>Final cover selected by teacher after student voting.</p></section>
+              <section class="builder-page"><h3>Teacher Introduction</h3><p>Reading text, project goal, and CCSS skill focus.</p></section>
+              <section class="builder-page"><h3>Table of Contents</h3><p>Scene 1, Scene 2, Scene 3, student credits.</p></section>
+              <section class="builder-page"><h3>Chapter 1: The Discovery</h3><p>Selected Scene Cover Image<br />Student Writing<br />Written by: Ava / Group 1<br />Skill Focus: setting, action, sequence</p></section>
+              <section class="builder-page"><h3>Student Credits</h3><p>Each page keeps its student author or group author.</p></section>
+              <section class="builder-page"><h3>Reflection Page</h3><p>Students explain how writing became a class book.</p></section>
+            </div>
+            <div class="cover-frame">Class book preview mock</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="movie-board">
+        <article class="project-card">
+          <h2>Movie Board</h2>
+          <p>Movie Board shows scenes in sequence. First version is a clear review board, not a complex video editor.</p>
+          <div class="scene-list">
+            <section class="scene-card">
+              <h3>Opening Title</h3>
+              <p>Project title, cover image, and class name.</p>
+              <div class="tag-row"><span class="tag">Ready</span></div>
+            </section>
+            <section class="scene-card">
+              <h3>Scene 1: Opening</h3>
+              <p>Writing approved. Image ready. Video ready.</p>
+              <div class="action-row"><button class="button">Preview</button><button class="button">Regenerate Video</button><button class="primary-button">Use in Movie</button></div>
+            </section>
+            <section class="scene-card">
+              <h3>Scene 2: The Discovery</h3>
+              <p>Writing approved. Image ready. Video queued.</p>
+              <div class="action-row"><button class="button">Preview</button><button class="button">Regenerate Video</button><button class="primary-button">Use in Movie</button></div>
+            </section>
+            <section class="scene-card">
+              <h3>Ending Credits</h3>
+              <p>Student credits and class reflection.</p>
+              <div class="tag-row"><span class="tag warning">Needs teacher review</span></div>
+            </section>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="publish">
+        <article class="project-card">
+          <h2>Publish Checks</h2>
+          <p>Publish only after writing, selected visuals, final cover, and teacher approval are complete.</p>
+          <div class="publish-checklist">
+            <div class="publish-check"><span>All Scene / Chapter writing approved</span><strong class="status-pill warning">3 chapters still need approval</strong></div>
+            <div class="publish-check"><span>All Scene Covers selected</span><strong class="status-pill danger">2 scene covers missing</strong></div>
+            <div class="publish-check"><span>Book / Movie Cover confirmed</span><strong class="status-pill danger">1 cover image not confirmed</strong></div>
+            <div class="publish-check"><span>Teacher final approval</span><strong class="status-pill warning">Pending</strong></div>
+          </div>
+          <div class="action-row">
+            <button class="button" type="button" data-jump-tab="submissions">Review Pending Chapters</button>
+            <button class="button" type="button" data-jump-tab="visuals">Select Scene Covers</button>
+            <button class="button" type="button" data-jump-tab="voting">Review Cover Vote</button>
+            <button class="primary-button" type="button" disabled>Publish Class Book</button>
+            <button class="primary-button" type="button" disabled>Publish Class Movie</button>
+            <button class="button" type="button" disabled>Export PDF</button>
+            <button class="button" type="button" disabled>Share Parent Link</button>
+          </div>
+        </article>
+      </section>
+
+      <div class="teacher-toast" data-teacher-toast hidden role="status" aria-live="polite"></div>
     </main>
+
+    <script>
+      (() => {
+        const STORE = {
+          character_profile: "storiesLens_character_profile",
+          character_reference_asset: "storiesLens_character_reference_asset",
+          scene_character: "storiesLens_scene_character",
+          visual_asset: "storiesLens_visual_asset",
+          visual_vote: "storiesLens_visual_vote"
+        };
+        window.StoriesLensProjectModel = {
+          STORE,
+          assetTypes: ["CHARACTER_REFERENCE", "SCENE_IMAGE", "PHOTO_STYLE_SCENE", "SCENE_VIDEO", "BOOK_COVER", "MOVIE_COVER"],
+          taskStatus: ["PENDING", "PROCESSING", "COMPLETED", "FAILED"]
+        };
+
+        const toast = document.querySelector("[data-teacher-toast]");
+
+        function showToast(message) {
+          if (!toast) return;
+          toast.textContent = message;
+          toast.hidden = false;
+          window.clearTimeout(showToast.timer);
+          showToast.timer = window.setTimeout(() => {
+            toast.hidden = true;
+          }, 2600);
+        }
+
+        function activateTab(tabName) {
+          document.querySelectorAll("[data-tab]").forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.tab === tabName);
+          });
+          document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
+            panel.classList.toggle("is-active", panel.dataset.tabPanel === tabName);
+          });
+          window.location.hash = tabName;
+        }
+
+        document.querySelectorAll("[data-tab]").forEach((button) => {
+          button.addEventListener("click", () => activateTab(button.dataset.tab));
+        });
+
+        document.querySelectorAll("[data-jump-tab]").forEach((button) => {
+          button.addEventListener("click", () => activateTab(button.dataset.jumpTab));
+        });
+
+        document.querySelectorAll('[data-action="approve-bible"]').forEach((button) => {
+          button.addEventListener("click", () => showToast("Story Bible approved. Characters can now be reviewed."));
+        });
+
+        document.querySelectorAll('[data-action="generate-character"]').forEach((button) => {
+          button.addEventListener("click", () => {
+            const card = button.closest("[data-character-card]");
+            card.querySelector("[data-character-status]").textContent = "Generated";
+            card.querySelector("[data-character-frame]").textContent = "Generated character reference mock";
+            showToast("Character card generated as a mock reference.");
+          });
+        });
+
+        document.querySelectorAll('[data-action="approve-character"]').forEach((button) => {
+          button.addEventListener("click", () => {
+            const card = button.closest("[data-character-card]");
+            card.querySelector("[data-character-status]").textContent = "Approved";
+            card.querySelector("[data-character-status]").classList.remove("warning");
+            document.querySelector("[data-character-ready-message]").textContent = "Scene visual generation is ready.";
+            showToast("Character reference approved. Student scene visuals can use this design.");
+          });
+        });
+
+        document.querySelectorAll('[data-action="select-cover"]').forEach((button) => {
+          button.addEventListener("click", () => {
+            document.querySelectorAll("[data-cover-status]").forEach((status) => {
+              status.textContent = "Candidate";
+              status.classList.add("warning");
+            });
+            const status = button.closest("[data-candidate-card]").querySelector("[data-cover-status]");
+            status.textContent = "Scene Cover Selected";
+            status.classList.remove("warning");
+            showToast("Scene cover selected by teacher.");
+          });
+        });
+
+        const initialHash = window.location.hash.replace("#", "");
+        if (initialHash) activateTab(initialHash);
+      })();
+    </script>
   </body>
 </html>

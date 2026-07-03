@@ -841,7 +841,7 @@
       <section class="lesson-hero">
         <span class="lesson-kicker">Teacher lesson builder</span>
         <h1>Create from Reading Text</h1>
-        <p>Upload a reading passage and turn it into a ready-to-teach visual writing project.</p>
+        <p>Upload a reading passage and turn it into a ready-to-teach reading-to-writing lesson.</p>
         <div class="stage-rail" aria-label="Teacher workflow stages">
           <div class="stage-pill is-active" data-stage-pill="upload"><em>1</em>Upload</div>
           <div class="stage-pill" data-stage-pill="review"><em>2</em>Review</div>
@@ -918,7 +918,7 @@
                 <button class="grade-button" type="button" data-grade="Grade 11">11</button>
                 <button class="grade-button" type="button" data-grade="Grade 12">12</button>
               </div>
-              <div class="recommend-note" data-grade-focus>Recommended focus: narrative writing, character, setting, sequence, descriptive details.</div>
+              <div class="recommend-note" data-grade-focus>Skill focus will be recommended after text analysis.</div>
             </div>
 
             <div>
@@ -964,18 +964,15 @@
             </label>
 
             <div class="library-note">
-              <strong>CCSS Standards Library</strong><br />
-              Runtime matching uses <code>resources/ccss/ela-standards.json</code>. Import source PDF once from <code>resources/source/ccss-ela-standards.pdf</code>.
-              <div class="review-actions" style="margin-top: 10px;">
-                <button class="quiet-button" type="button" data-import-ccss>Import CCSS PDF</button>
-              </div>
-              <span data-ccss-import-status>Standards ready for Grade 2-6 MVP matching.</span>
+              <strong>CCSS Standards: Ready</strong><br />
+              Standards are ready for grade-level matching after StoriesLens analyzes the reading text.
+              <span data-ccss-import-status>Skill focus will be recommended after text analysis.</span>
             </div>
           </div>
 
           <div class="builder-footer">
             <button class="primary-button" type="button" data-create-lesson>Create Lesson</button>
-            <small data-create-help>StoriesLens will create skill focus, model sentences, rewrite templates, and student writing tasks.</small>
+            <small data-create-help>StoriesLens will analyze the text type, match skills, create student writing support, and build a reading-to-writing lesson.</small>
           </div>
         </aside>
       </section>
@@ -983,7 +980,7 @@
       <section class="review-section" data-review-section>
         <div class="section-heading">
           <div>
-            <h2>Your lesson is ready.</h2>
+            <h2>Your reading-to-writing lesson is ready.</h2>
             <p>Review and adjust before assigning.</p>
           </div>
           <span class="lesson-kicker" data-review-mode>K12 CCSS</span>
@@ -991,13 +988,17 @@
 
         <div class="review-grid">
           <article class="review-card" data-skill-review-card>
-            <h3>CCSS Focus</h3>
+            <h3>Text & Skill Match</h3>
+            <div class="review-block" data-text-type>
+              <span>Text Type</span>
+              <p>Narrative story</p>
+            </div>
             <div class="review-block" data-ccss-focus>
-              <span>Reading Skill</span>
+              <span>Reading Focus</span>
               <p><strong>RL.4.3</strong> · Characters, setting, and events</p>
             </div>
             <div class="review-block" data-writing-focus>
-              <span>Writing Skill</span>
+              <span>Writing Focus</span>
               <p><strong>W.4.3</strong> · Narrative writing with clear sequence and details</p>
             </div>
             <div class="review-block">
@@ -1027,23 +1028,41 @@
           </article>
 
           <article class="review-card">
-            <h3>Student Rewrite Templates</h3>
-            <p>Sentence patterns students can use to start writing with confidence.</p>
+            <h3>Student Writing Support</h3>
+            <p>Student-facing task, writing frame, and checklist generated from the reading text.</p>
             <div class="review-block">
-              <span>Rewrite Pattern</span>
-              <p>"The ______ was quiet, but something unusual caught ______'s eye."</p>
+              <span>Student Writing Task</span>
+              <p data-student-writing-task>Write the opening scene and make the setting feel quiet and mysterious.</p>
             </div>
             <div class="review-block">
-              <span>Story Frame</span>
-              <p>At the beginning, ______ found ______.<br />Then, ______ followed a clue to ______.<br />After that, ______ faced ______.<br />In the end, ______ solved the problem by ______.</p>
+              <span data-writing-frame-label>Rewrite Frame</span>
+              <p data-writing-frame>"The ______ was quiet, but something unusual caught ______'s eye."</p>
+            </div>
+            <div class="review-block">
+              <span>Student Checklist</span>
+              <p data-student-checklist>I used character, setting, sequence, and descriptive details.</p>
             </div>
             <div class="review-actions"><button class="secondary-button" type="button">Accept</button><button class="quiet-button" type="button">Edit</button></div>
           </article>
 
           <article class="review-card">
-            <h3 data-project-plan-title>Class Book Plan</h3>
+            <h3>Project Plan</h3>
+            <p data-project-plan-title>Class Storybook Plan</p>
             <div class="compact-plan" data-project-plan-list></div>
             <div class="review-actions"><button class="secondary-button" type="button">Accept</button><button class="quiet-button" type="button">Edit</button></div>
+          </article>
+
+          <article class="review-card">
+            <h3>45-Minute Lesson Plan</h3>
+            <p>A complete teacher-ready class plan generated from the reading text, grade level, CCSS focus, model sentences, and student writing task.</p>
+            <div class="review-block">
+              <span>Included</span>
+              <p>Objective, materials, warm-up, close reading, CCSS skill mini-lesson, guided imitation writing, student work time, share-out, assessment, and extension.</p>
+            </div>
+            <div class="review-actions">
+              <button class="primary-button" type="button" data-download-lesson-plan>Download 45-Minute Lesson Plan</button>
+              <button class="quiet-button" type="button" data-preview-lesson-plan>Preview Plan</button>
+            </div>
           </article>
         </div>
 
@@ -1140,15 +1159,50 @@ Emma</textarea>
           grade: "Grade 4",
           framework: "K12_CCSS",
           outputType: "CLASS_BOOK",
-          classSize: 24
+          classSize: 24,
+          lessonResult: null
         };
 
         const sampleText =
           "In the school library, Mia found an old map hidden inside a dusty book. The library was quiet, but something unusual caught her eye. A golden line on the map moved slowly toward the garden. Mia called her friends, and together they followed the clue across the playground. Under the oldest tree, they found a small wooden door. No one knew what was behind it, but the map glowed brighter when Mia stepped closer.";
 
-        const planData = {
-          CLASS_BOOK: {
-            title: "Class Book Plan",
+        const defaultLessonResult = {
+          textType: "narrative",
+          subjectArea: "literature",
+          recommendedWritingMode: "narrative",
+          recommendedProjectMode: "storybook",
+          readingSummary: "A mystery story in which Mia finds a moving map and follows clues toward a hidden door.",
+          ccssReadingFocus: {
+            code: "RL.4.3",
+            skill: "Characters, setting, and events",
+            reason: "The passage has characters, a clear setting, and a sequence of story events."
+          },
+          ccssWritingFocus: {
+            code: "W.4.3",
+            skill: "Narrative writing with clear sequence and details",
+            reason: "Students can imitate the story structure and write a scene with setting, action, and sequence."
+          },
+          modelSentences: [
+            {
+              sentence: "The library was quiet, but something unusual caught Mia's eye.",
+              focus: "Descriptive opening",
+              why: "This sentence sets the scene and creates curiosity.",
+              rewritePattern: "The ______ was quiet, but something unusual caught ______'s eye."
+            },
+            {
+              sentence: "Together they followed the clue across the playground.",
+              focus: "Sequence and movement",
+              why: "This sentence shows action and moves the story forward.",
+              rewritePattern: "Together they followed the ______ across the ______."
+            }
+          ],
+          rewriteTemplates: [
+            "The ______ was quiet, but something unusual caught ______'s eye.",
+            "Together they followed the ______ across the ______."
+          ],
+          lessonPlan: {},
+          projectPlan: {
+            title: "Class Storybook Plan",
             partLabel: "Chapter",
             parts: [
               ["The Discovery", "Introduce the main character and setting."],
@@ -1158,37 +1212,367 @@ Emma</textarea>
               ["The Ending", "Write a clear solution."]
             ]
           },
-          CLASS_MOVIE: {
-            title: "Class Movie Plan",
-            partLabel: "Scene",
-            parts: [
-              ["Opening", "Introduce the setting and mystery."],
-              ["The Discovery", "Show the key object or clue."],
-              ["The First Clue", "Move the story forward with sequence words."],
-              ["The Challenge", "Show a problem or difficult choice."],
-              ["The Ending", "Resolve the story clearly."]
-            ]
-          },
-          INDIVIDUAL_WRITING: {
-            title: "Individual Writing Plan",
-            partLabel: "Task",
-            parts: [
-              ["Story Opening", "Introduce character, setting, and mystery."],
-              ["Middle Event", "Use sequence and action to move the story."],
-              ["Ending", "Resolve the problem clearly."]
-            ]
-          }
+          studentWritingTask: "Write the opening scene and make the setting feel quiet and mysterious.",
+          writingFrameLabel: "Rewrite Frame",
+          writingFrame: "The ______ was quiet, but something unusual caught ______'s eye.",
+          studentChecklist: [
+            "I included a character.",
+            "I described the setting.",
+            "I used sequence words.",
+            "I added descriptive details."
+          ]
         };
 
-        const gradeFocus = {
-          K: "Recommended focus: key details, characters, setting, and oral storytelling.",
-          "Grade 1": "Recommended focus: retell, beginning-middle-end, character action.",
-          "Grade 2": "Recommended focus: story structure, character response, details, closure.",
-          "Grade 3": "Recommended focus: ask and answer with evidence, sequence, dialogue.",
-          "Grade 4": "Recommended focus: narrative writing, character, setting, sequence, descriptive details.",
-          "Grade 5": "Recommended focus: theme, challenge, sequence, descriptive details.",
-          "Grade 6": "Recommended focus: plot development, pacing, dialogue, precise words."
+        function gradeNumber(grade) {
+          if (grade === "K") return "K";
+          return String(grade).replace("Grade ", "");
+        }
+
+        function detectTextType(text) {
+          const lower = text.toLowerCase();
+          const hasScience = /\b(venus|planet|radar|lava|tube|tubes|atmosphere|surface|researchers|scientists|evidence|temperature|greenhouse|clouds|discovery)\b/.test(lower);
+          const hasArgument = /\b(should|must|opinion|claim|argue|because|reason|evidence|support|against)\b/.test(lower) && /\b(should|must|opinion|claim|argue)\b/.test(lower);
+          const hasBiography = /\b(was born|born in|grew up|life|career|became famous|known for)\b/.test(lower);
+          const hasPoetry = text.split(/\r?\n/).filter((line) => line.trim()).length >= 5 && text.length < 900;
+          const hasNarrative = /\b(one day|once|found|walked|said|whispered|looked|door|map|clue|friend|journey)\b/.test(lower);
+
+          if (hasScience) {
+            return {
+              textType: "informational",
+              display: "Informational science article",
+              subjectArea: "science",
+              recommendedReadingDomain: "Reading Informational Text",
+              recommendedWritingMode: "informative_explanatory",
+              recommendedProjectMode: state.outputType === "CLASS_MOVIE" ? "documentary_movie" : "science_explainer_book",
+              reason: "The passage explains scientific ideas, evidence, and implications."
+            };
+          }
+          if (hasArgument) {
+            return {
+              textType: "argument",
+              display: "Opinion or argument text",
+              subjectArea: "opinion",
+              recommendedReadingDomain: "Reading Informational Text",
+              recommendedWritingMode: "opinion_argument",
+              recommendedProjectMode: "debate_pack",
+              reason: "The passage presents a claim, reasons, and supporting evidence."
+            };
+          }
+          if (hasBiography) {
+            return {
+              textType: "biography",
+              display: "Biography or profile",
+              subjectArea: "social studies",
+              recommendedReadingDomain: "Reading Informational Text",
+              recommendedWritingMode: "informative_explanatory",
+              recommendedProjectMode: "biography_profile_book",
+              reason: "The passage explains a person's life, actions, and importance."
+            };
+          }
+          if (hasPoetry) {
+            return {
+              textType: "poetry",
+              display: "Poem or lyrical text",
+              subjectArea: "literature",
+              recommendedReadingDomain: "Reading Literature",
+              recommendedWritingMode: "creative_rewrite",
+              recommendedProjectMode: "visual_poem_collection",
+              reason: "The passage uses short lines, imagery, and poetic language."
+            };
+          }
+          return {
+            textType: hasNarrative ? "narrative" : "mixed",
+            display: hasNarrative ? "Narrative story" : "Mixed literary text",
+            subjectArea: "literature",
+            recommendedReadingDomain: "Reading Literature",
+            recommendedWritingMode: "narrative",
+            recommendedProjectMode: state.outputType === "CLASS_MOVIE" ? "story_movie" : "storybook",
+            reason: "The passage has a setting, characters, and a sequence of events."
+          };
+        }
+
+        function matchCcss(textTypeResult) {
+          const grade = gradeNumber(state.grade);
+          if (textTypeResult.textType === "informational" || textTypeResult.textType === "biography") {
+            return {
+              ccssReadingFocus: {
+                code: `RI.${grade}.3`,
+                skill: "Explain ideas, concepts, events, or procedures in an informational text",
+                reason: "The text explains facts, evidence, and relationships between ideas."
+              },
+              ccssWritingFocus: {
+                code: `W.${grade}.2`,
+                skill: "Write informative/explanatory texts",
+                reason: "Students can explain the topic using facts, definitions, and domain vocabulary."
+              }
+            };
+          }
+          if (textTypeResult.textType === "argument") {
+            return {
+              ccssReadingFocus: {
+                code: `RI.${grade}.8`,
+                skill: "Explain how reasons and evidence support points in a text",
+                reason: "The text invites students to identify claims, reasons, and evidence."
+              },
+              ccssWritingFocus: {
+                code: `W.${grade}.1`,
+                skill: "Write opinion or argument texts with reasons and evidence",
+                reason: "Students can write a clear opinion supported by reasons from the source."
+              }
+            };
+          }
+          if (textTypeResult.textType === "poetry") {
+            return {
+              ccssReadingFocus: {
+                code: `RL.${grade}.4`,
+                skill: "Determine meaning and effect of words and phrases",
+                reason: "The text uses imagery and word choice that students can imitate."
+              },
+              ccssWritingFocus: {
+                code: `W.${grade}.3`,
+                skill: "Write narrative or expressive pieces with descriptive language",
+                reason: "Students can create a visual poem or lyrical scene using imagery."
+              }
+            };
+          }
+          return {
+            ccssReadingFocus: {
+              code: `RL.${grade}.3`,
+              skill: "Characters, setting, and events",
+              reason: "The text includes characters, a setting, and events that can be studied and imitated."
+            },
+            ccssWritingFocus: {
+              code: `W.${grade}.3`,
+              skill: "Narrative writing with clear sequence and details",
+              reason: "Students can write a scene or chapter with sequence, action, and descriptive details."
+            }
+          };
+        }
+
+        function createModelSentences(textTypeResult) {
+          if (textTypeResult.textType === "informational") {
+            return [
+              {
+                sentence: "Venus is often named the Earth's 'evil twin' because of its extremely hot temperature and greenhouse effect.",
+                focus: "Cause and explanation",
+                why: "This sentence explains a scientific nickname using a clear because clause.",
+                rewritePattern: "______ is often called ______ because ______."
+              },
+              {
+                sentence: "Researchers used radar images to study features hidden beneath the planet's thick clouds.",
+                focus: "Evidence and method",
+                why: "This sentence names who studied the topic, what tool they used, and what they investigated.",
+                rewritePattern: "Scientists used ______ to study ______."
+              },
+              {
+                sentence: "This discovery may help scientists understand how the planet changed over time.",
+                focus: "Importance of evidence",
+                why: "This sentence explains why a discovery matters.",
+                rewritePattern: "This discovery may help ______ understand ______."
+              }
+            ];
+          }
+          if (textTypeResult.textType === "argument") {
+            return [
+              {
+                sentence: "Schools should protect reading time because students need quiet practice every day.",
+                focus: "Claim and reason",
+                why: "This sentence states a clear opinion and gives one reason.",
+                rewritePattern: "______ should ______ because ______."
+              },
+              {
+                sentence: "One important piece of evidence is that students read more when books are easy to choose.",
+                focus: "Evidence sentence",
+                why: "This sentence introduces evidence clearly.",
+                rewritePattern: "One important piece of evidence is ______."
+              }
+            ];
+          }
+          return defaultLessonResult.modelSentences;
+        }
+
+        function createWritingSupport(textTypeResult) {
+          if (textTypeResult.textType === "informational") {
+            return {
+              studentWritingTask: "Write one page explaining an important discovery from the reading.",
+              writingFrameLabel: "Explainer Frame",
+              writingFrame: "First, scientists discovered ______.\nThis matters because ______.\nOne piece of evidence is ______.\nIn the future, scientists may ______.",
+              studentChecklist: [
+                "I explained the topic clearly.",
+                "I used facts from the reading.",
+                "I used science vocabulary.",
+                "I explained why the discovery matters."
+              ]
+            };
+          }
+          if (textTypeResult.textType === "argument") {
+            return {
+              studentWritingTask: "Write one short opinion page using a claim, reason, and evidence from the reading.",
+              writingFrameLabel: "Opinion Frame",
+              writingFrame: "I think ______ because ______.\nOne reason is ______.\nThe text shows ______.\nTherefore, ______.",
+              studentChecklist: [
+                "I stated my opinion clearly.",
+                "I gave at least one reason.",
+                "I used evidence from the reading.",
+                "I wrote a strong closing sentence."
+              ]
+            };
+          }
+          return {
+            studentWritingTask: "Write a scene or chapter that uses the source text as a model.",
+            writingFrameLabel: "Story Frame",
+            writingFrame: "At the beginning, ______ found ______.\nThen, ______ followed a clue to ______.\nAfter that, ______ faced ______.\nIn the end, ______ solved the problem by ______.",
+            studentChecklist: defaultLessonResult.studentChecklist
+          };
+        }
+
+        function createProjectPlan(textTypeResult) {
+          const output = state.outputType;
+          if (textTypeResult.textType === "informational") {
+            if (output === "CLASS_MOVIE") {
+              return {
+                title: "Class Science Documentary",
+                partLabel: "Scene",
+                parts: [
+                  ["Welcome to Venus", "Introduce the topic and why it matters."],
+                  ["The Harsh Environment", "Explain what makes Venus difficult to study."],
+                  ["Radar Discovery", "Show how scientists use evidence."],
+                  ["Hidden Lava Tubes", "Explain the key scientific idea."],
+                  ["What This Means for Science", "Explain why the discovery matters."]
+                ]
+              };
+            }
+            return {
+              title: "Class Science Explainer Book",
+              partLabel: "Page",
+              parts: [
+                ["What is Venus?", "Introduce the planet and topic."],
+                ["Why is Venus difficult to study?", "Explain the environment and challenge."],
+                ["What did radar discover?", "Explain the tool and evidence."],
+                ["What are lava tubes?", "Define the important science vocabulary."],
+                ["Why does this discovery matter?", "Explain the importance for future science."]
+              ]
+            };
+          }
+          if (textTypeResult.textType === "argument") {
+            return {
+              title: output === "CLASS_MOVIE" ? "Class Opinion Board Movie" : "Class Opinion Portfolio",
+              partLabel: output === "CLASS_MOVIE" ? "Scene" : "Page",
+              parts: [
+                ["The Claim", "State the main opinion clearly."],
+                ["Reason One", "Explain one supporting reason."],
+                ["Evidence", "Use evidence from the source text."],
+                ["Response", "Answer a different viewpoint."],
+                ["Closing", "End with a clear final thought."]
+              ]
+            };
+          }
+          if (output === "CLASS_MOVIE") {
+            return {
+              title: "Class Story Movie Plan",
+              partLabel: "Scene",
+              parts: [
+                ["Opening", "Introduce the setting and story problem."],
+                ["The Discovery", "Show the key object or clue."],
+                ["The First Clue", "Move the story forward with sequence words."],
+                ["The Challenge", "Show a problem or difficult choice."],
+                ["The Ending", "Resolve the story clearly."]
+              ]
+            };
+          }
+          if (output === "INDIVIDUAL_WRITING") {
+            return {
+              title: "Individual Writing Plan",
+              partLabel: "Task",
+              parts: [
+                ["Opening", "Introduce the topic, character, or setting."],
+                ["Development", "Use details from the reading as a model."],
+                ["Closing", "End with a clear final thought."]
+              ]
+            };
+          }
+          return defaultLessonResult.projectPlan;
+        }
+
+        const TextTypeDetectionService = detectTextType;
+        const CcssMatchService = matchCcss;
+        const ModelSentenceService = createModelSentences;
+        const LessonPlanService = createLessonPlan;
+        const ProjectPlanService = createProjectPlan;
+
+        function createLessonPlan(textTypeResult, ccss, models, support, projectPlan) {
+          return {
+            lessonTitle: `${projectTitle?.value?.trim() || "Reading-to-Writing Lesson"} - Reading-to-Writing Lesson`,
+            lessonType: "reading_to_writing",
+            duration: "45 minutes",
+            objective: `Students will read a ${textTypeResult.display.toLowerCase()}, study how it works, imitate one model sentence, and write a ${projectPlan.partLabel.toLowerCase()} for a shared classroom project.`,
+            readingLayer: {
+              textType: textTypeResult.display,
+              readingFocus: `${ccss.ccssReadingFocus.code} - ${ccss.ccssReadingFocus.skill}`,
+              keyVocabulary: textTypeResult.textType === "informational" ? ["atmosphere", "surface", "radar", "lava tubes", "evidence"] : ["setting", "clue", "discovery", "sequence", "challenge"],
+              discussionQuestions: textTypeResult.textType === "informational"
+                ? ["What is the article mostly explaining?", "What evidence does the text describe?", "Why does this discovery matter?"]
+                : ["Where does the story begin?", "What does the character discover?", "How do the events move forward?"],
+              teacherOpening: "Today we will read like writers. First we understand the source text, then we borrow its craft to create our own class project."
+            },
+            writingLayer: {
+              writingFocus: `${ccss.ccssWritingFocus.code} - ${ccss.ccssWritingFocus.skill}`,
+              modelSentences: models,
+              rewriteTemplates: models.map((model) => model.rewritePattern),
+              studentWritingTask: support.studentWritingTask,
+              studentChecklist: support.studentChecklist
+            },
+            projectOutcome: {
+              outputType: state.outputType === "CLASS_MOVIE" ? "Class Movie" : state.outputType === "INDIVIDUAL_WRITING" ? "Individual Writing" : "Class Book",
+              projectMode: textTypeResult.recommendedProjectMode,
+              description: projectPlan.title
+            }
+          };
+        }
+
+        function CreateLessonService() {
+          const text = readingText?.value.trim() || sampleText;
+          const textType = TextTypeDetectionService(text);
+          const ccss = CcssMatchService(textType);
+          const modelSentences = ModelSentenceService(textType);
+          const writingSupport = createWritingSupport(textType);
+          const projectPlan = ProjectPlanService(textType);
+          const lessonPlan = LessonPlanService(textType, ccss, modelSentences, writingSupport, projectPlan);
+          return {
+            textType: textType.textType,
+            subjectArea: textType.subjectArea,
+            recommendedWritingMode: textType.recommendedWritingMode,
+            recommendedProjectMode: textType.recommendedProjectMode,
+            readingSummary: textType.textType === "informational"
+              ? "This article explains scientific findings, evidence, and possible implications."
+              : defaultLessonResult.readingSummary,
+            ccssReadingFocus: ccss.ccssReadingFocus,
+            ccssWritingFocus: ccss.ccssWritingFocus,
+            modelSentences,
+            rewriteTemplates: modelSentences.map((model) => model.rewritePattern),
+            lessonPlan,
+            projectPlan,
+            studentWritingTask: writingSupport.studentWritingTask,
+            writingFrameLabel: writingSupport.writingFrameLabel,
+            writingFrame: writingSupport.writingFrame,
+            studentChecklist: writingSupport.studentChecklist,
+            textTypeDisplay: textType.display,
+            matchReason: textType.reason
+          };
+        }
+
+        const gradeFocus = Object.fromEntries(["K", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"].map((grade) => [
+          grade,
+          "Skill focus will be recommended after text analysis."
+        ]));
+        const serviceContractExample = {
+          readingSummary: "This article explains how radar findings on Venus may reveal hidden lava tubes.",
+          textType: "informational science article",
+          ccssReadingFocus: { code: "RI.4.3", skill: "Explain scientific ideas and concepts" },
+          ccssWritingFocus: { code: "W.4.2", skill: "Write informative/explanatory texts" },
+          recommendedProjectMode: "science_explainer_book"
         };
+        void serviceContractExample;
 
         const stagePills = document.querySelectorAll("[data-stage-pill]");
         const readingText = document.querySelector("[data-reading-text]");
@@ -1221,14 +1605,14 @@ Emma</textarea>
           const packList = document.querySelector("[data-pack-list]");
           if (!card) return;
           if (state.framework === "CREATIVE_WRITING") {
-            card.querySelector("h3").textContent = "Writing Craft Focus";
+            card.querySelector("h3").textContent = "Text & Skill Match";
             document.querySelector("[data-ccss-focus]").innerHTML = '<span>Craft Skill</span><p>Scene opening · setting · character action · suspense</p>';
             document.querySelector("[data-writing-focus]").innerHTML = '<span>Why this matches</span><p>This text includes a strong setting, a discovery moment, and clear story movement. It is suitable for scene-based creative writing.</p>';
             document.querySelector("[data-match-reason]").textContent = "Use this lesson to practice scene craft, suspense, setting details, and character action.";
             if (mode) mode.textContent = "Creative Writing";
             if (packList) packList.children[1].textContent = "Writing craft focus";
           } else {
-            card.querySelector("h3").textContent = "CCSS Focus";
+            card.querySelector("h3").textContent = "Text & Skill Match";
             document.querySelector("[data-ccss-focus]").innerHTML = '<span>Reading Skill</span><p><strong>RL.4.3</strong> · Characters, setting, and events</p>';
             document.querySelector("[data-writing-focus]").innerHTML = '<span>Writing Skill</span><p><strong>W.4.3</strong> · Narrative writing with clear sequence and details</p>';
             document.querySelector("[data-match-reason]").textContent = "This text includes a clear setting, character motivation, and a sequence of events. It is suitable for narrative imitation writing.";
@@ -1238,11 +1622,69 @@ Emma</textarea>
         }
 
         function updateProjectPlan() {
-          const plan = planData[state.outputType];
+          const plan = (state.lessonResult || defaultLessonResult).projectPlan;
           if (projectPlanTitle) projectPlanTitle.textContent = plan.title;
           if (projectPlanList) {
             projectPlanList.innerHTML = plan.parts
               .map((part, index) => `<article><strong>${plan.partLabel} ${index + 1} · ${part[0]}</strong><p>Goal: ${part[1]}</p></article>`)
+              .join("");
+          }
+          const partCount = document.querySelector("[data-part-count]");
+          if (partCount) partCount.textContent = `${plan.parts.length} ${plan.partLabel.toLowerCase()}s`;
+        }
+
+        function renderModelSentences(models) {
+          const list = document.querySelector(".model-list");
+          if (!list) return;
+          list.innerHTML = models
+            .map((model) => `
+              <article>
+                <blockquote>"${model.sentence}"</blockquote>
+                <div class="review-block"><span>Focus</span><p>${model.focus}</p></div>
+                <div class="review-block"><span>Why it helps</span><p>${model.why}</p></div>
+                <div class="review-block"><span>Rewrite Pattern</span><p>"${model.rewritePattern}"</p></div>
+              </article>
+            `)
+            .join("");
+        }
+
+        function renderLessonResult() {
+          const lesson = state.lessonResult || defaultLessonResult;
+          const mode = document.querySelector("[data-review-mode]");
+          const packList = document.querySelector("[data-pack-list]");
+          const textTypeBlock = document.querySelector("[data-text-type] p");
+          if (textTypeBlock) textTypeBlock.textContent = lesson.textTypeDisplay || "Narrative story";
+          document.querySelector("[data-ccss-focus]").innerHTML = `<span>Reading Focus</span><p><strong>${lesson.ccssReadingFocus.code}</strong> - ${lesson.ccssReadingFocus.skill}</p>`;
+          document.querySelector("[data-writing-focus]").innerHTML = `<span>Writing Focus</span><p><strong>${lesson.ccssWritingFocus.code}</strong> - ${lesson.ccssWritingFocus.skill}</p>`;
+          document.querySelector("[data-match-reason]").textContent = lesson.matchReason || lesson.ccssReadingFocus.reason;
+          document.querySelector("[data-student-writing-task]").textContent = lesson.studentWritingTask;
+          document.querySelector("[data-writing-frame-label]").textContent = lesson.writingFrameLabel;
+          document.querySelector("[data-writing-frame]").innerHTML = lesson.writingFrame.replace(/\n/g, "<br />");
+          document.querySelector("[data-student-checklist]").innerHTML = lesson.studentChecklist.map((item) => `- ${item}`).join("<br />");
+          renderModelSentences(lesson.modelSentences);
+          if (mode) mode.textContent = lesson.lessonPlan?.projectOutcome?.description || "Reading-to-Writing Lesson";
+          if (packList) {
+            packList.innerHTML = [
+              "Student instructions",
+              "Text type and skill match",
+              "Model sentences",
+              "Student writing support",
+              "Reading-to-writing lesson plan",
+              "Scene or chapter assignments",
+              "Student checklist",
+              "Class book/movie plan"
+            ].map((item) => `<li>${item}</li>`).join("");
+          }
+          updateProjectPlan();
+          localStorage.setItem("storieslens_create_lesson_result", JSON.stringify(lesson));
+        }
+
+        function updateProjectPlan() {
+          const plan = (state.lessonResult || defaultLessonResult).projectPlan;
+          if (projectPlanTitle) projectPlanTitle.textContent = plan.title;
+          if (projectPlanList) {
+            projectPlanList.innerHTML = plan.parts
+              .map((part, index) => `<article><strong>${plan.partLabel} ${index + 1} - ${part[0]}</strong><p>Goal: ${part[1]}</p></article>`)
               .join("");
           }
           const partCount = document.querySelector("[data-part-count]");
@@ -1259,8 +1701,8 @@ Emma</textarea>
             return;
           }
           state.classSize = Number(classSizeInput?.value || 24);
-          updateFrameworkReview();
-          updateProjectPlan();
+          state.lessonResult = CreateLessonService();
+          renderLessonResult();
           reviewSection?.classList.add("is-visible");
           setStage("review");
           reviewSection?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1277,7 +1719,7 @@ Emma</textarea>
             .split(/\r?\n/)
             .map((name) => name.trim())
             .filter(Boolean);
-          const plan = planData[state.outputType];
+          const plan = (state.lessonResult || defaultLessonResult).projectPlan;
           if (!assignmentResults) return;
           assignmentResults.innerHTML = plan.parts
             .map((part, index) => {
@@ -1293,6 +1735,103 @@ Emma</textarea>
           const slot = document.querySelector("[data-slot-count]");
           if (slot) slot.textContent = `${state.classSize || 24} student slots`;
           publishSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function buildLessonPlanText() {
+          const title = projectTitle?.value?.trim() || "The Mystery of the Lost Map";
+          const grade = state.grade || "Grade 4";
+          const lesson = state.lessonResult || defaultLessonResult;
+          const plan = lesson.projectPlan;
+          const readingSkill = `${lesson.ccssReadingFocus.code} - ${lesson.ccssReadingFocus.skill}`;
+          const writingSkill = `${lesson.ccssWritingFocus.code} - ${lesson.ccssWritingFocus.skill}`;
+          const matchReason = lesson.matchReason || lesson.ccssReadingFocus.reason;
+          const modelSentence = `"${lesson.modelSentences[0]?.sentence || "The library was quiet, but something unusual caught Mia's eye."}"`;
+          const rewritePattern = `"${lesson.modelSentences[0]?.rewritePattern || "The ______ was quiet, but something unusual caught ______'s eye."}"`;
+          const projectParts = plan.parts.map((part, index) => `${index + 1}. ${plan.partLabel} ${index + 1}: ${part[0]} - ${part[1]}`).join("\\n");
+
+          return [
+            "StoriesLens 45-Minute Reading-to-Writing Lesson Plan",
+            "===================================================",
+            "",
+            `Project: ${title}`,
+            `Grade: ${grade}`,
+            `Output Type: ${plan.title}`,
+            "",
+            "Text & Skill Match",
+            "------------------",
+            `Text Type: ${lesson.textTypeDisplay || "Narrative story"}`,
+            `Reading Summary: ${lesson.readingSummary}`,
+            `Reading: ${readingSkill}`,
+            `Writing: ${writingSkill}`,
+            `Why this text matches: ${matchReason}`,
+            "",
+            "Lesson Objective",
+            "----------------",
+            lesson.lessonPlan?.objective || "Students will read a passage, study its craft, imitate one model sentence, and write a page or scene for a shared classroom project.",
+            "",
+            "Materials",
+            "---------",
+            "- Teacher reading text",
+            "- Projector or shared screen",
+            "- Student writing devices or notebooks",
+            "- StoriesLens student task link or class code",
+            "- Model sentence and rewrite pattern",
+            "",
+            "0-5 Minutes - Warm-Up",
+            "---------------------",
+            lesson.lessonPlan?.readingLayer?.teacherOpening || "Preview the project goal: read like writers, then create a shared class project.",
+            "",
+            "5-12 Minutes - Close Reading",
+            "----------------------------",
+            `Read the passage once for meaning. Read again and identify the reading focus: ${lesson.ccssReadingFocus.skill}.`,
+            "",
+            "12-20 Minutes - CCSS Skill Mini-Lesson",
+            "-------------------------------------",
+            `Show the skill focus. Explain how the source text supports ${lesson.ccssWritingFocus.skill}. Students identify one useful detail from the text.`,
+            "",
+            "20-28 Minutes - Model Sentence Study",
+            "-----------------------------------",
+            `Model Sentence: ${modelSentence}`,
+            "Teacher Think-Aloud: This sentence names the setting, gives a quiet mood, and introduces curiosity.",
+            `Rewrite Pattern: ${rewritePattern}`,
+            "Students orally try one new sentence using the pattern.",
+            "",
+            "28-38 Minutes - Guided Imitation Writing",
+            "---------------------------------------",
+            lesson.studentWritingTask,
+            "",
+            "38-42 Minutes - Share and Feedback",
+            "----------------------------------",
+            "Students share one sentence. Use Glow / Grow / Next Step feedback: Glow = what works, Grow = what to improve, Next Step = one revision action.",
+            "",
+            "42-45 Minutes - Exit Ticket",
+            "--------------------------",
+            "Students submit their draft or write one final revision goal. Teacher confirms which students are ready for image candidate generation.",
+            "",
+            "Student Writing Assignments",
+            "---------------------------",
+            projectParts,
+            "",
+            "Assessment Checklist",
+            "--------------------",
+            ...lesson.studentChecklist.map((item) => `- ${item}`),
+            "",
+            "Extension",
+            "---------",
+            "After teacher review, students generate scene image candidates using approved character references and the class visual style. Students may vote, but the teacher confirms final covers before publishing."
+          ].join("\\n");
+        }
+
+        function downloadText(filename, text) {
+          const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
         }
 
         document.querySelectorAll("[data-text-tab-button]").forEach((button) => {
@@ -1370,13 +1909,19 @@ Emma</textarea>
           const status = document.querySelector("[data-pack-status]");
           if (status) status.hidden = false;
         });
-        document.querySelector("[data-regenerate-lesson]")?.addEventListener("click", () => {
-          updateFrameworkReview();
-          updateProjectPlan();
+        document.querySelector("[data-download-lesson-plan]")?.addEventListener("click", () => {
+          downloadText("storieslens-45-minute-lesson-plan.txt", buildLessonPlanText());
         });
-        document.querySelector("[data-import-ccss]")?.addEventListener("click", () => {
-          const status = document.querySelector("[data-ccss-import-status]");
-          if (status) status.textContent = "Import mock ready. Run scripts/extract-ccss.js to create draft JSON from the source PDF.";
+        document.querySelector("[data-preview-lesson-plan]")?.addEventListener("click", () => {
+          const status = document.querySelector("[data-pack-status]");
+          if (status) {
+            status.hidden = false;
+            status.textContent = "45-minute lesson plan preview is ready. Use Download 45-Minute Lesson Plan to save the full plan.";
+          }
+        });
+        document.querySelector("[data-regenerate-lesson]")?.addEventListener("click", () => {
+          state.lessonResult = CreateLessonService();
+          renderLessonResult();
         });
 
         updateGradeFocus();

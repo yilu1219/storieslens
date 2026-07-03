@@ -2572,9 +2572,9 @@ async function generateIvyAIReport(page = document) {
     openWriteModal(
       "Start Local Server",
       "Ivy AI Report needs the local backend proxy. Run npm start, then open http://localhost:3000/visual-write.html.",
-      "OpenRouter"
+      "AI Report"
     );
-    setIvyReportStatus(page, "Open this page through http://localhost:3000 to call OpenRouter safely.");
+    setIvyReportStatus(page, "Open this page through http://localhost:3000 to use the AI report safely.");
     return;
   }
 
@@ -2582,7 +2582,7 @@ async function generateIvyAIReport(page = document) {
   const reportRequest = buildIvyReportPrompt(page);
   try {
     if (trigger) trigger.disabled = true;
-    setIvyReportStatus(page, "Ivy is reading the draft with OpenRouter...");
+    setIvyReportStatus(page, "Ivy is reading the draft...");
     showWriteToast("Generating Ivy AI Report...");
 
     const response = await fetch("/api/ai-report", {
@@ -2599,12 +2599,12 @@ async function generateIvyAIReport(page = document) {
     }
 
     renderIvyAIReport(page, result.report || {});
-    setIvyReportStatus(page, `Ivy report ready via ${result.model || "OpenRouter"}.`);
+    setIvyReportStatus(page, "Ivy report ready.");
     showWriteToast("Ivy AI Report ready");
   } catch (error) {
     const message = error.message || "Ivy AI Report failed";
     setIvyReportStatus(page, message);
-    openWriteModal("Ivy AI Report Failed", message, "OpenRouter");
+    openWriteModal("Ivy AI Report Failed", message, "AI Report");
   } finally {
     if (trigger) trigger.disabled = false;
   }
@@ -2713,7 +2713,7 @@ async function generateFreeCreateImage(page = document) {
       "Image generation needs the local backend. Run npm start, then open http://localhost:3000/visual-write.html before generating.",
       "API"
     );
-    setImageGenerationStatus(page, "Open this page through http://localhost:3000 to use the AIMS image API.");
+    setImageGenerationStatus(page, "Open this page through http://localhost:3000 to use image generation.");
     return;
   }
 
@@ -2722,7 +2722,7 @@ async function generateFreeCreateImage(page = document) {
 
   try {
     if (trigger) trigger.disabled = true;
-    setImageGenerationStatus(page, "Generating image with AIMS...");
+    setImageGenerationStatus(page, "Generating image...");
     showWriteToast("Generating image...");
 
     const response = await fetch("/api/generate-image", {
@@ -2738,7 +2738,7 @@ async function generateFreeCreateImage(page = document) {
 
     const imageUrl = result.imageUrl || result.downloadUrl;
     if (!imageUrl) {
-      throw new Error("AIMS returned no image URL");
+      throw new Error("Image generation returned no image URL");
     }
 
     const preview = page.querySelector("[data-illustration-preview]");
@@ -2754,7 +2754,7 @@ async function generateFreeCreateImage(page = document) {
   } catch (error) {
     const message = error.message || "Image generation failed";
     setImageGenerationStatus(page, message);
-    openWriteModal("Image Generation Failed", message, "AIMS API");
+    openWriteModal("Image Generation Failed", message, "Image Service");
   } finally {
     if (trigger) trigger.disabled = false;
   }
