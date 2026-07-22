@@ -4,5 +4,8 @@
     "start": "node server.js",
     "test": "node tests/homepage.test.js",
     "extract:ccss": "node scripts/extract-ccss.js"
+  },
+  "dependencies": {
+    "docx": "^9.5.1"
   }
 }

@@ -8,18 +8,26 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const htmlFiles = [
   "index.html",
   "create-reading-project.html",
+  "create-reading-review.html",
+  "create-reading-assign.html",
+  "create-reading-publish.html",
   "visual-write.html",
   "teacher-dashboard.html",
   "teacher-project.html",
   "project-output.html",
   "visual-read.html",
   "group-write.html"
+  ,"group-project-studio.html"
 ].filter((file) => fs.existsSync(path.join(root, file)));
 
 const htmlByFile = Object.fromEntries(htmlFiles.map((file) => [file, read(file)]));
 const indexHtml = htmlByFile["index.html"];
 const createHtml = htmlByFile["create-reading-project.html"];
+const reviewHtml = htmlByFile["create-reading-review.html"];
+const assignHtml = htmlByFile["create-reading-assign.html"];
+const publishHtml = htmlByFile["create-reading-publish.html"];
 const visualWriteHtml = htmlByFile["visual-write.html"];
+const groupProjectStudioHtml = htmlByFile["group-project-studio.html"];
 const teacherHtml = htmlByFile["teacher-dashboard.html"];
 const teacherProjectHtml = htmlByFile["teacher-project.html"];
 const projectOutputHtml = htmlByFile["project-output.html"];
@@ -28,6 +36,86 @@ const serverJs = read("server.js");
 const scriptJs = read("script.js");
 const envExample = read(".env.example");
 const ccssStandards = JSON.parse(read("resources/ccss/ela-standards.json"));
+const createProjectFlowJs = read("create-project-flow.js");
+
+[
+  [createHtml, "Upload", "create-reading-review.html"],
+  [reviewHtml, "Review", "create-reading-assign.html"],
+  [assignHtml, "Assign", "create-reading-publish.html"],
+  [publishHtml, "Publish", "teacher-project.html?id=map-4832"]
+].forEach(([page, stage, nextHref]) => {
+  assert(page, `${stage} should have its own HTML page`);
+  assert(page.includes('src="create-project-flow.js"'), `${stage} should load the shared project flow`);
+  assert(page.includes(`data-current-stage="${stage.toLowerCase()}"`), `${stage} should identify its current stage`);
+  assert(page.includes(nextHref), `${stage} should link to its next destination`);
+});
+
+assert(!createHtml.includes("scrollIntoView"), "Upload should not scroll to later workflow stages");
+
+[
+  "Group Project Studio",
+  "1 Story Setup",
+  "2 Characters",
+  "3 Chapters / Scenes",
+  "4 Group Gallery",
+  "5 Publish",
+  "Generate Character",
+  "Approve Character",
+  "Character Reference Locked",
+  "Generate Chapter Image",
+  "Generate Scene Video",
+  "Vote",
+  "Use in Book",
+  "Preview Group Book",
+  "Create Share Link"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio should include: ${token}`));
+
+[
+  "Demo Preview",
+  "Steps 3-5 are open",
+  "data-demo-mode",
+  "showcase-star-keeper.png",
+  "showcase-block-castle.png"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio demo should include: ${token}`));
+
+[
+  "data-publish-assembly",
+  "Writing complete",
+  "Image selected",
+  "Ready to publish",
+  "showcase-space-adventure.png"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio publishing should include: ${token}`));
+
+[
+  "Illustrated Book",
+  "Animated Movie",
+  "Project Output",
+  "Locked by Project Owner",
+  "data-output-format"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio output choice should include: ${token}`));
+
+[
+  "Book Publisher",
+  "Download Word",
+  "Print Book",
+  "Movie Editor",
+  "Movie Timeline",
+  "Add Subtitles",
+  "Render Group Movie",
+  "data-movie-editor"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio publish tools should include: ${token}`));
+
+[
+  "Movie Progress",
+  "Trim Start",
+  "Trim End",
+  "Record My Narration",
+  "Stop Recording",
+  "MediaRecorder",
+  "data-narration-player"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Movie Editor should include: ${token}`));
+
+assert(serverJs.includes("/api/export-book-docx"), "Static server should export a real Word document");
 
 assert.strictEqual(packageJson.scripts?.start, "node server.js", "Railway/Railpack should have a start command");
 assert.strictEqual(packageJson.main, "server.js", "Package entry should point to the static server");
@@ -47,6 +135,23 @@ assert(!envExample.includes("aimodelshow"), "Environment example should not incl
 assert(envExample.includes("OPENROUTER_IMAGE_API_URL=https://openrouter.ai/api/v1/images"), "Environment example should include the OpenRouter image API URL");
 assert(envExample.includes("OPENROUTER_IMAGE_MODEL=bytedance-seed/seedream-4.5"), "Environment example should include the selected image model");
 assert(envExample.includes("IMAGE_SIZE=2560x1440"), "Environment example should use the minimum accepted 16:9 image size");
+assert(envExample.includes("OPENROUTER_VIDEO_API_URL=https://openrouter.ai/api/v1/videos"), "Environment example should include the OpenRouter video API URL");
+assert(envExample.includes("OPENROUTER_VIDEO_MODEL=bytedance/seedance-2.0-fast"), "Environment example should include the selected video model");
+assert(envExample.includes("VIDEO_DURATION=5"), "Environment example should default scene videos to five seconds");
+assert(envExample.includes("VIDEO_RESOLUTION=720p"), "Environment example should default scene videos to 720p");
+assert(serverJs.includes("/api/generate-video"), "Static server should expose a real video generation route");
+assert(serverJs.includes("/api/video-jobs/"), "Static server should expose video job polling");
+assert(serverJs.includes("bytedance/seedance-2.0-fast"), "Video generation should default to Seedance 2.0 Fast");
+assert(serverJs.includes("public\", \"generated\", \"videos"), "Completed videos should be persisted under public/generated/videos");
+assert(visualWriteHtml.includes('fetch("/api/generate-video"'), "Visual Write should submit real video jobs");
+assert(visualWriteHtml.includes('/api/video-jobs/'), "Visual Write should poll real video jobs");
+assert(visualWriteHtml.includes("Generate Image First"), "Video action should require a generated source image");
+assert(visualWriteHtml.includes("Preparing Video..."), "Visual Write should show video submission progress");
+assert(visualWriteHtml.includes("Generating Video..."), "Visual Write should show asynchronous video progress");
+assert(visualWriteHtml.includes("Regenerate Video"), "Visual Write should support video regeneration");
+assert(visualWriteHtml.includes("Download Video"), "Visual Write should expose completed video downloads");
+assert(visualWriteHtml.includes("<video controls playsinline"), "Visual Write should render a native video player");
+assert(!visualWriteHtml.includes("Scene video preview prepared"), "Visual Write should not simulate successful video generation");
 assert(serverJs.includes("/api/ai-report"), "Static server should keep the AI report proxy route");
 assert(scriptJs.includes("StoriesLensQuota"), "Global quota model should be available for plan and credit checks");
 assert(scriptJs.includes("Generate 1 image = 1 image credit") || scriptJs.includes("imageCost"), "Quota model should include image credit cost");
@@ -115,82 +220,50 @@ assert(!indexHtml.includes("Turn student writing into a class movie."), "Homepag
 assert(!indexHtml.includes('id="works"'), "Homepage should not include the standalone Works section");
 assert(!indexHtml.includes("Works become class projects."), "Homepage should not include the removed Works section title");
 
+const teacherFlowHtml = [createHtml, reviewHtml, assignHtml, publishHtml, createProjectFlowJs].join("\n");
 [
   "Create from Reading Text",
   "Upload a reading passage and turn it into a ready-to-teach reading-to-writing lesson.",
-  "Upload",
-  "Review",
-  "Assign",
-  "Publish",
   "Reading Text",
   "Lesson Setup",
   "Paste Text",
   "Upload File",
   "Try Sample",
-  "Recommended length: 300-1,200 words for classroom projects.",
-  "Use Sample: The Mystery of the Lost Map",
+  "Recommended length: 300-1,200 words.",
   "Project Title",
   "Grade Level",
   "Teaching Framework",
   "K12 CCSS",
   "Creative Writing",
-  "Custom Rubric",
-  "Coming soon",
   "Output Type",
   "Class Book",
   "Class Movie",
   "Individual Writing",
-  "project-output.html?type=class-book",
-  "project-output.html?type=class-movie",
-  "project-output.html?type=individual-writing",
   "Class Size",
-  "CCSS Standards: Ready",
-  "Skill focus will be recommended after text analysis.",
-  "Create Lesson",
-  "Your reading-to-writing lesson is ready.",
-  "Review and adjust before assigning.",
+  "Review the Lesson",
   "Text & Skill Match",
-  "Text Type",
   "Reading Focus",
   "Writing Focus",
   "Why this matches",
   "Model Sentences",
-  "Student Writing Support",
+  "Writing Support",
+  "Required CCSS",
   "Student Writing Task",
   "Rewrite Pattern",
-  "Student Checklist",
   "Project Plan",
-  "Class Science Explainer Book",
-  "Class Science Documentary",
-  "This lesson uses 1 project credit.",
-  "Visual credits are only used later when images or videos are generated.",
-  "Ready to assign this project?",
-  "Assign to Students",
-  "Regenerate Lesson",
-  "Assign chapters or scenes.",
+  "45-Minute Lesson Plan",
+  "Assign Chapters or Scenes",
   "Student Names",
   "Auto Assign",
-  "Generate Student Links",
-  "Student links are ready.",
+  "Publish the Project",
   "Class Code",
   "MAP-4832",
   "Copy Class Code",
   "Open Student View",
   "Go to Teacher Studio",
-  "Teacher Pack",
-  "Download Teacher Pack",
-  "45-Minute Lesson Plan",
-  "Download 45-Minute Lesson Plan",
-  "TextTypeDetectionService",
-  "CreateLessonService",
-  "science_explainer_book",
-  "documentary_movie",
-  "RL.4.3",
-  "W.4.3",
-  "RI.4.3",
-  "W.4.2"
+  "Teacher Pack"
 ].forEach((token) => {
-  assert(createHtml.includes(token), `Create Reading Project page should include: ${token}`);
+  assert(teacherFlowHtml.includes(token), `Four-page teacher flow should include: ${token}`);
 });
 
 assert(!createHtml.includes("Suggested Rewrite Template"), "Teacher cards should use Writing Support instead of Suggested Rewrite Template");
@@ -215,14 +288,19 @@ assert(!createHtml.includes("Recommended focus: narrative writing"), "Create pag
   "Visual Write",
   "Start your own visual story.",
   "Write your own story, get feedback, and turn it into images or video.",
-  "Join a class project.",
-  "Enter Class Code",
-  "Example: MAP-4832",
-  "Open My Task",
+  "Let's write and create together.",
+  "Class Code · MAP-4832",
+  "Join Project",
   "Free Creation",
   "Start Free Writing",
-  "Teacher Assignment",
-  "Open Teacher Task",
+  "Create Together",
+  "Join Teacher Project",
+  "Create Friend Group",
+  "Join Friend Group",
+  "Invite Code",
+  "Project Owner",
+  "Copy Invite Link",
+  "Claim an Open Scene",
   "You are writing Scene 3 for your class story movie.",
   "You are writing Page 3 for your class science explainer book.",
   "My Class Task",
@@ -253,13 +331,21 @@ assert(!createHtml.includes("Recommended focus: narrative writing"), "Create pag
   "Grow",
   "Next Step",
   "Submit to Teacher",
-  "Save Story"
+  "Save Story",
+  "Write your part. Build one story together.",
+  "Student Name",
+  "18 students writing",
+  "Class Progress",
+  "You are here",
+  "Complete all 5 scenes to publish the class movie",
+  "Start Free Writing"
 ].forEach((token) => {
   assert(visualWriteHtml.includes(token), `Visual Write page should include: ${token}`);
 });
 
 assert(!visualWriteHtml.includes("RL.4.3"), "Student Visual Write should not expose reading standard codes");
 assert(!visualWriteHtml.includes("W.4.3"), "Student Visual Write should not expose writing standard codes");
+assert(!visualWriteHtml.includes('resolution: "2K"'), "Visual Write image requests should not send a conflicting 2K resolution");
 
 [
   "The Mystery of the Lost Map",
@@ -363,7 +449,7 @@ Object.entries(htmlByFile).forEach(([file, contents]) => {
   });
 });
 
-[createHtml, visualWriteHtml, teacherProjectHtml, projectOutputHtml].forEach((pageHtml, index) => {
+[createHtml, reviewHtml, assignHtml, publishHtml, visualWriteHtml, groupProjectStudioHtml, teacherProjectHtml, projectOutputHtml].forEach((pageHtml, index) => {
   const scripts = [...pageHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
   scripts.forEach((script, scriptIndex) => {
     assert.doesNotThrow(() => new Function(script), `Inline script ${scriptIndex} on page ${index} should parse`);

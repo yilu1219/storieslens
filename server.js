@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = require("docx");
 
 const root = __dirname;
 
@@ -14,6 +15,7 @@ const mimeTypes = {
   ".jpeg": "image/jpeg",
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
+  ".mp4": "video/mp4",
   ".ico": "image/x-icon"
 };
 
@@ -100,7 +102,87 @@ function readJsonBody(request) {
   });
 }
 
+async function loadDocumentImage(imageUrl) {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith("data:image/")) {
+    const base64 = imageUrl.split(",")[1];
+    return base64 ? Buffer.from(base64, "base64") : null;
+  }
+
+  if (/^https?:\/\//i.test(imageUrl)) {
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) return null;
+    return Buffer.from(await imageResponse.arrayBuffer());
+  }
+
+  const localPath = path.resolve(root, imageUrl.replace(/^\/+/, ""));
+  if (!localPath.startsWith(root) || !fs.existsSync(localPath)) return null;
+  return fs.promises.readFile(localPath);
+}
+
+async function handleExportBookDocx(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(request);
+    const title = String(body.title || "Our Group Story").slice(0, 160);
+    const premise = String(body.premise || "").slice(0, 1200);
+    const chapters = Array.isArray(body.chapters) ? body.chapters.slice(0, 40) : [];
+    const children = [
+      new Paragraph({ text: title, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER }),
+      new Paragraph({ text: premise, alignment: AlignmentType.CENTER, spacing: { after: 480 } }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: "Created together with StoriesLens", italics: true, color: "58657D" })]
+      })
+    ];
+
+    for (let index = 0; index < chapters.length; index += 1) {
+      const chapter = chapters[index] || {};
+      const image = await loadDocumentImage(String(chapter.imageUrl || "")).catch(() => null);
+      children.push(new Paragraph({
+        text: String(chapter.title || `Chapter ${index + 1}`),
+        heading: HeadingLevel.HEADING_1,
+        pageBreakBefore: true
+      }));
+      if (image) {
+        children.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 280 },
+          children: [new ImageRun({ data: image, transformation: { width: 560, height: 315 } })]
+        }));
+      }
+      children.push(new Paragraph({
+        text: String(chapter.text || "This chapter is not finished."),
+        spacing: { line: 360, after: 280 }
+      }));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `Writer: ${String(chapter.writer || "Student")}`, bold: true })]
+      }));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `Illustration created by ${String(chapter.writer || "Student")} and StoriesLens AI`, italics: true, color: "58657D" })]
+      }));
+    }
+
+    const document = new Document({ sections: [{ properties: {}, children }] });
+    const buffer = await Packer.toBuffer(document);
+    const filename = `${title.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "") || "group-story"}.docx`;
+    response.writeHead(200, {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Length": buffer.length
+    });
+    response.end(buffer);
+  } catch (error) {
+    sendJson(response, 500, { error: error.message || "Word export failed" });
+  }
+}
+
 const imageTasks = new Map();
+const videoJobs = new Map();
 
 function getConfigValue(...keys) {
   for (const key of keys) {
@@ -129,6 +211,222 @@ function getImageConfig() {
     siteUrl: process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
     siteTitle: process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
   };
+}
+
+function getVideoConfig() {
+  const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
+  return {
+    model: getConfigValue("VIDEO_MODEL", "OPENROUTER_VIDEO_MODEL", "video.model") || "bytedance/seedance-2.0-fast",
+    duration: Number(getConfigValue("VIDEO_DURATION", "video.duration") || 5),
+    aspectRatio: getConfigValue("VIDEO_ASPECT_RATIO", "video.aspectRatio") || "16:9",
+    resolution: getConfigValue("VIDEO_RESOLUTION", "video.resolution") || "720p",
+    openRouterApiKey: getConfigValue("OPENROUTER_API_KEY", "openrouter.apiKey"),
+    openRouterVideoApiUrl: getConfigValue("OPENROUTER_VIDEO_API_URL", "openrouter.videoApiUrl") || `${baseUrl}/videos`,
+    siteUrl: process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
+    siteTitle: process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+  };
+}
+
+function openRouterHeaders(config) {
+  return {
+    Authorization: `Bearer ${config.openRouterApiKey}`,
+    "Content-Type": "application/json",
+    "HTTP-Referer": config.siteUrl,
+    "X-Title": config.siteTitle
+  };
+}
+
+function resolveLocalImageDataUrl(imageUrl) {
+  const value = String(imageUrl || "").trim();
+  if (!value) throw new Error("Generate an image before making a video.");
+  if (value.startsWith("data:image/")) return value;
+  if (/^https:\/\//i.test(value)) return value;
+
+  let pathname = value;
+  if (/^https?:\/\//i.test(value)) {
+    const parsed = new URL(value);
+    if (!["localhost", "127.0.0.1", "::1"].includes(parsed.hostname)) {
+      return value;
+    }
+    pathname = parsed.pathname;
+  }
+
+  const filePath = resolveRequestPath(pathname);
+  if (!filePath || !filePath.startsWith(path.join(root, "public", "generated")) || !fs.existsSync(filePath)) {
+    throw new Error("The generated source image could not be found. Generate it again before making a video.");
+  }
+
+  const extension = path.extname(filePath).toLowerCase();
+  const mimeType = mimeTypes[extension]?.split(";")[0] || "image/png";
+  return `data:${mimeType};base64,${fs.readFileSync(filePath).toString("base64")}`;
+}
+
+function buildVideoPrompt(body) {
+  const customPrompt = String(body.prompt || "").trim();
+  const studentWriting = String(body.studentWriting || body.draft || "").trim();
+  const mood = String(body.mood || "warm and mysterious").trim();
+  return [
+    customPrompt || `Animate this children's story scene: ${studentWriting}`,
+    `Mood: ${mood}.`,
+    "Preserve the source image's characters, faces, age, clothing, hairstyle, proportions, color palette, and illustration style exactly.",
+    "Add one clear character action, subtle environmental movement, and a gentle cinematic camera move.",
+    "Keep the scene classroom-safe. Do not add new characters, readable text, captions, logos, violence, cuts, or abrupt transformations."
+  ].filter(Boolean).join("\n");
+}
+
+function normalizeVideoStatus(status) {
+  const value = String(status || "pending").toLowerCase();
+  if (["completed", "failed", "cancelled", "expired", "in_progress", "pending"].includes(value)) return value;
+  return "pending";
+}
+
+function saveVideoBuffer(jobId, buffer) {
+  const safeJobId = sanitizePathPart(jobId, `video-${Date.now()}`);
+  const videoDirectory = path.join(root, "public", "generated", "videos");
+  const videoPath = path.join(videoDirectory, `${safeJobId}.mp4`);
+  fs.mkdirSync(videoDirectory, { recursive: true });
+  fs.writeFileSync(videoPath, buffer);
+  return `/${path.relative(root, videoPath).replace(/\\/g, "/")}`;
+}
+
+async function handleGenerateVideo(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(request);
+    const config = getVideoConfig();
+    if (!config.openRouterApiKey) {
+      sendJson(response, 501, { error: "Video generation is not configured yet." });
+      return;
+    }
+
+    const sourceImage = resolveLocalImageDataUrl(body.imageUrl);
+    const payload = {
+      model: body.model || config.model,
+      prompt: buildVideoPrompt(body),
+      duration: Number(body.duration || config.duration),
+      aspect_ratio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
+      resolution: body.resolution || config.resolution,
+      frame_images: [{
+        type: "image_url",
+        image_url: { url: sourceImage },
+        frame_type: "first_frame"
+      }]
+    };
+
+    const upstreamResponse = await fetch(config.openRouterVideoApiUrl, {
+      method: "POST",
+      headers: openRouterHeaders(config),
+      body: JSON.stringify(payload)
+    });
+    const upstreamData = await upstreamResponse.json().catch(() => ({}));
+    if (!upstreamResponse.ok || !upstreamData.id) {
+      console.error("OpenRouter video submission failed", upstreamResponse.status, upstreamData?.error || "Unknown provider error");
+      sendJson(response, upstreamResponse.status || 502, {
+        error: upstreamData?.error?.message || upstreamData?.error || "The video request could not be started. Please try again."
+      });
+      return;
+    }
+
+    const job = {
+      jobId: String(upstreamData.id),
+      status: normalizeVideoStatus(upstreamData.status),
+      pollingUrl: upstreamData.polling_url || `${config.openRouterVideoApiUrl}/${encodeURIComponent(upstreamData.id)}`,
+      sourceImageUrl: body.imageUrl,
+      createdAt: new Date().toISOString(),
+      localVideoUrl: ""
+    };
+    videoJobs.set(job.jobId, job);
+    sendJson(response, 202, {
+      jobId: job.jobId,
+      status: job.status,
+      pollUrl: `/api/video-jobs/${encodeURIComponent(job.jobId)}`
+    });
+  } catch (error) {
+    const message = error.message || "The video request could not be started.";
+    const statusCode = message.includes("Generate an image") || message.includes("source image") ? 400 : 500;
+    sendJson(response, statusCode, { error: message });
+  }
+}
+
+async function downloadCompletedVideo(job, config) {
+  if (job.localVideoUrl) return job.localVideoUrl;
+  const contentUrl = `${config.openRouterVideoApiUrl}/${encodeURIComponent(job.jobId)}/content?index=0`;
+  const videoResponse = await fetch(contentUrl, {
+    headers: {
+      Authorization: `Bearer ${config.openRouterApiKey}`,
+      "HTTP-Referer": config.siteUrl,
+      "X-Title": config.siteTitle
+    }
+  });
+  if (!videoResponse.ok) throw new Error(`Video download failed with status ${videoResponse.status}`);
+  const contentType = videoResponse.headers.get("content-type") || "";
+  if (!contentType.includes("video/") && !contentType.includes("application/octet-stream")) {
+    throw new Error("OpenRouter completed the job without returning video content.");
+  }
+  const videoUrl = saveVideoBuffer(job.jobId, Buffer.from(await videoResponse.arrayBuffer()));
+  job.localVideoUrl = videoUrl;
+  videoJobs.set(job.jobId, job);
+  return videoUrl;
+}
+
+async function handleGetVideoJob(request, response, jobId) {
+  if (request.method !== "GET") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+  const job = videoJobs.get(String(jobId));
+  if (!job) {
+    sendJson(response, 404, { error: "Video job not found. Please start it again." });
+    return;
+  }
+
+  try {
+    const config = getVideoConfig();
+    const upstreamResponse = await fetch(job.pollingUrl, {
+      headers: {
+        Authorization: `Bearer ${config.openRouterApiKey}`,
+        "HTTP-Referer": config.siteUrl,
+        "X-Title": config.siteTitle
+      }
+    });
+    const upstreamData = await upstreamResponse.json().catch(() => ({}));
+    if (!upstreamResponse.ok) throw new Error(`Video status check failed with status ${upstreamResponse.status}`);
+
+    job.status = normalizeVideoStatus(upstreamData.status);
+    videoJobs.set(job.jobId, job);
+    if (job.status === "completed") {
+      const videoUrl = await downloadCompletedVideo(job, config);
+      sendJson(response, 200, {
+        jobId: job.jobId,
+        status: "completed",
+        videoUrl,
+        downloadUrl: videoUrl,
+        usage: upstreamData.usage || null
+      });
+      return;
+    }
+    if (["failed", "cancelled", "expired"].includes(job.status)) {
+      console.error("OpenRouter video job failed", job.jobId, upstreamData.error || job.status);
+      sendJson(response, 200, {
+        jobId: job.jobId,
+        status: "failed",
+        error: "The video could not be generated. Your source image is safe, so you can try again."
+      });
+      return;
+    }
+    sendJson(response, 200, {
+      jobId: job.jobId,
+      status: job.status,
+      progressMessage: job.status === "in_progress" ? "Generating your scene video..." : "Your video is waiting to start..."
+    });
+  } catch (error) {
+    console.error("Video job polling failed", job.jobId, error.message);
+    sendJson(response, 502, { error: "We could not check the video yet. Please try again shortly." });
+  }
 }
 
 function buildImagePrompt(body) {
@@ -526,6 +824,7 @@ const server = http.createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
   const projectPartImageMatch = requestUrl.pathname.match(/^\/api\/project-parts\/([^/]+)\/generate-image$/);
   const imageTaskMatch = requestUrl.pathname.match(/^\/api\/image-tasks\/([^/]+)$/);
+  const videoJobMatch = requestUrl.pathname.match(/^\/api\/video-jobs\/([^/]+)$/);
 
   if (projectPartImageMatch) {
     handleCreateProjectPartImageTask(request, response, projectPartImageMatch[1]);
@@ -542,8 +841,23 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (requestUrl.pathname === "/api/generate-video") {
+    handleGenerateVideo(request, response);
+    return;
+  }
+
+  if (videoJobMatch) {
+    handleGetVideoJob(request, response, decodeURIComponent(videoJobMatch[1]));
+    return;
+  }
+
   if (requestUrl.pathname === "/api/ai-report") {
     handleAIReport(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/export-book-docx") {
+    handleExportBookDocx(request, response);
     return;
   }
 

@@ -63,8 +63,8 @@
       }
 
       .writing-choice-grid {
-        display: none;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
         gap: 18px;
         margin: 18px 0 22px;
       }
@@ -84,6 +84,7 @@
       }
 
       .writing-choice-card[data-choice="teacher"] {
+        order: 1;
         background:
           radial-gradient(circle at 20% 0%, rgba(210, 137, 255, 0.2), transparent 34%),
           linear-gradient(180deg, rgba(38, 24, 68, 0.92), rgba(10, 13, 32, 0.88));
@@ -131,6 +132,54 @@
         background: linear-gradient(135deg, var(--blue), var(--purple));
         box-shadow: 0 14px 32px rgba(71, 126, 255, 0.24);
       }
+
+      .writing-choice-card[data-choice="teacher"] {
+        min-height: 320px;
+        border-color: rgba(91, 151, 255, 0.72);
+        background: radial-gradient(circle at 10% 0%, rgba(65, 150, 255, 0.32), transparent 38%), linear-gradient(145deg, rgba(20, 55, 115, 0.96), rgba(8, 16, 40, 0.94));
+      }
+
+      .writing-choice-card[data-choice="free"] { min-height: 320px; background: linear-gradient(180deg, rgba(18, 27, 57, 0.9), rgba(8, 13, 31, 0.88)); }
+      .writing-choice-card[data-choice="free"] { order: 2; }
+      .assignment-code-panel { display:none !important; }
+      .join-project-form { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-top:auto; }
+      .join-project-form input { min-width:0; min-height:48px; padding:0 14px; border:1px solid rgba(143,171,255,.32); border-radius:10px; color:#fff; background:rgba(3,9,25,.74); }
+      .join-project-form button { margin-top:0; }
+      .project-signal-row { display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 18px; }
+      .project-signal-row b { padding:7px 10px; border:1px solid rgba(126,164,255,.3); border-radius:999px; color:#dbe7ff; background:rgba(5,14,38,.66); font-size:12px; }
+      .together-actions { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+      .together-actions button { margin:0; padding:9px 12px; border:1px solid rgba(143,171,255,.3); background:rgba(5,14,38,.7); box-shadow:none; font-size:13px; }
+      .together-actions button.is-active { border-color:#75a7ff; background:#234b98; }
+      .group-dialog { width:min(620px,calc(100% - 28px)); padding:0; border:1px solid rgba(128,166,255,.46); border-radius:16px; color:#fff; background:#09142f; box-shadow:0 30px 100px rgba(0,0,0,.6); }
+      .group-dialog::backdrop { background:rgba(1,4,14,.78); backdrop-filter:blur(7px); }
+      .group-dialog-inner { padding:24px; }
+      .group-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+      .group-dialog h2 { margin:0; font-size:28px; }
+      .group-dialog p { color:#b9c5df; line-height:1.5; }
+      .group-close { width:38px !important; height:38px; margin:0 !important; padding:0 !important; border:1px solid #40547e !important; border-radius:50% !important; color:#fff; background:#101d3d !important; box-shadow:none !important; }
+      .group-form { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+      .group-form label { color:#dce5fb; font-size:13px; font-weight:800; }
+      .group-form input,.group-form select { width:100%; min-height:44px; margin-top:6px; padding:0 11px; border:1px solid #40547e; border-radius:9px; color:#fff; background:#050d23; }
+      .group-form .wide { grid-column:1/-1; }
+      .invite-result { margin-top:16px; padding:15px; border:1px solid rgba(86,220,171,.38); border-radius:10px; background:rgba(24,90,72,.22); }
+      .invite-code { display:block; margin:6px 0; color:#ffd978; font-size:30px; letter-spacing:2px; }
+      .dialog-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
+      .dialog-actions button { margin:0; }
+      .class-project-context { margin:0 0 18px; padding:18px; border:1px solid rgba(114,160,255,.3); border-radius:14px; background:rgba(6,15,39,.72); }
+      .class-project-head,.class-project-progress-copy { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+      .class-project-head h3 { margin:0; font-size:21px; }
+      .class-project-head p { margin:5px 0 0; color:rgba(238,243,255,.7); }
+      .class-project-head strong { color:#84f0c8; white-space:nowrap; }
+      .class-project-progress-copy { margin-top:15px; color:#c8d5f4; font-size:13px; }
+      .class-project-progress { height:8px; margin-top:7px; overflow:hidden; border-radius:999px; background:#121e3d; }
+      .class-project-progress i { display:block; width:60%; height:100%; background:linear-gradient(90deg,#52d7a6,#5d7cff); }
+      .class-scene-list { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
+      .class-scene { padding:10px; border:1px solid rgba(143,171,255,.2); border-radius:10px; background:rgba(8,16,39,.74); }
+      .class-scene strong,.class-scene span { display:block; }
+      .class-scene span { margin-top:5px; color:#9eabc8; font-size:12px; }
+      .class-scene.is-done { border-color:rgba(82,215,166,.36); }
+      .class-scene.is-you { border-color:#6c8dff; box-shadow:0 0 0 2px rgba(72,117,255,.18); }
+      .class-scene.is-you span { color:#a9c4ff; font-weight:800; }
 
       .student-writing-workspace {
         display: grid;
@@ -478,6 +527,50 @@
         object-fit: cover;
       }
 
+      .student-preview-frame video {
+        display: block;
+        width: 100%;
+        min-height: 280px;
+        max-height: 460px;
+        background: #020611;
+        object-fit: contain;
+      }
+
+      .student-video-result {
+        width: 100%;
+      }
+
+      .student-video-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid rgba(143, 171, 255, 0.18);
+        background: rgba(4, 9, 24, 0.9);
+      }
+
+      .student-video-actions a,
+      .student-video-actions button {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border: 1px solid rgba(143, 171, 255, 0.28);
+        border-radius: 10px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .student-action-row button:disabled {
+        cursor: not-allowed;
+        opacity: 0.58;
+      }
+
       .student-preview-empty {
         padding: 22px;
         color: rgba(246, 248, 255, 0.68);
@@ -519,6 +612,11 @@
           grid-template-columns: 1fr;
         }
 
+        .join-project-form { grid-template-columns:1fr; }
+        .group-form { grid-template-columns:1fr; }
+        .group-form .wide { grid-column:auto; }
+        .class-scene-list { grid-template-columns:repeat(2,1fr); }
+
         .student-write-hero img {
           max-height: 280px;
         }
@@ -554,28 +652,66 @@
 
       <section class="student-write-hero write-hero" aria-label="Visual Write overview">
         <div>
-          <span class="student-write-kicker" data-mode-kicker>Student Writing</span>
-          <h1 data-mode-title>Start your own visual story.</h1>
-          <p data-mode-subtitle>Write your own story, get feedback, and turn it into images or video.</p>
+          <span class="student-write-kicker" data-mode-kicker>Student Writing Studio</span>
+          <h1 data-mode-title>Visual Write</h1>
+          <p data-mode-subtitle>Write your part. Build one story together.</p>
         </div>
         <img src="assets/hero-student.png" alt="" />
       </section>
 
       <section class="writing-choice-grid" aria-label="Choose a writing mode">
-        <article class="writing-choice-card is-active" data-choice="free">
+        <article class="writing-choice-card" data-choice="free">
           <span aria-hidden="true">✦</span>
-          <h2>Free Creation</h2>
-          <p>Start your own story from an idea, picture, or prompt.</p>
+          <h2>Free Writing</h2>
+          <p>Start your own story from an idea, picture, or prompt. Get feedback and turn it into images or video.</p>
           <button type="button" data-open-writing-mode="free">Start Free Writing</button>
         </article>
 
-        <article class="writing-choice-card" data-choice="teacher">
+        <article class="writing-choice-card is-active" data-choice="teacher">
           <span aria-hidden="true">✓</span>
-          <h2>Teacher Assignment</h2>
-          <p>Continue a chapter or scene assigned by your teacher.</p>
-          <button type="button" data-open-writing-mode="teacher">Open Teacher Task</button>
+          <h2>Create Together</h2>
+          <p>Create or join a shared story. Write one part, make visuals, and publish together.</p>
+          <div class="together-actions" aria-label="Co-creation options">
+            <button class="is-active" type="button" data-together-mode="teacher">Join Teacher Project</button>
+            <button type="button" data-open-create-group>Create Friend Group</button>
+            <button type="button" data-open-join-group>Join Friend Group</button>
+          </div>
+          <div class="project-signal-row"><b>18 students writing</b><b>5 scenes</b><b>60% complete</b></div>
+          <div class="join-project-form">
+            <input data-assignment-code-input placeholder="Class Code · MAP-4832" aria-label="Class Code" />
+            <input data-student-name-input placeholder="Student Name" aria-label="Student Name" />
+            <button type="button" data-open-assignment-task>Join Project</button>
+          </div>
+          <small data-assignment-join-error></small>
         </article>
       </section>
+
+      <dialog class="group-dialog" data-create-group-dialog>
+        <div class="group-dialog-inner">
+          <div class="group-dialog-head"><div><span class="student-write-kicker">Project Owner</span><h2>Create Friend Group</h2></div><button class="group-close" type="button" data-close-group aria-label="Close">×</button></div>
+          <p>Start an invite-only book or movie. Friends can claim one open part and create its writing and visuals.</p>
+          <div class="group-form">
+            <label class="wide">Project Name<input data-group-title value="The Star Keeper"></label>
+            <label>Project Type<select data-group-type><option value="book">Class Book</option><option value="movie">Class Movie</option></select></label>
+            <label>Scenes / Chapters<select data-group-parts><option>3</option><option selected>5</option><option>8</option></select></label>
+            <label>Member Limit<select data-group-limit><option>3</option><option selected>5</option><option>8</option></select></label>
+            <label>Join Rule<select><option>Owner approval</option><option>Anyone with invite code</option></select></label>
+          </div>
+          <div class="dialog-actions"><button type="button" data-create-friend-project>Create Group & Invite Friends</button></div>
+          <div class="invite-result" data-invite-result hidden><span>Invite Code</span><strong class="invite-code" data-invite-code>STAR-4821</strong><small data-invite-link></small><div class="dialog-actions"><button type="button" data-copy-invite>Copy Invite Link</button><button type="button" data-open-created-project>Open Group Project</button></div></div>
+        </div>
+      </dialog>
+
+      <dialog class="group-dialog" data-join-group-dialog>
+        <div class="group-dialog-inner">
+          <div class="group-dialog-head"><div><span class="student-write-kicker">Invite-only project</span><h2>Join Friend Group</h2></div><button class="group-close" type="button" data-close-group aria-label="Close">×</button></div>
+          <p>Enter the Invite Code from your friend. Use a display name rather than personal contact information.</p>
+          <div class="group-form"><label>Invite Code<input data-friend-code placeholder="STAR-4821"></label><label>Display Name<input data-friend-name placeholder="Your display name"></label></div>
+          <div class="dialog-actions"><button type="button" data-join-friend-project>Join Group</button></div>
+          <p data-friend-join-error></p>
+          <p><strong>Claim an Open Scene</strong> after joining. You can edit only your own part.</p>
+        </div>
+      </dialog>
 
       <section class="student-writing-workspace" data-writing-workspace="free" aria-label="Free Creation writing workspace">
         <section class="student-writing-panel">
@@ -687,6 +823,20 @@
               <p data-assignment-status>You are writing Scene 3 for your class story movie.</p>
             </div>
           </header>
+
+          <section class="class-project-context" aria-label="Class Progress">
+            <div class="class-project-head"><div><h3>The Mystery of the Lost Map</h3><p>Class Movie · Grade 4</p></div><strong>3 of 5 scenes ready</strong></div>
+            <div class="class-project-progress-copy"><span>Class Progress</span><span>60%</span></div>
+            <div class="class-project-progress"><i></i></div>
+            <div class="class-scene-list">
+              <article class="class-scene is-done"><strong>Scene 1 · Opening</strong><span>Ava · Complete</span></article>
+              <article class="class-scene is-done"><strong>Scene 2 · Discovery</strong><span>Leo · Complete</span></article>
+              <article class="class-scene is-you"><strong>Scene 3 · Hidden Door</strong><span>You are here</span></article>
+              <article class="class-scene"><strong>Scene 4 · Challenge</strong><span>Noah · Writing</span></article>
+              <article class="class-scene"><strong>Scene 5 · Ending</strong><span>Emma · Not started</span></article>
+            </div>
+            <div class="class-project-progress-copy"><strong>Complete all 5 scenes to publish the class movie</strong><span>One shared story</span></div>
+          </section>
 
           <div class="student-writing-form">
             <div class="task-info-list">
@@ -848,12 +998,18 @@
         const workspaces = [...document.querySelectorAll("[data-writing-workspace]")];
         const assignmentGate = document.querySelector("[data-assignment-gate]");
         const assignmentOpenButton = document.querySelector("[data-open-assignment-task]");
+        const assignmentCodeInput = document.querySelector("[data-assignment-code-input]");
+        const studentNameInput = document.querySelector("[data-student-name-input]");
+        const assignmentJoinError = document.querySelector("[data-assignment-join-error]");
         const modeTitle = document.querySelector("[data-mode-title]");
         const modeSubtitle = document.querySelector("[data-mode-subtitle]");
         const modeKicker = document.querySelector("[data-mode-kicker]");
         const freeGradeSelect = document.querySelector('[data-writing-field="free-grade"]');
         const freeSkillFocus = document.querySelector("[data-free-skill-focus]");
         const toast = document.querySelector("[data-student-toast]");
+        const createGroupDialog = document.querySelector("[data-create-group-dialog]");
+        const joinGroupDialog = document.querySelector("[data-join-group-dialog]");
+        const FRIEND_PROJECTS_KEY = "storieslens_friend_group_projects";
         const previewImages = {
           free: "assets/storybook-portal-book.png",
           assignment: "assets/showcase-block-castle.png"
@@ -865,9 +1021,9 @@
             subtitle: "Write your own story, get feedback, and turn it into images or video."
           },
           assignment: {
-            kicker: "Class Project",
-            title: "Join a class project.",
-            subtitle: "Enter your class code, open your teacher task, and write your scene or chapter."
+            kicker: "Create Together",
+            title: "Let's write and create together.",
+            subtitle: "Join a shared project, write your part, and turn the whole story into images or video."
           }
         };
         const gradeSkillFocus = {
@@ -921,6 +1077,7 @@
         };
         let activeMode = "free";
         let assignmentOpened = false;
+        const activeVideoJobs = new Map();
 
         function showToast(message) {
           if (!toast) return;
@@ -933,7 +1090,36 @@
         }
 
         function normalizeMode(mode) {
-          return mode === "assignment" || mode === "teacher" ? "assignment" : "free";
+          return mode === "assignment" || mode === "teacher" || mode === "group" ? "assignment" : "free";
+        }
+
+        function readFriendProjects() {
+          try { return JSON.parse(localStorage.getItem(FRIEND_PROJECTS_KEY) || "{}"); }
+          catch { return {}; }
+        }
+
+        function writeFriendProjects(projects) {
+          localStorage.setItem(FRIEND_PROJECTS_KEY, JSON.stringify(projects));
+        }
+
+        function createInviteCode() {
+          return `STAR-${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        function applyFriendProject(project, memberName) {
+          if (!project) return;
+          const context = document.querySelector(".class-project-context");
+          const partLabel = project.type === "movie" ? "Scene" : "Chapter";
+          const parts = Array.from({ length: project.partCount }, (_, index) => ({
+            title: `${partLabel} ${index + 1}`,
+            member: index === 0 ? memberName : index === 1 ? "Open · Claim" : "Not started",
+            className: index === 0 ? "is-you" : ""
+          }));
+          if (context) context.innerHTML = `<div class="class-project-head"><div><h3>${project.title}</h3><p>Friend Group · ${project.type === "movie" ? "Group Movie" : "Group Book"}</p></div><strong>1 of ${project.partCount} parts claimed</strong></div><div class="class-project-progress-copy"><span>Group Progress</span><span>${Math.round(100 / project.partCount)}%</span></div><div class="class-project-progress"><i style="width:${100 / project.partCount}%"></i></div><div class="class-scene-list">${parts.map(part => `<article class="class-scene ${part.className}"><strong>${part.title}</strong><span>${part.member}${part.className ? " · You are here" : ""}</span></article>`).join("")}</div><div class="class-project-progress-copy"><strong>Complete all ${project.partCount} parts to publish together</strong><span>Invite Code · ${project.code}</span></div>`;
+          const role = document.querySelector("[data-task-role]");
+          const status = document.querySelector("[data-assignment-status]");
+          if (role) role.textContent = `You claimed ${partLabel} 1 in ${project.title}.`;
+          if (status) status.textContent = `You are co-writing ${partLabel} 1 with your friend group.`;
         }
 
         function setMode(mode) {
@@ -1044,6 +1230,155 @@
           ].join("\n");
         }
 
+        function readStoredMedia(mode, mediaType) {
+          try {
+            return JSON.parse(localStorage.getItem(`storieslens_${mode}_generated_${mediaType}`) || "null");
+          } catch {
+            return null;
+          }
+        }
+
+        function getVideoButton(mode) {
+          return document.querySelector(`[data-student-action="video"][data-mode-target="${mode}"]`);
+        }
+
+        function setVideoButtonState(mode, state) {
+          const button = getVideoButton(mode);
+          if (!button) return;
+          const label = button.querySelector("span");
+          const copy = {
+            needsImage: "Generate Image First",
+            ready: "Generate Scene Video",
+            preparing: "Preparing Video...",
+            generating: "Generating Video...",
+            completed: "Regenerate Video"
+          };
+          if (label) label.textContent = copy[state] || copy.ready;
+          button.disabled = state === "needsImage" || state === "preparing" || state === "generating";
+          button.dataset.videoState = state;
+        }
+
+        function updateVideoButton(mode) {
+          if (activeVideoJobs.has(mode)) {
+            setVideoButtonState(mode, "generating");
+            return;
+          }
+          if (readStoredMedia(mode, "video")?.videoUrl) {
+            setVideoButtonState(mode, "completed");
+            return;
+          }
+          setVideoButtonState(mode, readStoredMedia(mode, "image")?.imageUrl ? "ready" : "needsImage");
+        }
+
+        function buildVideoPrompt(mode) {
+          const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Warm";
+          return [
+            `Animate this approved StoriesLens illustration using the student's writing: ${getDraft(mode)}`,
+            `Mood: ${selectedMood}.`,
+            "Preserve every character's face, age, clothing, hairstyle, proportions, color palette, and illustration style from the source image.",
+            "Add one clear character action, subtle environmental motion, and a gentle cinematic camera move.",
+            "Do not add new characters, text, captions, logos, violence, abrupt cuts, or visual transformations."
+          ].join("\n");
+        }
+
+        function renderVideoPreview(mode, videoData) {
+          const preview = document.querySelector(`[data-output="${mode}-preview"]`);
+          if (!preview || !videoData?.videoUrl) return;
+          preview.innerHTML = `
+            <div class="student-video-result">
+              <video controls playsinline preload="metadata" src="${videoData.videoUrl}"></video>
+              <div class="student-video-actions">
+                <a href="${videoData.downloadUrl || videoData.videoUrl}" download>Download Video</a>
+                <button type="button" data-regenerate-video>Regenerate Video</button>
+                <button type="button" data-save-video-work>Save to Works</button>
+              </div>
+            </div>`;
+          preview.querySelector("[data-regenerate-video]")?.addEventListener("click", () => generateVideoPreview(mode));
+          preview.querySelector("[data-save-video-work]")?.addEventListener("click", () => {
+            saveWork(mode);
+            showToast("Video saved with your story on this device.");
+          });
+          setVideoButtonState(mode, "completed");
+        }
+
+        async function requestVideoFromApi(mode) {
+          if (window.location.protocol === "file:") {
+            throw new Error("Video generation needs the local server. Open http://localhost:3000/visual-write.html.");
+          }
+          const imageData = readStoredMedia(mode, "image");
+          if (!imageData?.imageUrl) {
+            throw new Error("Generate an image before making a video.");
+          }
+          const response = await fetch("/api/generate-video", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: buildVideoPrompt(mode),
+              imageUrl: imageData.imageUrl,
+              duration: 5,
+              aspectRatio: "16:9",
+              resolution: "720p",
+              assetType: mode === "assignment" ? "SCENE_VIDEO" : "FREE_CREATE_VIDEO"
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.jobId) {
+            throw new Error(data.error || "The video request could not be started.");
+          }
+          return data;
+        }
+
+        async function pollVideoJob(jobId) {
+          for (let attempt = 0; attempt < 40; attempt += 1) {
+            if (attempt > 0) await new Promise((resolve) => window.setTimeout(resolve, 15000));
+            const response = await fetch(`/api/video-jobs/${encodeURIComponent(jobId)}`);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "We could not check the video yet.");
+            if (data.status === "completed" && data.videoUrl) return data;
+            if (data.status === "failed") throw new Error(data.error || "The video could not be generated.");
+          }
+          throw new Error("The video is taking longer than expected. Please try again shortly.");
+        }
+
+        async function generateVideoPreview(mode) {
+          const preview = document.querySelector(`[data-output="${mode}-preview"]`);
+          if (!preview || activeVideoJobs.has(mode)) return;
+          const sourceImage = readStoredMedia(mode, "image");
+          if (!sourceImage?.imageUrl) {
+            setVideoButtonState(mode, "needsImage");
+            showToast("Generate an image before making a video.");
+            return;
+          }
+
+          activeVideoJobs.set(mode, true);
+          setVideoButtonState(mode, "preparing");
+          preview.innerHTML = '<div class="student-preview-empty">Preparing Video...</div>';
+          try {
+            const submitted = await requestVideoFromApi(mode);
+            setVideoButtonState(mode, "generating");
+            preview.innerHTML = '<div class="student-preview-empty">Generating Video... This can take several minutes.</div>';
+            showToast("Video request accepted. 1 video credit used.");
+            const completed = await pollVideoJob(submitted.jobId);
+            const videoData = {
+              jobId: submitted.jobId,
+              videoUrl: completed.videoUrl,
+              downloadUrl: completed.downloadUrl || completed.videoUrl,
+              sourceImageUrl: sourceImage.imageUrl,
+              prompt: buildVideoPrompt(mode),
+              savedAt: new Date().toISOString()
+            };
+            localStorage.setItem(`storieslens_${mode}_generated_video`, JSON.stringify(videoData));
+            renderVideoPreview(mode, videoData);
+            showToast("Your scene video is ready.");
+          } catch (error) {
+            preview.innerHTML = `<img src="${sourceImage.imageUrl}" alt="Generated story visual preview" />`;
+            showToast(error.message);
+          } finally {
+            activeVideoJobs.delete(mode);
+            updateVideoButton(mode);
+          }
+        }
+
         async function requestImageFromApi(mode) {
           if (window.location.protocol === "file:") {
             throw new Error("API calls need the local server. Run npm start and open http://localhost:3000/visual-write.html.");
@@ -1055,7 +1390,6 @@
             body: JSON.stringify({
               prompt: buildImagePrompt(mode),
               aspectRatio: "16:9",
-              resolution: "2K",
               assetType: mode === "assignment" ? "SCENE_IMAGE" : "FREE_CREATE_IMAGE"
             })
           });
@@ -1086,6 +1420,8 @@
                 prompt: buildImagePrompt(mode),
                 savedAt: new Date().toISOString()
               }));
+              localStorage.removeItem(`storieslens_${mode}_generated_video`);
+              updateVideoButton(mode);
               showToast(
                 mode === "assignment"
                   ? `Scene image candidate generated with ${selectedMood.toLowerCase()} mood and approved characters.`
@@ -1099,14 +1435,7 @@
             }
           }
 
-          preview.innerHTML = `<img src="${previewImages[mode]}" alt="Generated story visual preview" />`;
-          showToast(
-            mediaType === "video"
-              ? "Scene video preview prepared. 1 video credit used."
-              : mode === "assignment"
-                ? `Scene image candidate generated with ${selectedMood.toLowerCase()} mood and approved characters.`
-                : "Image preview generated. 1 image credit used."
-          );
+          if (mediaType === "video") await generateVideoPreview(mode);
         }
 
         function saveWork(mode) {
@@ -1120,16 +1449,78 @@
         }
 
         document.querySelectorAll("[data-open-writing-mode]").forEach((button) => {
-          button.addEventListener("click", () => setMode(button.dataset.openWritingMode));
+          button.addEventListener("click", () => {
+            setMode(button.dataset.openWritingMode);
+            document.querySelector(`[data-writing-workspace="${normalizeMode(button.dataset.openWritingMode)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
         });
 
         freeGradeSelect?.addEventListener("change", updateFreeSkillFocus);
 
         assignmentOpenButton?.addEventListener("click", () => {
+          const code = assignmentCodeInput?.value.trim();
+          const studentName = studentNameInput?.value.trim();
+          if (!code || !studentName) {
+            if (assignmentJoinError) assignmentJoinError.textContent = "Enter your class code and student name to join.";
+            return;
+          }
+          if (assignmentJoinError) assignmentJoinError.textContent = "";
+          localStorage.setItem("storieslens_student_identity", JSON.stringify({ code, studentName }));
           assignmentOpened = true;
           applyAssignmentFromLesson();
           setMode("assignment");
           showToast(document.querySelector("[data-assignment-status]")?.textContent || "Class task opened.");
+          document.querySelector('[data-writing-workspace="assignment"]')?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        document.querySelector("[data-open-create-group]")?.addEventListener("click", () => createGroupDialog?.showModal());
+        document.querySelector("[data-open-join-group]")?.addEventListener("click", () => joinGroupDialog?.showModal());
+        document.querySelectorAll("[data-close-group]").forEach((button) => button.addEventListener("click", () => button.closest("dialog")?.close()));
+
+        document.querySelector("[data-create-friend-project]")?.addEventListener("click", () => {
+          const code = createInviteCode();
+          const project = {
+            code,
+            title: document.querySelector("[data-group-title]")?.value.trim() || "Our Shared Story",
+            type: document.querySelector("[data-group-type]")?.value || "book",
+            partCount: Number(document.querySelector("[data-group-parts]")?.value || 5),
+            memberLimit: Number(document.querySelector("[data-group-limit]")?.value || 5),
+            ownerName: "Project Owner",
+            createdAt: new Date().toISOString()
+          };
+          const projects = readFriendProjects();
+          projects[code] = project;
+          writeFriendProjects(projects);
+          document.querySelector("[data-invite-code]").textContent = code;
+          document.querySelector("[data-invite-link]").textContent = `${location.origin}/visual-write.html?mode=group&code=${code}`;
+          document.querySelector("[data-invite-result]").hidden = false;
+          localStorage.setItem("storieslens_active_friend_project", JSON.stringify(project));
+        });
+
+        document.querySelector("[data-copy-invite]")?.addEventListener("click", async () => {
+          const link = document.querySelector("[data-invite-link]")?.textContent || "";
+          await navigator.clipboard.writeText(link);
+          showToast("Invite link copied.");
+        });
+
+        document.querySelector("[data-open-created-project]")?.addEventListener("click", () => {
+          const project = JSON.parse(localStorage.getItem("storieslens_active_friend_project") || "null");
+          if (!project) return;
+          location.href = `group-project-studio.html?code=${encodeURIComponent(project.code)}`;
+        });
+
+        document.querySelector("[data-join-friend-project]")?.addEventListener("click", () => {
+          const code = document.querySelector("[data-friend-code]")?.value.trim().toUpperCase();
+          const name = document.querySelector("[data-friend-name]")?.value.trim();
+          const project = readFriendProjects()[code];
+          const error = document.querySelector("[data-friend-join-error]");
+          if (!code || !name) { if (error) error.textContent = "Enter the invite code and your display name."; return; }
+          if (!project) { if (error) error.textContent = "Invite code not found on this device."; return; }
+          assignmentOpened = true;
+          applyAssignmentFromLesson();
+          applyFriendProject(project, name);
+          localStorage.setItem("storieslens_student_identity", JSON.stringify({ code, studentName: name, groupType: "friend" }));
+          location.href = `group-project-studio.html?code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`;
         });
 
         document.querySelectorAll("[data-student-action]").forEach((button) => {
@@ -1138,7 +1529,7 @@
             const action = button.dataset.studentAction;
             if (action === "feedback") setFeedback(mode);
             if (action === "image") generatePreview(mode, "image");
-            if (action === "video") generatePreview(mode, "video");
+            if (action === "video") generateVideoPreview(mode);
             if (action === "save") saveWork(mode);
             if (action === "submit-image") {
               const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Mysterious";
@@ -1151,9 +1542,43 @@
           });
         });
 
-        const initialMode = normalizeMode(new URLSearchParams(window.location.search).get("mode"));
-        if (initialMode === "assignment") applyAssignmentFromLesson();
-        setMode(initialMode);
+        const pageParams = new URLSearchParams(window.location.search);
+        const requestedMode = pageParams.get("mode");
+        const classCode = pageParams.get("code");
+        if (classCode && assignmentCodeInput) assignmentCodeInput.value = classCode;
+        if (requestedMode === "group" && classCode) {
+          const project = readFriendProjects()[classCode.toUpperCase()];
+          const invitedName = pageParams.get("name");
+          if (project && invitedName) {
+            assignmentOpened = true;
+            applyAssignmentFromLesson();
+            applyFriendProject(project, invitedName);
+            setMode("assignment");
+          } else {
+            setMode("assignment");
+            document.querySelector("[data-friend-code]").value = classCode;
+            if (!project) document.querySelector("[data-friend-join-error]").textContent = "This invite code is not available on this device.";
+            joinGroupDialog?.showModal();
+          }
+        } else if (requestedMode === "assignment" || requestedMode === "teacher") {
+          if (classCode) {
+            assignmentOpened = true;
+            if (studentNameInput && !studentNameInput.value) studentNameInput.value = pageParams.get("name") || "Student";
+            applyAssignmentFromLesson();
+          }
+          setMode("assignment");
+        } else if (requestedMode === "free") {
+          setMode("free");
+        } else {
+          activeMode = "landing";
+          workspaces.forEach((workspace) => { workspace.hidden = true; });
+          if (assignmentGate) assignmentGate.hidden = true;
+        }
+        ["free", "assignment"].forEach((mode) => {
+          const savedVideo = readStoredMedia(mode, "video");
+          if (savedVideo?.videoUrl) renderVideoPreview(mode, savedVideo);
+          updateVideoButton(mode);
+        });
       })();
     </script>
   </body>

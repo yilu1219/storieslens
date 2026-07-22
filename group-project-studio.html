@@ -1,0 +1,283 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Group Project Studio | StoriesLens</title><style>
+:root{color-scheme:dark;--bg:#030716;--panel:#0d1735;--line:#30456f;--text:#f7f8ff;--muted:#aeb9d2;--blue:#397aff;--purple:#8651f4;--mint:#79efc2;--gold:#ffd579}*{box-sizing:border-box}body{margin:0;color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at 55% 0,#15164a 0,transparent 36%),var(--bg)}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.65;background-image:radial-gradient(circle,#fff 1px,transparent 1.5px);background-size:137px 137px}.shell{position:relative;width:min(1320px,calc(100% - 36px));margin:auto;padding:24px 0 60px}.header{height:62px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border:1px solid #27385f;background:rgba(4,9,25,.86);backdrop-filter:blur(18px)}.brand{color:#fff;text-decoration:none;font-size:22px;font-weight:900}.header nav{display:flex;gap:25px}.header nav a{color:#d9e0f1;text-decoration:none}.back{padding:11px 15px;color:#fff;text-decoration:none;border:1px solid #42577f;border-radius:7px}.hero{padding:34px 4px 20px}.kicker{display:inline-flex;padding:7px 10px;color:#cddcff;background:#12224a;border:1px solid #365388;border-radius:999px;font-size:13px;font-weight:800}.hero h1{margin:12px 0 7px;font-size:clamp(40px,6vw,68px);line-height:1}.hero p{margin:0;color:var(--muted);font-size:18px}.steps{display:grid;grid-template-columns:repeat(5,1fr);margin:20px 0 16px;border:1px solid #304976;background:#07142e}.step{min-height:52px;padding:10px;display:flex;align-items:center;gap:8px;border:0;border-right:1px solid #304976;color:#a9b5ce;background:transparent;font-weight:800;cursor:pointer}.step:last-child{border-right:0}.step b{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#26385f}.step.active{color:#fff;background:linear-gradient(120deg,#1b468d,#473c98)}.step.done{color:var(--mint)}.step:disabled{cursor:not-allowed;opacity:.42}.panel{display:none;padding:20px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,rgba(15,27,61,.97),rgba(7,15,36,.96))}.panel.active{display:block}.panel-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.panel h2,.panel h3{margin:0 0 7px}.panel p{color:var(--muted);line-height:1.5}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:block;color:#e7edff;font-weight:800}.field input,.field textarea,.field select{width:100%;margin-top:7px;padding:12px;border:1px solid #3a507d;border-radius:7px;color:#fff;background:#050d23;font:inherit}.field textarea{min-height:110px;resize:vertical}.wide{grid-column:1/-1}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.btn{min-height:43px;padding:0 17px;border:1px solid #41577f;border-radius:7px;color:#fff;background:#101d3f;font:inherit;font-weight:800;cursor:pointer}.btn.primary{border-color:transparent;background:linear-gradient(120deg,var(--blue),var(--purple))}.btn:disabled{opacity:.42;cursor:not-allowed}.status{min-height:22px;margin-top:10px;color:#b9c7e5}.character-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.character-preview{min-height:410px;display:grid;place-items:center;overflow:hidden;border:1px solid #3a507d;border-radius:8px;background:#06102a}.character-preview img{width:100%;height:100%;object-fit:cover}.character-empty{text-align:center;color:#9aa8c4;padding:30px}.locked{margin-top:14px;padding:13px;border:1px solid rgba(94,225,175,.4);border-radius:7px;color:#bdf7df;background:rgba(21,91,68,.22)}.chapter-grid{display:grid;grid-template-columns:300px 1fr;gap:15px}.chapter-list{display:grid;gap:8px}.chapter-card{padding:13px;text-align:left;border:1px solid #334a77;border-radius:7px;color:#fff;background:#09142f;cursor:pointer}.chapter-card.active{border-color:#6d8dff;background:#173268}.chapter-card span{display:block;margin-top:5px;color:#9fabc5;font-size:12px}.editor-layout{display:grid;grid-template-columns:1fr 380px;gap:13px}.editor{min-height:380px;width:100%;padding:14px;border:1px solid #3a507d;border-radius:7px;color:#fff;background:#050d23;font:inherit;line-height:1.6;resize:vertical}.visual{padding:15px;border:1px solid #344b78;border-radius:7px;background:#08132d}.visual-preview{aspect-ratio:16/10;display:grid;place-items:center;overflow:hidden;border:1px solid #3a507d;border-radius:7px;background:#030a1b;color:#95a3c0;text-align:center}.visual-preview img,.visual-preview video{width:100%;height:100%;object-fit:cover}.pill{display:inline-flex;margin:4px 4px 0 0;padding:6px 8px;border:1px solid #42577f;border-radius:999px;color:#cbd6ef;font-size:11px}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.work{padding:13px;border:1px solid #344b78;border-radius:7px;background:#09142f}.work img,.work video{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:6px;background:#030a1b}.work blockquote{margin:11px 0;color:#dbe3f5;line-height:1.45}.publish-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.book-preview{padding:20px;border:1px solid #3b507d;border-radius:7px;background:#f5e8ce;color:#261c14}.book-preview h3{font-family:Georgia,serif}.book-preview article{padding:15px 0;border-bottom:1px solid #cbbda5}.book-preview small{display:block;margin-top:10px;font-weight:800}.gate{padding:13px;border:1px solid #775a29;border-radius:7px;color:#ffe4a0;background:#2c210c}.toast{position:fixed;right:22px;bottom:22px;padding:13px 16px;border-radius:7px;color:#fff;background:#234a91;box-shadow:0 16px 50px #000}.toast[hidden]{display:none}@media(max-width:850px){.header nav{display:none}.steps{grid-template-columns:1fr}.step{border-right:0;border-bottom:1px solid #304976}.grid2,.character-layout,.chapter-grid,.editor-layout,.gallery,.publish-grid{grid-template-columns:1fr}.shell{width:calc(100% - 20px)}}
+</style></head><body><main class="shell"><header class="header"><a class="brand" href="index.html">StoriesLens</a><nav><a href="index.html">Home</a><a href="create-reading-project.html">Create</a><a href="visual-write.html">Visual Write</a><a href="teacher-dashboard.html">Teacher</a></nav><a class="back" href="visual-write.html">Back to Visual Write</a></header>
+<section class="hero"><span class="kicker">Friend Group · Invite-only</span><h1>Group Project Studio</h1><p>Build one consistent story world, create every part together, and publish one shared book or movie.</p></section>
+<div class="locked" data-demo-banner><strong>Demo Preview · Steps 3-5 are open</strong><br>Sample writing and visuals are ready for presentation. In a live project, approve the shared character before generating new visuals.</div>
+<nav class="steps" aria-label="Group project stages"><button class="step active" data-step="setup"><b>1</b>Story Setup</button><button class="step" data-step="characters"><b>2</b>Characters</button><button class="step" data-step="chapters"><b>3</b>Chapters / Scenes</button><button class="step" data-step="gallery"><b>4</b>Group Gallery</button><button class="step" data-step="publish"><b>5</b>Publish</button></nav>
+<section class="panel active" data-panel="setup"><div class="panel-head"><div><h2>1 Story Setup</h2><p>Set one story world and one visual language for every contributor.</p></div><span class="kicker" data-code></span></div><div class="grid2"><label class="field">Story Title<input data-story-title></label><label class="field">Output Type<select data-story-type><option value="book">Group Book</option><option value="movie">Group Movie</option></select></label><label class="field wide">Story Premise<textarea data-premise>A group of children finds a fallen star and helps it return home.</textarea></label><label class="field">World Setting<input data-world value="A moonlit coastal village with an old observatory"></label><label class="field">Art Style<select data-style><option>Watercolor Storybook</option><option>Classic Picture Book</option><option>Soft 3D Animation</option><option>Graphic Novel</option></select></label><label class="field">Chapters / Scenes<select data-count><option>3</option><option selected>5</option><option>8</option></select></label></div><div class="actions"><button class="btn primary" data-save-setup>Save Story Bible & Continue</button></div></section>
+<section class="panel" data-panel="characters"><div class="panel-head"><div><h2>2 Characters</h2><p>Generate and approve the shared character reference before anyone creates chapter visuals.</p></div><span class="kicker">Story Bible</span></div><div class="character-layout"><div><div class="grid2"><label class="field">Character Name<input data-character-name value="Luna"></label><label class="field">Age<input data-character-age value="9"></label><label class="field">Role<input data-character-role value="The Star Keeper"></label><label class="field">Hair<input data-character-hair value="Short black hair"></label><label class="field wide">Clothing<input data-character-clothing value="Blue coat with a gold star pin"></label><label class="field wide">Personality<input data-character-personality value="Brave, curious, kind"></label></div><div class="actions"><button class="btn primary" data-generate-character>Generate Character</button><button class="btn" data-regenerate-character disabled>Regenerate</button><button class="btn" data-approve-character disabled>Approve Character</button><button class="btn" data-add-character>+ Supporting Character</button></div><p class="status" data-character-status></p></div><div><div class="character-preview" data-character-preview><div class="character-empty">Front, side, and expression reference will appear here.</div></div><div class="locked" data-character-lock hidden><strong>Character Reference Locked</strong><br>All chapter images will use this character and the approved art style.</div></div></div></section>
+<section class="panel" data-panel="chapters"><div class="panel-head"><div><h2>3 Chapters / Scenes</h2><p>Claim one part, write independently, and create visuals from the shared Story Bible.</p></div><span class="kicker">Shared characters · Locked style</span></div><div class="gate" data-chapter-gate>Approve the main character before opening collaborative writing and visual generation.</div><div class="chapter-grid" data-chapter-workspace hidden><aside class="chapter-list" data-chapter-list></aside><div><div class="editor-layout"><div><label class="field">Writing Editor<textarea class="editor" data-chapter-editor></textarea></label><p data-writer-credit></p><button class="btn" data-save-chapter>Save Chapter</button></div><aside class="visual"><h3>Visual Studio</h3><p><span class="pill" data-approved-character></span><span class="pill" data-locked-style></span></p><div class="visual-preview" data-chapter-preview>Approved character + chapter writing → visual</div><div class="actions"><button class="btn primary" data-generate-chapter-image>Generate Chapter Image</button><button class="btn" data-generate-chapter-video disabled>Generate Scene Video</button></div><p class="status" data-chapter-status></p></aside></div></div></div></section>
+<section class="panel" data-panel="gallery"><div class="panel-head"><div><h2>4 Group Gallery</h2><p>Review writing and visual candidates, vote, and select what belongs in the final project.</p></div><span class="kicker">Owner review</span></div><div class="gallery" data-gallery></div></section>
+<section class="panel" data-panel="publish"><div class="panel-head"><div><h2>5 Publish</h2><p>Preview every contribution with its writer credit and publish one shared result.</p></div><span class="kicker">Final assembly</span></div><div class="publish-grid"><div class="book-preview" data-book-preview></div><aside><h3>Publish Checklist</h3><p>Approved character reference</p><p>Selected chapter visuals</p><p>Writer credits included</p><div class="actions"><button class="btn primary" data-preview-book>Preview Group Book</button><button class="btn" data-preview-movie>Preview Group Movie</button><button class="btn" data-export-pdf>Export PDF</button><button class="btn" data-download-video>Download Video</button><button class="btn" data-share>Create Share Link</button></div><p class="status" data-publish-status></p></aside></div></section><div class="toast" data-toast hidden></div></main>
+<script data-demo-mode>
+(()=>{
+  const params=new URLSearchParams(location.search);
+  if(params.get("live")==="1")return;
+  const projectsKey="storieslens_friend_group_projects";
+  const activeKey="storieslens_active_friend_project";
+  let projects={};
+  let active=null;
+  try{projects=JSON.parse(localStorage.getItem(projectsKey)||"{}");active=JSON.parse(localStorage.getItem(activeKey)||"null")}catch{}
+  const code=(params.get("code")||active?.code||"STAR-DEMO").toUpperCase();
+  const base=projects[code]||active||{code,title:"The Star Keeper",type:"book",partCount:5,memberLimit:5};
+  const character=base.character||{name:"Luna",age:"9",role:"The Star Keeper",hair:"Short black hair",clothing:"Blue coat with a gold star pin",personality:"Brave, curious, kind",imageUrl:"assets/showcase-star-keeper.png"};
+  const demo=[
+    {title:"Chapter 1 · The Fallen Star",writer:"Project Owner",text:"Luna saw a small golden star fall beyond the observatory. She pulled on her blue coat and followed its light into the quiet village.",imageUrl:"assets/showcase-star-keeper.png",votes:4,selected:true},
+    {title:"Chapter 2 · The Secret Path",writer:"Emma",text:"Behind the garden wall, Luna found a glowing path. She followed the warm light while the sleepy village disappeared behind her.",imageUrl:"assets/showcase-garden-door.png",votes:7,selected:true},
+    {title:"Chapter 3 · The Storm",writer:"Leo",text:"A silver storm swept across the mountain. Luna held the star close and bravely crossed the old stone bridge.",imageUrl:"assets/showcase-space-adventure.png",votes:5,selected:true},
+    {title:"Chapter 4 · The Sky Door",writer:"Mia",text:"The golden key opened a door above the clouds. Luna and her friends stepped into a bright new world together.",imageUrl:"assets/showcase-block-castle.png",votes:8,selected:true},
+    {title:"Chapter 5 · Home Again",writer:"Noah",text:"At sunrise, the star returned to the sky. Luna smiled as its light painted a golden path across the sea.",imageUrl:"assets/showcase-ocean-lantern.png",votes:6,selected:true}
+  ];
+  const existing=Array.isArray(base.chapters)?base.chapters:[];
+  const chapters=demo.map((sample,index)=>({...sample,...existing[index],text:existing[index]?.text||sample.text,imageUrl:index===2&&String(existing[index]?.imageUrl||"").includes("showcase-dragon-movie")?sample.imageUrl:(existing[index]?.imageUrl||sample.imageUrl),writer:existing[index]?.writer&&!existing[index].writer.includes("Open")?existing[index].writer:sample.writer,videoUrl:existing[index]?.videoUrl||"",selected:existing[index]?.selected||sample.selected}));
+  const project={...base,code,title:base.title||"The Star Keeper",partCount:5,character,characterApproved:true,chapters,demoPreview:true};
+  projects[code]=project;
+  localStorage.setItem(projectsKey,JSON.stringify(projects));
+  localStorage.setItem(activeKey,JSON.stringify(project));
+})();
+</script>
+<script>
+(()=>{"use strict";const PROJECTS="storieslens_friend_group_projects",ACTIVE="storieslens_active_friend_project",q=s=>document.querySelector(s),qa=s=>[...document.querySelectorAll(s)];const params=new URLSearchParams(location.search);let projects={};try{projects=JSON.parse(localStorage.getItem(PROJECTS)||"{}")}catch{}const code=(params.get("code")||JSON.parse(localStorage.getItem(ACTIVE)||"null")?.code||"").toUpperCase();let project=projects[code]||JSON.parse(localStorage.getItem(ACTIVE)||"null")||{code:"STAR-DEMO",title:"The Star Keeper",type:"book",partCount:5,memberLimit:5};project={...project,premise:project.premise||"A group of children finds a fallen star and helps it return home.",world:project.world||"A moonlit coastal village with an old observatory",style:project.style||"Watercolor Storybook",character:project.character||null,characterApproved:!!project.characterApproved,chapters:project.chapters||[]};let current=0;function save(){projects[project.code]=project;localStorage.setItem(PROJECTS,JSON.stringify(projects));localStorage.setItem(ACTIVE,JSON.stringify(project))}function toast(t){q("[data-toast]").textContent=t;q("[data-toast]").hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>q("[data-toast]").hidden=true,2400)}function show(step){const locked=["chapters","gallery","publish"].includes(step)&&!project.characterApproved;if(locked){toast("Approve the shared character first.");return}qa("[data-panel]").forEach(p=>p.classList.toggle("active",p.dataset.panel===step));qa("[data-step]").forEach(b=>b.classList.toggle("active",b.dataset.step===step));if(step==="chapters")renderChapters();if(step==="gallery")renderGallery();if(step==="publish")renderPublish()}qa("[data-step]").forEach(b=>b.onclick=()=>show(b.dataset.step));q("[data-code]").textContent=`Invite Code · ${project.code}`;q("[data-story-title]").value=project.title;q("[data-story-type]").value=project.type;q("[data-premise]").value=project.premise;q("[data-world]").value=project.world;q("[data-style]").value=project.style;q("[data-count]").value=String(project.partCount);function ensureChapters(){const label=project.type==="movie"?"Scene":"Chapter";project.chapters=Array.from({length:project.partCount},(_,i)=>project.chapters[i]||{id:i+1,title:`${label} ${i+1}`,writer:i===0?"Project Owner":"Open · Claim",text:i===0?"Luna saw a small golden star fall beyond the observatory. She pulled on her blue coat and followed its light into the quiet village.":"",imageUrl:"",videoUrl:"",votes:0,selected:false})}q("[data-save-setup]").onclick=()=>{project.title=q("[data-story-title]").value.trim()||"Our Shared Story";project.type=q("[data-story-type]").value;project.premise=q("[data-premise]").value.trim();project.world=q("[data-world]").value.trim();project.style=q("[data-style]").value;project.partCount=Number(q("[data-count]").value);ensureChapters();save();show("characters")};function characterData(){return{name:q("[data-character-name]").value,age:q("[data-character-age]").value,role:q("[data-character-role]").value,hair:q("[data-character-hair]").value,clothing:q("[data-character-clothing]").value,personality:q("[data-character-personality]").value,imageUrl:project.character?.imageUrl||""}}async function generateCharacter(){const c=characterData();q("[data-character-status]").textContent="Generating the shared character reference...";q("[data-character-preview]").innerHTML="Generating character reference...";try{const prompt=`Children's storybook character reference sheet, front view, side view, and three facial expressions. ${c.name}, age ${c.age}, role ${c.role}, ${c.hair}, wearing ${c.clothing}, personality ${c.personality}. ${project.style}. Clean consistent character design, plain dark blue presentation background, no text.`;const r=await fetch("/api/generate-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,aspectRatio:"16:9",assetType:"CHARACTER_REFERENCE"})});const data=await r.json();if(!r.ok||!data.imageUrl)throw Error(data.error||"Character generation failed.");project.character={...c,imageUrl:data.imageUrl};project.characterApproved=false;save();q("[data-character-preview]").innerHTML=`<img src="${data.imageUrl}" alt="Generated character reference">`;q("[data-character-status]").textContent="Character candidate ready for owner review.";q("[data-regenerate-character]").disabled=false;q("[data-approve-character]").disabled=false}catch(e){q("[data-character-preview]").innerHTML=`<div class="character-empty">${e.message}</div>`;q("[data-character-status]").textContent=e.message}}q("[data-generate-character]").onclick=generateCharacter;q("[data-regenerate-character]").onclick=generateCharacter;q("[data-approve-character]").onclick=()=>{project.character={...characterData(),imageUrl:project.character.imageUrl};project.characterApproved=true;ensureChapters();save();q("[data-character-lock]").hidden=false;q("[data-character-status]").textContent="Approved and locked for every contributor.";qa("[data-step]").forEach(b=>{if(["chapters","gallery","publish"].includes(b.dataset.step))b.disabled=false});setTimeout(()=>show("chapters"),350)};q("[data-add-character]").onclick=()=>toast("Supporting character slot added to the Story Bible prototype.");function restore(){if(project.character?.imageUrl){q("[data-character-preview]").innerHTML=`<img src="${project.character.imageUrl}" alt="Approved character reference">`;q("[data-regenerate-character]").disabled=false;q("[data-approve-character]").disabled=project.characterApproved;q("[data-character-lock]").hidden=!project.characterApproved;Object.entries(project.character).forEach(([k,v])=>{const el=q(`[data-character-${k}]`);if(el&&k!=="imageUrl")el.value=v})}qa("[data-step]").forEach(b=>{if(["chapters","gallery","publish"].includes(b.dataset.step))b.disabled=!project.characterApproved})}function renderChapters(){ensureChapters();q("[data-chapter-gate]").hidden=project.characterApproved;q("[data-chapter-workspace]").hidden=!project.characterApproved;if(!project.characterApproved)return;q("[data-chapter-list]").innerHTML=project.chapters.map((c,i)=>`<button class="chapter-card ${i===current?"active":""}" data-chapter="${i}"><strong>${c.title}</strong><span>${c.writer} · ${c.imageUrl?"Image ready":c.text?"Writing":"Open"}</span></button>`).join("");qa("[data-chapter]").forEach(b=>b.onclick=()=>{current=Number(b.dataset.chapter);renderChapters()});const c=project.chapters[current];q("[data-chapter-editor]").value=c.text;q("[data-writer-credit]").textContent=`Writer: ${c.writer}`;q("[data-approved-character]").textContent=`Character: ${project.character.name} · Approved`;q("[data-locked-style]").textContent=`Art style: ${project.style} · Locked`;q("[data-chapter-preview]").innerHTML=c.videoUrl?`<video controls src="${c.videoUrl}"></video>`:c.imageUrl?`<img src="${c.imageUrl}" alt="Chapter visual">`:"Approved character + chapter writing → visual";q("[data-generate-chapter-video]").disabled=!c.imageUrl}q("[data-save-chapter]").onclick=()=>{project.chapters[current].text=q("[data-chapter-editor]").value;save();renderChapters();toast("Chapter saved.")};async function genChapterImage(){const c=project.chapters[current];c.text=q("[data-chapter-editor]").value;if(!c.text.trim()){toast("Write the chapter before generating an image.");return}q("[data-chapter-status]").textContent="Generating with the approved Story Bible...";const char=project.character;const prompt=`${c.text}. Shared character reference: ${char.name}, age ${char.age}, ${char.hair}, wearing ${char.clothing}, ${char.personality}. World: ${project.world}. Locked art style: ${project.style}. Keep the character appearance identical across all chapters. Children's story illustration, no text.`;try{const r=await fetch("/api/generate-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,aspectRatio:"16:9",assetType:"GROUP_CHAPTER_IMAGE"})});const data=await r.json();if(!r.ok||!data.imageUrl)throw Error(data.error||"Image generation failed.");c.imageUrl=data.imageUrl;c.videoUrl="";save();renderChapters();q("[data-chapter-status]").textContent="Candidate image ready for Gallery review."}catch(e){q("[data-chapter-status]").textContent=e.message}}q("[data-generate-chapter-image]").onclick=genChapterImage;async function genVideo(){const c=project.chapters[current];if(!c.imageUrl)return;q("[data-chapter-status]").textContent="Starting 5-second video...";try{const r=await fetch("/api/generate-video",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:`Gentle cinematic motion based on this chapter: ${c.text}. Preserve ${project.character.name}'s exact appearance.`,imageUrl:c.imageUrl,duration:5,aspectRatio:"16:9",resolution:"720p",assetType:"GROUP_SCENE_VIDEO"})});const job=await r.json();if(!r.ok||!job.jobId)throw Error(job.error||"Video request failed.");for(let i=0;i<40;i++){if(i)await new Promise(x=>setTimeout(x,15000));const s=await fetch(`/api/video-jobs/${encodeURIComponent(job.jobId)}`);const data=await s.json();if(data.status==="completed"){c.videoUrl=data.videoUrl;save();renderChapters();q("[data-chapter-status]").textContent="Video ready.";return}if(data.status==="failed")throw Error(data.error||"Video failed.")}throw Error("Video is still processing.")}catch(e){q("[data-chapter-status]").textContent=e.message}}q("[data-generate-chapter-video]").onclick=genVideo;function renderGallery(){ensureChapters();q("[data-gallery]").innerHTML=project.chapters.map((c,i)=>`<article class="work">${c.videoUrl?`<video controls src="${c.videoUrl}"></video>`:c.imageUrl?`<img src="${c.imageUrl}" alt="${c.title}">`:`<div class="visual-preview">No visual yet</div>`}<h3>${c.title}</h3><p>Writer: ${c.writer}</p><blockquote>${c.text||"Waiting for this contributor."}</blockquote><div class="actions"><button class="btn" data-vote="${i}">Vote · ${c.votes}</button><button class="btn" data-select="${i}">${c.selected?"Selected":"Use in Book"}</button><button class="btn" data-gallery-video="${i}" ${c.imageUrl?"":"disabled"}>Make Short Video</button><button class="btn" data-gallery-regenerate="${i}" ${c.text?"":"disabled"}>Regenerate</button></div></article>`).join("");qa("[data-vote]").forEach(b=>b.onclick=()=>{project.chapters[b.dataset.vote].votes++;save();renderGallery()});qa("[data-select]").forEach(b=>b.onclick=()=>{project.chapters[b.dataset.select].selected=true;save();renderGallery();toast("Selected for the final book.")});qa("[data-gallery-video]").forEach(b=>b.onclick=()=>{current=Number(b.dataset.galleryVideo);show("chapters");genVideo()});qa("[data-gallery-regenerate]").forEach(b=>b.onclick=()=>{current=Number(b.dataset.galleryRegenerate);show("chapters");genChapterImage()})}function renderPublish(){ensureChapters();q("[data-book-preview]").innerHTML=`<h3>${project.title}</h3><p>${project.premise}</p>${project.chapters.map(c=>`<article><strong>${c.title}</strong><p>${c.text||"This part is not finished."}</p><small>Writer: ${c.writer}<br>Illustration created by ${c.writer} and StoriesLens AI</small></article>`).join("")}`}q("[data-preview-book]").onclick=()=>{renderPublish();toast("Group Book preview updated.")};q("[data-preview-movie]").onclick=()=>toast("Group Movie preview uses each approved scene video.");q("[data-export-pdf]").onclick=()=>window.print();q("[data-download-video]").onclick=()=>{const v=project.chapters.find(c=>c.videoUrl);if(v)location.href=v.videoUrl;else toast("Generate a scene video first.")};q("[data-share]").onclick=async()=>{const link=`${location.origin}/group-project-studio.html?code=${project.code}`;await navigator.clipboard.writeText(link);q("[data-publish-status]").textContent=`Share link copied: ${link}`};restore();ensureChapters();save()})();
+</script>
+<script data-publish-assembly>
+(()=>{
+  const projectsKey="storieslens_friend_group_projects";
+  const activeKey="storieslens_active_friend_project";
+  const escapeHtml=value=>String(value||"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+  function currentProject(){
+    const code=(new URLSearchParams(location.search).get("code")||"").toUpperCase();
+    try{
+      const projects=JSON.parse(localStorage.getItem(projectsKey)||"{}");
+      return projects[code]||JSON.parse(localStorage.getItem(activeKey)||"null");
+    }catch{return null}
+  }
+  function renderPublishAssembly(){
+    const project=currentProject();
+    const target=document.querySelector("[data-book-preview]");
+    if(!project||!target)return;
+    const chapters=Array.isArray(project.chapters)?project.chapters:[];
+    target.innerHTML=`<h3>${escapeHtml(project.title)}</h3><p>${escapeHtml(project.premise)}</p>${chapters.map(chapter=>{
+      const writingReady=Boolean(chapter.text?.trim());
+      const imageReady=Boolean(chapter.imageUrl);
+      const publishReady=writingReady&&imageReady;
+      return `<article data-publish-assembly><strong>${escapeHtml(chapter.title)}</strong>${imageReady?`<img src="${escapeHtml(chapter.imageUrl)}" alt="Selected illustration for ${escapeHtml(chapter.title)}" style="display:block;width:100%;max-height:290px;object-fit:cover;margin:12px 0;border-radius:6px">`:""}<p>${escapeHtml(chapter.text||"This part is not finished.")}</p><p><span class="pill">${writingReady?"Writing complete":"Writing needed"}</span><span class="pill">${imageReady?"Image selected":"Image needed"}</span><span class="pill">${publishReady?"Ready to publish":"Not ready"}</span></p><small>Writer: ${escapeHtml(chapter.writer)}<br>Illustration created by ${escapeHtml(chapter.writer)} and StoriesLens AI</small></article>`;
+    }).join("")}`;
+  }
+  document.querySelector('[data-step="publish"]')?.addEventListener("click",()=>setTimeout(renderPublishAssembly));
+  document.querySelector("[data-preview-book]")?.addEventListener("click",()=>setTimeout(renderPublishAssembly));
+  if(document.querySelector('[data-panel="publish"]')?.classList.contains("active"))renderPublishAssembly();
+})();
+</script>
+<script data-output-format>
+(()=>{
+  const select=document.querySelector("[data-story-type]");
+  if(!select)return;
+  const bookOption=select.querySelector('option[value="book"]');
+  const movieOption=select.querySelector('option[value="movie"]');
+  if(bookOption)bookOption.textContent="Illustrated Book";
+  if(movieOption)movieOption.textContent="Animated Movie";
+  const formatNote=document.createElement("div");
+  formatNote.className="locked";
+  formatNote.innerHTML='<strong>Project Output</strong><br><span data-output-choice>Illustrated Book · Locked by Project Owner</span>';
+  select.closest(".field")?.append(formatNote);
+  function readProject(){
+    const code=(new URLSearchParams(location.search).get("code")||"").toUpperCase();
+    try{return JSON.parse(localStorage.getItem("storieslens_friend_group_projects")||"{}")[code]||JSON.parse(localStorage.getItem("storieslens_active_friend_project")||"null")}catch{return null}
+  }
+  function applyOutputMode(){
+    const project=readProject();
+    const type=project?.type||select.value||"book";
+    const isMovie=type==="movie";
+    const label=isMovie?"Animated Movie":"Illustrated Book";
+    const choice=document.querySelector("[data-output-choice]");
+    if(choice)choice.textContent=`${label} · Locked by Project Owner`;
+    const visual=document.querySelector("[data-approved-character]")?.parentElement;
+    let outputPill=document.querySelector("[data-project-output]");
+    if(visual&&!outputPill){outputPill=document.createElement("span");outputPill.className="pill";outputPill.dataset.projectOutput="";visual.append(outputPill)}
+    if(outputPill)outputPill.textContent=`Project Output: ${label} · Locked by Project Owner`;
+    const videoButton=document.querySelector("[data-generate-chapter-video]");
+    if(videoButton)videoButton.hidden=!isMovie;
+    const previewBook=document.querySelector("[data-preview-book]");
+    const previewMovie=document.querySelector("[data-preview-movie]");
+    const downloadVideo=document.querySelector("[data-download-video]");
+    const exportPdf=document.querySelector("[data-export-pdf]");
+    if(previewBook)previewBook.hidden=isMovie;
+    if(exportPdf)exportPdf.hidden=isMovie;
+    if(previewMovie)previewMovie.hidden=!isMovie;
+    if(downloadVideo)downloadVideo.hidden=!isMovie;
+    const checklist=document.querySelector('[data-panel="publish"] aside');
+    if(checklist){
+      const lines=checklist.querySelectorAll(":scope > p:not(.status)");
+      const copy=isMovie?["Writing complete","Approved scene image","Scene animation ready"]:["Writing complete","Selected chapter illustration","Writer credits included"];
+      lines.forEach((line,index)=>{if(copy[index])line.textContent=copy[index]});
+    }
+  }
+  select.addEventListener("change",()=>{const choice=document.querySelector("[data-output-choice]");if(choice)choice.textContent=`${select.value==="movie"?"Animated Movie":"Illustrated Book"} · Select Save Story Bible to lock`});
+  document.querySelector("[data-save-setup]")?.addEventListener("click",()=>setTimeout(applyOutputMode));
+  ["chapters","publish"].forEach(step=>document.querySelector(`[data-step="${step}"]`)?.addEventListener("click",()=>setTimeout(applyOutputMode)));
+  applyOutputMode();
+})();
+</script>
+<style>
+.publisher-workspace{margin-top:16px;padding:18px;border:1px solid #3a507d;border-radius:8px;background:#08132d}.publisher-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.publisher-head h2{margin:0 0 5px}.publisher-toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}.movie-editor-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px}.movie-player{aspect-ratio:16/9;display:grid;place-items:center;overflow:hidden;border:1px solid #405787;border-radius:7px;background:#020714;color:#9ca9c3}.movie-player img,.movie-player video{width:100%;height:100%;object-fit:cover}.movie-settings{padding:14px;border:1px solid #344b78;border-radius:7px;background:#0b1734}.movie-settings label{display:block;margin-bottom:12px;font-weight:800}.movie-settings select,.movie-settings input{width:100%;margin-top:6px;padding:10px;border:1px solid #42577f;border-radius:6px;color:#fff;background:#050d23}.movie-timeline{display:flex;gap:10px;overflow-x:auto;padding:14px 4px 8px}.timeline-clip{flex:0 0 210px;padding:10px;border:1px solid #354c7a;border-radius:7px;background:#09142f}.timeline-clip.active{border-color:#76a0ff;background:#173268}.timeline-clip img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:5px}.timeline-clip strong,.timeline-clip small{display:block;margin-top:7px}.timeline-clip small{color:#aeb9d2}.clip-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.clip-actions button{padding:6px 8px;border:1px solid #41577f;border-radius:5px;color:#fff;background:#101d3f;cursor:pointer}.publisher-status{min-height:24px;color:#bfe9d8}@media(max-width:850px){.movie-editor-layout{grid-template-columns:1fr}}
+</style>
+<script data-publish-tools>
+(()=>{
+  const panel=document.querySelector('[data-panel="publish"]');
+  if(!panel)return;
+  const workspace=document.createElement("section");
+  workspace.className="publisher-workspace";
+  workspace.innerHTML='<div data-book-publisher><div class="publisher-head"><div><h2>Book Publisher</h2><p>Collect every chapter, illustration, and writer credit in one printable book.</p></div><span class="kicker">Editable Word + Print</span></div><div class="publisher-toolbar"><button class="btn primary" data-download-word>Download Word (.docx)</button><button class="btn" data-print-book>Print Book</button><button class="btn" data-download-pdf>Download PDF</button><button class="btn" data-save-book>Save to Works</button></div><p class="publisher-status" data-book-status></p></div><div data-movie-editor hidden><div class="publisher-head"><div><h2>Movie Editor</h2><p>Collect approved scene clips, arrange them, and prepare one shared class movie.</p></div><span class="kicker">Simple classroom editor</span></div><div class="movie-editor-layout"><div><div class="movie-player" data-movie-player>Select a scene from the Movie Timeline.</div><div class="movie-timeline" data-movie-timeline></div></div><aside class="movie-settings"><h3>Movie Settings</h3><label>Movie Title<input data-movie-title></label><label>Transition<select data-movie-transition><option value="fade">Fade</option><option value="dissolve">Dissolve</option><option value="none">None</option></select></label><label>Background Music<select data-movie-music><option value="none">No music</option><option value="gentle">Gentle Adventure</option><option value="mystery">Soft Mystery</option><option value="bright">Bright Celebration</option></select></label><label><input type="checkbox" data-movie-subtitles> Add Subtitles</label><label><input type="checkbox" data-movie-credits checked> Add Student Credits</label></aside></div><div class="publisher-toolbar"><button class="btn" data-add-opening>Add Opening Title</button><button class="btn" data-preview-full-movie>Preview Full Movie</button><button class="btn primary" data-render-group-movie>Render Group Movie</button><button class="btn" data-save-edit-plan>Save Edit Plan</button></div><p class="publisher-status" data-movie-status></p></div>';
+  panel.append(workspace);
+  const projectsKey="storieslens_friend_group_projects";
+  const activeKey="storieslens_active_friend_project";
+  let selectedClip=0;
+  function state(){
+    const code=(new URLSearchParams(location.search).get("code")||"").toUpperCase();
+    try{
+      const projects=JSON.parse(localStorage.getItem(projectsKey)||"{}");
+      return {code,projects,project:projects[code]||JSON.parse(localStorage.getItem(activeKey)||"null")};
+    }catch{return {code,projects:{},project:null}}
+  }
+  function saveProject(project,projects,code){projects[code]=project;localStorage.setItem(projectsKey,JSON.stringify(projects));localStorage.setItem(activeKey,JSON.stringify(project))}
+  function orderedChapters(project){
+    const chapters=Array.isArray(project?.chapters)?project.chapters:[];
+    const order=project?.movieEditPlan?.order;
+    if(!Array.isArray(order))return chapters;
+    return order.map(id=>chapters.find(chapter=>chapter.id===id)).filter(Boolean);
+  }
+  function refreshMode(){
+    const {project}=state();
+    const movie=project?.type==="movie";
+    document.querySelector("[data-book-publisher]").hidden=movie;
+    document.querySelector("[data-movie-editor]").hidden=!movie;
+    if(movie)renderTimeline();
+  }
+  function renderTimeline(){
+    const {project}=state();
+    if(!project)return;
+    const chapters=orderedChapters(project);
+    if(selectedClip>=chapters.length)selectedClip=0;
+    const timeline=document.querySelector("[data-movie-timeline]");
+    timeline.innerHTML=chapters.map((chapter,index)=>`<article class="timeline-clip ${index===selectedClip?"active":""}" data-clip="${index}">${chapter.imageUrl?`<img src="${chapter.imageUrl}" alt="Storyboard for ${chapter.title}">`:""}<strong>${chapter.title}</strong><small>${chapter.writer} · ${chapter.videoUrl?"Animation ready":"Storyboard only"}</small><div class="clip-actions"><button data-clip-left="${index}" title="Move left">Move Left</button><button data-clip-right="${index}" title="Move right">Move Right</button><button data-clip-mute="${index}">${chapter.muted?"Unmute":"Mute"}</button><button data-clip-remove="${index}">Remove</button></div></article>`).join("");
+    document.querySelectorAll("[data-clip]").forEach(card=>card.addEventListener("click",event=>{if(event.target.closest("button"))return;selectedClip=Number(card.dataset.clip);renderTimeline()}));
+    document.querySelectorAll("[data-clip-left]").forEach(button=>button.addEventListener("click",()=>moveClip(Number(button.dataset.clipLeft),-1)));
+    document.querySelectorAll("[data-clip-right]").forEach(button=>button.addEventListener("click",()=>moveClip(Number(button.dataset.clipRight),1)));
+    document.querySelectorAll("[data-clip-mute]").forEach(button=>button.addEventListener("click",()=>toggleMute(Number(button.dataset.clipMute))));
+    document.querySelectorAll("[data-clip-remove]").forEach(button=>button.addEventListener("click",()=>removeClip(Number(button.dataset.clipRemove))));
+    const active=chapters[selectedClip];
+    const player=document.querySelector("[data-movie-player]");
+    player.innerHTML=active?.videoUrl?`<video controls src="${active.videoUrl}"></video>`:active?.imageUrl?`<img src="${active.imageUrl}" alt="${active.title} storyboard">`:"Select a scene from the Movie Timeline.";
+    document.querySelector("[data-movie-title]").value=project.movieEditPlan?.title||project.title||"Our Group Movie";
+    document.querySelector("[data-movie-transition]").value=project.movieEditPlan?.transition||"fade";
+    document.querySelector("[data-movie-music]").value=project.movieEditPlan?.music||"none";
+    document.querySelector("[data-movie-subtitles]").checked=Boolean(project.movieEditPlan?.subtitles);
+  }
+  function updateOrder(mutator){
+    const {project,projects,code}=state();
+    const order=orderedChapters(project).map(chapter=>chapter.id);
+    mutator(order,project);
+    project.movieEditPlan={...(project.movieEditPlan||{}),order};
+    saveProject(project,projects,code);renderTimeline();
+  }
+  function moveClip(index,direction){updateOrder(order=>{const target=index+direction;if(target<0||target>=order.length)return;[order[index],order[target]]=[order[target],order[index]];selectedClip=target})}
+  function toggleMute(index){updateOrder((order,project)=>{const chapter=project.chapters.find(item=>item.id===order[index]);if(chapter)chapter.muted=!chapter.muted})}
+  function removeClip(index){updateOrder(order=>{order.splice(index,1);selectedClip=Math.max(0,index-1)})}
+  function collectEditPlan(){
+    const {project,projects,code}=state();
+    project.movieEditPlan={...(project.movieEditPlan||{}),title:document.querySelector("[data-movie-title]").value.trim()||project.title,transition:document.querySelector("[data-movie-transition]").value,music:document.querySelector("[data-movie-music]").value,subtitles:document.querySelector("[data-movie-subtitles]").checked,credits:document.querySelector("[data-movie-credits]").checked,order:orderedChapters(project).map(chapter=>chapter.id)};
+    saveProject(project,projects,code);return project;
+  }
+  document.querySelector("[data-download-word]").addEventListener("click",async()=>{
+    const {project}=state();const status=document.querySelector("[data-book-status]");status.textContent="Building editable Word book...";
+    try{const response=await fetch("/api/export-book-docx",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:project.title,premise:project.premise,chapters:project.chapters})});if(!response.ok)throw Error((await response.json().catch(()=>({}))).error||"Word export failed");const blob=await response.blob();const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=`${project.title.replace(/[^a-z0-9]+/gi,"-")||"group-story"}.docx`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent="Word book downloaded. Open it in Microsoft Word or WPS to edit and print."}catch(error){status.textContent=error.message}
+  });
+  document.querySelector("[data-print-book]").addEventListener("click",()=>window.print());
+  document.querySelector("[data-download-pdf]").addEventListener("click",()=>window.print());
+  document.querySelector("[data-save-book]").addEventListener("click",()=>{const {project}=state();const works=JSON.parse(localStorage.getItem("storieslens_works")||"[]");works.unshift({id:`group-book-${Date.now()}`,type:"group-book",title:project.title,chapters:project.chapters,createdAt:new Date().toISOString()});localStorage.setItem("storieslens_works",JSON.stringify(works));document.querySelector("[data-book-status]").textContent="Group book saved to Works."});
+  document.querySelector("[data-save-edit-plan]").addEventListener("click",()=>{collectEditPlan();document.querySelector("[data-movie-status]").textContent="Movie edit plan saved for the group."});
+  document.querySelector("[data-add-opening]").addEventListener("click",()=>{const project=collectEditPlan();project.movieEditPlan.openingTitle=true;const data=state();saveProject(project,data.projects,data.code);document.querySelector("[data-movie-status]").textContent="Opening title added to the edit plan."});
+  document.querySelector("[data-preview-full-movie]").addEventListener("click",()=>{const {project}=state();const ready=orderedChapters(project).filter(chapter=>chapter.videoUrl).length;document.querySelector("[data-movie-status]").textContent=`${ready} of ${orderedChapters(project).length} animations ready. Select any storyboard or animation in the timeline to preview it.`});
+  document.querySelector("[data-render-group-movie]").addEventListener("click",()=>{const project=collectEditPlan();const chapters=orderedChapters(project);const ready=chapters.filter(chapter=>chapter.videoUrl).length;document.querySelector("[data-movie-status]").textContent=ready===chapters.length?"Edit plan is ready. Final MP4 rendering requires the server FFmpeg renderer.":`${ready} of ${chapters.length} animations ready. Generate the missing scene animations before rendering.`});
+  document.querySelector('[data-step="publish"]')?.addEventListener("click",()=>setTimeout(refreshMode));
+  document.querySelector("[data-save-setup]")?.addEventListener("click",()=>setTimeout(refreshMode));
+  refreshMode();
+})();
+</script>
+<style>
+.movie-transport{margin-top:10px;padding:12px;border:1px solid #344b78;border-radius:7px;background:#071129}.transport-row{display:grid;grid-template-columns:auto minmax(140px,1fr) auto;gap:10px;align-items:center}.transport-row input[type="range"]{width:100%;accent-color:#6f83ff}.trim-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.trim-grid label{font-size:12px;color:#b7c3db}.trim-grid input{width:100%;margin-top:5px;padding:8px;border:1px solid #41577f;border-radius:5px;color:#fff;background:#050d23}.narration-studio{margin-top:12px;padding:12px;border:1px solid #3e5685;border-radius:7px;background:#0b1734}.narration-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.narration-studio audio{width:100%;margin-top:10px}.recording-dot{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#ff5f78}.narration-status{color:#bfe9d8;font-size:12px}@media(max-width:620px){.transport-row{grid-template-columns:1fr}.trim-grid{grid-template-columns:1fr}}
+</style>
+<script data-movie-recording-tools>
+(()=>{
+  const player=document.querySelector("[data-movie-player]");
+  const timeline=document.querySelector("[data-movie-timeline]");
+  if(!player||!timeline)return;
+  const controls=document.createElement("div");
+  controls.className="movie-transport";
+  controls.innerHTML='<strong>Movie Progress</strong><div class="transport-row"><button class="btn" data-movie-play>Play / Pause</button><input type="range" min="0" max="100" value="0" step="0.1" data-movie-progress aria-label="Movie Progress"><span data-movie-time>0:00 / 0:05</span></div><div class="trim-grid"><label>Trim Start (seconds)<input type="number" min="0" max="60" step="0.5" value="0" data-trim-start></label><label>Trim End (seconds)<input type="number" min="0.5" max="60" step="0.5" value="5" data-trim-end></label></div><div class="narration-studio"><div class="narration-head"><div><strong>Student Narration</strong><div class="narration-status" data-narration-status>Read your chapter aloud in your own voice.</div></div><div class="actions"><button class="btn primary" data-record-narration>Record My Narration</button><button class="btn" data-stop-narration disabled>Stop Recording</button><button class="btn" data-delete-narration hidden>Delete Recording</button></div></div><audio controls data-narration-player hidden></audio></div>';
+  player.insertAdjacentElement("afterend",controls);
+  const projectsKey="storieslens_friend_group_projects";
+  const activeKey="storieslens_active_friend_project";
+  let recorder=null;
+  let recorderStream=null;
+  let recordingTimer=null;
+  let recordingStartedAt=0;
+  function state(){
+    const code=(new URLSearchParams(location.search).get("code")||"").toUpperCase();
+    try{const projects=JSON.parse(localStorage.getItem(projectsKey)||"{}");return{code,projects,project:projects[code]||JSON.parse(localStorage.getItem(activeKey)||"null")}}catch{return{code,projects:{},project:null}}
+  }
+  function save(data){data.projects[data.code]=data.project;localStorage.setItem(projectsKey,JSON.stringify(data.projects));localStorage.setItem(activeKey,JSON.stringify(data.project))}
+  function activeChapter(data=state()){
+    const active=timeline.querySelector(".timeline-clip.active");
+    const index=Number(active?.dataset.clip||0);
+    const order=data.project?.movieEditPlan?.order;
+    const chapters=Array.isArray(data.project?.chapters)?data.project.chapters:[];
+    if(Array.isArray(order)){const id=order[index];return chapters.find(chapter=>chapter.id===id)||chapters[0]}
+    return chapters[index]||chapters[0];
+  }
+  function formatTime(seconds){const safe=Math.max(0,Number(seconds)||0);return`${Math.floor(safe/60)}:${String(Math.floor(safe%60)).padStart(2,"0")}`}
+  function bindVideoProgress(){
+    const video=player.querySelector("video");
+    const progress=document.querySelector("[data-movie-progress]");
+    const time=document.querySelector("[data-movie-time]");
+    const chapter=activeChapter();
+    const fallbackDuration=Math.max(0.5,Number(chapter?.trimEnd||chapter?.duration||5));
+    const update=()=>{const duration=Number.isFinite(video?.duration)&&video.duration>0?video.duration:fallbackDuration;const current=video?.currentTime||0;progress.value=String(Math.min(100,current/duration*100));time.textContent=`${formatTime(current)} / ${formatTime(duration)}`};
+    if(video){video.addEventListener("timeupdate",update);video.addEventListener("loadedmetadata",update)}else{progress.value="0";time.textContent=`0:00 / ${formatTime(fallbackDuration)}`}
+    update();
+  }
+  function syncChapterControls(){
+    const chapter=activeChapter();
+    if(!chapter)return;
+    document.querySelector("[data-trim-start]").value=String(chapter.trimStart||0);
+    document.querySelector("[data-trim-end]").value=String(chapter.trimEnd||chapter.duration||5);
+    const audio=document.querySelector("[data-narration-player]");
+    const remove=document.querySelector("[data-delete-narration]");
+    if(chapter.narrationUrl){audio.src=chapter.narrationUrl;audio.hidden=false;remove.hidden=false;document.querySelector("[data-narration-status]").textContent=`Narration ready · Writer: ${chapter.writer}`}else{audio.removeAttribute("src");audio.hidden=true;remove.hidden=true;document.querySelector("[data-narration-status]").textContent=`Read ${chapter.title} aloud in your own voice.`}
+    bindVideoProgress();
+  }
+  function saveTrim(){const data=state();const chapter=activeChapter(data);if(!chapter)return;chapter.trimStart=Math.max(0,Number(document.querySelector("[data-trim-start]").value)||0);chapter.trimEnd=Math.max(chapter.trimStart+.5,Number(document.querySelector("[data-trim-end]").value)||5);save(data);syncChapterControls()}
+  document.querySelector("[data-trim-start]").addEventListener("change",saveTrim);
+  document.querySelector("[data-trim-end]").addEventListener("change",saveTrim);
+  document.querySelector("[data-movie-progress]").addEventListener("input",event=>{const video=player.querySelector("video");const chapter=activeChapter();const duration=Number.isFinite(video?.duration)&&video.duration>0?video.duration:Number(chapter?.trimEnd||5);if(video)video.currentTime=duration*Number(event.target.value)/100;document.querySelector("[data-movie-time]").textContent=`${formatTime(duration*Number(event.target.value)/100)} / ${formatTime(duration)}`});
+  document.querySelector("[data-movie-play]").addEventListener("click",()=>{const video=player.querySelector("video");if(!video){document.querySelector("[data-movie-status]").textContent="This chapter has a storyboard image. Generate its scene animation to play video.";return}video.paused?video.play():video.pause()});
+  timeline.addEventListener("click",()=>setTimeout(syncChapterControls));
+  new MutationObserver(()=>setTimeout(syncChapterControls)).observe(player,{childList:true});
+  document.querySelector("[data-record-narration]").addEventListener("click",async()=>{
+    const status=document.querySelector("[data-narration-status]");
+    if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined"){status.textContent="Voice recording is not supported in this browser.";return}
+    try{
+      recorderStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const chunks=[];recorder=new MediaRecorder(recorderStream);recordingStartedAt=Date.now();
+      recorder.addEventListener("dataavailable",event=>{if(event.data.size)chunks.push(event.data)});
+      recorder.addEventListener("stop",()=>{const blob=new Blob(chunks,{type:recorder.mimeType||"audio/webm"});const reader=new FileReader();reader.addEventListener("load",()=>{const data=state();const chapter=activeChapter(data);if(chapter){chapter.narrationUrl=reader.result;chapter.narrationMime=blob.type;chapter.narrationDuration=Math.round((Date.now()-recordingStartedAt)/1000);save(data)}syncChapterControls();status.textContent="Narration saved locally with this chapter."});reader.readAsDataURL(blob);recorderStream?.getTracks().forEach(track=>track.stop());clearTimeout(recordingTimer)});
+      recorder.start();status.innerHTML='<span class="recording-dot"></span>Recording... Read your chapter aloud.';document.querySelector("[data-record-narration]").disabled=true;document.querySelector("[data-stop-narration]").disabled=false;recordingTimer=setTimeout(()=>stopRecording(),60000);
+    }catch(error){status.textContent=error.name==="NotAllowedError"?"Microphone permission was not granted.":"Could not start recording. Check your microphone."}
+  });
+  function stopRecording(){if(recorder?.state==="recording")recorder.stop();document.querySelector("[data-record-narration]").disabled=false;document.querySelector("[data-stop-narration]").disabled=true}
+  document.querySelector("[data-stop-narration]").addEventListener("click",stopRecording);
+  document.querySelector("[data-delete-narration]").addEventListener("click",()=>{const data=state();const chapter=activeChapter(data);if(!chapter)return;delete chapter.narrationUrl;delete chapter.narrationMime;delete chapter.narrationDuration;save(data);syncChapterControls()});
+  document.querySelector('[data-step="publish"]')?.addEventListener("click",()=>setTimeout(syncChapterControls));
+  syncChapterControls();
+})();
+</script></body></html>
