@@ -71,6 +71,40 @@ assert(!createHtml.includes("scrollIntoView"), "Upload should not scroll to late
 ].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio should include: ${token}`));
 
 [
+  "Writing Assistant",
+  "Story Bible + chapter continuity",
+  "Check Continuity",
+  "data-group-writing-tool",
+  'fetch("/api/writing-assistant"'
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio should embed contextual writing help: ${token}`));
+
+[
+  "Lobster AI Tutor",
+  "data-tutor-play",
+  "data-tutor-pause",
+  "data-tutor-replay",
+  "data-tutor-voice",
+  "Jenny",
+  "Aria",
+  "Samantha",
+  "Zira",
+  "SpeechSynthesisUtterance",
+  "speechSynthesis.cancel()",
+  "tutorUtterance.rate=.86",
+  "tutorUtterance.pitch=1.12"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio should provide spoken Lobster Tutor feedback: ${token}`));
+
+[
+  "data-focus-writing",
+  "data-toggle-writing-assistant",
+  "data-word-count",
+  "data-save-state",
+  "min-height:440px",
+  "grid-template-columns:minmax(0,3fr) minmax(300px,2fr)",
+  "focus-writing"
+].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Group Project Studio should prioritize the writing workspace: ${token}`));
+
+[
   "Demo Preview",
   "Steps 3-5 are open",
   "data-demo-mode",
@@ -153,6 +187,19 @@ assert(visualWriteHtml.includes("Download Video"), "Visual Write should expose c
 assert(visualWriteHtml.includes("<video controls playsinline"), "Visual Write should render a native video player");
 assert(!visualWriteHtml.includes("Scene video preview prepared"), "Visual Write should not simulate successful video generation");
 assert(serverJs.includes("/api/ai-report"), "Static server should keep the AI report proxy route");
+assert(serverJs.includes("/api/writing-assistant"), "Static server should expose contextual writing assistance");
+[
+  "Writing Assistant",
+  "Give a Hint",
+  "Check Sentence",
+  "Add Details",
+  "Improve Dialogue",
+  "Turn into a Scene",
+  "Visual Story Brief",
+  "data-visual-readiness"
+].forEach((token) => assert(visualWriteHtml.includes(token), `Visual Write should embed AI in the writing flow: ${token}`));
+assert(visualWriteHtml.includes('fetch("/api/ai-report"'), "Visual Write should request real structured AI feedback");
+assert(visualWriteHtml.includes('fetch("/api/writing-assistant"'), "Visual Write should request contextual sentence help");
 assert(scriptJs.includes("StoriesLensQuota"), "Global quota model should be available for plan and credit checks");
 assert(scriptJs.includes("Generate 1 image = 1 image credit") || scriptJs.includes("imageCost"), "Quota model should include image credit cost");
 assert(scriptJs.includes("estimateClassMovie"), "Quota model should estimate class movie video credit cost");

@@ -820,6 +820,81 @@ async function handleAIReport(request, response) {
   }
 }
 
+async function handleWritingAssistant(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    sendJson(response, 501, { error: "The writing assistant is not configured yet." });
+    return;
+  }
+  try {
+    const body = await readJsonBody(request);
+    const draft = String(body.studentDraft || "").trim();
+    const selectedText = String(body.selectedText || "").trim();
+    const action = String(body.action || "hint");
+    if (!draft) {
+      sendJson(response, 400, { error: "Write at least one sentence first." });
+      return;
+    }
+    const actionInstructions = {
+      hint: "Ask one useful question or give one short hint. Do not write the answer for the student.",
+      check: "Check grammar and clarity. Name one strength and at most one correction.",
+      details: "Suggest two concrete sensory or setting details the student may choose from.",
+      dialogue: "Suggest one short line of dialogue and explain why it helps.",
+      continuity: "Check whether this chapter connects logically to the surrounding chapters. Identify one strong connection and one specific continuity fix without rewriting the chapter.",
+      scene: "Create a concise visual scene brief with subject, action, setting, mood, and camera view. Do not add unrelated plot."
+    };
+    const systemPrompt = [
+      "You are the StoriesLens Writing Assistant for K12 students.",
+      "Support the student's thinking without replacing their full draft.",
+      "Use friendly, age-appropriate language and keep the reply under 80 words.",
+      "Respect the teacher task, skill focus, approved characters, and source text context.",
+      actionInstructions[action] || actionInstructions.hint,
+      "Return strict JSON with keys reply, suggestion, readyForVisual, visualBrief."
+    ].join(" ");
+    const userPrompt = [
+      `Mode: ${body.mode || "free"}`,
+      `Grade: ${body.grade || "3"}`,
+      `Skill focus: ${body.skillFocus || "narrative writing"}`,
+      body.teacherInstructions ? `Teacher instructions: ${body.teacherInstructions}` : "",
+      body.characterRules ? `Approved character rules: ${body.characterRules}` : "",
+      selectedText ? `Current sentence: ${selectedText}` : "Current sentence: Use the most relevant sentence in the draft.",
+      `Full student draft: ${draft.slice(0, 6000)}`
+    ].filter(Boolean).join("\n");
+    const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
+    const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
+        "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+      },
+      body: JSON.stringify({
+        model: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+        temperature: 0.35,
+        response_format: { type: "json_object" }
+      })
+    });
+    const upstreamData = await upstreamResponse.json().catch(() => ({}));
+    if (!upstreamResponse.ok) {
+      sendJson(response, upstreamResponse.status, { error: upstreamData?.error?.message || "Writing assistant request failed." });
+      return;
+    }
+    const content = upstreamData?.choices?.[0]?.message?.content || "{}";
+    let result;
+    try { result = JSON.parse(content); }
+    catch { result = { reply: content, suggestion: "", readyForVisual: false, visualBrief: "" }; }
+    sendJson(response, 200, { result });
+  } catch (error) {
+    sendJson(response, 500, { error: error.message || "Writing assistant failed." });
+  }
+}
+
 const server = http.createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
   const projectPartImageMatch = requestUrl.pathname.match(/^\/api\/project-parts\/([^/]+)\/generate-image$/);
@@ -853,6 +928,11 @@ const server = http.createServer((request, response) => {
 
   if (requestUrl.pathname === "/api/ai-report") {
     handleAIReport(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/writing-assistant") {
+    handleWritingAssistant(request, response);
     return;
   }
 

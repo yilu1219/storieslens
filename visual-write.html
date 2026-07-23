@@ -571,6 +571,36 @@
         opacity: 0.58;
       }
 
+      .context-writing-tools,
+      .visual-prompt-card {
+        border: 1px solid rgba(129, 153, 255, 0.32);
+        background: rgba(10, 20, 49, 0.82);
+        border-radius: 8px;
+        padding: 12px;
+      }
+
+      .context-writing-tools { display: grid; gap: 10px; margin-top: -2px; }
+      .context-writing-tools header,
+      .visual-prompt-card header { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
+      .context-writing-tools header strong,
+      .visual-prompt-card strong { color: #f6f8ff; }
+      .context-writing-tools header span,
+      .visual-prompt-card p { color: #aeb9d8; font-size: 0.82rem; margin: 0; }
+      .context-tool-actions,
+      .feedback-card-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+      .context-tool-actions button,
+      .feedback-card-actions button {
+        background: rgba(106, 91, 255, 0.12);
+        border: 1px solid rgba(150, 137, 255, 0.34);
+        border-radius: 6px;
+        color: #dce4ff;
+        min-height: 34px;
+        padding: 7px 10px;
+      }
+      .context-assistant-result { border-left: 3px solid #7f74ff; color: #dce4ff; line-height: 1.5; padding-left: 10px; }
+      .visual-prompt-card { margin: 14px 0 0; }
+      .visual-readiness { color: #8ff0c4; display: inline-flex; font-size: 0.78rem; margin-top: 8px; }
+
       .student-preview-empty {
         padding: 22px;
         color: rgba(246, 248, 255, 0.68);
@@ -759,6 +789,14 @@
               <textarea id="story-draft" data-story-draft data-writing-field="free-draft" placeholder="Start writing your visual story here...">Louis found a glowing key beside the moonlit bridge. He felt nervous, but he stepped forward slowly. The key began to shine, and a hidden door opened in the stones.</textarea>
             </label>
 
+            <section class="context-writing-tools" data-context-tools="free" aria-label="AI writing tools">
+              <header><strong>Writing Assistant</strong><span>Select a sentence, or place your cursor inside one.</span></header>
+              <div class="context-tool-actions">
+                <button type="button" data-writing-tool="hint">Give a Hint</button><button type="button" data-writing-tool="check">Check Sentence</button><button type="button" data-writing-tool="details">Add Details</button><button type="button" data-writing-tool="dialogue">Improve Dialogue</button><button type="button" data-writing-tool="scene">Turn into a Scene</button>
+              </div>
+              <div class="context-assistant-result" data-context-result>Choose a tool when you want help with the sentence you are writing.</div>
+            </section>
+
             <div class="student-action-row">
               <button class="primary" type="button" data-student-action="feedback" data-mode-target="free">Get AI Feedback</button>
               <button class="credit-action" type="button" data-student-action="image" data-mode-target="free"><span>Generate Image</span><small>1 image credit</small></button>
@@ -789,6 +827,7 @@
 
           <section class="student-preview-card">
             <h3>Visual Preview</h3>
+            <section class="visual-prompt-card" data-visual-context="free"><header><strong>Visual Story Brief</strong><span>Built from your writing</span></header><p data-visual-summary>Write an action, place, and mood to prepare a strong visual.</p><span class="visual-readiness" data-visual-readiness>Keep writing to unlock a clear visual.</span></section>
             <div class="student-preview-frame" data-output="free-preview">
               <div class="student-preview-empty">Generated image / video preview will appear here.</div>
             </div>
@@ -931,6 +970,14 @@
               <textarea data-writing-field="teacher-draft">Mia held the map carefully as the class walked toward the oldest tree in the garden. A small golden mark glowed on the paper. Under the roots, the students saw the shape of a hidden wooden door.</textarea>
             </label>
 
+            <section class="context-writing-tools" data-context-tools="assignment" aria-label="AI writing tools">
+              <header><strong>Writing Assistant</strong><span>Uses your teacher task, skill focus, and current sentence.</span></header>
+              <div class="context-tool-actions">
+                <button type="button" data-writing-tool="hint">Give a Hint</button><button type="button" data-writing-tool="check">Check Sentence</button><button type="button" data-writing-tool="details">Add Details</button><button type="button" data-writing-tool="dialogue">Improve Dialogue</button><button type="button" data-writing-tool="scene">Turn into a Scene</button>
+              </div>
+              <div class="context-assistant-result" data-context-result>Select a sentence to receive help without replacing your whole chapter.</div>
+            </section>
+
             <div class="student-action-row">
               <button class="primary" type="button" data-student-action="feedback" data-mode-target="assignment">Get AI Feedback</button>
               <button class="credit-action" type="button" data-student-action="image" data-mode-target="assignment"><span>Generate Scene Image</span><small>1 image credit</small></button>
@@ -972,6 +1019,7 @@
 
           <section class="student-preview-card">
             <h3>Visual Preview</h3>
+            <section class="visual-prompt-card" data-visual-context="assignment"><header><strong>Visual Story Brief</strong><span>Teacher context included</span></header><p data-visual-summary>Your scene, approved characters, mood, and locked style will be combined automatically.</p><span class="visual-readiness" data-visual-readiness>Ready when your scene has a clear action and setting.</span></section>
             <div class="student-preview-frame" data-output="assignment-preview">
               <div class="student-preview-empty">Generate a visual after your teacher-task draft is ready.</div>
             </div>
@@ -1189,8 +1237,83 @@
           return document.querySelector(selector)?.value.trim() || "";
         }
 
-        function setFeedback(mode) {
+        function getModeContext(mode) {
+          const normalizedMode = normalizeMode(mode);
+          return {
+            mode: normalizedMode,
+            grade: normalizedMode === "assignment"
+              ? document.querySelector('[data-writing-field="teacher-grade"]')?.value || "Grade 3"
+              : freeGradeSelect?.value || "3",
+            skillFocus: normalizedMode === "assignment"
+              ? document.querySelector('[data-task-skill-input]')?.value || "narrative writing"
+              : freeSkillFocus?.textContent || "visual storytelling",
+            teacherInstructions: normalizedMode === "assignment"
+              ? document.querySelector('[data-task-instructions]')?.value || ""
+              : "",
+            characterRules: normalizedMode === "assignment"
+              ? "Mia wears a yellow hoodie, round glasses, and a ponytail. Leo wears a green hoodie and backpack and has curly hair."
+              : ""
+          };
+        }
+
+        function getEditor(mode) {
+          return document.querySelector(normalizeMode(mode) === "assignment" ? '[data-writing-field="teacher-draft"]' : "[data-story-draft]");
+        }
+
+        function getCurrentSentence(editor) {
+          if (!editor) return "";
+          const start = editor.selectionStart || 0;
+          const end = editor.selectionEnd || start;
+          if (end > start) return editor.value.slice(start, end).trim();
+          const before = editor.value.slice(0, start);
+          const after = editor.value.slice(start);
+          const sentenceStart = Math.max(before.lastIndexOf("."), before.lastIndexOf("!"), before.lastIndexOf("?")) + 1;
+          const endings = [after.indexOf("."), after.indexOf("!"), after.indexOf("?")].filter((value) => value >= 0);
+          const sentenceEnd = endings.length ? start + Math.min(...endings) + 1 : editor.value.length;
+          return editor.value.slice(sentenceStart, sentenceEnd).trim();
+        }
+
+        function updateVisualBrief(mode, visualBrief = "") {
           const draft = getDraft(mode);
+          const container = document.querySelector(`[data-visual-context="${mode}"]`);
+          if (!container) return;
+          const summary = container.querySelector("[data-visual-summary]");
+          const readiness = container.querySelector("[data-visual-readiness]");
+          const hasAction = /\b(walk|run|find|open|look|hold|step|follow|see|saw|discover|climb|enter|leave|turn|shine|glow)\w*\b/i.test(draft);
+          const hasPlace = /\b(bridge|map|forest|library|castle|sea|school|island|door|woods|garden|village|room|tree)\b/i.test(draft);
+          const hasMood = /\b(brave|nervous|happy|careful|curious|afraid|excited|slowly|quietly|mysterious|warm|dark|bright)\b/i.test(draft);
+          if (summary) summary.textContent = visualBrief || (draft ? draft.split(/[.!?]+/).find((part) => part.trim())?.trim() || draft : "Write an action, place, and mood to prepare a strong visual.");
+          if (readiness) readiness.textContent = hasAction && hasPlace
+            ? `Visual ready${hasMood ? ": action, setting, and mood are clear." : ": add a mood for a stronger result."}`
+            : "Add a clear action and setting before generating your visual.";
+        }
+
+        async function setFeedback(mode) {
+          const draft = getDraft(mode);
+          if (!draft) { showToast("Write at least one sentence first."); return; }
+          const context = getModeContext(mode);
+          const outputs = {
+            glow: document.querySelector(`[data-output="${mode}-glow"]`),
+            grow: document.querySelector(`[data-output="${mode}-grow"]`),
+            next: document.querySelector(`[data-output="${mode}-next"]`)
+          };
+          Object.values(outputs).forEach((output) => { if (output) output.textContent = "Reading your story..."; });
+          try {
+            const response = await fetch("/api/ai-report", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ studentDraft: draft, grade: context.grade, ccssSkill: context.skillFocus, prompt: context.teacherInstructions })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.report) throw new Error(data.error || "AI feedback is unavailable.");
+            outputs.glow.textContent = data.report.glow || data.report.overall || "Your idea is clear.";
+            outputs.grow.textContent = data.report.grow || "Add one detail that helps the reader picture the scene.";
+            outputs.next.textContent = data.report.nextStep || "Revise one sentence, then read it aloud.";
+            showToast("AI feedback is ready.");
+            return;
+          } catch (error) {
+            // Keep a useful local response when the AI service is temporarily unavailable.
+          }
           const hasSetting = /\b(bridge|map|forest|library|castle|sea|school|island|door|woods)\b/i.test(draft);
           const hasFeeling = /\b(brave|nervous|happy|careful|curious|afraid|excited|slowly|quietly)\b/i.test(draft);
           const hasMiddle = draft.split(/[.!?]+/).filter((part) => part.trim().length > 8).length >= 3;
@@ -1206,6 +1329,42 @@
             : "Add one feeling or manner word, such as bravely, carefully, nervous, or excited.";
 
           showToast("AI feedback is ready.");
+        }
+
+        async function runWritingTool(mode, action, button) {
+          const editor = getEditor(mode);
+          const result = document.querySelector(`[data-context-tools="${mode}"] [data-context-result]`);
+          const draft = getDraft(mode);
+          if (!draft) { showToast("Write at least one sentence first."); return; }
+          const context = getModeContext(mode);
+          const originalLabel = button.textContent;
+          button.disabled = true;
+          button.textContent = "Thinking...";
+          if (result) result.textContent = `Looking at: “${getCurrentSentence(editor) || draft.slice(0, 120)}”`;
+          try {
+            const response = await fetch("/api/writing-assistant", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...context, action, studentDraft: draft, selectedText: getCurrentSentence(editor) })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.result) throw new Error(data.error || "Writing help is unavailable.");
+            const assistant = data.result;
+            if (result) result.innerHTML = `<strong>${assistant.reply || "Here is one next step."}</strong>${assistant.suggestion ? `<div class="feedback-card-actions"><button type="button" data-use-suggestion>Use suggestion</button></div><p>${assistant.suggestion}</p>` : ""}`;
+            result?.querySelector("[data-use-suggestion]")?.addEventListener("click", () => {
+              const selected = getCurrentSentence(editor);
+              if (selected && editor.value.includes(selected)) editor.value = editor.value.replace(selected, assistant.suggestion);
+              else editor.value = `${editor.value.trim()} ${assistant.suggestion}`.trim();
+              editor.dispatchEvent(new Event("input", { bubbles: true }));
+              showToast("Suggestion added. You can still edit it in your own words.");
+            });
+            updateVisualBrief(mode, assistant.visualBrief || "");
+          } catch (error) {
+            if (result) result.textContent = error.message;
+          } finally {
+            button.disabled = false;
+            button.textContent = originalLabel;
+          }
         }
 
         function buildImagePrompt(mode) {
@@ -1540,6 +1699,19 @@
               showToast("Teacher task is ready for review.");
             }
           });
+        });
+
+        document.querySelectorAll("[data-context-tools]").forEach((tools) => {
+          const mode = normalizeMode(tools.dataset.contextTools);
+          tools.querySelectorAll("[data-writing-tool]").forEach((button) => {
+            button.addEventListener("click", () => runWritingTool(mode, button.dataset.writingTool, button));
+          });
+        });
+
+        ["free", "assignment"].forEach((mode) => {
+          const editor = getEditor(mode);
+          editor?.addEventListener("input", () => updateVisualBrief(mode));
+          updateVisualBrief(mode);
         });
 
         const pageParams = new URLSearchParams(window.location.search);
