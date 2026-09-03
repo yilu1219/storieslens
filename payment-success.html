@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#070817" />
+    <title>Payment received | StoriesLens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
+    <style>
+      body{min-height:100vh;color:#fff;background:radial-gradient(circle at 50% 5%,rgba(111,80,237,.45),transparent 36%),#070817}.success{display:grid;width:min(720px,calc(100% - 32px));min-height:100vh;place-items:center;margin:auto;padding:50px 0}.success-card{padding:clamp(30px,7vw,64px);border:1px solid rgba(255,255,255,.15);border-radius:32px;background:rgba(255,255,255,.07);box-shadow:0 30px 90px rgba(0,0,0,.3);text-align:center}.check{display:grid;width:66px;height:66px;place-items:center;margin:0 auto 25px;color:#07151c;border-radius:50%;background:var(--mint);font-size:30px;font-weight:900}.success h1{max-width:none;font-size:clamp(48px,8vw,72px)}.success p{color:rgba(255,255,255,.7);font-size:18px;line-height:1.65}.success small{display:block;margin-top:18px;color:rgba(255,255,255,.48);line-height:1.55}.success .button{margin-top:20px;color:var(--night);background:var(--gold)}
+    </style>
+  </head>
+  <body>
+    <main class="success">
+      <section class="success-card">
+        <span class="check" aria-hidden="true">✓</span>
+        <p class="eyebrow"><span></span> Thank you, creator</p>
+        <h1>Your creator’s next chapter starts here.</h1>
+        <p>Stripe will send the purchaser a receipt. StoriesLens will verify the payment before activating or delivering the purchased project.</p>
+        <a class="button" href="visual-write.html?mode=free&from=start">Return to the Story Studio →</a>
+        <small>This page alone is not proof of payment. If you opened it directly, no purchase was made.</small>
+      </section>
+    </main>
+    <script src="analytics.js"></script>
+    <script>window.StoriesLensAnalytics?.track("payment_return_viewed",{offer:new URLSearchParams(location.search).get("offer")||"unknown"});</script>
+  </body>
+</html>

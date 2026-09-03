@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070817" />
+    <meta name="description" content="Start a Solo Story or create an invite-only Story Squad with StoriesLens." />
+    <title>Start Creating | StoriesLens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="start.css" />
+  </head>
+  <body class="start-page">
+    <a class="skip-link" href="#start-main">Skip to creator setup</a>
+    <header class="start-header">
+      <div class="nav-shell">
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span>
+          <span>StoriesLens</span>
+        </a>
+        <div class="start-header-actions">
+          <div class="language-switcher" aria-label="Interface language">
+            <button type="button" data-locale="en" aria-pressed="true">EN</button>
+            <button type="button" data-locale="zh" aria-pressed="false">中文</button>
+          </div>
+          <a class="back-link" href="index.html">← Back home</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="start-main" id="start-main">
+      <section class="start-panel" aria-labelledby="start-title">
+        <div class="start-progress">
+          <div><span data-step-label>Choose your path</span><strong><span data-step-current>1</span> of 3 · about 1 minute</strong></div>
+          <span class="progress-track" aria-hidden="true"><i data-progress-fill></i></span>
+        </div>
+        <p class="eyebrow"><span></span> Your story starts here</p>
+        <h1 id="start-title" data-step-title tabindex="-1">How do you want to create?</h1>
+        <p class="start-lede" data-step-lede>Choose one path now. You can invite other creators later.</p>
+
+        <form data-start-form novalidate>
+          <fieldset class="choice-fieldset step-panel" data-step-panel="1">
+            <legend>Choose a creation mode</legend>
+            <div class="start-mode-grid">
+              <button class="start-choice is-selected" type="button" data-mode-choice="solo" aria-pressed="true">
+                <span class="choice-kicker">Solo Story</span>
+                <strong>My idea. My voice.</strong>
+                <small>Write fiction, a memory, or a personal story with a thoughtful AI coach.</small>
+              </button>
+              <button class="start-choice" type="button" data-mode-choice="squad" aria-pressed="false">
+                <span class="choice-kicker">Story Squad</span>
+                <strong>One world. Many creators.</strong>
+                <small>Start an invite-only project or join friends with a Story Code.</small>
+              </button>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-fieldset step-panel" data-step-panel="2" data-solo-options hidden>
+            <legend>What kind of story?</legend>
+            <div class="story-origin-grid">
+              <button class="origin-choice is-selected" type="button" data-origin="imagination" aria-pressed="true"><strong>Invent a world</strong><small>Characters, quests, mysteries</small></button>
+              <button class="origin-choice" type="button" data-origin="memory" aria-pressed="false"><strong>Tell my story</strong><small>A memory or life moment</small></button>
+              <button class="origin-choice" type="button" data-origin="picture" aria-pressed="false"><strong>Start from a picture</strong><small>Imagine what happens next</small></button>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-fieldset step-panel" data-step-panel="2" data-squad-options hidden>
+            <legend>What would you like to do?</legend>
+            <div class="story-origin-grid two-up">
+              <button class="origin-choice is-selected" type="button" data-squad-action="create" aria-pressed="true"><strong>Start a new squad</strong><small>Invite 1–5 people after setup</small></button>
+              <button class="origin-choice" type="button" data-squad-action="join" aria-pressed="false"><strong>Join with a code</strong><small>Use the code from a friend</small></button>
+            </div>
+          </fieldset>
+
+          <div class="setup-fields step-panel" data-step-panel="3" hidden>
+            <label class="wide age-gate-field">
+              Creator age group
+              <select data-age-group required>
+                <option value="under18">Under 18 · adult supervision required</option>
+                <option value="adult">18 or older</option>
+              </select>
+              <small>We use an age group—not a birth date—to apply the right safety controls.</small>
+            </label>
+            <section class="wide supervision-panel" data-supervision-panel>
+              <span class="supervision-icon" aria-hidden="true">✓</span>
+              <div><strong>Adult setup required</strong><p>A parent, legal guardian, or educator must supervise this creator’s account, invitations, sharing, and purchases.</p></div>
+              <label><input type="checkbox" data-supervision-confirm /> <span>I am an adult responsible for supervising this account.</span></label>
+            </section>
+            <label>
+              Coach style
+              <select data-creator-level required>
+                <option value="starter">Gentle starter</option>
+                <option value="growing">Growing writer</option>
+                <option value="independent">Independent writer</option>
+                <option value="family">Family creating together</option>
+              </select>
+            </label>
+            <label>
+              Display name
+              <input data-display-name autocomplete="nickname" maxlength="24" placeholder="Use a first name or nickname" required />
+            </label>
+            <label class="wide">
+              Story language
+              <select data-story-language required>
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+                <option value="bilingual">Bilingual · English + 中文</option>
+              </select>
+              <small>Story Coach will use this language for questions and feedback.</small>
+            </label>
+            <label class="wide" data-idea-field>
+              Your story spark
+              <textarea data-story-seed rows="3" maxlength="280" placeholder="A shy inventor discovers that the moon is sending secret messages..."></textarea>
+              <small>One sentence is enough. Story Coach will ask what comes next.</small>
+            </label>
+            <label class="wide" data-code-field hidden>
+              Story Code
+              <input data-story-code maxlength="16" autocomplete="off" placeholder="Example: STAR-4821" />
+              <small>Ask the project owner for the invite code.</small>
+            </label>
+          </div>
+
+          <p class="form-error" data-form-error role="alert"></p>
+          <div class="start-actions">
+            <button class="step-back" type="button" data-step-back hidden>← Back</button>
+            <button class="button button-primary" type="button" data-step-next>Continue <span aria-hidden="true">→</span></button>
+            <button class="button button-primary" type="submit" data-continue hidden>Enter my Solo Story <span aria-hidden="true">→</span></button>
+            <p><span aria-hidden="true">✓</span> Private by default · Strict safe-content policy</p>
+          </div>
+        </form>
+      </section>
+
+      <aside class="start-visual" aria-label="A story world coming to life">
+        <img src="assets/showcase-space-adventure.png" alt="Young story characters exploring a bright space adventure" />
+        <div class="visual-overlay">
+          <p>“The stars were not just lights. They were invitations.”</p>
+          <div><span>Story in progress</span><strong>Written by the creator</strong></div>
+        </div>
+      </aside>
+    </main>
+
+    <script src="safety-client.js"></script>
+    <script src="i18n.js"></script>
+    <script src="analytics.js"></script>
+    <script src="start.js"></script>
+  </body>
+</html>

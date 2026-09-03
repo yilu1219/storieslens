@@ -3,12 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visual Write | StoriesLens</title>
+    <title>Story Studio | StoriesLens</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
       .visual-write-page {
         max-width: 1440px;
       }
+
+      .write-header-actions { display:flex; align-items:center; gap:10px; }
+      .write-language-switcher { display:inline-flex; padding:3px; border:1px solid rgba(143,171,255,.3); border-radius:999px; background:rgba(7,14,34,.7); }
+      .write-language-switcher button { min-width:42px; min-height:31px; padding:0 9px; border:0; border-radius:999px; color:#9facc9; background:transparent; cursor:pointer; font:inherit; font-size:12px; font-weight:800; }
+      .write-language-switcher button.is-active { color:#07101f; background:#f6f8ff; }
+      .write-language-switcher button:focus-visible { outline:3px solid #65e0ba; outline-offset:2px; }
+      .story-language-control { display:flex; align-items:center; gap:7px; min-height:38px; padding:3px 4px 3px 10px; border:1px solid rgba(121,231,193,.34); border-radius:999px; color:#a9b8d3; background:rgba(7,14,34,.72); font-size:11px; font-weight:850; }
+      .story-language-control select { min-height:30px; padding:0 25px 0 9px; border:0; border-radius:999px; color:#07101f; background:#79e7bd; font:inherit; font-size:11px; font-weight:900; cursor:pointer; }
 
       .student-write-hero {
         display: grid;
@@ -68,6 +76,12 @@
         gap: 18px;
         margin: 18px 0 22px;
       }
+
+      body.focused-studio [data-studio-landing] { display: none; }
+      body.focused-studio .student-writing-workspace { margin-top: 28px; }
+      body.focused-studio .main-nav,
+      body.focused-studio .top-cta { display: none; }
+      body.focused-studio .site-header { grid-template-columns: 1fr auto; }
 
       .writing-choice-card {
         display: flex;
@@ -188,6 +202,33 @@
         margin-bottom: 28px;
       }
 
+      .creator-journey {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        overflow: hidden;
+        border: 1px solid rgba(143, 171, 255, 0.22);
+        border-radius: 16px;
+        background: rgba(8, 15, 36, 0.78);
+      }
+
+      .creator-journey div {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        padding: 14px 16px;
+        border-right: 1px solid rgba(143, 171, 255, 0.15);
+      }
+
+      .creator-journey div:last-child { border-right: 0; }
+      .creator-journey span { grid-row: 1 / 3; display: grid; width: 28px; height: 28px; place-items: center; color: #9cadd1; border: 1px solid rgba(143, 171, 255, 0.25); border-radius: 50%; font-size: 11px; font-weight: 900; }
+      .creator-journey strong { color: #e8edfb; font-size: 13px; }
+      .creator-journey small { color: #8493b3; font-size: 11px; }
+      .creator-journey div.is-active { background: linear-gradient(120deg, rgba(92, 107, 255, 0.18), rgba(117, 231, 190, 0.08)); }
+      .creator-journey div.is-active span { color: #07141e; border-color: #7ce7c1; background: #7ce7c1; box-shadow: 0 0 20px rgba(124, 231, 193, 0.24); }
+      .creator-journey div.is-done span { color: #07141e; border-color: #ffd991; background: #ffd991; }
+
       .student-writing-workspace.assignment-workspace {
         grid-template-columns: minmax(260px, 0.72fr) minmax(360px, 1fr) minmax(320px, 0.82fr);
       }
@@ -290,6 +331,9 @@
         padding: 20px 22px 0;
       }
 
+      .session-status { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+      .session-status span { padding: 6px 9px; color: #a9b9db; border: 1px solid rgba(143,171,255,.2); border-radius: 999px; background: rgba(255,255,255,.04); font-size: 11px; font-weight: 800; }
+
       .student-writing-panel header p {
         margin: 7px 0 0;
         color: rgba(246, 248, 255, 0.68);
@@ -300,6 +344,37 @@
         gap: 14px;
         padding: 20px 22px 22px;
       }
+
+      .studio-dna-card {
+        overflow: hidden;
+        border: 1px solid rgba(117, 231, 190, 0.42);
+        border-radius: 16px;
+        background:
+          radial-gradient(circle at 0 0, rgba(80, 213, 172, 0.18), transparent 38%),
+          linear-gradient(145deg, rgba(12, 35, 51, 0.96), rgba(10, 17, 39, 0.92));
+      }
+
+      .studio-dna-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 17px 12px;
+      }
+
+      .studio-dna-head span { color: #7ce7c1; font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+      .studio-dna-head h3 { margin: 4px 0 0; color: #fff; font-size: 20px; }
+      .creator-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid rgba(255, 217, 145, .32); border-radius: 999px; color: #ffe1a3; background: rgba(255, 217, 145, .08); font-size: 11px; font-weight: 900; }
+      .studio-dna-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: rgba(117, 231, 190, .18); }
+      .studio-dna-grid div { min-width: 0; padding: 12px 16px; background: rgba(6, 16, 35, .86); }
+      .studio-dna-grid span { display: block; margin-bottom: 5px; color: #8fa5c9; font-size: 11px; font-weight: 850; text-transform: uppercase; }
+      .studio-dna-grid strong { display: block; color: #f4f7ff; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+      .studio-coach-question { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 15px 16px; }
+      .studio-coach-avatar { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; color: #07141e; background: linear-gradient(135deg, #74e7bd, #8fb2ff); font-weight: 950; }
+      .studio-coach-question span { display: block; color: #7ce7c1; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+      .studio-coach-question p { margin: 3px 0 0; color: #eef5ff; line-height: 1.45; }
+      .studio-coach-question button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; color: #07141e; background: #7ce7c1; font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; }
+      .authorship-note { margin: 0; color: #9eabc8; font-size: 12px; line-height: 1.45; }
 
       .student-writing-form label {
         display: grid;
@@ -338,6 +413,12 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
       }
+
+      .creator-settings { border: 1px solid rgba(143,171,255,.18); border-radius: 12px; background: rgba(255,255,255,.025); }
+      .creator-settings summary { padding: 11px 14px; color: #aeb9d8; cursor: pointer; font-size: 12px; font-weight: 800; }
+      .creator-settings .student-writing-row { padding: 0 14px 14px; }
+      .editor-label-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .editor-label-line small { color: #7ce7c1; font-size: 11px; font-weight: 800; }
 
       .skill-focus-card,
       .task-info-list,
@@ -580,6 +661,11 @@
       }
 
       .context-writing-tools { display: grid; gap: 10px; margin-top: -2px; }
+      .context-writing-tools > header strong { font-size: 17px; }
+      .context-tool-actions .coach-primary { color: #07141e; border-color: #7ce7c1; background: #7ce7c1; font-weight: 900; }
+      .more-coach-tools { width: 100%; }
+      .more-coach-tools summary { width: fit-content; color: #98a7c8; cursor: pointer; font-size: 12px; font-weight: 800; }
+      .more-coach-tools .context-tool-actions { margin-top: 9px; }
       .context-writing-tools header,
       .visual-prompt-card header { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
       .context-writing-tools header strong,
@@ -614,6 +700,9 @@
         line-height: 1.7;
       }
 
+      .student-action-row .premiere-primary { order: -2; min-height: 54px; flex: 1 1 230px; color: #07141e; border: 0; background: linear-gradient(120deg, #ffd991, #7ce7c1); }
+      .student-action-row .illustration-action { order: -1; }
+
       .student-toast {
         position: fixed;
         right: 28px;
@@ -629,6 +718,7 @@
       }
 
       .student-writing-workspace[hidden],
+      .studio-dna-card[hidden],
       .assignment-code-panel[hidden],
       .student-toast[hidden] {
         display: none;
@@ -638,11 +728,18 @@
         .student-write-hero,
         .writing-choice-grid,
         .student-writing-workspace,
-        .student-writing-row {
+        .student-writing-row,
+        .studio-dna-grid,
+        .studio-coach-question {
           grid-template-columns: 1fr;
         }
 
+        .creator-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .creator-journey div:nth-child(2) { border-right: 0; }
+        .creator-journey div:nth-child(-n+2) { border-bottom: 1px solid rgba(143,171,255,.15); }
+
         .join-project-form { grid-template-columns:1fr; }
+        .write-header-actions { flex-wrap:wrap; justify-content:flex-end; }
         .group-form { grid-template-columns:1fr; }
         .group-form .wide { grid-column:auto; }
         .class-scene-list { grid-template-columns:repeat(2,1fr); }
@@ -650,6 +747,15 @@
         .student-write-hero img {
           max-height: 280px;
         }
+      }
+
+      @media (max-width: 560px) {
+        .creator-journey { grid-template-columns: 1fr; }
+        .creator-journey div { border-right: 0; border-bottom: 1px solid rgba(143,171,255,.15); }
+        .creator-journey div:last-child { border-bottom: 0; }
+        .student-writing-panel header { align-items: flex-start; flex-direction: column; }
+        .session-status { justify-content: flex-start; }
+        .editor-label-line { align-items: flex-start; flex-direction: column; gap: 5px; }
       }
     </style>
   </head>
@@ -674,33 +780,38 @@
         </nav>
 
         <div class="header-actions write-header-actions">
+          <label class="story-language-control"><span>Story language</span><select data-live-story-language aria-label="Story language"><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+          <div class="write-language-switcher" aria-label="Interface language">
+            <button type="button" data-locale="en" aria-pressed="true">EN</button>
+            <button type="button" data-locale="zh" aria-pressed="false">中文</button>
+          </div>
           <a class="top-cta" href="create-reading-project.html">
             <span>Create from Reading Text</span>
           </a>
         </div>
       </header>
 
-      <section class="student-write-hero write-hero" aria-label="Visual Write overview">
+      <section class="student-write-hero write-hero" data-studio-landing aria-label="Visual Write overview">
         <div>
-          <span class="student-write-kicker" data-mode-kicker>Student Writing Studio</span>
-          <h1 data-mode-title>Visual Write</h1>
-          <p data-mode-subtitle>Write your part. Build one story together.</p>
+          <span class="student-write-kicker" data-mode-kicker>StoriesLens Creative Studio</span>
+          <h1 data-mode-title>Choose how your story begins.</h1>
+          <p data-mode-subtitle>Write on your own or build one world together.</p>
         </div>
         <img src="assets/hero-student.png" alt="" />
       </section>
 
-      <section class="writing-choice-grid" aria-label="Choose a writing mode">
+      <section class="writing-choice-grid" data-studio-landing aria-label="Choose a writing mode">
         <article class="writing-choice-card" data-choice="free">
           <span aria-hidden="true">✦</span>
-          <h2>Free Writing</h2>
-          <p>Start your own story from an idea, picture, or prompt. Get feedback and turn it into images or video.</p>
-          <button type="button" data-open-writing-mode="free">Start Free Writing</button>
+          <h2>Solo Story</h2>
+          <p>Start with an idea, a memory, or your imagination. Story Coach helps you grow it without taking over.</p>
+          <button type="button" data-open-writing-mode="free">Start Solo Story</button>
         </article>
 
         <article class="writing-choice-card is-active" data-choice="teacher">
           <span aria-hidden="true">✓</span>
-          <h2>Create Together</h2>
-          <p>Create or join a shared story. Write one part, make visuals, and publish together.</p>
+          <h2>Story Squad</h2>
+          <p>Create or join an invite-only story world. Write one part, connect every voice, and publish together.</p>
           <div class="together-actions" aria-label="Co-creation options">
             <button class="is-active" type="button" data-together-mode="teacher">Join Teacher Project</button>
             <button type="button" data-open-create-group>Create Friend Group</button>
@@ -744,40 +855,52 @@
       </dialog>
 
       <section class="student-writing-workspace" data-writing-workspace="free" aria-label="Free Creation writing workspace">
+        <nav class="creator-journey" aria-label="Story creation progress">
+          <div class="is-done" data-creator-step="spark"><span>✓</span><strong>Story spark</strong><small>Your idea</small></div>
+          <div class="is-active" data-creator-step="draft"><span>2</span><strong>Write</strong><small>Your first scene</small></div>
+          <div data-creator-step="coach"><span>3</span><strong>Coach</strong><small>Strengthen one moment</small></div>
+          <div data-creator-step="premiere"><span>4</span><strong>Premiere</strong><small>Book or film</small></div>
+        </nav>
         <section class="student-writing-panel">
           <header>
             <div>
-              <h2>Free Creation</h2>
-              <p>Write your own story, get feedback, and turn it into images or video.</p>
+              <h2>Solo Story</h2>
+              <p>Write the first scene only you can tell. Story Coach will help one question at a time.</p>
             </div>
+            <div class="session-status"><span>Private draft</span><span>Safe content enforced</span><span data-autosave-status>Saved on this device</span></div>
           </header>
 
           <div class="student-writing-form">
-            <div class="student-writing-row">
-              <label>
-                Grade Level
-                <select data-write-grade-selector data-writing-field="free-grade">
-                  <option value="K">K</option>
-                  <option value="1">Grade 1</option>
-                  <option value="2">Grade 2</option>
-                  <option value="3" selected>Grade 3</option>
-                  <option value="4">Grade 4</option>
-                  <option value="5">Grade 5</option>
-                  <option value="6">Grade 6</option>
-                  <option value="7">Grade 7</option>
-                  <option value="8">Grade 8</option>
-                  <option value="9">Grade 9</option>
-                  <option value="10">Grade 10</option>
-                  <option value="11">Grade 11</option>
-                  <option value="12">Grade 12</option>
-                </select>
-              </label>
-
-              <div class="skill-focus-card" aria-label="Skill focus">
-                <span>Skill Focus</span>
-                <strong data-free-skill-focus>character, setting, sequence, descriptive details</strong>
+            <section class="studio-dna-card" data-studio-dna hidden aria-label="Your Story DNA">
+              <div class="studio-dna-head">
+                <div><span>Your Story DNA</span><h3>Your original starting point</h3></div>
+                <b class="creator-badge">YOU WRITE · AI ASKS</b>
               </div>
-            </div>
+              <div class="studio-dna-grid">
+                <div><span>Inspiration</span><strong data-studio-dna-inspiration>—</strong></div>
+                <div><span>What stayed with me</span><strong data-studio-dna-memory>—</strong></div>
+                <div><span>My change</span><strong data-studio-dna-change>—</strong></div>
+                <div><span>My originality shift</span><strong data-studio-dna-shift>—</strong></div>
+              </div>
+              <div class="studio-coach-question">
+                <b class="studio-coach-avatar" aria-hidden="true">✦</b>
+                <div><span>Story Coach asks</span><p data-first-coach-question>What happens first in the story only you can tell?</p></div>
+                <button type="button" data-answer-first-question>Answer in editor</button>
+              </div>
+            </section>
+
+            <details class="creator-settings">
+              <summary>Creator settings · guidance level</summary>
+              <div class="student-writing-row">
+                <label>
+                  Creator level
+                  <select data-write-grade-selector data-writing-field="free-grade">
+                    <option value="K">Kindergarten</option><option value="1">Grade 1</option><option value="2">Grade 2</option><option value="3" selected>Grade 3</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option>
+                  </select>
+                </label>
+                <div class="skill-focus-card" aria-label="Skill focus"><span>Coach focus</span><strong data-free-skill-focus>character, setting, sequence, descriptive details</strong></div>
+              </div>
+            </details>
 
             <label>
               Story Idea
@@ -785,30 +908,33 @@
             </label>
 
             <label>
-              Writing Editor
-              <textarea id="story-draft" data-story-draft data-writing-field="free-draft" placeholder="Start writing your visual story here...">Louis found a glowing key beside the moonlit bridge. He felt nervous, but he stepped forward slowly. The key began to shine, and a hidden door opened in the stones.</textarea>
+              <span class="editor-label-line"><span>Write your first scene</span><small data-word-count>0 words · saved privately</small></span>
+              <textarea id="story-draft" data-story-draft data-writing-field="free-draft" placeholder="What happens first? Write it in your own words..."></textarea>
             </label>
 
             <section class="context-writing-tools" data-context-tools="free" aria-label="AI writing tools">
-              <header><strong>Writing Assistant</strong><span>Select a sentence, or place your cursor inside one.</span></header>
+              <header><strong>Story Coach</strong><span>It asks. You decide. You write.</span></header>
               <div class="context-tool-actions">
-                <button type="button" data-writing-tool="hint">Give a Hint</button><button type="button" data-writing-tool="check">Check Sentence</button><button type="button" data-writing-tool="details">Add Details</button><button type="button" data-writing-tool="dialogue">Improve Dialogue</button><button type="button" data-writing-tool="scene">Turn into a Scene</button>
+                <button class="coach-primary" type="button" data-writing-tool="begin">Ask my next question</button><button type="button" data-writing-tool="check">Check clarity</button><button type="button" data-writing-tool="details">Help me add detail</button>
               </div>
+              <details class="more-coach-tools"><summary>More ways Story Coach can help</summary><div class="context-tool-actions"><button type="button" data-writing-tool="hint">Give a small hint</button><button type="button" data-writing-tool="dialogue">Check dialogue</button><button type="button" data-writing-tool="scene">Prepare a scene brief</button></div></details>
               <div class="context-assistant-result" data-context-result>Choose a tool when you want help with the sentence you are writing.</div>
+              <p class="authorship-note">Story Coach asks and suggests. It never inserts story sentences into your writing.</p>
             </section>
 
             <div class="student-action-row">
-              <button class="primary" type="button" data-student-action="feedback" data-mode-target="free">Get AI Feedback</button>
-              <button class="credit-action" type="button" data-student-action="image" data-mode-target="free"><span>Generate Image</span><small>1 image credit</small></button>
-              <button class="credit-action" type="button" data-student-action="video" data-mode-target="free"><span>Generate Scene Video</span><small>1 video credit</small></button>
-              <button type="button" data-student-action="save" data-mode-target="free">Save Story</button>
+              <button class="premiere-primary" type="button" data-student-action="premiere" data-mode-target="free">Preview my book or film <span aria-hidden="true">→</span></button>
+              <button class="credit-action illustration-action" type="button" data-student-action="image" data-mode-target="free"><span>Create one illustration</span><small>From my finished scene</small></button>
+              <button type="button" data-student-action="feedback" data-mode-target="free">Get coach notes</button>
+              <button type="button" data-student-action="save" data-mode-target="free">Save now</button>
+              <button type="button" data-student-action="video" data-mode-target="free" hidden><span>Generate Scene Video</span><small>Available after premiere</small></button>
             </div>
           </div>
         </section>
 
         <aside class="student-output-stack" aria-label="Free Creation feedback and preview">
           <section class="student-feedback-card">
-            <h3>AI Feedback</h3>
+            <h3>Coach notes</h3>
             <div class="student-feedback-grid">
               <article>
                 <strong>Glow</strong>
@@ -826,7 +952,7 @@
           </section>
 
           <section class="student-preview-card">
-            <h3>Visual Preview</h3>
+            <h3>Your scene preview</h3>
             <section class="visual-prompt-card" data-visual-context="free"><header><strong>Visual Story Brief</strong><span>Built from your writing</span></header><p data-visual-summary>Write an action, place, and mood to prepare a strong visual.</p><span class="visual-readiness" data-visual-readiness>Keep writing to unlock a clear visual.</span></section>
             <div class="student-preview-frame" data-output="free-preview">
               <div class="student-preview-empty">Generated image / video preview will appear here.</div>
@@ -836,10 +962,10 @@
           <section class="student-next-card">
             <h3>Next Step</h3>
             <ol>
-              <li>Write or revise your story.</li>
-              <li>Get AI feedback.</li>
-              <li>Generate a picture or short video.</li>
-              <li>Save your story.</li>
+              <li>Write one moment in your own words.</li>
+              <li>Ask Story Coach one useful question.</li>
+              <li>Create an illustration when the scene feels ready.</li>
+              <li>Preview your book or film.</li>
             </ol>
           </section>
         </aside>
@@ -1041,6 +1167,8 @@
     </main>
 
     <script src="script.js"></script>
+    <script src="safety-client.js"></script>
+    <script src="analytics.js"></script>
     <script>
       (() => {
         const workspaces = [...document.querySelectorAll("[data-writing-workspace]")];
@@ -1057,6 +1185,27 @@
         const toast = document.querySelector("[data-student-toast]");
         const createGroupDialog = document.querySelector("[data-create-group-dialog]");
         const joinGroupDialog = document.querySelector("[data-join-group-dialog]");
+        const pageParams = new URLSearchParams(window.location.search);
+        let creatorSetup = null;
+        let storyDna = null;
+        try {
+          creatorSetup = JSON.parse(localStorage.getItem("storieslens_creator_setup") || "null");
+        } catch {}
+        if (creatorSetup?.ageGroup === "under18" && creatorSetup.supervisionConfirmed !== true) {
+          window.location.replace("start.html?safety=required");
+          return;
+        }
+        try {
+          storyDna = JSON.parse(localStorage.getItem("storieslens_story_dna") || "null");
+        } catch {}
+        const liveStoryLanguage = document.querySelector("[data-live-story-language]");
+        const soloWordCount = document.querySelector("[data-word-count]");
+        const autosaveStatus = document.querySelector("[data-autosave-status]");
+        let soloAutosaveTimer = null;
+        let activeStoryLanguage = creatorSetup?.storyLanguage || pageParams.get("storyLang") || "en";
+        if (!["en", "zh", "bilingual"].includes(activeStoryLanguage)) activeStoryLanguage = "en";
+        if (liveStoryLanguage) liveStoryLanguage.value = activeStoryLanguage;
+        const t = (text) => window.StoriesLensI18n?.t(text) || text;
         const FRIEND_PROJECTS_KEY = "storieslens_friend_group_projects";
         const previewImages = {
           free: "assets/storybook-portal-book.png",
@@ -1064,14 +1213,14 @@
         };
         const modeCopy = {
           free: {
-            kicker: "Free Creation",
-            title: "Start your own visual story.",
-            subtitle: "Write your own story, get feedback, and turn it into images or video."
+            kicker: "Solo Story",
+            title: "Write something only you could tell.",
+            subtitle: "Start with an idea, a memory, or your imagination. Story Coach helps without taking over."
           },
           assignment: {
-            kicker: "Create Together",
-            title: "Let's write and create together.",
-            subtitle: "Join a shared project, write your part, and turn the whole story into images or video."
+            kicker: "Story Squad",
+            title: "Build one world together.",
+            subtitle: "Join a shared project, write your part, and help bring the whole story to life."
           }
         };
         const gradeSkillFocus = {
@@ -1125,6 +1274,7 @@
         };
         let activeMode = "free";
         let assignmentOpened = false;
+        let firstSentenceTracked = false;
         const activeVideoJobs = new Map();
 
         function showToast(message) {
@@ -1137,8 +1287,32 @@
           }, 2600);
         }
 
+        function applyStoryLanguage(nextLanguage, announce = false) {
+          activeStoryLanguage = ["en", "zh", "bilingual"].includes(nextLanguage) ? nextLanguage : "en";
+          if (liveStoryLanguage) liveStoryLanguage.value = activeStoryLanguage;
+          creatorSetup = { ...(creatorSetup || {}), storyLanguage: activeStoryLanguage };
+          localStorage.setItem("storieslens_creator_setup", JSON.stringify(creatorSetup));
+          if (storyDna) {
+            storyDna = { ...storyDna, storyLanguage: activeStoryLanguage };
+            localStorage.setItem("storieslens_story_dna", JSON.stringify(storyDna));
+          }
+          ["free", "assignment"].forEach((mode) => {
+            const editor = getEditor(mode);
+            if (editor) editor.lang = activeStoryLanguage === "zh" ? "zh-CN" : activeStoryLanguage === "bilingual" ? "mul" : "en";
+          });
+          renderStoryDna();
+          if (announce) window.StoriesLensAnalytics?.track("story_language_changed", { storyLanguage: activeStoryLanguage });
+          if (announce) showToast(activeStoryLanguage === "zh" ? "Story Coach 现在会用中文引导。" : activeStoryLanguage === "bilingual" ? "Story Coach will reply in English and 中文." : "Story Coach will now guide in English.");
+        }
+
         function normalizeMode(mode) {
           return mode === "assignment" || mode === "teacher" || mode === "group" ? "assignment" : "free";
+        }
+
+        function escapeHtml(value) {
+          return String(value || "").replace(/[&<>"']/g, (character) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+          })[character]);
         }
 
         function readFriendProjects() {
@@ -1163,7 +1337,7 @@
             member: index === 0 ? memberName : index === 1 ? "Open · Claim" : "Not started",
             className: index === 0 ? "is-you" : ""
           }));
-          if (context) context.innerHTML = `<div class="class-project-head"><div><h3>${project.title}</h3><p>Friend Group · ${project.type === "movie" ? "Group Movie" : "Group Book"}</p></div><strong>1 of ${project.partCount} parts claimed</strong></div><div class="class-project-progress-copy"><span>Group Progress</span><span>${Math.round(100 / project.partCount)}%</span></div><div class="class-project-progress"><i style="width:${100 / project.partCount}%"></i></div><div class="class-scene-list">${parts.map(part => `<article class="class-scene ${part.className}"><strong>${part.title}</strong><span>${part.member}${part.className ? " · You are here" : ""}</span></article>`).join("")}</div><div class="class-project-progress-copy"><strong>Complete all ${project.partCount} parts to publish together</strong><span>Invite Code · ${project.code}</span></div>`;
+          if (context) context.innerHTML = `<div class="class-project-head"><div><h3>${escapeHtml(project.title)}</h3><p>Friend Group · ${project.type === "movie" ? "Group Movie" : "Group Book"}</p></div><strong>1 of ${project.partCount} parts claimed</strong></div><div class="class-project-progress-copy"><span>Group Progress</span><span>${Math.round(100 / project.partCount)}%</span></div><div class="class-project-progress"><i style="width:${100 / project.partCount}%"></i></div><div class="class-scene-list">${parts.map(part => `<article class="class-scene ${part.className}"><strong>${escapeHtml(part.title)}</strong><span>${escapeHtml(part.member)}${part.className ? " · You are here" : ""}</span></article>`).join("")}</div><div class="class-project-progress-copy"><strong>Complete all ${project.partCount} parts to publish together</strong><span>Invite Code · ${escapeHtml(project.code)}</span></div>`;
           const role = document.querySelector("[data-task-role]");
           const status = document.querySelector("[data-assignment-status]");
           if (role) role.textContent = `You claimed ${partLabel} 1 in ${project.title}.`;
@@ -1173,9 +1347,9 @@
         function setMode(mode) {
           activeMode = normalizeMode(mode);
           const copy = modeCopy[activeMode];
-          if (modeKicker) modeKicker.textContent = copy.kicker;
-          if (modeTitle) modeTitle.textContent = copy.title;
-          if (modeSubtitle) modeSubtitle.textContent = copy.subtitle;
+          if (modeKicker) modeKicker.textContent = t(copy.kicker);
+          if (modeTitle) modeTitle.textContent = t(copy.title);
+          if (modeSubtitle) modeSubtitle.textContent = t(copy.subtitle);
           workspaces.forEach((workspace) => {
             const isActive = workspace.dataset.writingWorkspace === activeMode;
             workspace.hidden = !isActive || (activeMode === "assignment" && !assignmentOpened);
@@ -1188,7 +1362,7 @@
 
         function updateFreeSkillFocus() {
           if (!freeGradeSelect || !freeSkillFocus) return;
-          freeSkillFocus.textContent = gradeSkillFocus[freeGradeSelect.value] || gradeSkillFocus[3];
+          freeSkillFocus.textContent = t(gradeSkillFocus[freeGradeSelect.value] || gradeSkillFocus[3]);
         }
 
         function applyAssignmentFromLesson() {
@@ -1252,8 +1426,59 @@
               : "",
             characterRules: normalizedMode === "assignment"
               ? "Mia wears a yellow hoodie, round glasses, and a ponytail. Leo wears a green hoodie and backpack and has curly hair."
+              : "",
+            inspiration: normalizedMode === "free" ? storyDna?.inspiration || creatorSetup?.seed || "" : "",
+            storyDnaContext: normalizedMode === "free" && storyDna
+              ? [
+                  `Source type: ${storyDna.source || "idea"}`,
+                  `Inspiration: ${storyDna.inspiration || ""}`,
+                  `What stayed: ${storyDna.memory || ""}`,
+                  `Creator's change: ${storyDna.change || ""}`,
+                  `Originality shift: ${storyDna.shift || ""}`
+                ].join("\n")
               : ""
           };
+        }
+
+        function getStarterQuestion() {
+          const change = storyDna?.change?.trim();
+          const shift = storyDna?.shift;
+          const language = activeStoryLanguage;
+          const questionEn = change
+            ? `Your change is “${change}.” What is the very first moment that shows this new story is different?`
+            : shift === "setting"
+              ? "Where does your new story begin, and what surprising detail can only exist there?"
+              : shift === "goal"
+                ? "What does your new hero want most, and what makes that difficult?"
+                : shift === "rule"
+                  ? "What impossible rule shapes your world, and who discovers it first?"
+                  : "What happens first in the story only you can tell?";
+          const questionZh = change
+            ? `你想做出的改变是“${change}”。故事开头发生什么，能让读者立刻发现这是一个全新的故事？`
+            : shift === "setting"
+              ? "你的新故事从哪里开始？那里有什么只属于这个世界的惊喜细节？"
+              : shift === "goal"
+                ? "你的新主角最想得到什么？为什么这件事很难？"
+                : shift === "rule"
+                  ? "这个世界里有什么不可能的规则？第一个发现它的人是谁？"
+                  : "在这个只有你能讲述的故事里，第一件发生的事是什么？";
+          if (language === "zh") return questionZh;
+          if (language === "bilingual") return `${questionEn} / ${questionZh}`;
+          return questionEn;
+        }
+
+        function renderStoryDna() {
+          const card = document.querySelector("[data-studio-dna]");
+          if (!card || !storyDna || pageParams.get("from") !== "start") return;
+          card.hidden = false;
+          const memoryNames = { character: "A character’s choice", world: "The world", feeling: "The feeling", surprise: "The surprise" };
+          const shiftNames = { setting: "A completely new setting", goal: "A different hero goal", rule: "One impossible rule" };
+          const set = (selector, value) => { const node = document.querySelector(selector); if (node) node.textContent = value || "—"; };
+          set("[data-studio-dna-inspiration]", storyDna.inspiration);
+          set("[data-studio-dna-memory]", t(memoryNames[storyDna.memory] || storyDna.memory || "—"));
+          set("[data-studio-dna-change]", storyDna.change);
+          set("[data-studio-dna-shift]", t(shiftNames[storyDna.shift] || storyDna.shift || "—"));
+          set("[data-first-coach-question]", getStarterQuestion());
         }
 
         function getEditor(mode) {
@@ -1302,13 +1527,15 @@
             const response = await fetch("/api/ai-report", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ studentDraft: draft, grade: context.grade, ccssSkill: context.skillFocus, prompt: context.teacherInstructions })
+              body: JSON.stringify({ studentDraft: draft, grade: context.grade, ccssSkill: context.skillFocus, prompt: context.teacherInstructions, storyLanguage: activeStoryLanguage })
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.report) throw new Error(data.error || "AI feedback is unavailable.");
             outputs.glow.textContent = data.report.glow || data.report.overall || "Your idea is clear.";
             outputs.grow.textContent = data.report.grow || "Add one detail that helps the reader picture the scene.";
             outputs.next.textContent = data.report.nextStep || "Revise one sentence, then read it aloud.";
+            if (normalizeMode(mode) === "free") document.body.dataset.soloCoached = "true";
+            updateSoloJourney();
             showToast("AI feedback is ready.");
             return;
           } catch (error) {
@@ -1328,6 +1555,8 @@
             ? "Now add one sentence of dialogue between two characters."
             : "Add one feeling or manner word, such as bravely, carefully, nervous, or excited.";
 
+          if (normalizeMode(mode) === "free") document.body.dataset.soloCoached = "true";
+          updateSoloJourney();
           showToast("AI feedback is ready.");
         }
 
@@ -1335,32 +1564,44 @@
           const editor = getEditor(mode);
           const result = document.querySelector(`[data-context-tools="${mode}"] [data-context-result]`);
           const draft = getDraft(mode);
-          if (!draft) { showToast("Write at least one sentence first."); return; }
           const context = getModeContext(mode);
+          window.StoriesLensAnalytics?.track("coach_help_requested", { mode: normalizeMode(mode), action, hasDraft: Boolean(draft), storyLanguage: activeStoryLanguage });
+          if (!draft && action !== "begin") { showToast(t("Write at least one sentence first.")); return; }
+          if (!draft && action === "begin" && !context.storyDnaContext && !context.inspiration) {
+            showToast(t("Add a story idea first."));
+            document.querySelector('[data-writing-field="free-idea"]')?.focus();
+            return;
+          }
           const originalLabel = button.textContent;
           button.disabled = true;
-          button.textContent = "Thinking...";
-          if (result) result.textContent = `Looking at: “${getCurrentSentence(editor) || draft.slice(0, 120)}”`;
+          button.textContent = t("Thinking...");
+          if (result) result.textContent = action === "begin" && !draft
+            ? t("Finding the best first question for your story...")
+            : `${t("Looking at")}: “${getCurrentSentence(editor) || draft.slice(0, 120)}”`;
           try {
             const response = await fetch("/api/writing-assistant", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...context, action, studentDraft: draft, selectedText: getCurrentSentence(editor) })
+              body: JSON.stringify({ ...context, action, studentDraft: draft, selectedText: getCurrentSentence(editor), storyLanguage: activeStoryLanguage })
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.result) throw new Error(data.error || "Writing help is unavailable.");
             const assistant = data.result;
-            if (result) result.innerHTML = `<strong>${assistant.reply || "Here is one next step."}</strong>${assistant.suggestion ? `<div class="feedback-card-actions"><button type="button" data-use-suggestion>Use suggestion</button></div><p>${assistant.suggestion}</p>` : ""}`;
-            result?.querySelector("[data-use-suggestion]")?.addEventListener("click", () => {
-              const selected = getCurrentSentence(editor);
-              if (selected && editor.value.includes(selected)) editor.value = editor.value.replace(selected, assistant.suggestion);
-              else editor.value = `${editor.value.trim()} ${assistant.suggestion}`.trim();
-              editor.dispatchEvent(new Event("input", { bubbles: true }));
-              showToast("Suggestion added. You can still edit it in your own words.");
-            });
+            if (result) {
+              result.replaceChildren();
+              const reply = document.createElement("strong");
+              reply.textContent = assistant.reply || t("Here is one next step.");
+              result.append(reply);
+              if (assistant.suggestion && action !== "begin") {
+                const suggestion = document.createElement("p");
+                suggestion.textContent = `${t("Idea to consider")}: ${assistant.suggestion}`;
+                result.append(suggestion);
+              }
+            }
             updateVisualBrief(mode, assistant.visualBrief || "");
           } catch (error) {
-            if (result) result.textContent = error.message;
+            if (result && action === "begin") result.textContent = getStarterQuestion();
+            else if (result) result.textContent = error.message;
           } finally {
             button.disabled = false;
             button.textContent = originalLabel;
@@ -1375,10 +1616,10 @@
             : freeSkillFocus?.textContent || "visual storytelling";
           const characterRules = normalizeMode(mode) === "assignment"
             ? "Use the approved character references: Mia has a yellow hoodie, round glasses, and a ponytail; Leo has a green hoodie, backpack, and curly hair. Keep age, face style, clothing, hairstyle, and role consistent."
-            : "Create age-appropriate K12 storybook characters with consistent friendly design.";
+            : "Create story characters that match the creator's writing. Respect any stated character ages and do not infantilize adult subjects.";
 
           return [
-            "Create one polished children's storybook illustration for StoriesLens.",
+            "Create one polished storybook or cinematic editorial illustration for StoriesLens.",
             `Student writing: ${draft}`,
             `Skill focus: ${skill}`,
             `Mood: ${selectedMood}`,
@@ -1568,6 +1809,7 @@
           if (!preview) return;
           const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Mysterious";
           if (mediaType === "image") {
+            window.StoriesLensAnalytics?.track("visual_generation_requested", { mode: normalizeMode(mode), mediaType: "image" });
             preview.innerHTML = '<div class="student-preview-empty">Generating image...</div>';
             try {
               const result = await requestImageFromApi(mode);
@@ -1588,7 +1830,11 @@
               );
               return;
             } catch (error) {
-              preview.innerHTML = `<div class="student-preview-empty">${error.message}</div>`;
+              preview.replaceChildren();
+              const failure = document.createElement("div");
+              failure.className = "student-preview-empty";
+              failure.textContent = error.message;
+              preview.append(failure);
               showToast(error.message);
               return;
             }
@@ -1601,10 +1847,40 @@
           const payload = {
             mode,
             savedAt: new Date().toISOString(),
-            draft: getDraft(mode)
+            draft: getDraft(mode),
+            setupId: normalizeMode(mode) === "free" ? creatorSetup?.createdAt || "" : ""
           };
           localStorage.setItem("storieslens_student_visual_write", JSON.stringify(payload));
+          window.StoriesLensAnalytics?.track("story_saved", { mode: normalizeMode(mode), hasDraft: Boolean(payload.draft) });
           showToast(mode === "assignment" ? "Teacher task draft saved on this device." : "Story saved on this device.");
+        }
+
+        function updateSoloJourney() {
+          const draft = getDraft("free");
+          const words = draft.trim() ? draft.trim().split(/\s+/).filter(Boolean).length : 0;
+          const hasSentence = /[.!?。！？]/.test(draft);
+          const hasCoachMoment = document.body.dataset.soloCoached === "true" || words >= 45;
+          const steps = [...document.querySelectorAll("[data-creator-step]")];
+          const activeIndex = !hasSentence ? 1 : !hasCoachMoment ? 2 : 3;
+          steps.forEach((step, index) => {
+            step.classList.toggle("is-done", index < activeIndex);
+            step.classList.toggle("is-active", index === activeIndex);
+            const marker = step.querySelector("span");
+            if (marker) marker.textContent = index < activeIndex ? "✓" : String(index + 1);
+          });
+          if (soloWordCount) {
+            const locale = window.StoriesLensI18n?.locale || (localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en");
+            soloWordCount.textContent = locale === "zh" ? `${words} 字/词 · 私密保存` : `${words} ${words === 1 ? "word" : "words"} · saved privately`;
+          }
+        }
+
+        function scheduleSoloAutosave() {
+          if (autosaveStatus) autosaveStatus.textContent = t("Saving…");
+          clearTimeout(soloAutosaveTimer);
+          soloAutosaveTimer = setTimeout(() => {
+            localStorage.setItem("storieslens_student_visual_write", JSON.stringify({ mode: "free", savedAt: new Date().toISOString(), draft: getDraft("free"), setupId: creatorSetup?.createdAt || "" }));
+            if (autosaveStatus) autosaveStatus.textContent = t("Saved on this device");
+          }, 650);
         }
 
         document.querySelectorAll("[data-open-writing-mode]").forEach((button) => {
@@ -1645,6 +1921,9 @@
             partCount: Number(document.querySelector("[data-group-parts]")?.value || 5),
             memberLimit: Number(document.querySelector("[data-group-limit]")?.value || 5),
             ownerName: "Project Owner",
+            storyDna,
+            storyLanguage: activeStoryLanguage,
+            premise: storyDna?.change ? `A new story direction: ${storyDna.change}` : "",
             createdAt: new Date().toISOString()
           };
           const projects = readFriendProjects();
@@ -1686,10 +1965,21 @@
           button.addEventListener("click", () => {
             const mode = normalizeMode(button.dataset.modeTarget || activeMode);
             const action = button.dataset.studentAction;
+            if (window.StoriesLensSafety && !window.StoriesLensSafety.check(getDraft(mode)).safe) {
+              showToast(t(window.StoriesLensSafety.message));
+              getEditor(mode)?.focus();
+              return;
+            }
             if (action === "feedback") setFeedback(mode);
             if (action === "image") generatePreview(mode, "image");
             if (action === "video") generateVideoPreview(mode);
             if (action === "save") saveWork(mode);
+            if (action === "premiere") {
+              if (!getDraft(mode)) { showToast(t("Write at least one sentence first.")); return; }
+              saveWork(mode);
+              window.StoriesLensAnalytics?.track("premiere_opened", { mode, storyLanguage: activeStoryLanguage });
+              location.href = "solo-premiere.html";
+            }
             if (action === "submit-image") {
               const selectedMood = document.querySelector('input[name="sceneMood"]:checked')?.value || "Mysterious";
               showToast(`Image candidate submitted for teacher review and class voting. Mood: ${selectedMood}.`);
@@ -1710,13 +2000,58 @@
 
         ["free", "assignment"].forEach((mode) => {
           const editor = getEditor(mode);
-          editor?.addEventListener("input", () => updateVisualBrief(mode));
+          editor?.addEventListener("input", () => {
+            updateVisualBrief(mode);
+            if (mode === "free") {
+              updateSoloJourney();
+              scheduleSoloAutosave();
+            }
+            if (!firstSentenceTracked && getDraft(mode).match(/[.!?。！？]/)) {
+              firstSentenceTracked = true;
+              window.StoriesLensAnalytics?.track("first_sentence_completed", { mode: normalizeMode(mode), storyLanguage: activeStoryLanguage });
+            }
+          });
           updateVisualBrief(mode);
         });
+        document.querySelector('[data-writing-field="free-idea"]')?.addEventListener("input", updateSoloJourney);
+        updateSoloJourney();
 
-        const pageParams = new URLSearchParams(window.location.search);
         const requestedMode = pageParams.get("mode");
         const classCode = pageParams.get("code");
+        const applyCreatorSetup = () => {
+          if (!creatorSetup || pageParams.get("from") !== "start") return;
+          document.body.classList.add("focused-studio");
+          window.StoriesLensAnalytics?.track("studio_entered", { mode: "solo", fromStoryDna: Boolean(storyDna), storyLanguage: activeStoryLanguage });
+          const ideaInput = document.querySelector('[data-writing-field="free-idea"]');
+          const draftInput = document.querySelector('[data-writing-field="free-draft"]');
+          if (ideaInput && creatorSetup.seed) ideaInput.value = creatorSetup.seed;
+          if (draftInput) {
+            let savedWork = null;
+            try { savedWork = JSON.parse(localStorage.getItem("storieslens_student_visual_write") || "null"); } catch {}
+            draftInput.value = savedWork?.setupId === creatorSetup.createdAt ? savedWork.draft || "" : "";
+          }
+          if (freeGradeSelect) {
+            const levelToGrade = { starter: "3", growing: "6", independent: "10", family: "5" };
+            freeGradeSelect.value = levelToGrade[creatorSetup.creatorLevel] || (creatorSetup.ageBand === "11-14" ? "7" : creatorSetup.ageBand === "grownup" ? "10" : "4");
+            freeGradeSelect.dispatchEvent(new Event("change"));
+          }
+          renderStoryDna();
+          updateVisualBrief("free");
+          updateSoloJourney();
+        };
+        document.querySelector("[data-answer-first-question]")?.addEventListener("click", () => {
+          const editor = getEditor("free");
+          editor?.focus();
+          editor?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+        window.addEventListener("storieslens:locale", () => {
+          renderStoryDna();
+          updateSoloJourney();
+          if (autosaveStatus) autosaveStatus.textContent = t("Saved on this device");
+          if (activeMode !== "landing") setMode(activeMode);
+        });
+        liveStoryLanguage?.addEventListener("change", () => applyStoryLanguage(liveStoryLanguage.value, true));
+        applyStoryLanguage(activeStoryLanguage);
         if (classCode && assignmentCodeInput) assignmentCodeInput.value = classCode;
         if (requestedMode === "group" && classCode) {
           const project = readFriendProjects()[classCode.toUpperCase()];
@@ -1741,6 +2076,16 @@
           setMode("assignment");
         } else if (requestedMode === "free") {
           setMode("free");
+          applyCreatorSetup();
+        } else if (requestedMode === "group-start") {
+          document.body.classList.add("focused-studio");
+          activeMode = "landing";
+          workspaces.forEach((workspace) => { workspace.hidden = true; });
+          if (assignmentGate) assignmentGate.hidden = true;
+          const titleInput = document.querySelector("[data-group-title]");
+          const projectTitle = storyDna?.inspiration || creatorSetup?.seed;
+          if (titleInput && projectTitle) titleInput.value = projectTitle.split(/[.!?]/)[0].slice(0, 54) || titleInput.value;
+          createGroupDialog?.showModal();
         } else {
           activeMode = "landing";
           workspaces.forEach((workspace) => { workspace.hidden = true; });
@@ -1753,5 +2098,6 @@
         });
       })();
     </script>
+    <script src="i18n.js"></script>
   </body>
 </html>

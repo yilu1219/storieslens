@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#070817" />
+    <title>Creator Checkout | StoriesLens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="checkout.css" />
+  </head>
+  <body class="checkout-page">
+    <header class="checkout-header">
+      <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span><span>StoriesLens</span></a>
+      <div class="language-switcher" aria-label="Interface language">
+        <button type="button" data-locale="en" aria-pressed="true">EN</button>
+        <button type="button" data-locale="zh" aria-pressed="false">中文</button>
+      </div>
+    </header>
+
+    <main class="checkout-shell">
+      <section class="checkout-intro">
+        <a class="back-link" href="index.html#pricing">← Back to pricing</a>
+        <p class="eyebrow"><span></span> Creator or guardian checkout</p>
+        <h1>Finish the story. <em>Keep the authorship.</em></h1>
+        <p>Create first. Pay only when the work is ready to become a finished keepsake.</p>
+        <div class="checkout-trust">
+          <span>One-time payment</span>
+          <span>No subscription</span>
+          <span>Secure Stripe checkout</span>
+        </div>
+      </section>
+
+      <section class="order-card" aria-labelledby="order-title">
+        <span class="order-kicker">Your order</span>
+        <div class="order-heading"><div><h2 id="order-title" data-offer-name>Story Pass</h2><p data-offer-description>Turn one finished story into a book or comic your family can keep.</p></div><strong data-offer-price>$19</strong></div>
+        <ul data-offer-features>
+          <li>Full Story Coach for one project</li>
+          <li>Invite up to 5 collaborators</li>
+          <li>12 visual scene generations</li>
+          <li>Illustrated layout and downloadable edition</li>
+        </ul>
+        <div class="order-total"><span>Total today</span><strong data-total-price>$19 USD</strong></div>
+        <button class="checkout-button" type="button" data-checkout>Continue to secure checkout <span aria-hidden="true">→</span></button>
+        <p class="checkout-status" data-checkout-status role="status"></p>
+        <a class="fallback-link" href="beta-interest.html?offer=story-pass" data-fallback hidden>Checkout is not connected—join the founding beta instead →</a>
+        <p class="checkout-fineprint">You will continue to Stripe to enter payment details. StoriesLens does not store card information.</p>
+      </section>
+    </main>
+
+    <section class="checkout-faq">
+      <div><strong>Why pay after creating?</strong><p>Try the writing experience before deciding whether the finished format is worth buying.</p></div>
+      <div><strong>Is this a subscription?</strong><p>No. Story Pass is a one-time project purchase. The guided deposit is applied to the stated cohort total.</p></div>
+      <div><strong>Who should complete payment?</strong><p>Adults can purchase their own work. A parent or legal guardian must purchase for a minor.</p></div>
+    </section>
+
+    <script src="analytics.js"></script>
+    <script src="i18n.js"></script>
+    <script src="checkout.js"></script>
+  </body>
+</html>

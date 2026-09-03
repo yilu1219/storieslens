@@ -1,549 +1,220 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StoriesLens | Classroom Co-Creation Studio</title>
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-      .home-product-page {
-        width: min(94vw, 1480px);
-      }
-
-      .product-hero {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 28px;
-        align-items: start;
-        min-height: auto;
-        padding: 32px 0 18px;
-      }
-
-      .product-eyebrow {
-        display: inline-flex;
-        width: fit-content;
-        align-items: center;
-        gap: 10px;
-        padding: 9px 12px;
-        border: 1px solid rgba(145, 172, 255, 0.28);
-        border-radius: 999px;
-        color: rgba(234, 239, 255, 0.78);
-        background: rgba(10, 18, 42, 0.62);
-      }
-
-      .product-eyebrow::before {
-        content: "";
-        width: 9px;
-        height: 9px;
-        border-radius: 999px;
-        background: #93ffcf;
-        box-shadow: 0 0 18px rgba(147, 255, 207, 0.72);
-      }
-
-      .product-hero h1 {
-        margin: 18px 0 16px;
-        max-width: 980px;
-        color: #fff;
-        font-size: clamp(46px, 5.2vw, 76px);
-        line-height: 1;
-        letter-spacing: 0;
-      }
-
-      .product-hero p {
-        max-width: 820px;
-        margin: 0;
-        color: rgba(239, 244, 255, 0.82);
-        font-size: clamp(17px, 1.45vw, 21px);
-        line-height: 1.58;
-      }
-
-      .product-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 13px;
-        margin-top: 26px;
-      }
-
-      .product-actions a,
-      .product-small-button {
-        display: inline-flex;
-        min-height: 48px;
-        align-items: center;
-        justify-content: center;
-        padding: 0 18px;
-        border: 1px solid rgba(151, 176, 255, 0.28);
-        border-radius: 12px;
-        color: #fff;
-        background: rgba(255, 255, 255, 0.07);
-        font-weight: 850;
-        text-decoration: none;
-      }
-
-      .product-actions a.primary,
-      .product-small-button.primary {
-        border: 0;
-        background: linear-gradient(135deg, #3478ff, #8a4cff);
-        box-shadow: 0 16px 40px rgba(80, 112, 255, 0.28);
-      }
-
-      .product-actions a.secondary {
-        border-color: rgba(154, 255, 210, 0.34);
-        background: rgba(50, 125, 102, 0.16);
-      }
-
-      .entry-card-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-        gap: 18px;
-      }
-
-      .entry-card {
-        display: flex;
-        min-height: 330px;
-        flex-direction: column;
-        padding: 28px;
-        border: 1px solid rgba(151, 176, 255, 0.24);
-        border-radius: 20px;
-        background:
-          radial-gradient(circle at 10% 0%, rgba(99, 134, 255, 0.2), transparent 36%),
-          linear-gradient(180deg, rgba(16, 28, 65, 0.88), rgba(8, 13, 31, 0.8));
-      }
-
-      .entry-card.teacher-entry {
-        border-color: rgba(119, 161, 255, 0.58);
-        background:
-          radial-gradient(circle at 14% 0%, rgba(83, 131, 255, 0.36), transparent 38%),
-          linear-gradient(180deg, rgba(29, 58, 125, 0.96), rgba(9, 17, 40, 0.88));
-        box-shadow: 0 26px 70px rgba(53, 102, 255, 0.2);
-      }
-
-      .entry-card span {
-        color: #ffd991;
-        font-weight: 900;
-      }
-
-      .entry-card h2 {
-        margin: 10px 0 8px;
-        color: #fff;
-        font-size: clamp(30px, 3vw, 46px);
-      }
-
-      .entry-card p {
-        max-width: 680px;
-        margin: 0;
-        color: rgba(234, 239, 255, 0.78);
-        font-size: 18px;
-        line-height: 1.5;
-      }
-
-      .entry-card ul {
-        margin: 18px 0 24px;
-        padding-left: 19px;
-        color: rgba(234, 239, 255, 0.76);
-        line-height: 1.55;
-      }
-
-      .entry-card .entry-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: auto;
-      }
-
-      .product-preview-board {
-        position: relative;
-        width: min(100%, 1180px);
-        min-height: 520px;
-        overflow: hidden;
-        border-radius: 26px;
-        background: rgba(4, 8, 22, 0.2);
-        box-shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
-        justify-self: center;
-      }
-
-      .hero-classroom-image {
-        width: 100%;
-        height: 100%;
-        min-height: 520px;
-        object-fit: cover;
-        object-position: center;
-        border-radius: 26px;
-        border: 1px solid rgba(151, 176, 255, 0.22);
-      }
-
-      .hero-image-copy {
-        position: absolute;
-        left: 36px;
-        top: 42px;
-        z-index: 2;
-        max-width: min(46%, 520px);
-        padding: 20px 22px;
-        border: 1px solid rgba(33, 63, 112, 0.12);
-        border-radius: 18px;
-        color: rgba(13, 28, 54, 0.88);
-        background: rgba(255, 255, 255, 0.54);
-        backdrop-filter: blur(8px);
-        box-shadow: 0 22px 60px rgba(84, 116, 166, 0.16);
-      }
-
-      .hero-image-copy p {
-        margin: 0;
-        color: #07111f;
-        font-size: clamp(18px, 1.75vw, 28px);
-        line-height: 1.34;
-        font-weight: 850;
-        letter-spacing: 0;
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
-      }
-
-      .hero-visual-caption {
-        position: absolute;
-        left: 22px;
-        right: 22px;
-        bottom: 20px;
-        display: grid;
-        gap: 10px;
-        padding: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        border-radius: 18px;
-        background: rgba(6, 10, 24, 0.68);
-        backdrop-filter: blur(14px);
-      }
-
-      .hero-visual-caption strong {
-        color: #fff;
-        font-size: 17px;
-      }
-
-      .hero-visual-caption p {
-        margin: 0;
-        color: rgba(234, 239, 255, 0.76);
-      }
-
-      .hero-flow-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .hero-flow-pills span {
-        padding: 7px 9px;
-        border-radius: 999px;
-        color: rgba(255, 255, 255, 0.92);
-        background: rgba(255, 255, 255, 0.1);
-        font-size: 13px;
-        font-weight: 850;
-      }
-
-      .product-section {
-        margin: 22px 0;
-        padding: 28px;
-        border: 1px solid rgba(145, 172, 255, 0.22);
-        border-radius: 22px;
-        background: linear-gradient(180deg, rgba(16, 28, 65, 0.82), rgba(8, 13, 31, 0.76));
-      }
-
-      .product-section > header {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        align-items: end;
-        margin-bottom: 20px;
-      }
-
-      .product-section h2 {
-        margin: 0;
-        color: #fff;
-        font-size: clamp(28px, 3vw, 44px);
-        letter-spacing: 0;
-      }
-
-      .product-section header p {
-        max-width: 720px;
-        margin: 8px 0 0;
-        color: rgba(234, 239, 255, 0.74);
-        line-height: 1.55;
-      }
-
-      .product-card-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .product-card-grid.three {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .product-card-grid.two {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .product-card,
-      .scene-card,
-      .pricing-card {
-        padding: 18px;
-        border: 1px solid rgba(151, 176, 255, 0.2);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.055);
-      }
-
-      .pricing-card {
-        display: flex;
-        min-height: 360px;
-        flex-direction: column;
-      }
-
-      .product-card span,
-      .scene-card span,
-      .pricing-card span {
-        color: #ffd991;
-        font-weight: 900;
-      }
-
-      .product-card h3,
-      .scene-card h3,
-      .pricing-card h3 {
-        margin: 9px 0 8px;
-        color: #fff;
-      }
-
-      .product-card p,
-      .scene-card p,
-      .pricing-card p,
-      .product-card li,
-      .pricing-card li {
-        color: rgba(234, 239, 255, 0.72);
-        line-height: 1.5;
-      }
-
-      .product-card p,
-      .scene-card p,
-      .pricing-card p {
-        margin: 0;
-      }
-
-      .product-card ul,
-      .pricing-card ul {
-        margin: 12px 0 0;
-        padding-left: 18px;
-      }
-
-      .pricing-card .product-small-button {
-        width: 100%;
-        margin-top: auto;
-      }
-
-      .steps-strip {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .steps-strip article {
-        padding: 16px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.055);
-        border: 1px solid rgba(151, 176, 255, 0.18);
-      }
-
-      .steps-strip strong {
-        display: block;
-        color: #fff;
-        margin: 8px 0 4px;
-      }
-
-      .trust-band {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 20px;
-        align-items: center;
-      }
-
-      @media (max-width: 1060px) {
-        .product-hero,
-        .entry-card-grid,
-        .product-card-grid,
-        .product-card-grid.three,
-        .product-card-grid.two,
-        .steps-strip,
-        .trust-band {
-          grid-template-columns: 1fr;
-        }
-
-        .product-preview-board,
-        .hero-classroom-image {
-          min-height: 360px;
-        }
-
-        .hero-image-copy {
-          left: 18px;
-          right: 18px;
-          top: 18px;
-          max-width: none;
-          padding: 14px;
-        }
-
-        .product-section > header {
-          display: block;
-        }
-      }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070817" />
+    <meta name="description" content="StoriesLens is a bilingual AI Story Coach for creators of every age. Write original stories solo or together, then turn them into books and short films." />
+    <meta property="og:title" content="StoriesLens — AI guides. You become the author." />
+    <meta property="og:description" content="A bilingual Story Coach that helps people write original stories themselves, solo or together, and bring them to life as books or films." />
+    <meta property="og:image" content="https://www.storieslens.com/assets/hero-co-create-v2.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="StoriesLens — AI guides. You become the author." />
+    <meta name="twitter:description" content="A bilingual Story Coach that helps people write original stories themselves, solo or together, and bring them to life as books or films." />
+    <meta name="twitter:image" content="https://www.storieslens.com/assets/hero-co-create-v2.png" />
+    <title>StoriesLens | Turn Inspiration Into an Original Story</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
   </head>
   <body>
-    <canvas id="star-canvas" aria-hidden="true"></canvas>
+    <a class="skip-link" href="#main">Skip to content</a>
 
-    <main class="page-shell home-product-page">
-      <header class="site-header" aria-label="StoriesLens navigation">
+    <header class="site-header" data-header>
+      <div class="nav-shell">
         <a class="brand" href="index.html" aria-label="StoriesLens home">
-          <span class="brand-mark">
-            <img src="assets/storieslens-logo.png" alt="StoriesLens logo" />
-          </span>
+          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span>
           <span>StoriesLens</span>
         </a>
 
-        <nav class="main-nav" aria-label="Primary navigation">
-          <a href="index.html">Home</a>
-          <a href="create-reading-project.html">Create</a>
-          <a href="visual-write.html">Visual Write</a>
-          <a href="teacher-dashboard.html">Teacher</a>
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="primary-navigation" data-menu-button>
+          <span></span><span></span><span></span>
+          <span class="sr-only">Open navigation</span>
+        </button>
+
+        <nav class="main-nav" id="primary-navigation" aria-label="Primary navigation" data-nav>
+          <a href="#create">Create</a>
+          <a href="#coach">How AI helps</a>
+          <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
+          <a href="teacher-dashboard.html">For educators</a>
         </nav>
 
-        <div class="header-actions">
-          <a class="top-cta" href="create-reading-project.html">
-            <span>Create from Reading Text</span>
-          </a>
-        </div>
-      </header>
-
-      <section class="product-hero" aria-label="StoriesLens classroom co-creation hero">
-        <div>
-          <span class="product-eyebrow">Classroom Co-Creation Studio</span>
-          <h1>Turn reading into writing, and writing into visual stories.</h1>
-        </div>
-
-        <div class="product-preview-board" aria-label="Visual story creation preview">
-          <img class="hero-classroom-image" src="assets/hero-classroom-creation.png" alt="Student writing that becomes vocabulary, illustrated book, movie scene, and avatar animation" />
-          <div class="hero-image-copy">
-            <p>StoriesLens helps teachers upload any reading text, align it with CCSS skills, and turn student writing into whole-class storybooks and AI movies.</p>
+        <div class="nav-actions">
+          <div class="language-switcher" aria-label="Interface language">
+            <button type="button" data-locale="en" aria-pressed="true">EN</button>
+            <button type="button" data-locale="zh" aria-pressed="false">中文</button>
           </div>
-          <div class="hero-visual-caption">
-            <strong>From one reading text to a whole-class visual story.</strong>
-            <p>Students write scenes, generate visuals, and publish a shared book or movie.</p>
-            <div class="hero-flow-pills" aria-label="Product flow">
-              <span>Reading Text</span>
-              <span>CCSS Match</span>
-              <span>Student Scenes</span>
-              <span>Class Book / Movie</span>
+          <a class="nav-cta" href="start.html">Start a story <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero section-shell" id="create">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> Bilingual Story Coach · Solo or together · Every age</p>
+          <h1>AI guides. You become the <em>author.</em></h1>
+          <p class="hero-lede">Turn a book, film, memory, or idea into an original story you write yourself—alone, with friends, or across generations—then premiere it as a book or short film.</p>
+
+          <form class="story-launchpad" data-story-launchpad novalidate>
+            <div class="launchpad-heading"><strong>What sparked your imagination?</strong><span>No account needed</span></div>
+            <div class="source-choice-row" role="group" aria-label="Choose an inspiration source">
+              <button class="is-selected" type="button" data-source-choice="book" aria-pressed="true"><span aria-hidden="true">▤</span>A book</button>
+              <button type="button" data-source-choice="movie" aria-pressed="false"><span aria-hidden="true">▶</span>A film</button>
+              <button type="button" data-source-choice="idea" aria-pressed="false"><span aria-hidden="true">✦</span>My own idea</button>
+            </div>
+            <label class="launchpad-input"><span data-source-label>Which book stayed with you?</span><input data-source-input maxlength="120" placeholder="Type the title—or describe it in your own words" /></label>
+            <div class="launchpad-footer">
+              <label><span>Story language</span><select data-launch-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+              <button type="submit">Discover my Story DNA <span aria-hidden="true">→</span></button>
+            </div>
+            <p class="launchpad-error" data-launchpad-error role="alert"></p>
+          </form>
+          <div class="hero-trust"><span>AI asks. You write.</span><span>English · 中文 · Bilingual</span><a href="start.html?mode=squad">Have a Story Code? Join →</a></div>
+        </div>
+
+        <div class="hero-stage" aria-label="A young creator writing a story with StoriesLens">
+          <div class="hero-glow"></div>
+          <img src="assets/hero-co-create-v2.png" alt="Three young creators combining their ideas into one magical shared story world" />
+          <div class="hero-image-caption">
+            <span class="caption-avatars" aria-hidden="true"><i>L</i><i>M</i><i>J</i></span>
+            <div><strong>Three creators. One shared world.</strong><small>Every contribution stays credited.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="promise-bar" aria-label="StoriesLens product promise">
+        <div class="section-shell promise-grid">
+          <div><span>01</span><strong>Inspiration</strong><small>A book, a film, or an idea of their own.</small></div>
+          <div><span>02</span><strong>Story DNA</strong><small>Discover the feeling, conflict, and structure.</small></div>
+          <div><span>03</span><strong>Original world</strong><small>New characters, rules, choices, and ending.</small></div>
+          <div><span>04</span><strong>Premiere</strong><small>Create a book, comic, trailer, or film.</small></div>
+        </div>
+      </section>
+
+      <section class="coach-section" id="coach">
+        <div class="section-shell coach-layout">
+          <div class="coach-copy">
+            <p class="eyebrow light"><span></span> Meet your Story Coach</p>
+          <h2>AI guides. The creator stays in control.</h2>
+            <p>Story Coach notices what is missing, asks one useful question at a time, and remembers the world your creators are building.</p>
+            <div class="coach-principles">
+              <div><strong>Questions before answers</strong><span>Guidance that develops the writer instead of replacing them.</span></div>
+              <div><strong>One connected world</strong><span>Characters, places, promises, and timelines stay consistent.</span></div>
+              <div><strong>Every voice belongs</strong><span>In a squad, the coach helps each creator contribute something meaningful.</span></div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section class="product-section" aria-label="Teacher and student entry points">
-        <div class="entry-card-grid">
-          <article class="entry-card teacher-entry">
-            <span>For Teachers</span>
-            <h2>For Teachers</h2>
-            <p>Create a CCSS-aligned class book or movie from any reading text.</p>
-            <ul>
-              <li>Upload reading text</li>
-              <li>Match CCSS skills</li>
-              <li>Generate scene or chapter tasks</li>
-              <li>Review student writing</li>
-              <li>Publish a class book or movie</li>
-            </ul>
-            <div class="entry-actions">
-              <a class="product-small-button primary" href="create-reading-project.html">Create from Reading Text</a>
+          <div class="coach-demo" aria-label="Example conversation with the Story Coach">
+            <div class="demo-bar">
+              <span class="coach-orb">S</span>
+              <div><strong>Story Coach</strong><small>Guiding, not ghostwriting</small></div>
+              <span class="online-dot">Live</span>
             </div>
-          </article>
-          <article class="entry-card student-entry">
-            <span>For Students</span>
-            <h2>For Students</h2>
-            <p>Join your class project or start your own visual story.</p>
-            <ul>
-              <li>Enter a class code</li>
-              <li>Write your chapter or scene</li>
-              <li>Get Glow / Grow / Next Step feedback</li>
-              <li>Generate images or videos</li>
-              <li>Submit to teacher or save your story</li>
-            </ul>
-            <div class="entry-actions">
-              <a class="product-small-button primary" href="visual-write.html?mode=assignment">Enter Class Code</a>
-              <a class="product-small-button" href="visual-write.html?mode=free">Start Free Writing</a>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="product-section" id="pricing">
-        <header>
-          <div>
-            <h2>Pricing built around publishing.</h2>
-            <p>Core value comes from class books, class movies, exports, and share links.</p>
+            <div class="story-context"><span>Scene 3 · The hidden door</span><p>“Maya opened the door and walked inside.”</p></div>
+            <div class="coach-message"><span class="coach-orb small">S</span><p>Maya makes a brave choice here. What makes opening the door difficult for her?</p></div>
+            <div class="choice-row"><button type="button">She hears a warning</button><button type="button">She promised not to</button><button type="button">My own idea</button></div>
+            <div class="authorship-meter"><span>Written by Maya</span><strong>Creator in control</strong></div>
           </div>
-        </header>
-        <div class="product-card-grid three">
-          <article class="pricing-card">
-            <span>Free</span>
-            <h3>$0</h3>
-            <ul>
-              <li>1 visual writing project / month</li>
-              <li>1 sample class book</li>
-              <li>12 image credits</li>
-              <li>Watermark included</li>
-            </ul>
-            <a class="product-small-button" href="visual-write.html">Start Free</a>
-          </article>
-          <article class="pricing-card">
-            <span>Teacher Pro</span>
-            <h3>$19 / month</h3>
-            <ul>
-              <li>20 visual writing projects</li>
-              <li>8 class books</li>
-              <li>200 image credits</li>
-              <li>24 video credits</li>
-              <li>PDF export</li>
-              <li>No watermark</li>
-              <li>Parent share links</li>
-            </ul>
-            <a class="product-small-button primary" href="teacher-dashboard.html">Upgrade to Pro</a>
-          </article>
-          <article class="pricing-card">
-            <span>Classroom Studio</span>
-            <h3>$69 / month</h3>
-            <ul>
-              <li>100 visual writing projects</li>
-              <li>30 class books</li>
-              <li>1,000 image credits</li>
-              <li>120 video credits</li>
-              <li>Multiple classes</li>
-              <li>Class movie publishing</li>
-              <li>Parent share links</li>
-              <li>Export reports</li>
-            </ul>
-            <a class="product-small-button" href="teacher-dashboard.html">Contact / Start Studio</a>
-          </article>
         </div>
       </section>
 
-      <section class="product-section trust-band" id="settings">
-        <div>
-          <h2>Designed for classroom writing.</h2>
-          <p>Teachers control student projects, submissions, and publishing. StoriesLens is designed as a creative layer for classroom reading and writing projects.</p>
+      <section class="section-shell outcomes-section">
+        <div class="section-heading centered">
+          <p class="eyebrow"><span></span> The creative payoff</p>
+          <h2>Finish the story. Then bring it to life.</h2>
         </div>
-        <a class="product-small-button primary" href="teacher-dashboard.html">Open Teacher Studio</a>
+        <div class="outcome-grid">
+          <article><img src="assets/book-spread.png" alt="An illustrated book spread" /><span>Illustrated book</span></article>
+          <article><img src="assets/showcase-block-castle.png" alt="A colorful graphic story scene" /><span>Comic story</span></article>
+          <article><img src="assets/showcase-ocean-lantern.png" alt="A cinematic ocean lantern story scene" /><span>Cinematic trailer</span></article>
+          <article><img src="assets/movie-scene.png" alt="A fantasy movie scene created from a story" /><span>AI short film</span></article>
+        </div>
       </section>
 
-      <footer class="site-footer">
-        <span>Teacher Dashboard</span>
-        <span>Upload Reading Text</span>
-        <span>Export Class Book</span>
-        <p>© StoriesLens · Classroom Co-Creation Studio</p>
-      </footer>
+      <section class="section-shell steps-section" id="how-it-works">
+        <div class="section-heading">
+          <p class="eyebrow"><span></span> How it works</p>
+          <h2>From “what if?” to premiere.</h2>
+        </div>
+        <ol class="steps-grid">
+          <li><span>01</span><strong>Start</strong><p>Choose Solo Story or create an invite-only Story Squad.</p></li>
+          <li><span>02</span><strong>Build</strong><p>Create the characters, setting, and rules of your world.</p></li>
+          <li><span>03</span><strong>Write</strong><p>Draft each scene while Story Coach asks the next helpful question.</p></li>
+          <li><span>04</span><strong>Premiere</strong><p>Turn the finished story into a book, comic, trailer, or short film.</p></li>
+        </ol>
+      </section>
+
+      <section class="family-section">
+        <div class="section-shell family-layout">
+          <div><p class="eyebrow light"><span></span> Open to every age · Extra care for younger creators</p><h2>Creative freedom, with the right guardrails.</h2></div>
+          <div class="family-points">
+            <p><strong>Private by default</strong><span>Stories and squads begin invite-only.</span></p>
+            <p><strong>Age-aware safety</strong><span>Adults create independently; younger creators can work with parent or educator oversight.</span></p>
+            <p><strong>No open direct messages</strong><span>Collaboration stays inside the story project.</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-shell pricing-section" id="pricing">
+        <div class="section-heading centered">
+          <p class="eyebrow"><span></span> Founding beta pricing</p>
+          <h2>Writing stays open. Publishing pays for production.</h2>
+          <p>Start creating free. Pay only when the story is ready to become a finished keepsake—no subscription required.</p>
+        </div>
+
+        <div class="pricing-grid">
+          <article class="price-card">
+            <span class="price-label">Explore</span><h3><strong>$0</strong></h3><p>For trying the writing experience.</p>
+            <ul><li>1 active Solo Story</li><li>Basic Story Coach</li><li>Join an invite-only squad</li><li>Private story preview</li></ul>
+            <a class="button button-secondary" href="start.html?mode=solo">Start free</a>
+          </article>
+
+          <article class="price-card featured">
+            <div class="popular">Best first purchase</div>
+            <span class="price-label">Story Pass</span><h3><strong>$19</strong><small> one story · one-time</small></h3><p>For finishing a Solo Story or an invite-only squad project.</p>
+            <ul><li>Full Story Coach for one project</li><li>Invite up to 5 collaborators</li><li>12 visual scene generations</li><li>Illustrated book or comic layout</li><li>Downloadable Word and print edition</li></ul>
+            <a class="button button-primary" href="checkout.html?offer=story-pass">Get one Story Pass · $19</a>
+            <span class="purchase-reassurance">Creator or parent checkout · One-time payment</span>
+          </article>
+
+          <article class="price-card">
+            <span class="price-label">Guided Story Squad</span><h3><strong>$49</strong><small> seat deposit</small></h3><p>For creators who want a real team and a finished premiere. The deposit applies to the $129 total.</p>
+            <ul><li>3 guided creation sessions</li><li>5–6 creator cohort</li><li>Shared story world and full coaching</li><li>Digital book plus 30–60 sec trailer</li><li>Private family premiere</li></ul>
+            <a class="button button-secondary" href="checkout.html?offer=guided-squad">Reserve a seat · $49</a>
+            <span class="purchase-reassurance">Parent checkout · Applied to $129 total</span>
+          </article>
+        </div>
+        <p class="pricing-note"><strong>Optional Movie Pack:</strong> add a finished 30-second film for $29 or a 60-second premiere for $49. Secure checkout is handled by Stripe; StoriesLens never sees your card details.</p>
+      </section>
+
+      <section class="educator-strip">
+        <div class="section-shell educator-layout">
+          <div><span class="educator-label">For educators</span><h2>Turn a reading into a world the whole class builds together.</h2><p>Teacher controls, structured feedback, reading-to-writing projects, and standards-aligned learning evidence live in the classroom experience—not in the child-facing headline.</p></div>
+          <a class="button button-light" href="create-reading-project.html">Explore the classroom studio <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <section class="final-cta section-shell" id="start">
+        <p class="eyebrow"><span></span> The next story is waiting</p><h2>One imagination is enough to begin.</h2><p>Start alone. Invite others when the world is ready to grow.</p>
+        <a class="button button-primary" href="start.html?mode=solo">Start my story <span aria-hidden="true">→</span></a>
+      </section>
     </main>
 
-    <script src="script.js"></script>
+    <footer class="site-footer">
+      <div class="section-shell footer-grid">
+        <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span><span>StoriesLens</span></a>
+        <p>AI guides. Human creators write. Stories come alive.</p>
+        <nav aria-label="Footer navigation"><a href="#create">Create</a><a href="#pricing">Pricing</a><a href="trust.html">Family trust</a><a href="teacher-dashboard.html">For educators</a></nav>
+        <small>© <span data-year></span> StoriesLens. Built for creators of every age.</small>
+      </div>
+    </footer>
+
+    <script src="safety-client.js"></script>
+    <script src="analytics.js"></script>
+    <script src="home.js"></script>
+    <script src="i18n.js"></script>
   </body>
 </html>

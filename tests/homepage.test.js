@@ -16,8 +16,16 @@ const htmlFiles = [
   "teacher-project.html",
   "project-output.html",
   "visual-read.html",
-  "group-write.html"
-  ,"group-project-studio.html"
+  "group-write.html",
+  "group-project-studio.html",
+  "start.html",
+  "story-dna.html",
+  "trust.html",
+  "founder-lab.html",
+  "beta-interest.html",
+  "yc-demo.html",
+  "solo-premiere.html",
+  "checkout.html"
 ].filter((file) => fs.existsSync(path.join(root, file)));
 
 const htmlByFile = Object.fromEntries(htmlFiles.map((file) => [file, read(file)]));
@@ -28,6 +36,8 @@ const assignHtml = htmlByFile["create-reading-assign.html"];
 const publishHtml = htmlByFile["create-reading-publish.html"];
 const visualWriteHtml = htmlByFile["visual-write.html"];
 const groupProjectStudioHtml = htmlByFile["group-project-studio.html"];
+const startHtml = htmlByFile["start.html"];
+const storyDnaHtml = htmlByFile["story-dna.html"];
 const teacherHtml = htmlByFile["teacher-dashboard.html"];
 const teacherProjectHtml = htmlByFile["teacher-project.html"];
 const projectOutputHtml = htmlByFile["project-output.html"];
@@ -37,6 +47,15 @@ const scriptJs = read("script.js");
 const envExample = read(".env.example");
 const ccssStandards = JSON.parse(read("resources/ccss/ela-standards.json"));
 const createProjectFlowJs = read("create-project-flow.js");
+const analyticsJs = read("analytics.js");
+const trustHtml = htmlByFile["trust.html"];
+const founderLabHtml = htmlByFile["founder-lab.html"];
+const betaInterestHtml = htmlByFile["beta-interest.html"];
+const ycDemoHtml = htmlByFile["yc-demo.html"];
+const soloPremiereHtml = htmlByFile["solo-premiere.html"];
+const checkoutHtml = htmlByFile["checkout.html"];
+const checkoutJs = read("checkout.js");
+const safetyClientJs = read("safety-client.js");
 
 [
   [createHtml, "Upload", "create-reading-review.html"],
@@ -150,10 +169,21 @@ assert(!createHtml.includes("scrollIntoView"), "Upload should not scroll to late
 ].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Movie Editor should include: ${token}`));
 
 assert(serverJs.includes("/api/export-book-docx"), "Static server should export a real Word document");
+assert(serverJs.includes("/api/checkout-link"), "Static server should expose an allowlisted checkout-link route");
+assert(serverJs.includes("REQUIRE_EXTERNAL_MEDIA_MODERATION"), "Media generation should fail closed behind external moderation");
+assert(serverJs.includes("SAFE_VIDEO_GENERATION_ENABLED"), "Video generation should remain gated until frame review exists");
+assert(envExample.includes("OPENAI_MODERATION_MODEL=omni-moderation-latest"), "Environment example should configure the moderation model");
+assert(startHtml.includes("data-age-group"), "Creator setup should collect an under-18 versus adult age group");
+assert(startHtml.includes("data-supervision-confirm"), "Under-18 setup should require adult supervision confirmation");
+assert(safetyClientJs.includes("StoriesLensSafety"), "Client flows should provide immediate safe-content feedback");
+assert(serverJs.includes("buy.stripe.com"), "Checkout should only redirect to a trusted Stripe host");
+assert(envExample.includes("STRIPE_STORY_PASS_URL="), "Environment example should document the Story Pass Payment Link");
 
 assert.strictEqual(packageJson.scripts?.start, "node server.js", "Railway/Railpack should have a start command");
 assert.strictEqual(packageJson.main, "server.js", "Package entry should point to the static server");
 assert(serverJs.includes("process.env.PORT"), "Static server should bind to Railway's PORT environment variable");
+assert(serverJs.includes('"X-Content-Type-Options", "nosniff"'), "Static server should prevent MIME sniffing");
+assert(serverJs.includes('"Permissions-Policy", "camera=(), geolocation=(), payment=(), usb=()"'), "Static server should disable unneeded sensitive browser permissions");
 assert(serverJs.includes("/api/generate-image"), "Static server should keep the image generation proxy route");
 assert(serverJs.includes("ImageProvider"), "Image generation should use a switchable provider abstraction");
 assert(serverJs.includes("OPENROUTER_IMAGE_API_URL"), "Image generation should support the OpenRouter image endpoint through environment config");
@@ -207,6 +237,7 @@ assert(scriptJs.includes("estimateClassMovie"), "Quota model should estimate cla
 [
   "assets/storieslens-logo.png",
   "assets/hero-student.png",
+  "assets/hero-co-create-v2.png",
   "assets/hero-classroom-creation.png",
   "assets/storybook-portal-book.png",
   "assets/showcase-block-castle.png"
@@ -227,45 +258,149 @@ assert(ccssStandards.some((standard) => standard.code === "W.4.3"), "CCSS librar
 assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCSS standards should include keyword arrays");
 
 [
-  "Turn reading into writing, and writing into visual stories.",
-  "Classroom Co-Creation Studio",
-  "Create from Reading Text",
-  "From one reading text to a whole-class visual story.",
-  "Students write scenes, generate visuals, and publish a shared book or movie.",
-  "For Teachers",
-  "Create a CCSS-aligned class book or movie from any reading text.",
-  "Upload reading text",
-  "Generate scene or chapter tasks",
-  "For Students",
-  "Join your class project or start your own visual story.",
-  "Enter a class code",
-  "Submit to teacher or save your story",
-  "visual-write.html?mode=assignment",
-  "visual-write.html?mode=free",
-  "Enter Class Code",
-  "Start Free Writing",
-  "Pricing built around publishing.",
-  "Core value comes from class books, class movies, exports, and share links.",
-  "1 visual writing project / month",
-  "12 image credits",
-  "$19 / month",
-  "200 image credits",
-  "24 video credits",
-  "$69 / month",
-  "1,000 image credits",
-  "120 video credits",
-  "Start Free",
-  "Upgrade to Pro",
-  "Contact / Start Studio",
-  "Designed for classroom writing."
+  "AI guides. You become the",
+  "author.",
+  "Bilingual Story Coach · Solo or together · Every age",
+  "What sparked your imagination?",
+  "A book",
+  "A film",
+  "My own idea",
+  "Discover my Story DNA",
+  "AI asks. You write.",
+  "English · 中文 · Bilingual",
+  "Inspiration",
+  "Story DNA",
+  "Original world",
+  "Questions before answers",
+  "AI guides. The creator stays in control.",
+  "The creative payoff",
+  "Illustrated book",
+  "Comic story",
+  "Cinematic trailer",
+  "AI short film",
+  "Open to every age · Extra care for younger creators",
+  "Private by default",
+  "Age-aware safety",
+  "No open direct messages",
+  "Founding beta pricing",
+  "Story Pass",
+  "$19",
+  "Guided Story Squad",
+  "$49",
+  "Optional Movie Pack:",
+  "For educators",
+  "Turn a reading into a world the whole class builds together.",
+  "start.html?mode=solo",
+  "start.html?mode=squad",
+  "create-reading-project.html",
+  'src="home.js"',
+  'src="i18n.js"',
+  'data-locale="en"',
+  'data-locale="zh"',
+  'href="home.css"'
 ].forEach((token) => {
   assert(indexHtml.includes(token), `Homepage should include: ${token}`);
 });
 
-assert(!indexHtml.includes('id="class-movie"'), "Homepage should not include the standalone Class Movie section");
-assert(!indexHtml.includes("Turn student writing into a class movie."), "Homepage should not include the removed Class Movie section title");
-assert(!indexHtml.includes('id="works"'), "Homepage should not include the standalone Works section");
-assert(!indexHtml.includes("Works become class projects."), "Homepage should not include the removed Works section title");
+[
+  "How do you want to create?",
+  "Solo Story",
+  "Story Squad",
+  "Invent a world",
+  "Tell my story",
+  "Start from a picture",
+  "Start a new squad",
+  "Join with a code",
+  "Coach style",
+  "Display name",
+  "Story language",
+  "Bilingual · English + 中文",
+  "Your story spark",
+  "data-step-current",
+  "data-step-next",
+  "data-step-back",
+  'src="start.js"',
+  'href="start.css"'
+].forEach((token) => assert(startHtml?.includes(token), `Start page should include: ${token}`));
+
+[
+  "Discover your Story DNA",
+  "What stayed with you most?",
+  "A character’s choice",
+  "The world",
+  "The feeling",
+  "The surprise",
+  "If you could change one thing, what would it be?",
+  "A completely new setting",
+  "A different hero goal",
+  "One impossible rule",
+  "Your Story DNA is ready.",
+  "Create it on my own",
+  "Build it with others",
+  'src="story-dna.js"',
+  'href="story-dna.css"'
+].forEach((token) => assert(storyDnaHtml?.includes(token), `Story DNA experience should include: ${token}`));
+
+assert(visualWriteHtml.includes('src="i18n.js"'), "Story Studio should load the bilingual interface controller");
+assert(visualWriteHtml.includes("storyLanguage: activeStoryLanguage"), "Story Studio should send the selected story language to AI coaching");
+assert(visualWriteHtml.includes("data-live-story-language"), "Story Studio should let the creator change writing language without changing interface language");
+assert(visualWriteHtml.includes("let activeStoryLanguage"), "Story Studio language should be changeable during creation");
+assert(storyDnaHtml.includes("data-dna-story-language"), "Story DNA should keep writing-language choice visible");
+assert(startHtml.includes('option value="zh">中文</option>'), "Creator setup should support Chinese story writing");
+assert(startHtml.includes('option value="bilingual">Bilingual · English + 中文</option>'), "Creator setup should support bilingual story writing");
+
+[
+  "Your Story DNA",
+  "Story Coach asks",
+  "Ask my next question",
+  'data-writing-tool="begin"',
+  "storyDnaContext",
+  "getStarterQuestion",
+  "Story Coach asks and suggests. It never inserts story sentences into your writing."
+].forEach((token) => assert(visualWriteHtml.includes(token), `Story Studio should preserve child authorship and Story DNA context: ${token}`));
+assert(!visualWriteHtml.includes("data-use-suggestion"), "Solo Story Coach should not insert AI sentences into the child's draft");
+assert(serverJs.includes('begin: "Ask exactly one vivid question'), "Writing assistant should support blank-page coaching without ghostwriting");
+assert(serverJs.includes("Student-created Story DNA"), "Writing assistant should receive the child's Story DNA context");
+
+[
+  "Your squad begins with one shared Story DNA",
+  "data-group-dna-context",
+  'params.get("demo")!=="1"',
+  "storyLanguage:project?.storyLanguage",
+  "Idea to consider"
+].forEach((token) => assert(groupProjectStudioHtml.includes(token), `Story Squad should inherit an original, real project context: ${token}`));
+assert(groupProjectStudioHtml.includes("data-group-story-language"), "Story Squad should expose a project-level writing language");
+assert(!groupProjectStudioHtml.includes("data-apply-group-suggestion"), "Story Squad coach should not insert AI prose into a creator's chapter");
+
+[
+  "story_dna_started",
+  "story_dna_completed",
+  "creator_setup_completed",
+  "first_sentence_completed",
+  "visual_generation_requested"
+].forEach((eventName) => assert([indexHtml, read("home.js"), read("story-dna.js"), read("start.js"), visualWriteHtml].join("\n").includes(eventName), `Core funnel should track ${eventName}`));
+assert(analyticsJs.includes("MAX_EVENTS = 500"), "Local analytics should cap retained events");
+assert(!analyticsJs.includes("studentDraft"), "Local product analytics should never collect story drafts");
+assert(trustHtml.includes("AI asks; the human writes"), "Creator trust page should state the authorship boundary");
+assert(trustHtml.includes("not a claim of legal certification"), "Family trust page should avoid fabricated compliance claims");
+assert(founderLabHtml.includes("Local validation only"), "Founder dashboard should label local events as non-traction");
+assert(founderLabHtml.includes("Three experiments before building more"), "Founder dashboard should prioritize evidence-building experiments");
+assert(betaInterestHtml.includes("it does not create an account or charge money"), "Pricing test should clearly disclose that it is not a live checkout");
+assert(betaInterestHtml.includes("pricing_intent_recorded"), "Pricing test should record an explicit, non-revenue intent event");
+assert(indexHtml.includes("checkout.html?offer=story-pass"), "Homepage should lead the Story Pass offer to parent checkout");
+assert(checkoutHtml.includes("Creator or guardian checkout"), "Checkout should support adult creators and guardian purchases for minors");
+assert(checkoutHtml.includes("No subscription"), "Checkout should clarify that Story Pass is not a subscription");
+assert(checkoutJs.includes('fetch("/api/checkout-link"'), "Checkout should request a server-approved Payment Link");
+assert(ycDemoHtml.includes("90-second founder demo"), "Founder demo should provide a timed pitch route");
+assert(ycDemoHtml.includes("fictional demonstration data"), "Founder demo should clearly disclose fictional demo data");
+assert(ycDemoHtml.includes("founder_demo_started"), "Founder demo should track demo activation separately from user traction");
+assert(visualWriteHtml.includes('data-student-action="premiere"'), "Solo studio should lead a finished draft to a book or film preview");
+assert(soloPremiereHtml.includes("AI guided, the creator authored."), "Solo premiere should preserve creator attribution");
+assert(soloPremiereHtml.includes("storieslens_free_generated_video"), "Solo premiere should render a finished scene video when available");
+assert(soloPremiereHtml.includes("Adults may purchase directly"), "Solo premiere should support adults while reserving minor purchases for guardians");
+
+assert(!indexHtml.includes("CCSS-aligned"), "Consumer homepage should not lead with CCSS language");
+assert(!indexHtml.includes("Meet strangers"), "Consumer homepage should not promise unsafe open stranger matching");
 
 const teacherFlowHtml = [createHtml, reviewHtml, assignHtml, publishHtml, createProjectFlowJs].join("\n");
 [
@@ -332,15 +467,15 @@ assert(!createHtml.includes("Recommended focus: narrative writing"), "Create pag
 });
 
 [
-  "Visual Write",
-  "Start your own visual story.",
-  "Write your own story, get feedback, and turn it into images or video.",
-  "Let's write and create together.",
+  "Story Studio",
+  "Write something only you could tell.",
+  "Story Coach helps without taking over.",
+  "Build one world together.",
   "Class Code · MAP-4832",
   "Join Project",
-  "Free Creation",
-  "Start Free Writing",
-  "Create Together",
+  "Solo Story",
+  "Start Solo Story",
+  "Story Squad",
   "Join Teacher Project",
   "Create Friend Group",
   "Join Friend Group",
@@ -378,14 +513,13 @@ assert(!createHtml.includes("Recommended focus: narrative writing"), "Create pag
   "Grow",
   "Next Step",
   "Submit to Teacher",
-  "Save Story",
-  "Write your part. Build one story together.",
+  "Save now",
+  "Write on your own or build one world together.",
   "Student Name",
   "18 students writing",
   "Class Progress",
   "You are here",
-  "Complete all 5 scenes to publish the class movie",
-  "Start Free Writing"
+  "Complete all 5 scenes to publish the class movie"
 ].forEach((token) => {
   assert(visualWriteHtml.includes(token), `Visual Write page should include: ${token}`);
 });

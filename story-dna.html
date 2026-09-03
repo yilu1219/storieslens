@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070817" />
+    <meta name="description" content="Discover the Story DNA inside an inspiration, then transform it into an original story world." />
+    <title>Discover Your Story DNA | StoriesLens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="story-dna.css" />
+  </head>
+  <body class="dna-page">
+    <a class="skip-link" href="#dna-main">Skip to Story DNA</a>
+    <header class="dna-header">
+      <div class="nav-shell">
+        <a class="brand" href="index.html" aria-label="StoriesLens home"><span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span><span>StoriesLens</span></a>
+        <div class="dna-header-actions">
+          <label class="dna-story-language"><span>Story language</span><select data-dna-story-language aria-label="Story language"><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+          <div class="language-switcher" aria-label="Interface language"><button type="button" data-locale="en" aria-pressed="true">EN</button><button type="button" data-locale="zh" aria-pressed="false">中文</button></div>
+          <a class="dna-exit" href="index.html">← Change inspiration</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="dna-main" id="dna-main">
+      <section class="dna-workbench" aria-labelledby="dna-title">
+        <div class="dna-progress">
+          <div><span data-dna-step-label>Find the spark</span><strong><span data-dna-step>1</span> of 3</strong></div>
+          <span><i data-dna-progress></i></span>
+        </div>
+        <div class="inspiration-chip"><span data-source-type>A book</span><strong data-inspiration-title>Your inspiration</strong></div>
+
+        <div data-dna-flow>
+          <p class="eyebrow"><span></span> Discover your Story DNA</p>
+          <h1 id="dna-title" data-dna-title tabindex="-1">What stayed with you most?</h1>
+          <p class="dna-lede" data-dna-lede>Choose the part that keeps returning to your imagination.</p>
+
+          <section class="dna-step" data-dna-panel="1">
+            <div class="dna-choice-grid">
+              <button type="button" data-memory="character"><span>01</span><strong>A character’s choice</strong><small>Something brave, difficult, or surprising</small></button>
+              <button type="button" data-memory="world"><span>02</span><strong>The world</strong><small>A place or rule I wanted to explore</small></button>
+              <button type="button" data-memory="feeling"><span>03</span><strong>The feeling</strong><small>Wonder, tension, warmth, or courage</small></button>
+              <button type="button" data-memory="surprise"><span>04</span><strong>The surprise</strong><small>A reveal I did not see coming</small></button>
+            </div>
+          </section>
+
+          <section class="dna-step" data-dna-panel="2" hidden>
+            <label class="dna-text-answer"><span>If you could change one thing, what would it be?</span><textarea data-change-answer rows="5" maxlength="280" placeholder="I would change the ending so the hero has to trust someone they once feared..."></textarea><small>Your answer becomes the first original decision in your new story.</small></label>
+          </section>
+
+          <section class="dna-step" data-dna-panel="3" hidden>
+            <div class="dna-choice-grid three-up">
+              <button type="button" data-shift="setting"><span>01</span><strong>A completely new setting</strong><small>Move the story engine somewhere unexpected</small></button>
+              <button type="button" data-shift="goal"><span>02</span><strong>A different hero goal</strong><small>Give your hero something new to fight for</small></button>
+              <button type="button" data-shift="rule"><span>03</span><strong>One impossible rule</strong><small>Change how your original world works</small></button>
+            </div>
+          </section>
+
+          <p class="dna-error" data-dna-error role="alert"></p>
+          <div class="dna-actions"><button class="dna-back" type="button" data-dna-back hidden>← Back</button><button class="dna-next" type="button" data-dna-next>Continue →</button></div>
+        </div>
+
+        <section class="dna-result" data-dna-result hidden>
+          <p class="eyebrow"><span></span> Your original starting point</p>
+          <h1>Your Story DNA is ready.</h1>
+          <p>You did not copy a story. You discovered what moved you—and made the first decisions for a new one.</p>
+          <div class="result-dna-grid"><div><span>What stayed</span><strong data-result-memory></strong></div><div><span>Your change</span><strong data-result-change></strong></div><div><span>Originality shift</span><strong data-result-shift></strong></div></div>
+          <h2>How do you want to create it?</h2>
+          <div class="result-paths"><a data-result-solo href="start.html?mode=solo"><small>Solo Story</small><strong>Create it on my own</strong><span>→</span></a><a data-result-squad href="start.html?mode=squad"><small>Story Squad</small><strong>Build it with others</strong><span>→</span></a></div>
+        </section>
+      </section>
+
+      <aside class="dna-preview" aria-label="Live Story DNA preview">
+        <div class="dna-orb" aria-hidden="true">DNA</div>
+        <p>STORY DNA · LIVE PREVIEW</p>
+        <h2>The inspiration is only the spark. These choices make the next story yours.</h2>
+        <div class="preview-stack">
+          <div class="is-ready"><span>Inspiration</span><strong data-preview-inspiration>Your inspiration</strong></div>
+          <div><span>What stayed with you</span><strong data-preview-memory>Waiting for your choice</strong></div>
+          <div><span>Your first change</span><strong data-preview-change>Waiting for your idea</strong></div>
+          <div><span>Originality shift</span><strong data-preview-shift>Waiting for your twist</strong></div>
+        </div>
+        <small>StoriesLens uses inspiration to ask questions—not to copy characters, text, or an author’s style.</small>
+      </aside>
+    </main>
+
+    <script src="safety-client.js"></script>
+    <script src="i18n.js"></script>
+    <script src="analytics.js"></script>
+    <script src="story-dna.js"></script>
+  </body>
+</html>

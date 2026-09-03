@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = require("docx");
+const { checkImageSafety, checkTextSafety } = require("./content-safety");
 
 const root = __dirname;
 
@@ -42,6 +43,83 @@ function loadLocalEnv() {
 loadLocalEnv();
 
 const port = Number(process.env.PORT || 3000);
+
+class SafetyPolicyError extends Error {
+  constructor(message, statusCode = 422) {
+    super(message);
+    this.code = "CONTENT_POLICY_BLOCKED";
+    this.statusCode = statusCode;
+  }
+}
+
+async function enforceTextSafety(text, { media = false } = {}) {
+  const requireExternal = media
+    ? process.env.REQUIRE_EXTERNAL_MEDIA_MODERATION !== "false"
+    : process.env.REQUIRE_EXTERNAL_TEXT_MODERATION !== "false";
+  const result = await checkTextSafety(text, { requireExternal });
+  if (result.unavailable) {
+    throw new SafetyPolicyError("Media generation is paused because the safety review service is unavailable.", 503);
+  }
+  if (!result.safe) {
+    throw new SafetyPolicyError("This request cannot be used because it may contain unsafe or age-inappropriate content.");
+  }
+}
+
+async function enforceImageSafety(imageUrl) {
+  const requireExternal = process.env.REQUIRE_EXTERNAL_MEDIA_MODERATION !== "false";
+  const reviewableImage = /^https:\/\//i.test(String(imageUrl || "")) ? imageUrl : resolveLocalImageDataUrl(imageUrl);
+  const result = await checkImageSafety(reviewableImage, { requireExternal });
+  if (result.unavailable) {
+    throw new SafetyPolicyError("The generated image could not complete its safety review, so it was not released.", 503);
+  }
+  if (!result.safe) {
+    throw new SafetyPolicyError("The generated image did not pass the StoriesLens safe-content review.");
+  }
+}
+
+function discardUnsafeLocalImage(imageUrl) {
+  const value = String(imageUrl || "");
+  if (!value.startsWith("/public/generated/")) return;
+  const filePath = resolveRequestPath(value);
+  const generatedRoot = path.join(root, "public", "generated");
+  if (filePath?.startsWith(generatedRoot) && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}
+
+const checkoutOffers = {
+  "story-pass": {
+    name: "Story Pass",
+    price: "$19",
+    envKey: "STRIPE_STORY_PASS_URL",
+    fallbackUrl: "/beta-interest.html?offer=story-pass"
+  },
+  "guided-squad": {
+    name: "Guided Story Squad seat deposit",
+    price: "$49",
+    envKey: "STRIPE_GUIDED_SQUAD_URL",
+    fallbackUrl: "/beta-interest.html?offer=guided-squad"
+  },
+  "movie-30": {
+    name: "30-second Movie Pack",
+    price: "$29",
+    envKey: "STRIPE_MOVIE_30_URL",
+    fallbackUrl: "/beta-interest.html?offer=movie-30"
+  },
+  "movie-60": {
+    name: "60-second Movie Pack",
+    price: "$49",
+    envKey: "STRIPE_MOVIE_60_URL",
+    fallbackUrl: "/beta-interest.html?offer=movie-60"
+  }
+};
+
+function isTrustedStripeCheckoutUrl(value) {
+  try {
+    const checkoutUrl = new URL(String(value || ""));
+    return checkoutUrl.protocol === "https:" && ["buy.stripe.com", "checkout.stripe.com"].includes(checkoutUrl.hostname);
+  } catch {
+    return false;
+  }
+}
 
 function resolveRequestPath(urlPathname) {
   const decodedPath = decodeURIComponent(urlPathname);
@@ -100,6 +178,40 @@ function readJsonBody(request) {
 
     request.on("error", reject);
   });
+}
+
+async function handleCheckoutLink(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(request);
+    const offerId = String(body.offer || "");
+    const offer = checkoutOffers[offerId];
+    if (!offer) {
+      sendJson(response, 400, { error: "Unknown offer" });
+      return;
+    }
+
+    const checkoutUrl = process.env[offer.envKey] || "";
+    if (!isTrustedStripeCheckoutUrl(checkoutUrl)) {
+      sendJson(response, 503, {
+        error: "Secure checkout is not connected yet.",
+        offer: { id: offerId, name: offer.name, price: offer.price },
+        fallbackUrl: offer.fallbackUrl
+      });
+      return;
+    }
+
+    sendJson(response, 200, {
+      checkoutUrl,
+      offer: { id: offerId, name: offer.name, price: offer.price }
+    });
+  } catch (error) {
+    sendJson(response, 400, { error: error.message || "Checkout request failed" });
+  }
 }
 
 async function loadDocumentImage(imageUrl) {
@@ -266,7 +378,7 @@ function buildVideoPrompt(body) {
   const studentWriting = String(body.studentWriting || body.draft || "").trim();
   const mood = String(body.mood || "warm and mysterious").trim();
   return [
-    customPrompt || `Animate this children's story scene: ${studentWriting}`,
+    customPrompt || `Animate this story scene: ${studentWriting}`,
     `Mood: ${mood}.`,
     "Preserve the source image's characters, faces, age, clothing, hairstyle, proportions, color palette, and illustration style exactly.",
     "Add one clear character action, subtle environmental movement, and a gentle cinematic camera move.",
@@ -297,6 +409,11 @@ async function handleGenerateVideo(request, response) {
 
   try {
     const body = await readJsonBody(request);
+    if (process.env.SAFE_VIDEO_GENERATION_ENABLED !== "true") {
+      sendJson(response, 503, { error: "Video generation remains disabled until output-frame safety review is configured." });
+      return;
+    }
+    await enforceTextSafety(buildVideoPrompt(body), { media: true });
     const config = getVideoConfig();
     if (!config.openRouterApiKey) {
       sendJson(response, 501, { error: "Video generation is not configured yet." });
@@ -304,6 +421,7 @@ async function handleGenerateVideo(request, response) {
     }
 
     const sourceImage = resolveLocalImageDataUrl(body.imageUrl);
+    await enforceImageSafety(sourceImage);
     const payload = {
       model: body.model || config.model,
       prompt: buildVideoPrompt(body),
@@ -347,8 +465,8 @@ async function handleGenerateVideo(request, response) {
     });
   } catch (error) {
     const message = error.message || "The video request could not be started.";
-    const statusCode = message.includes("Generate an image") || message.includes("source image") ? 400 : 500;
-    sendJson(response, statusCode, { error: message });
+    const statusCode = error.statusCode || (message.includes("Generate an image") || message.includes("source image") ? 400 : 500);
+    sendJson(response, statusCode, { code: error.code || "VIDEO_GENERATION_FAILED", error: message });
   }
 }
 
@@ -629,6 +747,12 @@ async function runImageTask(task) {
 
   try {
     const result = await provider.generate(task.imageRequest);
+    try {
+      await enforceImageSafety(result.imageUrl);
+    } catch (error) {
+      discardUnsafeLocalImage(result.imageUrl);
+      throw error;
+    }
     task.status = "COMPLETED";
     task.imageUrl = result.imageUrl;
     task.downloadUrl = result.downloadUrl;
@@ -654,7 +778,14 @@ async function handleGenerateImage(request, response) {
     const body = await readJsonBody(request);
     const provider = createImageProvider();
     const imageRequest = createImageGenerationRequest(body);
+    await enforceTextSafety(imageRequest.prompt, { media: true });
     const result = await provider.generate(imageRequest);
+    try {
+      await enforceImageSafety(result.imageUrl);
+    } catch (error) {
+      discardUnsafeLocalImage(result.imageUrl);
+      throw error;
+    }
 
     sendJson(response, 200, {
       imageUrl: result.imageUrl,
@@ -663,7 +794,7 @@ async function handleGenerateImage(request, response) {
       status: "COMPLETED"
     });
   } catch (error) {
-    const statusCode = String(error.message || "").includes("OPENROUTER_API_KEY") ? 501 : 500;
+    const statusCode = error.statusCode || (String(error.message || "").includes("OPENROUTER_API_KEY") ? 501 : 500);
     sendJson(response, statusCode, { error: error.message || "Image generation failed" });
   }
 }
@@ -683,6 +814,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
       submissionId: body.submissionId || "submission",
       assetId: `task-${taskId}`
     });
+    await enforceTextSafety(imageRequest.prompt, { media: true });
     const task = {
       taskId,
       status: "PENDING",
@@ -701,7 +833,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
 
     sendJson(response, 202, { taskId, status: "PENDING" });
   } catch (error) {
-    sendJson(response, 400, { error: error.message || "Image task could not be created" });
+    sendJson(response, error.statusCode || 400, { code: error.code || "IMAGE_TASK_FAILED", error: error.message || "Image task could not be created" });
   }
 }
 
@@ -748,18 +880,27 @@ async function handleAIReport(request, response) {
       sendJson(response, 400, { error: "Student draft is required" });
       return;
     }
+    await enforceTextSafety([studentDraft, body.prompt, body.ccssSkill].filter(Boolean).join("\n"));
 
     const grade = String(body.grade || "3");
     const customPrompt = String(body.prompt || "").trim();
     const avatarModel = String(body.avatarModel || "Ivy Mentor");
     const ccssSkill = String(body.ccssSkill || "Narrative Writing");
+    const storyLanguage = ["zh", "bilingual"].includes(body.storyLanguage) ? body.storyLanguage : "en";
+    const languageInstruction = storyLanguage === "zh"
+      ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
+      : storyLanguage === "bilingual"
+        ? "Respond bilingually: concise English first, followed by clear Simplified Chinese."
+        : "Respond in clear English appropriate to the requested creator level.";
     const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
     const model = body.model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
     const systemPrompt = [
-      "You are Ivy, the StoriesLens AI Report tutor for K12 English writing.",
-      "Give kind, specific, classroom-safe feedback for a student.",
-      "Use short sentences and do not rewrite the whole essay for the child.",
+      "You are Ivy, the StoriesLens feedback coach for creators of any age.",
+      languageInstruction,
+      "Give kind, specific feedback that matches the creator's requested level.",
+      "Use clear sentences and do not rewrite the whole draft for the creator.",
+      "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Return strict JSON with keys: overall, glow, grow, nextStep, ccssNotes, sentenceComments, videoScript.",
       "ccssNotes must be an array of objects with skill, rating, evidence, and suggestion.",
       "sentenceComments must be an array of objects with quote and comment.",
@@ -804,6 +945,7 @@ async function handleAIReport(request, response) {
     }
 
     const content = upstreamData?.choices?.[0]?.message?.content || "{}";
+    await enforceTextSafety(content);
     let report;
     try {
       report = JSON.parse(content);
@@ -816,7 +958,7 @@ async function handleAIReport(request, response) {
       usage: upstreamData.usage || null
     });
   } catch (error) {
-    sendJson(response, 500, { error: error.message || "AI report failed" });
+    sendJson(response, error.statusCode || 500, { code: error.code || "AI_REPORT_FAILED", error: error.message || "AI report failed" });
   }
 }
 
@@ -835,11 +977,24 @@ async function handleWritingAssistant(request, response) {
     const draft = String(body.studentDraft || "").trim();
     const selectedText = String(body.selectedText || "").trim();
     const action = String(body.action || "hint");
-    if (!draft) {
+    const storyDnaContext = String(body.storyDnaContext || "").trim();
+    const inspiration = String(body.inspiration || "").trim();
+    const storyLanguage = ["zh", "bilingual"].includes(body.storyLanguage) ? body.storyLanguage : "en";
+    const languageInstruction = storyLanguage === "zh"
+      ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
+      : storyLanguage === "bilingual"
+        ? "Respond bilingually: concise English first, followed by clear Simplified Chinese."
+        : "Respond in clear English appropriate to the requested creator level.";
+    if (!draft && action !== "begin") {
       sendJson(response, 400, { error: "Write at least one sentence first." });
       return;
     }
+    if (!draft && action === "begin" && !storyDnaContext && !inspiration) {
+      sendJson(response, 400, { error: "Add a story idea first." });
+      return;
+    }
     const actionInstructions = {
+      begin: "Ask exactly one vivid question that helps the student imagine and write their own first sentence from the Story DNA. Do not provide a sentence, sample prose, plot answer, or multiple-choice options. Set suggestion to an empty string.",
       hint: "Ask one useful question or give one short hint. Do not write the answer for the student.",
       check: "Check grammar and clarity. Name one strength and at most one correction.",
       details: "Suggest two concrete sensory or setting details the student may choose from.",
@@ -848,9 +1003,12 @@ async function handleWritingAssistant(request, response) {
       scene: "Create a concise visual scene brief with subject, action, setting, mood, and camera view. Do not add unrelated plot."
     };
     const systemPrompt = [
-      "You are the StoriesLens Writing Assistant for K12 students.",
-      "Support the student's thinking without replacing their full draft.",
-      "Use friendly, age-appropriate language and keep the reply under 80 words.",
+      "You are the StoriesLens Story Coach for creators of any age, including young people, adults, and families.",
+      languageInstruction,
+      "Support the creator's thinking without replacing their full draft.",
+      "The human creator is the author. Never claim authorship, imitate source text, or insert finished story prose for them.",
+      "Use friendly language that matches the requested creator level and keep the reply under 80 words.",
+      "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Respect the teacher task, skill focus, approved characters, and source text context.",
       actionInstructions[action] || actionInstructions.hint,
       "Return strict JSON with keys reply, suggestion, readyForVisual, visualBrief."
@@ -861,9 +1019,12 @@ async function handleWritingAssistant(request, response) {
       `Skill focus: ${body.skillFocus || "narrative writing"}`,
       body.teacherInstructions ? `Teacher instructions: ${body.teacherInstructions}` : "",
       body.characterRules ? `Approved character rules: ${body.characterRules}` : "",
-      selectedText ? `Current sentence: ${selectedText}` : "Current sentence: Use the most relevant sentence in the draft.",
-      `Full student draft: ${draft.slice(0, 6000)}`
+      storyDnaContext ? `Student-created Story DNA:\n${storyDnaContext.slice(0, 2000)}` : "",
+      inspiration ? `Student inspiration: ${inspiration.slice(0, 500)}` : "",
+      selectedText ? `Current sentence: ${selectedText}` : draft ? "Current sentence: Use the most relevant sentence in the draft." : "Current sentence: The creator has not written one yet.",
+      draft ? `Full creator draft: ${draft.slice(0, 6000)}` : "Full creator draft: Not started. Ask one question that unlocks the creator's own first sentence."
     ].filter(Boolean).join("\n");
+    await enforceTextSafety(userPrompt);
     const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
     const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
@@ -886,16 +1047,21 @@ async function handleWritingAssistant(request, response) {
       return;
     }
     const content = upstreamData?.choices?.[0]?.message?.content || "{}";
+    await enforceTextSafety(content);
     let result;
     try { result = JSON.parse(content); }
     catch { result = { reply: content, suggestion: "", readyForVisual: false, visualBrief: "" }; }
     sendJson(response, 200, { result });
   } catch (error) {
-    sendJson(response, 500, { error: error.message || "Writing assistant failed." });
+    sendJson(response, error.statusCode || 500, { code: error.code || "WRITING_ASSISTANT_FAILED", error: error.message || "Writing assistant failed." });
   }
 }
 
 const server = http.createServer((request, response) => {
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.setHeader("X-Frame-Options", "SAMEORIGIN");
+  response.setHeader("Permissions-Policy", "camera=(), geolocation=(), payment=(), usb=()");
   const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
   const projectPartImageMatch = requestUrl.pathname.match(/^\/api\/project-parts\/([^/]+)\/generate-image$/);
   const imageTaskMatch = requestUrl.pathname.match(/^\/api\/image-tasks\/([^/]+)$/);
@@ -938,6 +1104,11 @@ const server = http.createServer((request, response) => {
 
   if (requestUrl.pathname === "/api/export-book-docx") {
     handleExportBookDocx(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/checkout-link") {
+    handleCheckoutLink(request, response);
     return;
   }
 
