@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = require("docx");
 const { checkImageSafety, checkTextSafety } = require("./content-safety");
+const { buildChineseCoachCurriculum } = require("./chinese-writing-coach");
 
 const root = __dirname;
 
@@ -887,6 +888,11 @@ async function handleAIReport(request, response) {
     const avatarModel = String(body.avatarModel || "Ivy Mentor");
     const ccssSkill = String(body.ccssSkill || "Narrative Writing");
     const storyLanguage = ["zh", "bilingual"].includes(body.storyLanguage) ? body.storyLanguage : "en";
+    const chineseCurriculum = storyLanguage === "en" ? null : buildChineseCoachCurriculum({
+      coachLens: body.coachLens,
+      creatorLevel: body.creatorLevel,
+      genre: body.genre
+    });
     const languageInstruction = storyLanguage === "zh"
       ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
       : storyLanguage === "bilingual"
@@ -900,6 +906,7 @@ async function handleAIReport(request, response) {
       languageInstruction,
       "Give kind, specific feedback that matches the creator's requested level.",
       "Use clear sentences and do not rewrite the whole draft for the creator.",
+      chineseCurriculum ? chineseCurriculum.prompt : "Use established narrative-writing pedagogy and preserve the creator's own voice.",
       "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Return strict JSON with keys: overall, glow, grow, nextStep, ccssNotes, sentenceComments, videoScript.",
       "ccssNotes must be an array of objects with skill, rating, evidence, and suggestion.",
@@ -910,6 +917,7 @@ async function handleAIReport(request, response) {
     const userPrompt = [
       `Grade: ${grade}`,
       `CCSS focus: ${ccssSkill}`,
+      chineseCurriculum ? `Chinese coach lens: ${chineseCurriculum.lensName}; creator stage: ${chineseCurriculum.levelName}; genre: ${chineseCurriculum.genre}.` : "",
       `Digital human avatar: ${avatarModel}`,
       customPrompt ? `Teacher prompt: ${customPrompt}` : "Teacher prompt: Give a concise writing report.",
       "Student draft:",
@@ -980,6 +988,11 @@ async function handleWritingAssistant(request, response) {
     const storyDnaContext = String(body.storyDnaContext || "").trim();
     const inspiration = String(body.inspiration || "").trim();
     const storyLanguage = ["zh", "bilingual"].includes(body.storyLanguage) ? body.storyLanguage : "en";
+    const chineseCurriculum = storyLanguage === "en" ? null : buildChineseCoachCurriculum({
+      coachLens: body.coachLens,
+      creatorLevel: body.creatorLevel,
+      genre: body.genre
+    });
     const languageInstruction = storyLanguage === "zh"
       ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
       : storyLanguage === "bilingual"
@@ -994,11 +1007,11 @@ async function handleWritingAssistant(request, response) {
       return;
     }
     const actionInstructions = {
-      begin: "Ask exactly one vivid question that helps the student imagine and write their own first sentence from the Story DNA. Do not provide a sentence, sample prose, plot answer, or multiple-choice options. Set suggestion to an empty string.",
+      begin: "Ask exactly one vivid question that helps the creator imagine and write their own first sentence from the Story DNA. Do not provide a sentence, sample prose, or plot answer. For an expression-stage creator only, you may offer two short direction words, never two finished sentences. Set suggestion, strength, priority, and microLesson to empty strings.",
       hint: "Ask one useful question or give one short hint. Do not write the answer for the student.",
       check: "Check grammar and clarity. Name one strength and at most one correction.",
-      details: "Suggest two concrete sensory or setting details the student may choose from.",
-      dialogue: "Suggest one short line of dialogue and explain why it helps.",
+      details: "Name two categories of sensory or setting detail the creator may explore, then ask the creator to supply the actual detail. Do not invent story facts.",
+      dialogue: "Diagnose the purpose or naturalness of the dialogue. Offer a fill-in-the-blank pattern or an unrelated neutral micro-example only; never write dialogue for the creator's characters.",
       continuity: "Check whether this chapter connects logically to the surrounding chapters. Identify one strong connection and one specific continuity fix without rewriting the chapter.",
       scene: "Create a concise visual scene brief with subject, action, setting, mood, and camera view. Do not add unrelated plot."
     };
@@ -1007,19 +1020,23 @@ async function handleWritingAssistant(request, response) {
       languageInstruction,
       "Support the creator's thinking without replacing their full draft.",
       "The human creator is the author. Never claim authorship, imitate source text, or insert finished story prose for them.",
-      "Use friendly language that matches the requested creator level and keep the reply under 80 words.",
+      chineseCurriculum ? chineseCurriculum.prompt : "Use friendly language that matches the requested creator level and keep the reply concise.",
+      storyLanguage === "zh" ? "Keep the complete coaching response under 220 Chinese characters." : "Keep the complete coaching response under 110 words.",
       "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Respect the teacher task, skill focus, approved characters, and source text context.",
       actionInstructions[action] || actionInstructions.hint,
-      "Return strict JSON with keys reply, suggestion, readyForVisual, visualBrief."
+      "Return strict JSON with keys reply, strength, priority, microLesson, question, task, suggestion, readyForVisual, visualBrief, authorshipCheck.",
+      "authorshipCheck must be 'pass' only when the response teaches or asks without supplying finished story prose."
     ].join(" ");
     const userPrompt = [
       `Mode: ${body.mode || "free"}`,
       `Grade: ${body.grade || "3"}`,
       `Skill focus: ${body.skillFocus || "narrative writing"}`,
+      chineseCurriculum ? `Chinese coach lens: ${chineseCurriculum.lensName}; creator stage: ${chineseCurriculum.levelName}; genre: ${chineseCurriculum.genre}.` : "",
       body.teacherInstructions ? `Teacher instructions: ${body.teacherInstructions}` : "",
       body.characterRules ? `Approved character rules: ${body.characterRules}` : "",
       storyDnaContext ? `Student-created Story DNA:\n${storyDnaContext.slice(0, 2000)}` : "",
+      body.revisionHistory ? `Revision since the previous coaching turn:\n${String(body.revisionHistory).slice(0, 3200)}` : "",
       inspiration ? `Student inspiration: ${inspiration.slice(0, 500)}` : "",
       selectedText ? `Current sentence: ${selectedText}` : draft ? "Current sentence: Use the most relevant sentence in the draft." : "Current sentence: The creator has not written one yet.",
       draft ? `Full creator draft: ${draft.slice(0, 6000)}` : "Full creator draft: Not started. Ask one question that unlocks the creator's own first sentence."
@@ -1051,7 +1068,29 @@ async function handleWritingAssistant(request, response) {
     let result;
     try { result = JSON.parse(content); }
     catch { result = { reply: content, suggestion: "", readyForVisual: false, visualBrief: "" }; }
-    sendJson(response, 200, { result });
+    const limit = (value, max) => String(value || "").trim().slice(0, max);
+    const safeResult = {
+      reply: limit(result.reply, 420),
+      strength: limit(result.strength, 240),
+      priority: limit(result.priority, 240),
+      microLesson: limit(result.microLesson, 280),
+      question: limit(result.question, 180),
+      task: limit(result.task, 180),
+      suggestion: action === "begin" ? "" : limit(result.suggestion, 240),
+      readyForVisual: result.readyForVisual === true,
+      visualBrief: limit(result.visualBrief, 500),
+      authorshipCheck: result.authorshipCheck === "pass" ? "pass" : "review",
+      coachMeta: chineseCurriculum ? {
+        lens: chineseCurriculum.coachLens,
+        lensName: chineseCurriculum.lensName,
+        creatorLevel: chineseCurriculum.creatorLevel,
+        levelName: chineseCurriculum.levelName,
+        genre: chineseCurriculum.genre
+      } : null
+    };
+    if (action === "begin" && !safeResult.question) safeResult.question = safeResult.reply;
+    if (action === "begin" && !safeResult.reply) safeResult.reply = safeResult.question;
+    sendJson(response, 200, { result: safeResult });
   } catch (error) {
     sendJson(response, error.statusCode || 500, { code: error.code || "WRITING_ASSISTANT_FAILED", error: error.message || "Writing assistant failed." });
   }

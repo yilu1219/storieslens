@@ -12,6 +12,10 @@ button,a { -webkit-tap-highlight-color:transparent; }
 .site-nav { display:flex; gap:30px; }
 .site-nav a { color:#d9def0; text-decoration:none; }
 .site-nav .active { color:#fff; border-bottom:2px solid #736dff; padding:20px 0; }
+.teacher-top-actions { display:flex; align-items:center; gap:10px; }
+.flow-language-switcher { display:inline-flex; padding:3px; border:1px solid #344970; border-radius:999px; background:#071128; }
+.flow-language-switcher button { min-width:40px; min-height:32px; padding:0 9px; border:0; border-radius:999px; color:#9faac3; background:transparent; cursor:pointer; font-size:12px; font-weight:800; }
+.flow-language-switcher button.is-active { color:#061126; background:var(--mint); }
 .top-cta,.primary-button,.secondary-button,.quiet-button { min-height:44px; padding:0 20px; border-radius:7px; border:1px solid transparent; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; text-decoration:none; font-weight:750; }
 .top-cta,.primary-button { color:#fff; background:linear-gradient(120deg,var(--blue),var(--violet)); }
 .secondary-button { color:#fff; background:#142246; border-color:#48608f; }
@@ -75,4 +79,178 @@ textarea { min-height:310px; resize:vertical; line-height:1.55; }
 .page-actions { position:sticky; bottom:0; z-index:5; margin-top:16px; padding:13px 0; display:flex; justify-content:space-between; gap:12px; background:linear-gradient(transparent,rgba(3,7,22,.96) 28%); }
 .page-actions > :last-child { margin-left:auto; }
 .error-text { margin-top:8px; color:#ffb4b4; min-height:20px; }
-@media (max-width:800px) { .page-shell{width:min(100% - 22px,1240px);padding-top:12px}.site-nav{display:none}.lesson-hero h1{font-size:42px}.stage-step a{justify-content:center;padding:7px}.stage-step a span{display:none}.workspace,.review-grid,.assignment-grid,.publish-grid{grid-template-columns:1fr}.summary-strip{grid-template-columns:1fr 1fr}.grade-grid{grid-template-columns:repeat(5,1fr)}.assignment-row{grid-template-columns:1fr}.pack-list{columns:1} }
+.ink-seal { display:none; }
+
+/* Chinese mode: contemporary xuan-paper and ink-wash classroom */
+html[lang="zh-CN"] { color-scheme:light; }
+html[lang="zh-CN"] body {
+  --bg:#f3eee2;
+  --panel:#fffdf7;
+  --panel2:#f6f0e4;
+  --line:rgba(34,47,52,.2);
+  --text:#17282e;
+  --muted:#65706f;
+  --blue:#263f46;
+  --violet:#963b31;
+  --mint:#d8e5d9;
+  --gold:#9d3c31;
+  color:var(--text);
+  font-family:"Songti SC","STSong","SimSun","Noto Serif SC","Source Han Serif SC",serif;
+  background:
+    linear-gradient(180deg,rgba(250,247,239,.8),rgba(244,239,227,.76)),
+    url("assets/chinese-ink-classroom-bg-v1.png") center top / cover fixed no-repeat,
+    #f3eee2;
+}
+html[lang="zh-CN"] body::before {
+  opacity:.32;
+  background:
+    linear-gradient(90deg,rgba(109,91,60,.04) 1px,transparent 1px),
+    linear-gradient(rgba(109,91,60,.03) 1px,transparent 1px);
+  background-size:28px 28px;
+  mix-blend-mode:multiply;
+}
+html[lang="zh-CN"] .page-shell { width:min(1220px,calc(100% - 40px)); }
+html[lang="zh-CN"] .site-header {
+  border:1px solid rgba(37,55,57,.16);
+  border-radius:14px;
+  background:rgba(250,247,239,.82);
+  box-shadow:0 12px 38px rgba(37,45,42,.08);
+  backdrop-filter:blur(18px) saturate(.8);
+}
+html[lang="zh-CN"] .brand { color:#17282e; }
+html[lang="zh-CN"] .brand img { background:#fff; box-shadow:0 3px 10px rgba(33,43,39,.1); }
+html[lang="zh-CN"] .site-nav a { color:#596765; }
+html[lang="zh-CN"] .site-nav .active { color:#923b31; border-color:#a84638; }
+html[lang="zh-CN"] .flow-language-switcher {
+  border-color:rgba(37,55,57,.18);
+  background:rgba(255,253,247,.78);
+}
+html[lang="zh-CN"] .flow-language-switcher button { color:#68736f; }
+html[lang="zh-CN"] .flow-language-switcher button.is-active { color:#fff; background:#263f46; }
+html[lang="zh-CN"] .top-cta,
+html[lang="zh-CN"] .primary-button {
+  color:#fff;
+  background:linear-gradient(120deg,#a74739,#873329);
+  box-shadow:0 10px 24px rgba(143,54,44,.18);
+}
+html[lang="zh-CN"] .secondary-button {
+  color:#21373b;
+  border-color:rgba(43,70,72,.24);
+  background:#e8efe9;
+}
+html[lang="zh-CN"] .quiet-button {
+  color:#3c4a4b;
+  border-color:rgba(43,70,72,.2);
+  background:rgba(255,253,247,.86);
+}
+html[lang="zh-CN"] .lesson-hero { position:relative; padding:48px 10px 24px; }
+html[lang="zh-CN"] .lesson-kicker {
+  color:#6e332d;
+  border-color:rgba(154,62,50,.2);
+  background:rgba(164,67,54,.08);
+}
+html[lang="zh-CN"] .lesson-hero h1 {
+  max-width:820px;
+  margin-top:15px;
+  color:#142a30;
+  font-family:"Songti SC","STSong","Noto Serif SC",Georgia,serif;
+  font-weight:650;
+  letter-spacing:-.04em;
+}
+html[lang="zh-CN"] .lesson-hero > p { max-width:760px; color:#5f6b69; }
+html[lang="zh-CN"] .ink-seal {
+  position:absolute;
+  top:44px;
+  right:18px;
+  display:grid;
+  width:52px;
+  height:52px;
+  place-items:center;
+  border:2px solid rgba(158,57,46,.78);
+  color:#9e392e;
+  font-family:"Songti SC","STSong",serif;
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.12em;
+  line-height:1.05;
+  transform:rotate(-3deg);
+}
+html[lang="zh-CN"] .stage-rail {
+  overflow:hidden;
+  border-color:rgba(41,61,61,.18);
+  border-radius:12px;
+  background:rgba(255,253,247,.76);
+  box-shadow:0 8px 28px rgba(38,52,48,.06);
+}
+html[lang="zh-CN"] .stage-step { border-color:rgba(41,61,61,.14); }
+html[lang="zh-CN"] .stage-step a { color:#78817d; }
+html[lang="zh-CN"] .stage-step em { color:#596764; background:#e9e5da; }
+html[lang="zh-CN"] .stage-step.is-current a {
+  color:#fff;
+  background:linear-gradient(110deg,#263f46,#49635e);
+}
+html[lang="zh-CN"] .stage-step.is-current em { color:#253b40; background:#f7ebd4; }
+html[lang="zh-CN"] .stage-step.is-complete:not(.is-current) a { color:#8f3b32; }
+html[lang="zh-CN"] .card {
+  border-color:rgba(38,58,58,.16);
+  border-radius:18px;
+  color:#17282e;
+  background:linear-gradient(145deg,rgba(255,253,247,.94),rgba(245,239,226,.91));
+  box-shadow:0 20px 56px rgba(36,48,44,.1);
+  backdrop-filter:blur(12px) saturate(.75);
+}
+html[lang="zh-CN"] .card h2,
+html[lang="zh-CN"] .card h3 { color:#17282e; font-family:"Songti SC","STSong","Noto Serif SC",Georgia,serif; }
+html[lang="zh-CN"] .card > p { color:#66716f; }
+html[lang="zh-CN"] label,
+html[lang="zh-CN"] .field-label { color:#263a3d; }
+html[lang="zh-CN"] input,
+html[lang="zh-CN"] textarea,
+html[lang="zh-CN"] select {
+  color:#17282e;
+  border-color:rgba(43,68,68,.22);
+  background:rgba(255,254,250,.86);
+}
+html[lang="zh-CN"] input:focus,
+html[lang="zh-CN"] textarea:focus,
+html[lang="zh-CN"] select:focus {
+  border-color:#8e3b33;
+  box-shadow:0 0 0 3px rgba(142,59,51,.12);
+}
+html[lang="zh-CN"] .field-help { color:#7d8580; }
+html[lang="zh-CN"] .tab-button,
+html[lang="zh-CN"] .grade-button,
+html[lang="zh-CN"] .choice-card {
+  color:#415250;
+  border-color:rgba(43,68,68,.2);
+  background:rgba(255,253,247,.74);
+}
+html[lang="zh-CN"] .tab-button.is-active,
+html[lang="zh-CN"] .grade-button.is-selected,
+html[lang="zh-CN"] .choice-card.is-selected {
+  color:#fff;
+  border-color:#344e4f;
+  background:linear-gradient(135deg,#263f46,#526b64);
+}
+html[lang="zh-CN"] .choice-card span { color:#78827e; }
+html[lang="zh-CN"] .choice-card.is-selected span { color:rgba(255,255,255,.72); }
+html[lang="zh-CN"] .upload-drop,
+html[lang="zh-CN"] .review-block,
+html[lang="zh-CN"] .summary-strip div,
+html[lang="zh-CN"] .review-card,
+html[lang="zh-CN"] .assignment-row {
+  color:#263a3d;
+  border-color:rgba(43,68,68,.2);
+  background:rgba(255,253,247,.72);
+}
+html[lang="zh-CN"] .review-block { border-left-color:#9d3c31; }
+html[lang="zh-CN"] .review-block span { color:#973c32; }
+html[lang="zh-CN"] .review-block p,
+html[lang="zh-CN"] .pack-list { color:#445452; }
+html[lang="zh-CN"] .class-code { color:#973c32; }
+html[lang="zh-CN"] .page-actions {
+  background:linear-gradient(transparent,rgba(243,238,226,.97) 30%);
+}
+html[lang="zh-CN"] .notice { color:#70472c; border-color:#c7a16d; background:#f6eacb; }
+html[lang="zh-CN"] .error-text { color:#9d3029; }
+@media (max-width:800px) { .page-shell{width:min(100% - 22px,1240px);padding-top:12px}.site-nav{display:none}.top-cta{display:none}.lesson-hero h1{font-size:42px}.stage-step a{justify-content:center;padding:7px}.stage-step a span{display:none}.workspace,.review-grid,.assignment-grid,.publish-grid{grid-template-columns:1fr}.summary-strip{grid-template-columns:1fr 1fr}.grade-grid{grid-template-columns:repeat(5,1fr)}.assignment-row{grid-template-columns:1fr}.pack-list{columns:1} }

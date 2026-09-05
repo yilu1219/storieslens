@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#070817" />
     <meta name="description" content="StoriesLens is a bilingual AI Story Coach for creators of every age. Write original stories solo or together, then turn them into books and short films." />
-    <meta property="og:title" content="StoriesLens — AI guides. You become the author." />
-    <meta property="og:description" content="A bilingual Story Coach that helps people write original stories themselves, solo or together, and bring them to life as books or films." />
-    <meta property="og:image" content="https://www.storieslens.com/assets/hero-co-create-v2.png" />
+    <meta property="og:title" content="StoriesLens — Create a story. Together." />
+    <meta property="og:description" content="Write an original story solo or together, then bring it to life as a book, comic, trailer, or film." />
+    <meta property="og:image" content="https://www.storieslens.com/assets/hero-en-cinematic-cocreation-hd-v4.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="StoriesLens — AI guides. You become the author." />
-    <meta name="twitter:description" content="A bilingual Story Coach that helps people write original stories themselves, solo or together, and bring them to life as books or films." />
-    <meta name="twitter:image" content="https://www.storieslens.com/assets/hero-co-create-v2.png" />
-    <title>StoriesLens | Turn Inspiration Into an Original Story</title>
+    <meta name="twitter:title" content="StoriesLens — Create a story. Together." />
+    <meta name="twitter:description" content="Write an original story solo or together, then bring it to life as a book, comic, trailer, or film." />
+    <meta name="twitter:image" content="https://www.storieslens.com/assets/hero-en-cinematic-cocreation-hd-v4.png" />
+    <title>StoriesLens | Create a Story Together</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
@@ -25,7 +25,11 @@
       <div class="nav-shell">
         <a class="brand" href="index.html" aria-label="StoriesLens home">
           <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span>
-          <span>StoriesLens</span>
+          <span class="brand-copy">
+            <span class="brand-name">StoriesLens</span>
+            <span class="brand-name-zh" lang="zh-CN">语镜故事</span>
+          </span>
+          <img class="brand-seal" src="assets/storieslens-zh-seal-v1.png" alt="语镜故事红泥印章" width="512" height="512" />
         </a>
 
         <button class="menu-button" type="button" aria-expanded="false" aria-controls="primary-navigation" data-menu-button>
@@ -34,7 +38,6 @@
         </button>
 
         <nav class="main-nav" id="primary-navigation" aria-label="Primary navigation" data-nav>
-          <a href="#create">Create</a>
           <a href="#coach">How AI helps</a>
           <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
@@ -54,52 +57,104 @@
     <main id="main">
       <section class="hero section-shell" id="create">
         <div class="hero-copy">
-          <p class="eyebrow"><span></span> Bilingual Story Coach · Solo or together · Every age</p>
-          <h1>AI guides. You become the <em>author.</em></h1>
-          <p class="hero-lede">Turn a book, film, memory, or idea into an original story you write yourself—alone, with friends, or across generations—then premiere it as a book or short film.</p>
+          <div class="hero-message">
+            <p class="eyebrow"><span></span> Bilingual story incubation · From page to screen</p>
+            <h1><span>One story. Two languages.</span><em>Infinite possibilities.</em></h1>
+            <p class="hero-lede">Write in Chinese, English, or both—with an AI literary coach that helps you revise without taking over. Start solo or create together, publish in chapters, and grow promising stories into books, comics, and films.</p>
+            <div class="hero-writing-entries" aria-label="Choose a writing language">
+              <span class="writing-entry-label">Choose your writing language</span>
+              <div class="writing-entry-grid" role="group" aria-label="Choose a writing language">
+                <button class="writing-entry is-selected" type="button" data-writing-language-entry="en" aria-pressed="true">
+                  <span class="writing-entry-mark" aria-hidden="true">EN</span>
+                  <span class="writing-entry-copy"><strong>English Writing</strong><small>Write in English</small></span>
+                  <span class="writing-entry-arrow" aria-hidden="true">→</span>
+                </button>
+                <button class="writing-entry writing-entry-zh" type="button" data-writing-language-entry="zh" aria-pressed="false">
+                  <span class="writing-entry-mark" aria-hidden="true">中</span>
+                  <span class="writing-entry-copy"><strong lang="zh-CN">中文写作</strong><small>Write in Chinese</small></span>
+                  <span class="writing-entry-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+              <small class="writing-entry-note">AI coaching is included in both · You can add bilingual writing later</small>
+            </div>
+          </div>
 
           <form class="story-launchpad" data-story-launchpad novalidate>
-            <div class="launchpad-heading"><strong>What sparked your imagination?</strong><span>No account needed</span></div>
+            <div class="launchpad-heading"><strong>Start with one idea</strong><span>No account needed</span></div>
             <div class="source-choice-row" role="group" aria-label="Choose an inspiration source">
               <button class="is-selected" type="button" data-source-choice="book" aria-pressed="true"><span aria-hidden="true">▤</span>A book</button>
               <button type="button" data-source-choice="movie" aria-pressed="false"><span aria-hidden="true">▶</span>A film</button>
               <button type="button" data-source-choice="idea" aria-pressed="false"><span aria-hidden="true">✦</span>My own idea</button>
             </div>
-            <label class="launchpad-input"><span data-source-label>Which book stayed with you?</span><input data-source-input maxlength="120" placeholder="Type the title—or describe it in your own words" /></label>
+            <div class="launchpad-input">
+              <label for="story-inspiration" data-source-label>Which book stayed with you?</label>
+              <div class="launchpad-input-control">
+                <input id="story-inspiration" data-source-input maxlength="120" placeholder="Type the title—or describe it in your own words" />
+                <button class="voice-input-button" type="button" data-voice-input aria-label="Start voice input" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.25a3.5 3.5 0 0 0 3.5-3.5V6.5a3.5 3.5 0 1 0-7 0v5.25a3.5 3.5 0 0 0 3.5 3.5Z"/><path d="M5.75 11.5a6.25 6.25 0 0 0 12.5 0M12 17.75V21M8.75 21h6.5"/></svg>
+                  <span data-voice-label>Speak</span>
+                </button>
+              </div>
+              <small class="voice-privacy" data-voice-privacy>Speak instead · audio is not saved.</small>
+            </div>
             <div class="launchpad-footer">
               <label><span>Story language</span><select data-launch-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
-              <button type="submit">Discover my Story DNA <span aria-hidden="true">→</span></button>
+              <button type="submit">Build my Story DNA <span aria-hidden="true">→</span></button>
             </div>
             <p class="launchpad-error" data-launchpad-error role="alert"></p>
           </form>
-          <div class="hero-trust"><span>AI asks. You write.</span><span>English · 中文 · Bilingual</span><a href="start.html?mode=squad">Have a Story Code? Join →</a></div>
+          <div class="hero-trust"><span>AI coaches. You create.</span><span>Publish · Serialize · Adapt</span><a href="start.html?mode=squad">Have a Story Code? Join →</a></div>
         </div>
 
-        <div class="hero-stage" aria-label="A young creator writing a story with StoriesLens">
+        <div class="hero-stage" aria-label="Creators building one story world with StoriesLens">
           <div class="hero-glow"></div>
-          <img src="assets/hero-co-create-v2.png" alt="Three young creators combining their ideas into one magical shared story world" />
+          <img class="hero-image-en" src="assets/hero-en-cinematic-cocreation-hd-v4.png" alt="Three creators building one story together as an open book becomes an animated film world" fetchpriority="high" decoding="async" />
+          <img class="hero-image-zh" src="assets/hero-zh-ink-cocreation-hd-v2.png" alt="水墨雨幕中的创作者用文字、书页与分镜共同创造一个武侠故事世界" fetchpriority="high" decoding="async" />
           <div class="hero-image-caption">
-            <span class="caption-avatars" aria-hidden="true"><i>L</i><i>M</i><i>J</i></span>
-            <div><strong>Three creators. One shared world.</strong><small>Every contribution stays credited.</small></div>
+            <span class="caption-kicker" aria-hidden="true">NOW CREATING</span>
+            <div><strong>Originals in production</strong><small>Solo · Story Squad · Classroom</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="studio-reel english-only" id="premieres" aria-labelledby="studio-reel-title">
+        <div class="section-shell">
+          <div class="studio-reel-heading">
+            <div><p class="eyebrow"><span></span> StoriesLens Originals</p><h2 id="studio-reel-title">Three ways into the next world.</h2></div>
+            <p>Every project begins with your words. Choose the kind of production you want to make.</p>
+          </div>
+          <div class="studio-reel-grid">
+            <a class="studio-reel-card reel-solo" href="start.html?mode=solo">
+              <img src="assets/original-garden-door-hd-v2.png" alt="An original illustrated fantasy world behind a garden door" loading="lazy" decoding="async" />
+              <span class="reel-number">01</span><span class="reel-label">Solo Original</span><strong>Your idea. Your voice. Your film.</strong><small>START A SOLO STORY →</small>
+            </a>
+            <a class="studio-reel-card reel-squad" href="start.html?mode=squad">
+              <img src="assets/original-ocean-lantern-hd-v2.png" alt="An original cinematic story world built around a glowing ocean lantern" loading="lazy" decoding="async" />
+              <span class="reel-number">02</span><span class="reel-label">Story Squad</span><strong>One world. Many imaginations.</strong><small>BUILD A SQUAD →</small>
+            </a>
+            <a class="studio-reel-card reel-class" href="teacher-dashboard.html">
+              <img src="assets/original-star-keeper-hd-v2.png" alt="An original animated story about a young creator holding a glowing star" loading="lazy" decoding="async" />
+              <span class="reel-number">03</span><span class="reel-label">Class Premiere</span><strong>Turn reading into a shared production.</strong><small>OPEN THE TEACHER STUDIO →</small>
+            </a>
           </div>
         </div>
       </section>
 
       <section class="promise-bar" aria-label="StoriesLens product promise">
         <div class="section-shell promise-grid">
-          <div><span>01</span><strong>Inspiration</strong><small>A book, a film, or an idea of their own.</small></div>
-          <div><span>02</span><strong>Story DNA</strong><small>Discover the feeling, conflict, and structure.</small></div>
-          <div><span>03</span><strong>Original world</strong><small>New characters, rules, choices, and ending.</small></div>
-          <div><span>04</span><strong>Premiere</strong><small>Create a book, comic, trailer, or film.</small></div>
+          <div><span>01</span><strong>Write</strong><small>Start solo or invite others into the same story world.</small></div>
+          <div><span>02</span><strong>Serialize</strong><small>Publish chapter by chapter and keep the story growing.</small></div>
+          <div><span>03</span><strong>Get discovered</strong><small>Readers signal what they want to keep reading and see on screen.</small></div>
+          <div><span>04</span><strong>Adapt</strong><small>Grow promising stories into books, comics, trailers, and films.</small></div>
         </div>
       </section>
 
       <section class="coach-section" id="coach">
         <div class="section-shell coach-layout">
           <div class="coach-copy">
-            <p class="eyebrow light"><span></span> Meet your Story Coach</p>
-          <h2>AI guides. The creator stays in control.</h2>
-            <p>Story Coach notices what is missing, asks one useful question at a time, and remembers the world your creators are building.</p>
+            <p class="eyebrow light"><span></span> Your AI writing &amp; story coach</p>
+          <h2>Feedback that makes your story stronger.</h2>
+            <p>Story Coach asks useful questions, identifies what is unclear, and helps you revise each scene—while every word and decision remain yours.</p>
             <div class="coach-principles">
               <div><strong>Questions before answers</strong><span>Guidance that develops the writer instead of replacing them.</span></div>
               <div><strong>One connected world</strong><span>Characters, places, promises, and timelines stay consistent.</span></div>
@@ -109,12 +164,12 @@
 
           <div class="coach-demo" aria-label="Example conversation with the Story Coach">
             <div class="demo-bar">
-              <span class="coach-orb">S</span>
+              <span class="coach-orb"><span class="locale-en">S</span><span class="locale-zh" lang="zh-CN">文</span></span>
               <div><strong>Story Coach</strong><small>Guiding, not ghostwriting</small></div>
               <span class="online-dot">Live</span>
             </div>
             <div class="story-context"><span>Scene 3 · The hidden door</span><p>“Maya opened the door and walked inside.”</p></div>
-            <div class="coach-message"><span class="coach-orb small">S</span><p>Maya makes a brave choice here. What makes opening the door difficult for her?</p></div>
+            <div class="coach-message"><span class="coach-orb small"><span class="locale-en">S</span><span class="locale-zh" lang="zh-CN">问</span></span><p>Maya makes a brave choice here. What makes opening the door difficult for her?</p></div>
             <div class="choice-row"><button type="button">She hears a warning</button><button type="button">She promised not to</button><button type="button">My own idea</button></div>
             <div class="authorship-meter"><span>Written by Maya</span><strong>Creator in control</strong></div>
           </div>
@@ -123,14 +178,75 @@
 
       <section class="section-shell outcomes-section">
         <div class="section-heading centered">
-          <p class="eyebrow"><span></span> The creative payoff</p>
-          <h2>Finish the story. Then bring it to life.</h2>
+          <div class="locale-en">
+            <p class="eyebrow"><span></span> The creative payoff</p>
+            <h2>Finish the story. Then bring it to life.</h2>
+          </div>
+          <div class="locale-zh" lang="zh-CN">
+            <p class="eyebrow"><span></span> 落笔成篇 · 共创成境</p>
+            <h2>一页文字，生长为一方世界。</h2>
+            <p class="outcomes-zh-intro">写下故事，铺陈画境；独自起笔，也可与同道续写。最后让它成为一本书、一册连环画，或一部可以共同观看的电影。</p>
+          </div>
         </div>
         <div class="outcome-grid">
-          <article><img src="assets/book-spread.png" alt="An illustrated book spread" /><span>Illustrated book</span></article>
-          <article><img src="assets/showcase-block-castle.png" alt="A colorful graphic story scene" /><span>Comic story</span></article>
-          <article><img src="assets/showcase-ocean-lantern.png" alt="A cinematic ocean lantern story scene" /><span>Cinematic trailer</span></article>
-          <article><img src="assets/movie-scene.png" alt="A fantasy movie scene created from a story" /><span>AI short film</span></article>
+          <article class="book-outcome-card">
+            <div class="flipbook" data-flipbook tabindex="0" aria-label="Interactive illustrated book preview">
+              <div class="flipbook-pages">
+                <div class="book-spread-preview is-active" data-book-page aria-hidden="false">
+                  <div class="paper-page image-page">
+                    <img class="locale-en" src="assets/outcome-book-hd-v2.png" alt="The Star Keeper illustrated story world" loading="lazy" decoding="async" />
+                    <img class="locale-zh" src="assets/outcome-zh-ink-book-v1.png" alt="书页化作山河与白鹤的水墨绘本世界" loading="lazy" decoding="async" />
+                  </div>
+                  <div class="paper-page story-page">
+                    <div class="book-language locale-en"><small>THE STAR KEEPER</small><strong>Chapter One</strong><p>The star was no bigger than a button, but it lit the whole room.</p><em>Tap the page to turn →</em></div>
+                    <div class="book-language locale-zh" lang="zh-CN"><small>《鹤从书中来》</small><strong>第一章 · 墨醒</strong><p>她落下第一笔，纸上的河便有了水声。一只白鹤从墨色深处振翅而起。</p><em>轻触书页，继续故事 →</em></div>
+                  </div>
+                </div>
+                <div class="book-spread-preview" data-book-page aria-hidden="true">
+                  <div class="paper-page story-page">
+                    <div class="book-language locale-en"><small>PAGE TWO</small><strong>Build it together</strong><p>Milo drew a path home. Lina built the bridge. Together, the city began to glow.</p></div>
+                    <div class="book-language locale-zh" lang="zh-CN"><small>第二页 · 续写</small><strong>一人落笔，众人添山河</strong><p>有人写下渡口，有人画出灯火。不同的想象，在同一条河上相遇。</p></div>
+                  </div>
+                  <div class="paper-page image-page">
+                    <img class="locale-en" src="assets/original-star-keeper-hd-v2.png" alt="Creators building the Star Keeper world together" loading="lazy" decoding="async" />
+                    <img class="locale-zh" src="assets/outcome-zh-lianhuanhua-v1.png" alt="伙伴们在古城中共同续写故事的国风连环画" loading="lazy" decoding="async" />
+                  </div>
+                </div>
+                <div class="book-spread-preview" data-book-page aria-hidden="true">
+                  <div class="paper-page image-page">
+                    <img class="locale-en" src="assets/outcome-film-hd-v2.png" alt="The finished Star Keeper story" loading="lazy" decoding="async" />
+                    <img class="locale-zh" src="assets/outcome-zh-cinematic-trailer-v1.png" alt="书卷化作电影分镜的水墨山河" loading="lazy" decoding="async" />
+                  </div>
+                  <div class="paper-page story-page">
+                    <div class="book-language locale-en"><small>THE END</small><strong>Every voice shines</strong><p>When the star rose again, every maker could see a piece of their own idea in the sky.</p></div>
+                    <div class="book-language locale-zh" lang="zh-CN"><small>终章 · 成境</small><strong>故事有了自己的光</strong><p>当书卷在银幕上展开，每位创作者都在山河之间，看见了自己写下的那一笔。</p></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flipbook-controls">
+                <button type="button" data-book-prev aria-label="Previous page">←</button>
+                <span data-book-page-count aria-live="polite">1 / 3</span>
+                <button type="button" data-book-next aria-label="Next page">→</button>
+              </div>
+            </div>
+            <span class="outcome-title locale-en">Illustrated book</span>
+            <span class="outcome-title locale-zh" lang="zh-CN">水墨绘本</span>
+          </article>
+          <article class="outcome-comic-card">
+            <img class="locale-en" src="assets/outcome-comic-kid-ink-v3.png" alt="An original humorous hand-drawn comic story" loading="lazy" decoding="async" />
+            <img class="locale-zh" src="assets/outcome-zh-lianhuanhua-v1.png" alt="两位创作者与白狐在古城中追寻故事印记的国风连环画" loading="lazy" decoding="async" />
+            <span class="outcome-title locale-en">Comic story</span><span class="outcome-title locale-zh" lang="zh-CN">国风连环画</span>
+          </article>
+          <article class="outcome-trailer-card">
+            <img class="locale-en" src="assets/outcome-trailer-hd-v2.png" alt="A cinematic trailer being assembled from an original story" loading="lazy" decoding="async" />
+            <img class="locale-zh" src="assets/outcome-zh-cinematic-trailer-v1.png" alt="发光书卷在雨幕山河中化作电影分镜" loading="lazy" decoding="async" />
+            <span class="outcome-title locale-en">Cinematic trailer</span><span class="outcome-title locale-zh" lang="zh-CN">水墨电影预告</span>
+          </article>
+          <article class="outcome-film-card">
+            <img class="locale-en" src="assets/outcome-film-hd-v2.png" alt="A finished animated short film scene created from an original story" loading="lazy" decoding="async" />
+            <img class="locale-zh" src="assets/outcome-zh-cocreated-film-v1.png" alt="三位创作者在放映厅观看共同创作的山水电影" loading="lazy" decoding="async" />
+            <span class="outcome-title locale-en">AI short film</span><span class="outcome-title locale-zh" lang="zh-CN">共创短片</span>
+          </article>
         </div>
       </section>
 
@@ -190,10 +306,19 @@
         <p class="pricing-note"><strong>Optional Movie Pack:</strong> add a finished 30-second film for $29 or a 60-second premiere for $49. Secure checkout is handled by Stripe; StoriesLens never sees your card details.</p>
       </section>
 
-      <section class="educator-strip">
+      <section class="educator-strip" id="educators">
         <div class="section-shell educator-layout">
-          <div><span class="educator-label">For educators</span><h2>Turn a reading into a world the whole class builds together.</h2><p>Teacher controls, structured feedback, reading-to-writing projects, and standards-aligned learning evidence live in the classroom experience—not in the child-facing headline.</p></div>
-          <a class="button button-light" href="create-reading-project.html">Explore the classroom studio <span aria-hidden="true">→</span></a>
+          <div class="educator-copy">
+            <span class="educator-label">For language teachers · 中文课堂</span>
+            <h2>Turn one reading into original writing—and a class premiere.</h2>
+            <p>In Chinese mode, teachers can move a class from close reading to original expression: the AI asks, learners write, and the teacher reviews every contribution before it becomes a class book or film.</p>
+            <div class="educator-features" aria-label="Classroom workflow">
+              <span><b>01</b><strong>Text → Questions</strong><small>Bring a passage, excerpt, or theme.</small></span>
+              <span><b>02</b><strong>Reading → Writing</strong><small>Transform ideas without copying.</small></span>
+              <span><b>03</b><strong>Class → Premiere</strong><small>Publish a book, comic, or film.</small></span>
+            </div>
+          </div>
+          <a class="button button-light" href="teacher-dashboard.html">Open the teacher studio <span aria-hidden="true">→</span></a>
         </div>
       </section>
 
@@ -205,12 +330,24 @@
 
     <footer class="site-footer">
       <div class="section-shell footer-grid">
-        <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span><span>StoriesLens</span></a>
+        <a class="brand" href="index.html" aria-label="StoriesLens home">
+          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span>
+          <span class="brand-copy">
+            <span class="brand-name">StoriesLens</span>
+            <span class="brand-name-zh" lang="zh-CN">语镜故事</span>
+          </span>
+          <img class="brand-seal" src="assets/storieslens-zh-seal-v1.png" alt="语镜故事红泥印章" width="512" height="512" loading="lazy" />
+        </a>
         <p>AI guides. Human creators write. Stories come alive.</p>
-        <nav aria-label="Footer navigation"><a href="#create">Create</a><a href="#pricing">Pricing</a><a href="trust.html">Family trust</a><a href="teacher-dashboard.html">For educators</a></nav>
+        <nav aria-label="Footer navigation"><a href="#create">Create</a><a href="#pricing">Pricing</a><a href="trust.html">Creator safety</a><a href="teacher-dashboard.html">For educators</a></nav>
         <small>© <span data-year></span> StoriesLens. Built for creators of every age.</small>
       </div>
     </footer>
+
+    <nav class="mobile-action-bar" aria-label="Mobile creation actions">
+      <a class="mobile-action-secondary" href="start.html?mode=squad">Join or co-create</a>
+      <a class="mobile-action-primary" href="start.html?mode=solo">Start my story <span aria-hidden="true">→</span></a>
+    </nav>
 
     <script src="safety-client.js"></script>
     <script src="analytics.js"></script>

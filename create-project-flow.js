@@ -17,7 +17,7 @@
     title: "The Mystery of the Lost Map",
     readingText: "",
     grade: "Grade 4",
-    framework: "K12_CCSS",
+    framework: "CHINESE_LANGUAGE_ARTS",
     outputType: "CLASS_BOOK",
     classSize: 24,
     lessonResult: null,

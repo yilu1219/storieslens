@@ -5,406 +5,183 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Teacher Studio | StoriesLens</title>
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      .teacher-studio-page {
-        width: min(94vw, 1500px);
-      }
-
-      .studio-hero,
-      .studio-section,
-      .publish-queue,
-      .quota-status {
-        border: 1px solid rgba(145, 172, 255, 0.22);
-        border-radius: 22px;
-        background: linear-gradient(180deg, rgba(16, 28, 65, 0.86), rgba(8, 13, 31, 0.78));
-      }
-
-      .studio-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 22px;
-        align-items: end;
-        margin: 26px 0 18px;
-        padding: 30px;
-      }
-
-      .studio-hero span {
-        color: #93ffcf;
-        font-weight: 900;
-      }
-
-      .studio-hero h1 {
-        margin: 8px 0 12px;
-        color: #fff;
-        font-size: clamp(42px, 5vw, 76px);
-      }
-
-      .studio-hero p {
-        max-width: 860px;
-        margin: 0;
-        color: rgba(234, 239, 255, 0.76);
-        font-size: 19px;
-        line-height: 1.55;
-      }
-
-      .studio-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 22px;
-      }
-
-      .studio-actions a,
-      .studio-actions button,
-      .project-actions button {
-        min-height: 44px;
-        padding: 0 14px;
-        border: 1px solid rgba(151, 176, 255, 0.26);
-        border-radius: 12px;
-        color: #fff;
-        background: rgba(255, 255, 255, 0.07);
-        font: inherit;
-        font-weight: 850;
-        text-decoration: none;
-      }
-
-      .studio-actions .primary {
-        border: 0;
-        background: linear-gradient(135deg, #3478ff, #8a4cff);
-      }
-
-      .quota-status {
-        display: grid;
-        grid-template-columns: 260px minmax(0, 1fr);
-        gap: 14px;
-        margin: 18px 0;
-        padding: 18px;
-      }
-
-      .quota-plan,
-      .quota-meter,
-      .quota-estimate,
-      .quota-note {
-        border: 1px solid rgba(151, 176, 255, 0.18);
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.055);
-      }
-
-      .quota-plan,
-      .quota-meter {
-        padding: 16px;
-      }
-
-      .quota-plan span,
-      .quota-meter span,
-      .quota-note span {
-        color: #93ffcf;
-        font-weight: 900;
-      }
-
-      .quota-plan h2 {
-        margin: 8px 0;
-        color: #fff;
-        font-size: 30px;
-      }
-
-      .quota-plan p,
-      .quota-meter p,
-      .quota-estimate p,
-      .quota-note p {
-        margin: 0;
-        color: rgba(234, 239, 255, 0.74);
-        line-height: 1.48;
-      }
-
-      .quota-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .quota-meter strong {
-        display: block;
-        margin: 6px 0 4px;
-        color: #fff;
-        font-size: 22px;
-      }
-
-      .quota-estimate,
-      .quota-note {
-        margin: 14px 0;
-        padding: 13px;
-      }
-
-      .studio-section {
-        margin: 18px 0;
-        padding: 24px;
-      }
-
-      .studio-section header {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        align-items: end;
-        margin-bottom: 18px;
-      }
-
-      .studio-section h2 {
-        margin: 0;
-        color: #fff;
-        font-size: 32px;
-      }
-
-      .studio-section header p {
-        margin: 7px 0 0;
-        color: rgba(234, 239, 255, 0.72);
-      }
-
-      .project-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .project-card,
-      .submission-card,
-      .queue-card,
-      .metric-card {
-        padding: 18px;
-        border: 1px solid rgba(151, 176, 255, 0.2);
-        border-radius: 18px;
-        color: rgba(234, 239, 255, 0.74);
-        background: rgba(255, 255, 255, 0.055);
-      }
-
-      .project-card span,
-      .submission-card span,
-      .queue-card span,
-      .metric-card span {
-        color: #ffd991;
-        font-weight: 900;
-      }
-
-      .project-card h3,
-      .submission-card h3,
-      .queue-card h3,
-      .metric-card h3 {
-        margin: 8px 0;
-        color: #fff;
-      }
-
-      .project-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 13px 0;
-      }
-
-      .project-meta b {
-        padding: 7px 9px;
-        border-radius: 999px;
-        color: rgba(234, 239, 255, 0.84);
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .project-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .metric-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .submission-grid,
-      .queue-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      @media (max-width: 1060px) {
-        .studio-hero,
-        .quota-status,
-        .quota-grid,
-        .project-grid,
-        .metric-grid,
-        .submission-grid,
-        .queue-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="teacher-dashboard.css" />
   </head>
-  <body>
-    <canvas id="star-canvas" aria-hidden="true"></canvas>
-
+  <body class="teacher-hub">
     <main class="teacher-studio-page page-shell">
-      <header class="site-header" aria-label="StoriesLens teacher navigation">
+      <header class="teacher-topbar" aria-label="Teacher Studio navigation">
         <a class="brand" href="index.html" aria-label="StoriesLens home">
           <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="StoriesLens logo" /></span>
           <span>StoriesLens</span>
         </a>
-        <nav class="main-nav" aria-label="Primary navigation">
-          <a href="index.html">Home</a>
-          <a href="create-reading-project.html">Create</a>
-          <a href="index.html#class-movie">Class Movie</a>
-          <a href="visual-write.html">Visual Write</a>
-          <a href="index.html#works">Works</a>
-          <a class="nav-active" href="teacher-dashboard.html">Teacher</a>
-          <a href="index.html#pricing">Pricing</a>
+        <nav class="teacher-nav" aria-label="Teacher Studio sections">
+          <a class="is-active" href="#today">Today</a>
+          <a href="#student-work">Student work</a>
+          <a href="#projects">Projects</a>
+          <a href="#teacher-tools">Teacher tools</a>
         </nav>
-        <div class="header-actions">
-          <a class="top-cta" href="create-reading-project.html"><span>Create from Reading Text</span></a>
+        <div class="teacher-header-actions">
+          <div class="teacher-language-switcher" aria-label="Interface language">
+            <button type="button" data-locale="en" aria-pressed="true">EN</button>
+            <button type="button" data-locale="zh" aria-pressed="false">中文</button>
+          </div>
+          <a class="teacher-button" href="create-reading-project.html">＋ New project</a>
         </div>
       </header>
 
-      <section class="studio-hero">
-        <div>
-          <span>Teacher project center</span>
-          <h1>Teacher Studio</h1>
-          <p>Create reading-based writing projects, review student work, and publish class books or movies.</p>
-          <div class="studio-actions">
-            <a class="primary" href="create-reading-project.html">Create from Reading Text</a>
-            <a href="visual-write.html">Start from Writing Prompt</a>
-            <a href="create-reading-project.html#project-type">Create Class Movie</a>
+      <section class="teacher-welcome" id="today">
+        <div class="teacher-welcome-copy">
+          <span class="teacher-eyebrow">Teacher Studio</span>
+          <h1>Turn a class story into something worth sharing.</h1>
+          <p>Guide the writing, review the work, then publish it to the student bookshelf or the class screening room.</p>
+          <div class="welcome-actions">
+            <a class="teacher-button" href="create-reading-project.html">Create a new project <span aria-hidden="true">→</span></a>
+            <a class="teacher-button-secondary" href="visual-write.html?mode=assignment">Open student view</a>
           </div>
         </div>
+        <aside class="class-code-card" aria-label="Current class code">
+          <span>Current class code</span>
+          <strong data-class-code>MOON-4821</strong>
+          <p>Students use this code to enter the current class story.</p>
+          <button type="button" data-copy-class-code>Copy class code</button>
+        </aside>
       </section>
 
-      <section class="quota-status" aria-label="Current plan and monthly quota">
-        <div class="quota-plan">
-          <span>Current Plan</span>
-          <h2>Teacher Pro</h2>
-          <p>Credits cover high-cost image and video generation. Core plan limits control classroom projects, exports, and publishing.</p>
-        </div>
-        <div class="quota-grid">
-          <article class="quota-meter"><span>Projects</span><strong>8 / 20</strong><p>visual writing projects used this month</p></article>
-          <article class="quota-meter"><span>Class Books</span><strong>3 / 8</strong><p>class books used this month</p></article>
-          <article class="quota-meter"><span>Image Credits</span><strong>142 / 200</strong><p>Generate 1 image = 1 image credit</p></article>
-          <article class="quota-meter"><span>Video Credits</span><strong>18 / 24</strong><p>Generate 1 scene video = 1 video credit</p></article>
-        </div>
-      </section>
-
-      <section class="studio-section">
-        <header>
+      <section class="today-card" aria-label="Next teacher action">
+        <div class="today-main">
+          <span class="today-icon" aria-hidden="true">▶</span>
           <div>
-            <h2>Class Projects</h2>
-            <p>Manage classroom reading-to-writing projects and publishing status.</p>
+            <span class="section-kicker">Continue where you left off</span>
+            <h2>The Mystery of the Lost Map</h2>
+            <p>21 of 24 scenes submitted · 3 drafts need your review</p>
           </div>
-        </header>
-        <div class="project-grid">
-          <article class="project-card">
-            <span>Class Movie</span>
-            <h3>The Mystery of the Lost Map</h3>
-            <p>Grade 4 · 8 scenes · 21 / 24 students submitted · 5 videos generated · Ready for teacher review</p>
-            <div class="project-meta"><b>RL.4.3</b><b>W.4.3</b><b>Class Movie</b></div>
-            <div class="quota-estimate">
-              <p>This movie has 8 scenes and needs 8 video credits.</p>
-              <p>You have 18 video credits.</p>
-            </div>
-            <div class="project-actions">
-              <button>Review Scenes</button>
-              <button>Generate Missing Videos</button>
-              <button data-quota-action="class-movie-ready">Generate Class Movie</button>
-              <button>Export Report</button>
-            </div>
-          </article>
+        </div>
+        <div class="today-metrics" aria-label="Project progress">
+          <span><strong>88%</strong>Submitted</span>
+          <span><strong>3</strong>To review</span>
+        </div>
+        <a class="teacher-button" href="teacher-project.html">Continue project <span aria-hidden="true">→</span></a>
+      </section>
 
-          <article class="project-card">
-            <span>Class Book</span>
-            <h3>Animal Adventure Stories</h3>
-            <p>Grade 3 · 12 chapters · 18 / 20 students submitted · PDF ready</p>
-            <div class="project-meta"><b>RL.3.3</b><b>W.3.3</b><b>Class Book</b></div>
-            <div class="project-actions">
-              <button>Review Chapters</button>
-              <button data-quota-action="image-credit">Generate Images</button>
-              <button>Publish Book</button>
-              <button data-quota-action="pdf-export">Export PDF</button>
-            </div>
-            <div class="quota-note">
-              <span>PDF / watermark rule</span>
-              <p>Teacher Pro can export PDFs without watermark and create parent share links.</p>
+      <section class="teacher-section" id="student-work">
+        <header class="teacher-section-head">
+          <div>
+            <span class="section-kicker">Student creations</span>
+            <h2>Every class deserves a premiere.</h2>
+          </div>
+          <p>Two clear homes for finished work: books learners can open and films the class can watch together.</p>
+        </header>
+
+        <div class="showcase-grid">
+          <article class="showcase-card">
+            <img src="assets/outcome-book-hd-v2.png" alt="An illustrated student story displayed as an open book" />
+            <div class="showcase-content">
+              <span class="showcase-kicker">12 published works</span>
+              <h3>Student Bookshelf</h3>
+              <p>Open illustrated stories, class anthologies, comics, and personal writing—each with its creator credit.</p>
+              <div class="showcase-actions">
+                <a href="project-output.html?type=class-book">Enter the bookshelf <span aria-hidden="true">→</span></a>
+                <button type="button" data-gallery-action="share-books">Share with families</button>
+              </div>
             </div>
           </article>
+
+          <article class="showcase-card">
+            <img src="assets/outcome-film-hd-v2.png" alt="A cinematic frame from a student-created class film" />
+            <div class="showcase-content">
+              <span class="showcase-kicker">4 films ready</span>
+              <h3>Class Screening Room</h3>
+              <p>Premiere trailers and short films in one cinematic gallery, with the writers and creators always credited.</p>
+              <div class="showcase-actions">
+                <a href="project-output.html?type=class-movie">Enter the screening room <span aria-hidden="true">→</span></a>
+                <button type="button" data-gallery-action="premiere">Start class premiere</button>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section class="studio-section">
-        <header>
+      <section class="teacher-section" id="projects">
+        <header class="teacher-section-head">
           <div>
-            <h2>Writing Assignments</h2>
-            <p>Track class progress by project part, skill focus, and submission status.</p>
+            <span class="section-kicker">Active work</span>
+            <h2>Current projects</h2>
           </div>
+          <a class="teacher-button-secondary" href="create-reading-project.html">＋ New project</a>
         </header>
-        <div class="metric-grid">
-          <article class="metric-card"><span>Submitted</span><h3>21 / 24</h3><p>Students finished a scene draft.</p></article>
-          <article class="metric-card"><span>Needs Review</span><h3>9</h3><p>Drafts waiting for Glow / Grow / Next Step.</p></article>
-          <article class="metric-card"><span>Images Ready</span><h3>14</h3><p>Scene visuals generated or selected.</p></article>
-          <article class="metric-card"><span>Publish Queue</span><h3>2</h3><p>Projects close to book or movie export.</p></article>
+
+        <div class="project-list">
+          <article class="project-row">
+            <div class="project-title">
+              <img class="project-thumb" src="assets/outcome-film-hd-v2.png" alt="" />
+              <div><h3>The Mystery of the Lost Map</h3><span>Class Movie · Grade 4</span></div>
+            </div>
+            <span class="project-state">3 drafts need review</span>
+            <div class="project-progress"><span>21 / 24 submitted</span><div class="project-progress-bar"><i style="width: 88%"></i></div></div>
+            <a class="teacher-link-button" href="teacher-project.html">Open</a>
+          </article>
+          <article class="project-row">
+            <div class="project-title">
+              <img class="project-thumb" src="assets/outcome-book-hd-v2.png" alt="" />
+              <div><h3>Animal Adventure Stories</h3><span>Class Book · Grade 3</span></div>
+            </div>
+            <span class="project-state">Ready to publish</span>
+            <div class="project-progress"><span>18 / 20 submitted</span><div class="project-progress-bar"><i style="width: 90%"></i></div></div>
+            <a class="teacher-link-button" href="project-output.html?type=class-book">Open</a>
+          </article>
         </div>
       </section>
 
-      <section class="studio-section">
-        <header>
-          <div>
-            <h2>Student Submissions</h2>
-            <p>Review student writing in simple classroom language.</p>
-          </div>
-        </header>
-        <div class="submission-grid">
-          <article class="submission-card"><span>Ava · Scene 1</span><h3>Opening</h3><p>Glow: clear setting. Grow: add one sound detail. Next Step: revise the first sentence.</p></article>
-          <article class="submission-card"><span>Leo · Scene 2</span><h3>The Discovery</h3><p>Glow: strong discovery moment. Grow: add the character goal.</p></article>
-          <article class="submission-card"><span>Mia · Scene 3</span><h3>The Hidden Door</h3><p>Glow: visual details are ready for an image. Next Step: add dialogue.</p></article>
+      <details class="teacher-tools" id="teacher-tools">
+        <summary><span>Teacher tools, plan and usage</span><small>Open only when you need them</small></summary>
+        <div class="tool-grid">
+          <article class="tool-card"><span>Current Plan</span><strong>Teacher Pro</strong><p>Class publishing and family sharing included.</p></article>
+          <article class="tool-card"><span>Projects</span><strong>8 / 20</strong><p>Active projects this month.</p></article>
+          <article class="tool-card"><span>Class Books</span><strong>3 / 8</strong><p>Published books this month.</p></article>
+          <article class="tool-card"><span>Image Credits</span><strong>142 / 200</strong><p>For final illustrations.</p></article>
+          <article class="tool-card"><span>Video Credits</span><strong>18 / 24</strong><p>This movie has 8 scenes and needs 8 video credits. You have 18 video credits.</p></article>
+          <article class="tool-card"><span>Writing Assignments</span><strong>21 / 24</strong><p>Student Submissions received.</p></article>
+          <article class="tool-card"><span>Publish Queue</span><strong>2</strong><p>One Class Book and one Class Movie.</p></article>
+          <article class="tool-card"><span>Class Projects</span><strong>2 active</strong><p>Review Scenes · Generate Missing Videos · Generate Class Movie · Export Report</p></article>
         </div>
-      </section>
+      </details>
 
-      <section class="studio-section publish-queue">
-        <header>
-          <div>
-            <h2>Publish Queue</h2>
-            <p>Prepare polished classroom outputs for books, movies, reports, and parent sharing.</p>
-          </div>
-        </header>
-        <div class="queue-grid">
-          <article class="queue-card"><span>Class Movie</span><h3>The Mystery of the Lost Map</h3><p>5 videos ready · 3 scene visuals missing · teacher review pending.</p></article>
-          <article class="queue-card"><span>Class Book</span><h3>Animal Adventure Stories</h3><p>PDF ready · cover image ready · 2 chapters need review.</p></article>
-          <article class="queue-card"><span>Report</span><h3>Grade 4 Narrative Writing</h3><p>Export student progress, skill focus, and project evidence.</p></article>
-        </div>
-      </section>
+      <footer class="teacher-footer">
+        <span>StoriesLens Teacher Studio</span>
+        <span>AI guides. Learners create. Teachers stay in control.</span>
+      </footer>
 
       <div class="write-toast" hidden role="status" aria-live="polite"></div>
     </main>
 
     <script src="script.js"></script>
+    <script src="i18n.js"></script>
     <script>
       (() => {
         const toast = document.querySelector(".write-toast");
-        const messages = {
-          "class-movie-ready": "This movie has 8 scenes and needs 8 video credits. You have 18 video credits. Generate Class Movie is ready.",
-          "image-credit": "Generate 1 image = 1 image credit. Image Credits: 142 / 200.",
-          "pdf-export": "Upgrade to Teacher Pro to export PDFs without watermark.",
-          "image-empty": "You have no image credits left this month. Upgrade to Teacher Pro or wait until your credits reset.",
-          "video-low": "This class movie needs 8 video credits. You have 5 credits left. Buy 3 more video credits or upgrade your plan.",
-          "movie-restricted": "Class movie publishing is available in Teacher Pro and Classroom Studio."
-        };
+        const locale = () => window.StoriesLensI18n?.locale || "en";
+        const say = (english, chinese) => locale() === "zh" ? chinese : english;
 
-        function showQuotaMessage(message) {
+        function showMessage(message) {
           if (!toast || !message) return;
           toast.textContent = message;
           toast.hidden = false;
-          window.clearTimeout(showQuotaMessage.timer);
-          showQuotaMessage.timer = window.setTimeout(() => {
-            toast.hidden = true;
-          }, 3600);
+          window.clearTimeout(showMessage.timer);
+          showMessage.timer = window.setTimeout(() => { toast.hidden = true; }, 3000);
         }
 
-        document.querySelectorAll("[data-quota-action]").forEach((button) => {
+        document.querySelector("[data-copy-class-code]")?.addEventListener("click", async () => {
+          const code = document.querySelector("[data-class-code]")?.textContent?.trim() || "MOON-4821";
+          try { await navigator.clipboard.writeText(code); } catch (_) {}
+          showMessage(say(`Class code ${code} copied.`, `班级邀请码 ${code} 已复制。`));
+        });
+
+        document.querySelectorAll("[data-gallery-action]").forEach((button) => {
           button.addEventListener("click", () => {
-            showQuotaMessage(messages[button.dataset.quotaAction]);
+            const action = button.dataset.galleryAction;
+            showMessage(action === "premiere"
+              ? say("The screening room is ready for your class premiere.", "放映厅已准备好，可以开始班级首映。")
+              : say("A private family gallery link is ready to create.", "可以创建一个仅限家长查看的私密作品链接。"));
           });
         });
       })();
