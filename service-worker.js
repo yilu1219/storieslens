@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v42-20260911";
+const VERSION = "storieslens-h5-v43-20260911";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -32,7 +32,7 @@ const APP_SHELL = [
   "/assets/portal-solo-family-watercolor-v5.jpg",
   "/assets/portal-cocreate-family-watercolor-v5.jpg",
   "/assets/portal-teacher-bulletin-watercolor-v4.jpg",
-  "/assets/lightyear-life-to-book-film-voice-watercolor-v1.jpg"
+  "/assets/lightyear-three-generations-watercolor-v2.jpg"
 ];
 
 self.addEventListener("install", (event) => {
