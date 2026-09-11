@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v41-20260911";
+const VERSION = "storieslens-h5-v42-20260911";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -13,7 +13,7 @@ const APP_SHELL = [
   "/classroom-archive.js?v=20260911-3",
   "/analytics.js",
   "/i18n.js?v=20260908-1",
-  "/portal-home.css?v=20260911-28",
+  "/portal-home.css?v=20260911-29",
   "/portal-home.js?v=20260911-28",
   "/family-flow.css?v=20260911-2",
   "/h5-app.js?v=20260911-4",
@@ -31,7 +31,8 @@ const APP_SHELL = [
   "/assets/storieslens-logo.png",
   "/assets/portal-solo-family-watercolor-v5.jpg",
   "/assets/portal-cocreate-family-watercolor-v5.jpg",
-  "/assets/portal-teacher-bulletin-watercolor-v4.jpg"
+  "/assets/portal-teacher-bulletin-watercolor-v4.jpg",
+  "/assets/lightyear-life-to-book-film-voice-watercolor-v1.jpg"
 ];
 
 self.addEventListener("install", (event) => {

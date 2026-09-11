@@ -149,7 +149,7 @@ button, textarea { color: inherit; font: inherit; }
 .company-family-intro .portal-kicker { grid-column: 1 / -1; }
 .company-family-intro h2 { max-width: 780px; margin: 0; font-size: clamp(49px, 5.8vw, 78px); line-height: .94; letter-spacing: -.05em; }
 .company-family-intro > p:last-child { max-width: 430px; margin: 0; color: var(--muted); font-size: clamp(19px, 2vw, 26px); line-height: 1.34; }
-.lightyear-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: clamp(24px, 3.4vw, 48px); overflow: hidden; min-height: 330px; padding: clamp(34px, 5vw, 65px); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 30px; background:
+.lightyear-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, .78fr); grid-template-rows: 1fr auto; align-items: stretch; gap: 28px clamp(28px, 4vw, 56px); overflow: hidden; min-height: 520px; padding: clamp(34px, 5vw, 65px); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 30px; background:
   radial-gradient(circle at 92% 10%, rgba(244,203,112,.2), transparent 22rem),
   radial-gradient(circle at 4% 110%, rgba(105,205,153,.22), transparent 26rem),
   linear-gradient(135deg, #0b2521, #164536 58%, #0e332a);
@@ -157,7 +157,7 @@ button, textarea { color: inherit; font: inherit; }
 .lightyear-card::before { position: absolute; inset: 0; z-index: -1; content: ""; pointer-events: none; opacity: .13; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E"); }
 .lightyear-card:hover { box-shadow: 0 43px 94px rgba(20,55,43,.27); transform: translateY(-4px); }
 .lightyear-card:focus-visible { outline: 4px solid var(--gold); outline-offset: 5px; }
-.lightyear-card-copy { display: grid; gap: 12px; min-width: 0; }
+.lightyear-card-copy { display: grid; grid-column: 1; grid-row: 1; align-content: center; gap: 12px; min-width: 0; }
 .lightyear-card-copy small { color: #a9dfbf; font-family: var(--sans); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 .lightyear-card-copy strong { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; font-size: clamp(37px, 4.1vw, 58px); line-height: .95; letter-spacing: -.045em; }
 .lightyear-card-copy strong span { font-weight: 700; }
@@ -168,7 +168,9 @@ button, textarea { color: inherit; font: inherit; }
 .lightyear-features li:first-child { border-top: 0; }
 .lightyear-feature-icon { display: grid; width: 34px; height: 34px; place-items: center; color: var(--gold); border: 1px solid rgba(244,203,112,.42); border-radius: 50%; background: rgba(244,203,112,.07); }
 .lightyear-feature-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.55; }
-.lightyear-cta { align-self: end; padding-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,.66); font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: .04em; white-space: nowrap; }
+.lightyear-card-art { display: block; grid-column: 2; grid-row: 1 / 3; min-height: 390px; overflow: hidden; border: 1px solid rgba(255,255,255,.2); border-radius: 20px; background: #eee4d3; box-shadow: 0 20px 45px rgba(0,0,0,.24); }
+.lightyear-card-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 70% center; }
+.lightyear-cta { grid-column: 1; grid-row: 2; align-self: end; justify-self: start; padding-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,.66); font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: .04em; white-space: nowrap; }
 .brand-bridge { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: clamp(22px, 4vw, 60px); margin-top: 22px; padding: 25px clamp(24px, 4vw, 48px); border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.47); }
 .brand-bridge > span { display: grid; gap: 5px; }
 .brand-bridge b { color: var(--leaf-deep); font-family: var(--sans); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
@@ -224,11 +226,14 @@ button, textarea { color: inherit; font: inherit; }
   .company-family-intro .portal-kicker { grid-column: auto; }
   .company-family-intro h2 { font-size: 49px; }
   .company-family-intro > p:last-child { font-size: 19px; }
-  .lightyear-card { grid-template-columns: 1fr; gap: 22px; min-height: 0; padding: 30px 25px; border-radius: 23px; }
+  .lightyear-card { grid-template-columns: 1fr; grid-template-rows: auto auto auto; gap: 22px; min-height: 0; padding: 25px; border-radius: 23px; }
+  .lightyear-card-art { grid-column: 1; grid-row: 1; width: calc(100% + 50px); min-height: 0; aspect-ratio: 16 / 10; margin: -25px -25px 2px; border-width: 0 0 1px; border-radius: 23px 23px 0 0; }
+  .lightyear-card-art img { object-position: 70% center; }
+  .lightyear-card-copy { grid-column: 1; grid-row: 2; }
   .lightyear-card-copy strong { font-size: 42px; }
   .lightyear-card-copy em { font-size: 23px; }
   .lightyear-features li { font-size: 14px; }
-  .lightyear-cta { justify-self: start; }
+  .lightyear-cta { grid-column: 1; grid-row: 3; justify-self: start; }
   .brand-bridge { grid-template-columns: 1fr; gap: 15px; padding: 22px; }
   .brand-bridge i { transform: rotate(45deg); }
   .portal-footer { flex-direction: column; }
