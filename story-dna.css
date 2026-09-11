@@ -10,9 +10,9 @@
 .dna-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
 .dna-header .nav-shell { grid-template-columns: 1fr auto; }
 .dna-header-actions { display: flex; align-items: center; gap: 14px; }
-.dna-story-language { display: flex; align-items: center; gap: 7px; min-height: 38px; padding: 3px 4px 3px 10px; border: 1px solid rgba(126,224,190,.34); border-radius: 999px; color: rgba(255,255,255,.62); font-size: 11px; font-weight: 800; }
+.dna-story-language { display: flex; align-items: center; gap: 7px; min-height: 38px; padding: 3px 4px 3px 10px; border: 1px solid rgba(126,224,190,.34); border-radius: 999px; color: rgba(255,255,255,.62); font-size: 13px; font-weight: 800; }
 .dna-story-language select { min-height: 30px; padding: 0 24px 0 9px; color: var(--night); border: 0; border-radius: 999px; background: var(--mint); font: inherit; font-weight: 800; }
-.dna-exit { color: rgba(255, 255, 255, 0.62); font-size: 13px; font-weight: 700; }
+.dna-exit { color: rgba(255, 255, 255, 0.62); font-size: 15px; font-weight: 700; }
 
 .dna-main {
   display: grid;
@@ -35,18 +35,18 @@
 .dna-workbench { padding: clamp(30px, 4vw, 56px); }
 
 .dna-progress { display: grid; gap: 10px; margin-bottom: 28px; }
-.dna-progress > div { display: flex; justify-content: space-between; color: rgba(255,255,255,.5); font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.dna-progress > div { display: flex; justify-content: space-between; color: rgba(255,255,255,.5); font-size: 13px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .dna-progress > div strong { color: var(--mint); }
 .dna-progress > span { height: 4px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.1); }
 .dna-progress i { display: block; width: 33.333%; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--mint),var(--gold)); transition: width 220ms ease; }
 
 .inspiration-chip { display: flex; align-items: center; gap: 10px; width: fit-content; max-width: 100%; margin-bottom: 32px; padding: 8px 11px 8px 8px; border: 1px solid rgba(244,199,109,.28); border-radius: 999px; background: rgba(244,199,109,.07); }
-.inspiration-chip span { padding: 4px 8px; color: var(--night); border-radius: 999px; background: var(--gold); font-size: 10px; font-weight: 800; text-transform: uppercase; }
-.inspiration-chip strong { overflow: hidden; color: rgba(255,255,255,.78); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.inspiration-chip span { padding: 4px 8px; color: var(--night); border-radius: 999px; background: var(--gold); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.inspiration-chip strong { overflow: hidden; color: rgba(255,255,255,.78); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 
-.dna-workbench h1 { max-width: 760px; margin-bottom: 12px; font-size: clamp(42px, 5vw, 66px); }
+.dna-workbench h1 { max-width: 760px; margin-bottom: 12px; font-size: clamp(44px, 5vw, 68px); }
 .dna-workbench h1:focus { outline: 0; }
-.dna-lede { margin: 0 0 30px; color: rgba(255,255,255,.62); font-size: 17px; }
+.dna-lede { margin: 0 0 30px; color: rgba(255,255,255,.62); font-size: 19px; }
 .dna-step { animation: dna-in 200ms ease both; }
 @keyframes dna-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -55,8 +55,8 @@
 .dna-choice-grid button { display: grid; min-height: 142px; align-content: start; gap: 7px; padding: 18px; color: white; text-align: left; border: 1px solid rgba(255,255,255,.14); border-radius: 17px; background: rgba(255,255,255,.05); cursor: pointer; transition: transform 160ms ease, border-color 160ms ease, background 160ms ease; }
 .dna-choice-grid button:hover { transform: translateY(-2px); border-color: rgba(184,168,255,.6); }
 .dna-choice-grid button.is-selected { border-color: var(--lilac); background: rgba(111,80,237,.22); box-shadow: inset 0 0 0 1px rgba(184,168,255,.14); }
-.dna-choice-grid button > span { color: var(--gold); font-family: "Fraunces",Georgia,serif; font-size: 13px; }
-.dna-choice-grid button strong { font-family: "Fraunces",Georgia,serif; font-size: 20px; }
+.dna-choice-grid button > span { color: var(--gold); font-family: "Fraunces",Georgia,serif; font-size: 15px; }
+.dna-choice-grid button strong { font-family: "Fraunces",Georgia,serif; font-size: 22px; }
 .dna-choice-grid button small { color: rgba(255,255,255,.48); line-height: 1.4; }
 
 .dna-text-answer { display: grid; gap: 10px; color: rgba(255,255,255,.8); font-weight: 700; }
@@ -65,7 +65,7 @@
 .dna-text-answer small { color: rgba(255,255,255,.46); font-weight: 500; }
 .dna-choice-grid button:focus-visible,.dna-text-answer textarea:focus { outline: 3px solid rgba(126,224,190,.68); outline-offset: 2px; }
 
-.dna-error { min-height: 20px; margin: 14px 0 0; color: #ffb8a9; font-size: 12px; }
+.dna-error { min-height: 20px; margin: 14px 0 0; color: #ffb8a9; font-size: 14px; }
 .dna-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); }
 .dna-actions button { min-height: 49px; padding: 0 18px; border-radius: 999px; cursor: pointer; font-weight: 800; }
 .dna-back { color: rgba(255,255,255,.66); border: 0; background: transparent; }
@@ -73,28 +73,28 @@
 
 .dna-preview { position: sticky; top: 28px; align-self: start; min-height: calc(100vh - 133px); padding: clamp(28px,3vw,44px); background: radial-gradient(circle at 65% 8%,rgba(111,80,237,.38),transparent 30%),linear-gradient(145deg,#11132d,#08091b); }
 .dna-orb { display: grid; width: 58px; height: 58px; place-items: center; color: var(--night); border-radius: 18px; background: var(--gold); font-family: "Fraunces",Georgia,serif; font-weight: 800; box-shadow: 0 12px 30px rgba(244,199,109,.2); }
-.dna-preview > p { margin: 22px 0 10px; color: var(--mint); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
-.dna-preview h2 { margin-bottom: 28px; font-size: clamp(28px,3vw,40px); line-height: 1.08; }
+.dna-preview > p { margin: 22px 0 10px; color: var(--mint); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.dna-preview h2 { margin-bottom: 28px; font-size: clamp(30px,3vw,42px); line-height: 1.08; }
 .preview-stack { display: grid; gap: 9px; }
 .preview-stack > div { display: grid; gap: 5px; padding: 15px; border: 1px solid rgba(255,255,255,.11); border-radius: 14px; background: rgba(255,255,255,.045); }
 .preview-stack > div.is-ready { border-color: rgba(126,224,190,.28); }
-.preview-stack span { color: rgba(255,255,255,.42); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.preview-stack strong { color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.4; }
+.preview-stack span { color: rgba(255,255,255,.42); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.preview-stack strong { color: rgba(255,255,255,.75); font-size: 15px; line-height: 1.4; }
 .preview-stack > div.is-ready strong { color: white; }
 .dna-preview > small { display: block; margin-top: 24px; color: rgba(255,255,255,.42); line-height: 1.5; }
 
-.dna-result > p:not(.eyebrow) { max-width: 700px; color: rgba(255,255,255,.62); font-size: 17px; line-height: 1.6; }
+.dna-result > p:not(.eyebrow) { max-width: 700px; color: rgba(255,255,255,.62); font-size: 19px; line-height: 1.6; }
 .result-dna-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin: 28px 0 36px; }
 .result-dna-grid > div { display: grid; gap: 7px; padding: 16px; border: 1px solid rgba(126,224,190,.22); border-radius: 15px; background: rgba(126,224,190,.06); }
-.result-dna-grid span { color: var(--mint); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.result-dna-grid strong { font-size: 13px; line-height: 1.4; }
-.dna-result h2 { margin: 0 0 14px; font-size: 24px; }
+.result-dna-grid span { color: var(--mint); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.result-dna-grid strong { font-size: 15px; line-height: 1.4; }
+.dna-result h2 { margin: 0 0 14px; font-size: 26px; }
 .result-paths { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
 .result-paths a { display: grid; min-height: 120px; grid-template-columns: 1fr auto; align-content: center; gap: 5px 12px; padding: 20px; border: 1px solid rgba(255,255,255,.16); border-radius: 17px; background: rgba(255,255,255,.06); }
 .result-paths a:last-child { background: rgba(111,80,237,.2); }
-.result-paths small { grid-column: 1; color: var(--gold); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.result-paths small { grid-column: 1; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .result-paths strong { grid-column: 1; }
-.result-paths span { grid-column: 2; grid-row: 1/3; align-self: center; color: var(--gold); font-size: 24px; }
+.result-paths span { grid-column: 2; grid-row: 1/3; align-self: center; color: var(--gold); font-size: 26px; }
 
 [hidden] { display: none !important; }
 
@@ -111,5 +111,5 @@
   .dna-workbench,.dna-preview { padding: 24px 18px; border-radius: 22px; }
   .dna-choice-grid,.dna-choice-grid.three-up,.result-dna-grid,.result-paths { grid-template-columns: 1fr; }
   .dna-choice-grid button { min-height: 112px; }
-  .dna-workbench h1 { font-size: 42px; }
+  .dna-workbench h1 { font-size: 44px; }
 }

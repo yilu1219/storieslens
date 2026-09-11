@@ -19,6 +19,9 @@
   const progressFill = document.querySelector("[data-progress-fill]");
   const displayName = document.querySelector("[data-display-name]");
   const storySeed = document.querySelector("[data-story-seed]");
+  const workFileField = document.querySelector("[data-work-file-field]");
+  const workFile = document.querySelector("[data-work-file]");
+  const workFileStatus = document.querySelector("[data-work-file-status]");
   const storyCode = document.querySelector("[data-story-code]");
   const creatorLevel = document.querySelector("[data-creator-level]");
   const ageGroup = document.querySelector("[data-age-group]");
@@ -41,8 +44,10 @@
   const requestedStoryLanguage = startParams.get("storyLang");
   let mode = requestedMode === "squad" ? "squad" : "solo";
   let step = requestedDna && (requestedMode === "solo" || requestedMode === "squad") ? 3 : requestedMode === "solo" || requestedMode === "squad" ? 2 : 1;
-  let origin = ["book", "movie", "idea"].includes(requestedSource) ? requestedSource : "imagination";
+  const sourceToOrigin = { work: "work", tell: "memory", inspiration: "imagination", picture: "picture", text: "work", voice: "memory", book: "imagination", movie: "imagination", idea: "imagination" };
+  let origin = sourceToOrigin[requestedSource] || "imagination";
   let squadAction = "create";
+  let importedWork = null;
   let storyLanguageTouched = ["en", "zh", "bilingual"].includes(requestedStoryLanguage);
 
   if (storyLanguage) storyLanguage.value = storyLanguageTouched ? requestedStoryLanguage : window.StoriesLensI18n?.locale === "zh" ? "zh" : "en";
@@ -59,7 +64,7 @@
       soloTitle: "What kind of story will you begin?",
       squadTitle: "How will you join the adventure?",
       soloLede: "Pick the easiest starting point. There is no wrong answer.",
-      squadLede: "Start a private squad or enter the code a friend sent you."
+      squadLede: "Start a private squad with family or friends, or enter the Story Code they sent you."
     },
     3: {
       label: "Meet the creator",
@@ -87,6 +92,7 @@
     const joining = mode === "squad" && squadAction === "join";
     ideaField.hidden = joining;
     codeField.hidden = !joining;
+    if (workFileField) workFileField.hidden = joining || origin !== "work";
     const copy = stepCopy[step];
     stepCurrent.textContent = String(step);
     stepLabel.textContent = t(copy.label);
@@ -132,6 +138,61 @@
   });
   ageGroup?.addEventListener("change", renderAgeGate);
 
+  workFile?.addEventListener("change", async () => {
+    const file = workFile.files?.[0];
+    importedWork = null;
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      workFile.value = "";
+      error.textContent = t("Choose a file smaller than 2 MB.");
+      return;
+    }
+    const isText = file.type === "text/plain" || file.type === "text/markdown" || /\.(txt|md)$/i.test(file.name);
+    const isImage = /^image\/(jpeg|png|webp)$/.test(file.type);
+    if (!isText && !isImage) {
+      workFile.value = "";
+      error.textContent = t("Choose a JPG, PNG, WEBP, TXT, or MD file.");
+      return;
+    }
+    let content;
+    let storedName = file.name;
+    let storedType = file.type || (isText ? "text/plain" : "image");
+    let artworkReview = null;
+    if (isText) {
+      content = await file.text();
+    } else {
+      if (workFileStatus) workFileStatus.textContent = t("Removing metadata and checking artwork safety…");
+      try {
+        if (!window.StoriesLensArtworkSafety) throw Object.assign(new Error("review_unavailable"), { reasonCode: "review_unavailable" });
+        const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
+        content = safeArtwork.dataUrl;
+        storedName = "artwork.webp";
+        storedType = safeArtwork.type;
+        artworkReview = { safetyReviewed: true, metadataRemoved: true };
+      } catch (uploadError) {
+        workFile.value = "";
+        const message = uploadError.reasonCode === "real_person" ? "This upload appears to show a real person. Please upload artwork without identifiable people." : uploadError.reasonCode === "personal_name" ? "A visible personal name was detected. Please cover or remove it and try again." : uploadError.reasonCode === "school_information" ? "School information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "contact_information" ? "Contact information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "identity_document" ? "Identity documents cannot be uploaded." : uploadError.reasonCode === "not_artwork" ? "Please upload artwork rather than a personal photograph." : uploadError.reasonCode === "unsafe_content" ? "This artwork did not pass the safe-content review." : "Artwork upload is paused because the safety review is unavailable. You can still write or speak.";
+        error.textContent = t(message);
+        if (workFileStatus) workFileStatus.textContent = t("Artwork was not added.");
+        return;
+      }
+    }
+    if (isText && window.StoriesLensSafety && !window.StoriesLensSafety.check(content).safe) {
+      workFile.value = "";
+      error.textContent = t(window.StoriesLensSafety.message);
+      return;
+    }
+    importedWork = { name: storedName, type: storedType, kind: isText ? "text" : "image", content, ...(artworkReview || {}) };
+    try { sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork)); } catch (_error) {
+      importedWork = null;
+      error.textContent = t("This file is too large to keep on this device. Choose a smaller one.");
+      return;
+    }
+    if (isText && !storySeed.value.trim()) storySeed.value = String(content).trim().slice(0, storySeed.maxLength || 280);
+    if (workFileStatus) workFileStatus.textContent = isText ? `${t("Ready")}: ${file.name}` : t("Safety check passed · personal metadata removed · private by default");
+    error.textContent = "";
+  });
+
   window.addEventListener("storieslens:locale", (event) => {
     if (!storyLanguageTouched && storyLanguage) storyLanguage.value = event.detail.locale === "zh" ? "zh" : "en";
     render();
@@ -142,6 +203,12 @@
     const name = displayName.value.trim();
     const code = storyCode.value.trim().toUpperCase();
     const seed = storySeed.value.trim();
+
+    if (mode === "solo" && origin === "work" && !importedWork && !seed) {
+      error.textContent = t("Choose a work file or paste a short excerpt so Story Coach knows where to begin.");
+      workFile?.focus();
+      return;
+    }
 
     if (seed && window.StoriesLensSafety && !window.StoriesLensSafety.check(seed).safe) {
       error.textContent = t(window.StoriesLensSafety.message);
@@ -167,7 +234,7 @@
       return;
     }
 
-    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, createdAt: new Date().toISOString() };
+    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true } : null, createdAt: new Date().toISOString() };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}`;

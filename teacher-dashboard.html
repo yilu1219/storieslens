@@ -3,188 +3,100 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teacher Studio | StoriesLens</title>
+    <meta name="theme-color" content="#f7f3ea" />
+    <meta name="description" content="Photograph a classroom bulletin board and turn approved student work into a private digital book, printed class collection, or class premiere." />
+    <title>Bulletin Board Publisher | StoriesLens</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="teacher-dashboard.css" />
+    <link rel="stylesheet" href="pwa.css" />
   </head>
-  <body class="teacher-hub">
+  <body class="teacher-hub teacher-hub-v2">
     <main class="teacher-studio-page page-shell">
       <header class="teacher-topbar" aria-label="Teacher Studio navigation">
         <a class="brand" href="index.html" aria-label="StoriesLens home">
-          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="StoriesLens logo" /></span>
+          <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span>
           <span>StoriesLens</span>
         </a>
-        <nav class="teacher-nav" aria-label="Teacher Studio sections">
-          <a class="is-active" href="#today">Today</a>
-          <a href="#student-work">Student work</a>
-          <a href="#projects">Projects</a>
-          <a href="#teacher-tools">Teacher tools</a>
-        </nav>
+        <a class="teacher-home-link" href="index.html">← Back to home</a>
         <div class="teacher-header-actions">
           <div class="teacher-language-switcher" aria-label="Interface language">
             <button type="button" data-locale="en" aria-pressed="true">EN</button>
             <button type="button" data-locale="zh" aria-pressed="false">中文</button>
           </div>
-          <a class="teacher-button" href="create-reading-project.html">＋ New project</a>
         </div>
       </header>
 
-      <section class="teacher-welcome" id="today">
-        <div class="teacher-welcome-copy">
-          <span class="teacher-eyebrow">Teacher Studio</span>
-          <h1>Turn a class story into something worth sharing.</h1>
-          <p>Guide the writing, review the work, then publish it to the student bookshelf or the class screening room.</p>
-          <div class="welcome-actions">
-            <a class="teacher-button" href="create-reading-project.html">Create a new project <span aria-hidden="true">→</span></a>
-            <a class="teacher-button-secondary" href="visual-write.html?mode=assignment">Open student view</a>
-          </div>
+      <section class="teacher-choice-hero" id="today">
+        <div class="teacher-choice-intro">
+          <span class="teacher-eyebrow">StoriesLens Bulletin Board Publisher</span>
+          <h1>Photograph the wall. Keep every story.</h1>
+          <p>One focused teacher workflow: capture the class display, review every page, and turn approved artwork and writing into something families can keep.</p>
         </div>
-        <aside class="class-code-card" aria-label="Current class code">
-          <span>Current class code</span>
-          <strong data-class-code>MOON-4821</strong>
-          <p>Students use this code to enter the current class story.</p>
-          <button type="button" data-copy-class-code>Copy class code</button>
-        </aside>
+
+        <div class="teacher-paths teacher-paths-single" aria-label="Bulletin board publishing workflow">
+          <a class="teacher-path teacher-path-capture" href="classroom-archive.html">
+            <div class="teacher-path-visual" aria-hidden="true">
+              <div class="mini-board"><i></i><i></i><i></i><i></i></div>
+              <span>→</span>
+              <div class="mini-book"><i></i></div>
+            </div>
+            <span class="teacher-path-number">ONE SIMPLE WORKFLOW</span>
+            <h2>Turn one bulletin board into a class keepsake</h2>
+            <p>Take one wide photo to begin. StoriesLens organizes possible pages, flags privacy details, and waits for your approval before anything is shared.</p>
+            <strong>Create a free private proof <span aria-hidden="true">→</span></strong>
+          </a>
+        </div>
+
+        <div class="teacher-promise" aria-label="Teacher publishing promise">
+          <span><b>Free to begin</b><small>Create the private proof before anyone pays.</small></span>
+          <span><b>Teacher controlled</b><small>Nothing reaches families without your approval.</small></span>
+          <span><b>No inventory</b><small>Print only after a family places an order.</small></span>
+        </div>
       </section>
 
-      <section class="today-card" aria-label="Next teacher action">
-        <div class="today-main">
-          <span class="today-icon" aria-hidden="true">▶</span>
-          <div>
-            <span class="section-kicker">Continue where you left off</span>
-            <h2>The Mystery of the Lost Map</h2>
-            <p>21 of 24 scenes submitted · 3 drafts need your review</p>
-          </div>
-        </div>
-        <div class="today-metrics" aria-label="Project progress">
-          <span><strong>88%</strong>Submitted</span>
-          <span><strong>3</strong>To review</span>
-        </div>
-        <a class="teacher-button" href="teacher-project.html">Continue project <span aria-hidden="true">→</span></a>
-      </section>
-
-      <section class="teacher-section" id="student-work">
+      <section class="teacher-section teacher-showcase-section" id="student-work">
         <header class="teacher-section-head">
           <div>
-            <span class="section-kicker">Student creations</span>
-            <h2>Every class deserves a premiere.</h2>
+            <span class="section-kicker">Teacher-approved output</span>
+            <h2>One class collection. Three ways to keep it.</h2>
           </div>
-          <p>Two clear homes for finished work: books learners can open and films the class can watch together.</p>
+          <p>Every version begins with the same reviewed pages. Families decide what they want to keep.</p>
         </header>
 
-        <div class="showcase-grid">
-          <article class="showcase-card">
-            <img src="assets/outcome-book-hd-v2.png" alt="An illustrated student story displayed as an open book" />
-            <div class="showcase-content">
-              <span class="showcase-kicker">12 published works</span>
-              <h3>Student Bookshelf</h3>
-              <p>Open illustrated stories, class anthologies, comics, and personal writing—each with its creator credit.</p>
-              <div class="showcase-actions">
-                <a href="project-output.html?type=class-book">Enter the bookshelf <span aria-hidden="true">→</span></a>
-                <button type="button" data-gallery-action="share-books">Share with families</button>
-              </div>
-            </div>
+        <div class="teacher-deliverable-grid">
+          <article>
+            <span>01</span>
+            <h3>Private digital book</h3>
+            <p>A mobile-friendly edition shared only with approved families.</p>
           </article>
-
-          <article class="showcase-card">
-            <img src="assets/outcome-film-hd-v2.png" alt="A cinematic frame from a student-created class film" />
-            <div class="showcase-content">
-              <span class="showcase-kicker">4 films ready</span>
-              <h3>Class Screening Room</h3>
-              <p>Premiere trailers and short films in one cinematic gallery, with the writers and creators always credited.</p>
-              <div class="showcase-actions">
-                <a href="project-output.html?type=class-movie">Enter the screening room <span aria-hidden="true">→</span></a>
-                <button type="button" data-gallery-action="premiere">Start class premiere</button>
-              </div>
-            </div>
+          <article>
+            <span>02</span>
+            <h3>Printed class book</h3>
+            <p>Produced only after an order and delivered directly to families.</p>
           </article>
+          <article>
+            <span>03</span>
+            <h3>Class premiere</h3>
+            <p>Approved artwork, writing, and voices presented as a short private film.</p>
+          </article>
+        </div>
+        <div class="teacher-single-cta">
+          <div><strong>Start free. Review privately.</strong><span>Nothing reaches families until the teacher approves it.</span></div>
+          <a href="classroom-archive.html">Turn the wall into a book <span aria-hidden="true">→</span></a>
         </div>
       </section>
-
-      <section class="teacher-section" id="projects">
-        <header class="teacher-section-head">
-          <div>
-            <span class="section-kicker">Active work</span>
-            <h2>Current projects</h2>
-          </div>
-          <a class="teacher-button-secondary" href="create-reading-project.html">＋ New project</a>
-        </header>
-
-        <div class="project-list">
-          <article class="project-row">
-            <div class="project-title">
-              <img class="project-thumb" src="assets/outcome-film-hd-v2.png" alt="" />
-              <div><h3>The Mystery of the Lost Map</h3><span>Class Movie · Grade 4</span></div>
-            </div>
-            <span class="project-state">3 drafts need review</span>
-            <div class="project-progress"><span>21 / 24 submitted</span><div class="project-progress-bar"><i style="width: 88%"></i></div></div>
-            <a class="teacher-link-button" href="teacher-project.html">Open</a>
-          </article>
-          <article class="project-row">
-            <div class="project-title">
-              <img class="project-thumb" src="assets/outcome-book-hd-v2.png" alt="" />
-              <div><h3>Animal Adventure Stories</h3><span>Class Book · Grade 3</span></div>
-            </div>
-            <span class="project-state">Ready to publish</span>
-            <div class="project-progress"><span>18 / 20 submitted</span><div class="project-progress-bar"><i style="width: 90%"></i></div></div>
-            <a class="teacher-link-button" href="project-output.html?type=class-book">Open</a>
-          </article>
-        </div>
-      </section>
-
-      <details class="teacher-tools" id="teacher-tools">
-        <summary><span>Teacher tools, plan and usage</span><small>Open only when you need them</small></summary>
-        <div class="tool-grid">
-          <article class="tool-card"><span>Current Plan</span><strong>Teacher Pro</strong><p>Class publishing and family sharing included.</p></article>
-          <article class="tool-card"><span>Projects</span><strong>8 / 20</strong><p>Active projects this month.</p></article>
-          <article class="tool-card"><span>Class Books</span><strong>3 / 8</strong><p>Published books this month.</p></article>
-          <article class="tool-card"><span>Image Credits</span><strong>142 / 200</strong><p>For final illustrations.</p></article>
-          <article class="tool-card"><span>Video Credits</span><strong>18 / 24</strong><p>This movie has 8 scenes and needs 8 video credits. You have 18 video credits.</p></article>
-          <article class="tool-card"><span>Writing Assignments</span><strong>21 / 24</strong><p>Student Submissions received.</p></article>
-          <article class="tool-card"><span>Publish Queue</span><strong>2</strong><p>One Class Book and one Class Movie.</p></article>
-          <article class="tool-card"><span>Class Projects</span><strong>2 active</strong><p>Review Scenes · Generate Missing Videos · Generate Class Movie · Export Report</p></article>
-        </div>
-      </details>
 
       <footer class="teacher-footer">
         <span>StoriesLens Teacher Studio</span>
-        <span>AI guides. Learners create. Teachers stay in control.</span>
+        <span>One wall · One private proof · One class keepsake</span>
       </footer>
-
-      <div class="write-toast" hidden role="status" aria-live="polite"></div>
     </main>
 
     <script src="script.js"></script>
     <script src="i18n.js"></script>
-    <script>
-      (() => {
-        const toast = document.querySelector(".write-toast");
-        const locale = () => window.StoriesLensI18n?.locale || "en";
-        const say = (english, chinese) => locale() === "zh" ? chinese : english;
-
-        function showMessage(message) {
-          if (!toast || !message) return;
-          toast.textContent = message;
-          toast.hidden = false;
-          window.clearTimeout(showMessage.timer);
-          showMessage.timer = window.setTimeout(() => { toast.hidden = true; }, 3000);
-        }
-
-        document.querySelector("[data-copy-class-code]")?.addEventListener("click", async () => {
-          const code = document.querySelector("[data-class-code]")?.textContent?.trim() || "MOON-4821";
-          try { await navigator.clipboard.writeText(code); } catch (_) {}
-          showMessage(say(`Class code ${code} copied.`, `班级邀请码 ${code} 已复制。`));
-        });
-
-        document.querySelectorAll("[data-gallery-action]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const action = button.dataset.galleryAction;
-            showMessage(action === "premiere"
-              ? say("The screening room is ready for your class premiere.", "放映厅已准备好，可以开始班级首映。")
-              : say("A private family gallery link is ready to create.", "可以创建一个仅限家长查看的私密作品链接。"));
-          });
-        });
-      })();
-    </script>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
   </body>
 </html>

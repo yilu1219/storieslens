@@ -1,0 +1,850 @@
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const { queueHyperframesRender, resolveBinary } = require("./hyperframes-renderer");
+
+const SESSION_DAYS = 30;
+const CHALLENGE_MINUTES = 10;
+const MAX_PROJECTS_PER_USER = 100;
+const MAX_SCENES = 24;
+const MAX_AUDIO_BYTES = 12 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+const offerCatalog = {
+  "story-pass": { name: "Story Pass", price: "$19", envKey: "STRIPE_STORY_PASS_URL", fallbackUrl: "/beta-interest.html?offer=story-pass" },
+  "guided-squad": { name: "Guided Story Squad", price: "$49", envKey: "STRIPE_GUIDED_SQUAD_URL", fallbackUrl: "/beta-interest.html?offer=guided-squad" },
+  "movie-30": { name: "30-second Movie Pack", price: "$39", envKey: "STRIPE_MOVIE_30_URL", fallbackUrl: "/beta-interest.html?offer=movie-30" },
+  "movie-60": { name: "60-second Movie Pack", price: "$49", envKey: "STRIPE_MOVIE_60_URL", fallbackUrl: "/beta-interest.html?offer=movie-60" }
+};
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function addDays(date, days) {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function cleanText(value, max = 240) {
+  return String(value || "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim().slice(0, max);
+}
+
+function cleanId(value) {
+  return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100);
+}
+
+function cleanUrl(value) {
+  const url = cleanText(value, 1800);
+  if (!url) return "";
+  if (/^https:\/\//i.test(url)) return url;
+  if (/^\/(?:api\/media|public\/generated|assets)\//.test(url)) return url;
+  return "";
+}
+
+function safeJsonValue(value, maxLength = 20_000) {
+  if (!value || typeof value !== "object") return {};
+  try {
+    const serialized = JSON.stringify(value);
+    if (serialized.length > maxLength) return {};
+    return JSON.parse(serialized);
+  } catch {
+    return {};
+  }
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function parseCookies(request) {
+  return Object.fromEntries(String(request.headers.cookie || "").split(";").map((item) => {
+    const index = item.indexOf("=");
+    if (index < 0) return ["", ""];
+    return [item.slice(0, index).trim(), decodeURIComponent(item.slice(index + 1).trim())];
+  }).filter(([key]) => key));
+}
+
+function isSecureRequest(request) {
+  return request.socket?.encrypted || String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim() === "https";
+}
+
+function setSessionCookie(request, response, sessionId, expiresAt) {
+  const secure = isSecureRequest(request) ? "; Secure" : "";
+  response.setHeader("Set-Cookie", `storieslens_session=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=Lax; Expires=${new Date(expiresAt).toUTCString()}${secure}`);
+}
+
+function clearSessionCookie(request, response) {
+  const secure = isSecureRequest(request) ? "; Secure" : "";
+  response.setHeader("Set-Cookie", `storieslens_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`);
+}
+
+function maskDestination(method, destination) {
+  if (method === "email") {
+    const [name, domain] = destination.split("@");
+    return `${name.slice(0, 2)}${"*".repeat(Math.max(1, name.length - 2))}@${domain}`;
+  }
+  return `${destination.slice(0, 3)}****${destination.slice(-4)}`;
+}
+
+function validateDestination(method, value) {
+  const destination = cleanText(value, 160).toLowerCase();
+  if (method === "email" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)) return destination;
+  if (method === "phone" && /^\+?[0-9]{7,15}$/.test(destination.replace(/[\s()-]/g, ""))) return destination.replace(/[\s()-]/g, "");
+  return "";
+}
+
+function hashValue(value) {
+  return crypto.createHash("sha256").update(String(value)).digest("hex");
+}
+
+function createStore(root) {
+  const dataDirectory = path.join(root, ".data");
+  const mediaDirectory = path.join(dataDirectory, "media");
+  const databasePath = path.join(dataDirectory, "platform.json");
+  fs.mkdirSync(mediaDirectory, { recursive: true, mode: 0o700 });
+
+  const empty = () => ({
+    version: 1,
+    users: [],
+    sessions: [],
+    authChallenges: [],
+    projects: [],
+    media: [],
+    guardianConsents: [],
+    shares: [],
+    orders: [],
+    renderJobs: [],
+    notificationSubscriptions: [],
+    productEvents: []
+  });
+
+  function read() {
+    if (!fs.existsSync(databasePath)) return empty();
+    try {
+      return { ...empty(), ...JSON.parse(fs.readFileSync(databasePath, "utf8")) };
+    } catch {
+      const corruptPath = `${databasePath}.corrupt-${Date.now()}`;
+      fs.renameSync(databasePath, corruptPath);
+      return empty();
+    }
+  }
+
+  function write(database) {
+    const temporaryPath = `${databasePath}.${process.pid}.tmp`;
+    fs.writeFileSync(temporaryPath, `${JSON.stringify(database, null, 2)}\n`, { mode: 0o600 });
+    fs.renameSync(temporaryPath, databasePath);
+  }
+
+  function mutate(callback) {
+    const database = read();
+    const result = callback(database);
+    write(database);
+    return result;
+  }
+
+  return { dataDirectory, mediaDirectory, read, mutate };
+}
+
+function publicUser(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    kind: user.kind,
+    displayName: user.displayName || "Creator",
+    ageGroup: user.ageGroup || "unknown",
+    locale: user.locale || "en",
+    signInMethod: user.signInMethod || "guest",
+    maskedDestination: user.maskedDestination || "",
+    createdAt: user.createdAt
+  };
+}
+
+function cleanScene(scene, index) {
+  return {
+    id: cleanId(scene?.id) || `scene-${index + 1}`,
+    title: cleanText(scene?.title || `Scene ${index + 1}`, 120),
+    text: cleanText(scene?.text || scene?.caption, 6000),
+    caption: cleanText(scene?.caption || scene?.text, 600),
+    imageUrl: cleanUrl(scene?.imageUrl),
+    videoUrl: cleanUrl(scene?.videoUrl),
+    narrationMediaId: cleanId(scene?.narrationMediaId),
+    duration: Math.max(2, Math.min(12, Number(scene?.duration) || 5)),
+    transition: ["cut", "fade", "dissolve"].includes(scene?.transition) ? scene.transition : "fade"
+  };
+}
+
+function normalizeProject(input, existing = {}) {
+  const ageGroup = ["under18", "adult", "unknown"].includes(input.ageGroup) ? input.ageGroup : (existing.ageGroup || "unknown");
+  const visibility = ageGroup === "under18" ? "private" : (["private", "invite"].includes(input.visibility) ? input.visibility : (existing.visibility || "private"));
+  const rawScenes = Array.isArray(input.scenes) ? input.scenes : (existing.scenes || []);
+  return {
+    ...existing,
+    title: cleanText(input.title ?? existing.title ?? "My Story", 160) || "My Story",
+    language: ["en", "zh", "bilingual"].includes(input.language) ? input.language : (existing.language || "en"),
+    mode: ["solo", "squad", "classroom", "family"].includes(input.mode) ? input.mode : (existing.mode || "solo"),
+    ageGroup,
+    visibility,
+    sourceType: ["artwork", "text", "voice", "inspiration", "classroom"].includes(input.sourceType) ? input.sourceType : (existing.sourceType || "text"),
+    sourceText: cleanText(input.sourceText ?? existing.sourceText, 6000),
+    draft: cleanText(input.draft ?? existing.draft, 40_000),
+    storyDna: safeJsonValue(input.storyDna ?? existing.storyDna, 24_000),
+    coachHistory: (Array.isArray(input.coachHistory) ? input.coachHistory : (existing.coachHistory || [])).slice(-30).map((entry) => ({
+      role: entry?.role === "coach" ? "coach" : "creator",
+      text: cleanText(entry?.text, 1800),
+      createdAt: cleanText(entry?.createdAt, 40) || nowIso()
+    })),
+    scenes: rawScenes.slice(0, MAX_SCENES).map(cleanScene),
+    coverImageUrl: cleanUrl(input.coverImageUrl ?? existing.coverImageUrl),
+    clientSnapshot: safeJsonValue(input.clientSnapshot ?? existing.clientSnapshot, 120_000)
+  };
+}
+
+function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, enforceImageSafety, reviewArtworkSafety }) {
+  const store = createStore(root);
+
+  function sessionFor(request, response, { create = true } = {}) {
+    const cookieId = cleanId(parseCookies(request).storieslens_session);
+    const database = store.read();
+    let session = database.sessions.find((item) => item.id === cookieId && new Date(item.expiresAt) > new Date());
+    let user = session ? database.users.find((item) => item.id === session.userId) : null;
+    if ((session && user) || !create) return { database, session, user };
+
+    return store.mutate((nextDatabase) => {
+      const createdAt = nowIso();
+      user = { id: crypto.randomUUID(), kind: "guest", displayName: "Creator", ageGroup: "unknown", locale: "en", signInMethod: "guest", createdAt, updatedAt: createdAt };
+      session = { id: crypto.randomBytes(24).toString("hex"), userId: user.id, createdAt, expiresAt: addDays(new Date(), SESSION_DAYS) };
+      nextDatabase.users.push(user);
+      nextDatabase.sessions.push(session);
+      setSessionCookie(request, response, session.id, session.expiresAt);
+      return { database: nextDatabase, session, user };
+    });
+  }
+
+  function requireProject(database, user, projectId) {
+    return database.projects.find((project) => project.id === projectId && project.ownerId === user.id && !project.deletedAt);
+  }
+
+  async function deliverAuthCode(method, destination, code, challengeId) {
+    const webhookUrl = cleanText(process.env.AUTH_DELIVERY_WEBHOOK_URL, 800);
+    if (!webhookUrl) return false;
+    const deliveryResponse = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(process.env.AUTH_DELIVERY_WEBHOOK_SECRET ? { Authorization: `Bearer ${process.env.AUTH_DELIVERY_WEBHOOK_SECRET}` } : {})
+      },
+      body: JSON.stringify({ method, destination, code, challengeId, product: "StoriesLens" })
+    });
+    if (!deliveryResponse.ok) throw new Error("The sign-in code could not be delivered.");
+    return true;
+  }
+
+  async function handleAuth(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/auth/session" && request.method === "GET") {
+      const { user } = sessionFor(request, response);
+      sendJson(response, 200, { authenticated: user.kind === "account", user: publicUser(user) });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/auth/start" && request.method === "POST") {
+      const body = await readJsonBody(request);
+      const method = body.method === "phone" ? "phone" : "email";
+      const destination = validateDestination(method, body.destination);
+      if (!destination) {
+        sendJson(response, 400, { error: method === "email" ? "Enter a valid email address." : "Enter a valid mobile number including country code." });
+        return true;
+      }
+      const isProduction = process.env.NODE_ENV === "production";
+      if (isProduction && !process.env.AUTH_DELIVERY_WEBHOOK_URL) {
+        sendJson(response, 503, { error: "Secure sign-in delivery is not configured yet." });
+        return true;
+      }
+      const code = String(crypto.randomInt(100000, 999999));
+      const challenge = {
+        id: crypto.randomUUID(),
+        method,
+        destinationHash: hashValue(`${method}:${destination}`),
+        maskedDestination: maskDestination(method, destination),
+        codeHash: hashValue(`${code}:${destination}`),
+        attempts: 0,
+        createdAt: nowIso(),
+        expiresAt: new Date(Date.now() + CHALLENGE_MINUTES * 60 * 1000).toISOString(),
+        usedAt: ""
+      };
+      store.mutate((database) => {
+        database.authChallenges = database.authChallenges.filter((item) => new Date(item.expiresAt) > new Date() && !item.usedAt).slice(-1000);
+        database.authChallenges.push(challenge);
+      });
+      try {
+        await deliverAuthCode(method, destination, code, challenge.id);
+      } catch (error) {
+        sendJson(response, 502, { error: error.message });
+        return true;
+      }
+      sendJson(response, 200, {
+        challengeId: challenge.id,
+        maskedDestination: challenge.maskedDestination,
+        expiresInSeconds: CHALLENGE_MINUTES * 60,
+        ...(isProduction ? {} : { devCode: code })
+      });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/auth/verify" && request.method === "POST") {
+      const body = await readJsonBody(request);
+      const challengeId = cleanId(body.challengeId);
+      const code = cleanText(body.code, 12);
+      const destination = validateDestination(body.method === "phone" ? "phone" : "email", body.destination);
+      const current = sessionFor(request, response);
+      const result = store.mutate((database) => {
+        const challenge = database.authChallenges.find((item) => item.id === challengeId);
+        if (!challenge || challenge.usedAt || new Date(challenge.expiresAt) <= new Date()) return { error: "This sign-in code has expired." };
+        challenge.attempts += 1;
+        if (challenge.attempts > 5) return { error: "Too many attempts. Request a new code." };
+        if (!destination || hashValue(`${code}:${destination}`) !== challenge.codeHash) return { error: "The sign-in code is incorrect." };
+        challenge.usedAt = nowIso();
+        let account = database.users.find((item) => item.kind === "account" && item.destinationHash === challenge.destinationHash);
+        if (!account) {
+          account = {
+            id: crypto.randomUUID(),
+            kind: "account",
+            displayName: cleanText(body.displayName, 80) || "Creator",
+            ageGroup: ["under18", "adult"].includes(body.ageGroup) ? body.ageGroup : "unknown",
+            locale: body.locale === "zh" ? "zh" : "en",
+            signInMethod: challenge.method,
+            destinationHash: challenge.destinationHash,
+            maskedDestination: challenge.maskedDestination,
+            createdAt: nowIso(),
+            updatedAt: nowIso()
+          };
+          database.users.push(account);
+        }
+        database.projects.forEach((project) => {
+          if (project.ownerId === current.user.id) project.ownerId = account.id;
+        });
+        const session = database.sessions.find((item) => item.id === current.session.id);
+        session.userId = account.id;
+        session.expiresAt = addDays(new Date(), SESSION_DAYS);
+        return { account, session };
+      });
+      if (result.error) {
+        sendJson(response, 400, { error: result.error });
+        return true;
+      }
+      setSessionCookie(request, response, result.session.id, result.session.expiresAt);
+      sendJson(response, 200, { authenticated: true, user: publicUser(result.account) });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/auth/wechat" && request.method === "POST") {
+      if (!process.env.WECHAT_APP_ID || !process.env.WECHAT_APP_SECRET) {
+        sendJson(response, 503, { error: "WeChat login is reserved but not configured. Add WECHAT_APP_ID and WECHAT_APP_SECRET after the Mini Program is registered." });
+        return true;
+      }
+      sendJson(response, 501, { error: "WeChat code exchange must be enabled with the registered Mini Program domain before production launch." });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/auth/logout" && request.method === "POST") {
+      const cookieId = cleanId(parseCookies(request).storieslens_session);
+      store.mutate((database) => {
+        database.sessions = database.sessions.filter((item) => item.id !== cookieId);
+      });
+      clearSessionCookie(request, response);
+      sendJson(response, 200, { success: true });
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleProjects(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/projects" && request.method === "GET") {
+      const { database, user } = sessionFor(request, response);
+      const projects = database.projects.filter((project) => project.ownerId === user.id && !project.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      sendJson(response, 200, { projects, user: publicUser(user) });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/projects" && request.method === "POST") {
+      const body = await readJsonBody(request, 180_000);
+      const { database, user } = sessionFor(request, response);
+      if (database.projects.filter((project) => project.ownerId === user.id && !project.deletedAt).length >= MAX_PROJECTS_PER_USER) {
+        sendJson(response, 409, { error: "This account has reached its project limit." });
+        return true;
+      }
+      await enforceTextSafety([body.title, body.sourceText, body.draft].filter(Boolean).join("\n"));
+      const createdAt = nowIso();
+      const project = normalizeProject(body);
+      Object.assign(project, { id: crypto.randomUUID(), ownerId: user.id, createdAt, updatedAt: createdAt, version: 1, deletedAt: "" });
+      store.mutate((nextDatabase) => nextDatabase.projects.push(project));
+      sendJson(response, 201, { project });
+      return true;
+    }
+
+    const projectMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)$/);
+    if (!projectMatch) return false;
+    const projectId = cleanId(decodeURIComponent(projectMatch[1]));
+    const { database, user } = sessionFor(request, response);
+    const project = requireProject(database, user, projectId);
+    if (!project) {
+      sendJson(response, 404, { error: "Story project not found." });
+      return true;
+    }
+
+    if (request.method === "GET") {
+      sendJson(response, 200, { project });
+      return true;
+    }
+
+    if (request.method === "PATCH" || request.method === "PUT") {
+      const body = await readJsonBody(request, 180_000);
+      await enforceTextSafety([body.title, body.sourceText, body.draft, ...(body.scenes || []).map((scene) => scene?.text)].filter(Boolean).join("\n"));
+      const updated = store.mutate((nextDatabase) => {
+        const index = nextDatabase.projects.findIndex((item) => item.id === projectId && item.ownerId === user.id && !item.deletedAt);
+        const nextProject = normalizeProject(body, nextDatabase.projects[index]);
+        nextProject.updatedAt = nowIso();
+        nextProject.version = Number(nextProject.version || 0) + 1;
+        nextDatabase.projects[index] = nextProject;
+        return nextProject;
+      });
+      sendJson(response, 200, { project: updated });
+      return true;
+    }
+
+    if (request.method === "DELETE") {
+      store.mutate((nextDatabase) => {
+        const stored = nextDatabase.projects.find((item) => item.id === projectId && item.ownerId === user.id);
+        stored.deletedAt = nowIso();
+        stored.purgeAfter = addDays(new Date(), 30);
+      });
+      sendJson(response, 200, { archived: true, recoverableForDays: 30 });
+      return true;
+    }
+
+    sendJson(response, 405, { error: "Method not allowed" });
+    return true;
+  }
+
+  async function handleMedia(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/media" && request.method === "POST") {
+      const body = await readJsonBody(request, 18_000_000);
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(body.projectId));
+      if (!project) {
+        sendJson(response, 404, { error: "Save the story project before uploading media." });
+        return true;
+      }
+      const match = String(body.dataUrl || "").match(/^data:([^;,]+);base64,([A-Za-z0-9+/=]+)$/);
+      if (!match) {
+        sendJson(response, 400, { error: "Choose a valid image or audio recording." });
+        return true;
+      }
+      const mimeType = match[1].toLowerCase();
+      const imageExtensions = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+      const audioExtensions = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/ogg": "ogg" };
+      const kind = imageExtensions[mimeType] ? "image" : (audioExtensions[mimeType] ? "audio" : "");
+      if (!kind) {
+        sendJson(response, 415, { error: "This media format is not supported." });
+        return true;
+      }
+      const buffer = Buffer.from(match[2], "base64");
+      const limit = kind === "image" ? MAX_IMAGE_BYTES : MAX_AUDIO_BYTES;
+      if (!buffer.length || buffer.length > limit) {
+        sendJson(response, 413, { error: `Keep this ${kind} smaller than ${Math.round(limit / 1024 / 1024)} MB.` });
+        return true;
+      }
+      if (kind === "image") {
+        if (body.metadataRemoved !== true) {
+          sendJson(response, 400, { error: "Image metadata must be removed on the device before upload." });
+          return true;
+        }
+        const artworkReview = await reviewArtworkSafety(body.dataUrl);
+        if (!artworkReview.approved) {
+          sendJson(response, artworkReview.statusCode || 422, {
+            error: ["real_person", "not_artwork"].includes(artworkReview.reasonCode)
+              ? "Real-person photos are not stored. Upload artwork without identifiable people."
+              : "This image was not stored because it did not pass the artwork privacy review.",
+            reasonCode: artworkReview.reasonCode || "uncertain"
+          });
+          return true;
+        }
+      }
+      const mediaId = crypto.randomUUID();
+      const extension = imageExtensions[mimeType] || audioExtensions[mimeType];
+      const ownerDirectory = path.join(store.mediaDirectory, user.id);
+      fs.mkdirSync(ownerDirectory, { recursive: true, mode: 0o700 });
+      const filePath = path.join(ownerDirectory, `${mediaId}.${extension}`);
+      fs.writeFileSync(filePath, buffer, { mode: 0o600 });
+      const media = {
+        id: mediaId,
+        ownerId: user.id,
+        projectId: project.id,
+        kind,
+        mimeType,
+        bytes: buffer.length,
+        filePath,
+        private: true,
+        metadataRemoved: kind === "image",
+        createdAt: nowIso()
+      };
+      store.mutate((nextDatabase) => nextDatabase.media.push(media));
+      sendJson(response, 201, { media: { ...media, filePath: undefined, url: `/api/media/${media.id}` } });
+      return true;
+    }
+
+    const mediaMatch = requestUrl.pathname.match(/^\/api\/media\/([^/]+)$/);
+    if (!mediaMatch || request.method !== "GET") return false;
+    const mediaId = cleanId(decodeURIComponent(mediaMatch[1]));
+    const { database, user } = sessionFor(request, response);
+    const media = database.media.find((item) => item.id === mediaId && item.ownerId === user.id);
+    if (!media || !fs.existsSync(media.filePath)) {
+      sendJson(response, 404, { error: "Private media not found." });
+      return true;
+    }
+    response.writeHead(200, {
+      "Content-Type": media.mimeType,
+      "Content-Length": fs.statSync(media.filePath).size,
+      "Cache-Control": "private, max-age=300",
+      "Content-Disposition": "inline",
+      "X-Robots-Tag": "noindex, noarchive"
+    });
+    fs.createReadStream(media.filePath).pipe(response);
+    return true;
+  }
+
+  async function handleConsentAndSharing(request, response, requestUrl) {
+    const consentRevokeMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/consents\/([^/]+)$/);
+    if (consentRevokeMatch && request.method === "DELETE") {
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(consentRevokeMatch[1])));
+      const consentId = cleanId(decodeURIComponent(consentRevokeMatch[2]));
+      const consent = project ? database.guardianConsents.find((item) => item.id === consentId && item.projectId === project.id && !item.revokedAt) : null;
+      if (!project || !consent) {
+        sendJson(response, 404, { error: "Active guardian approval not found." });
+        return true;
+      }
+      store.mutate((nextDatabase) => {
+        const stored = nextDatabase.guardianConsents.find((item) => item.id === consent.id);
+        stored.revokedAt = nowIso();
+        nextDatabase.shares.forEach((share) => { if (share.projectId === project.id && !share.revokedAt) share.revokedAt = nowIso(); });
+      });
+      sendJson(response, 200, { revoked: true, invitationsRevoked: true });
+      return true;
+    }
+
+    const consentMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/consents$/);
+    if (consentMatch) {
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(consentMatch[1])));
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      if (request.method === "GET") {
+        sendJson(response, 200, { consents: database.guardianConsents.filter((item) => item.projectId === project.id && !item.revokedAt) });
+        return true;
+      }
+      if (request.method === "POST") {
+        const body = await readJsonBody(request);
+        if (body.confirmedAdult !== true || body.approvedPrivateMedia !== true || body.approvedSharing !== true) {
+          sendJson(response, 400, { error: "A parent or legal guardian must confirm every required permission." });
+          return true;
+        }
+        const guardianName = cleanText(body.guardianName, 100);
+        const relationship = cleanText(body.relationship, 80);
+        if (!guardianName || !relationship) {
+          sendJson(response, 400, { error: "Enter the guardian name and relationship." });
+          return true;
+        }
+        const consent = {
+          id: crypto.randomUUID(),
+          projectId: project.id,
+          guardianName,
+          relationship,
+          scopes: ["private_media", "invite_share", "print_proof"],
+          verificationStatus: user.kind === "account" ? "account-attested" : "self-attested",
+          policyVersion: "2026-09-07",
+          createdAt: nowIso(),
+          revokedAt: ""
+        };
+        store.mutate((nextDatabase) => nextDatabase.guardianConsents.push(consent));
+        sendJson(response, 201, { consent, notice: "This records guardian approval. Configure a verified parental-consent provider before a public child launch." });
+        return true;
+      }
+      sendJson(response, 405, { error: "Method not allowed" });
+      return true;
+    }
+
+    const shareMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/share$/);
+    if (shareMatch && request.method === "POST") {
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(shareMatch[1])));
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      if (project.ageGroup === "under18") {
+        const consent = database.guardianConsents.find((item) => item.projectId === project.id && !item.revokedAt && item.scopes.includes("invite_share"));
+        if (!consent) {
+          sendJson(response, 403, { error: "Guardian approval is required before sharing a young creator's project." });
+          return true;
+        }
+      }
+      const token = crypto.randomBytes(20).toString("base64url");
+      const share = { id: crypto.randomUUID(), token, projectId: project.id, ownerId: user.id, visibility: "invite", createdAt: nowIso(), expiresAt: addDays(new Date(), 14), revokedAt: "" };
+      store.mutate((nextDatabase) => nextDatabase.shares.push(share));
+      sendJson(response, 201, { shareUrl: `/share/${token}`, expiresAt: share.expiresAt, visibility: "invite" });
+      return true;
+    }
+
+    const shareApiMatch = requestUrl.pathname.match(/^\/api\/shares\/([^/]+)$/);
+    if (shareApiMatch && request.method === "GET") {
+      const database = store.read();
+      const token = cleanText(decodeURIComponent(shareApiMatch[1]), 80);
+      const share = database.shares.find((item) => item.token === token && !item.revokedAt && new Date(item.expiresAt) > new Date());
+      const project = share ? database.projects.find((item) => item.id === share.projectId && !item.deletedAt) : null;
+      if (!share || !project) {
+        sendJson(response, 404, { error: "This private story link is unavailable or has expired." });
+        return true;
+      }
+      sendJson(response, 200, {
+        project: {
+          id: project.id,
+          title: project.title,
+          language: project.language,
+          draft: project.draft,
+          storyDna: project.storyDna,
+          scenes: project.scenes.map((scene) => ({ ...scene, narrationMediaId: "" })),
+          coverImageUrl: project.coverImageUrl,
+          updatedAt: project.updatedAt
+        },
+        expiresAt: share.expiresAt
+      });
+      return true;
+    }
+
+    const sharePageMatch = requestUrl.pathname.match(/^\/share\/([^/]+)$/);
+    if (sharePageMatch && request.method === "GET") {
+      const database = store.read();
+      const token = cleanText(decodeURIComponent(sharePageMatch[1]), 80);
+      const share = database.shares.find((item) => item.token === token && !item.revokedAt && new Date(item.expiresAt) > new Date());
+      const project = share ? database.projects.find((item) => item.id === share.projectId && !item.deletedAt) : null;
+      const title = project ? project.title : "Private StoriesLens story";
+      const description = project ? cleanText(project.draft || project.sourceText || "A private story shared with you.", 180) : "This private story link has expired.";
+      const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:image" content="/assets/storieslens-logo.png"><title>${escapeHtml(title)} · StoriesLens</title><link rel="stylesheet" href="/app-shell.css"></head><body class="shared-story-page"><main class="shared-story-card"><a href="/index.html" class="app-brand">StoriesLens</a><p class="app-kicker">PRIVATE STORY INVITATION</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p>${project ? `<a class="app-primary" href="/shared-story.html?token=${encodeURIComponent(token)}">Open private story</a>` : `<a class="app-primary" href="/index.html">Return home</a>`}<small>Invite-only · Expires automatically · Not indexed by search engines</small></main></body></html>`;
+      response.writeHead(project ? 200 : 404, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" });
+      response.end(page);
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleOrdersAndRender(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/orders" && request.method === "GET") {
+      const { database, user } = sessionFor(request, response);
+      sendJson(response, 200, { orders: database.orders.filter((item) => item.ownerId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/orders" && request.method === "POST") {
+      const body = await readJsonBody(request);
+      const { database, user } = sessionFor(request, response);
+      const offerId = cleanId(body.offer);
+      const offer = offerCatalog[offerId];
+      const project = requireProject(database, user, cleanId(body.projectId));
+      if (!offer || !project) {
+        sendJson(response, 400, { error: "Choose a valid story and product." });
+        return true;
+      }
+      const checkoutUrl = cleanText(process.env[offer.envKey], 1000);
+      const checkoutReady = (() => {
+        try {
+          const url = new URL(checkoutUrl);
+          return url.protocol === "https:" && ["buy.stripe.com", "checkout.stripe.com"].includes(url.hostname);
+        } catch { return false; }
+      })();
+      const order = { id: crypto.randomUUID(), ownerId: user.id, projectId: project.id, offerId, name: offer.name, price: offer.price, status: checkoutReady ? "awaiting_payment" : "interest_only", createdAt: nowIso(), updatedAt: nowIso() };
+      store.mutate((nextDatabase) => nextDatabase.orders.push(order));
+      sendJson(response, 201, { order, checkoutUrl: checkoutReady ? checkoutUrl : "", fallbackUrl: checkoutReady ? "" : offer.fallbackUrl });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/render-jobs" && request.method === "GET") {
+      const { database, user } = sessionFor(request, response);
+      sendJson(response, 200, { renderJobs: database.renderJobs.filter((item) => item.ownerId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((item) => ({ ...item, outputFilePath: undefined })) });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/render-jobs" && request.method === "POST") {
+      const body = await readJsonBody(request);
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(body.projectId));
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      const scenes = project.scenes.length ? project.scenes : [cleanScene({ title: project.title, text: project.draft || project.sourceText, duration: 8 }, 0)];
+      const totalDuration = scenes.reduce((sum, scene) => sum + scene.duration, 0);
+      const ready = scenes.every((scene) => scene.imageUrl || scene.videoUrl);
+      const job = {
+        id: crypto.randomUUID(),
+        ownerId: user.id,
+        projectId: project.id,
+        provider: "hyperframes",
+        status: ready ? "ready_for_render" : "awaiting_media",
+        aspectRatio: body.aspectRatio === "9:16" ? "9:16" : "16:9",
+        resolution: body.resolution === "1080p" ? "1080p" : "720p",
+        totalDuration,
+        plan: scenes.map((scene, index) => ({ ...scene, start: scenes.slice(0, index).reduce((sum, item) => sum + item.duration, 0), trackIndex: 1 })),
+        outputUrl: "",
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+      store.mutate((nextDatabase) => nextDatabase.renderJobs.push(job));
+      let renderResult = { started: false };
+      if (ready) {
+        renderResult = queueHyperframesRender({
+          root,
+          project,
+          mediaRecords: database.media.filter((item) => item.ownerId === user.id),
+          job,
+          onUpdate(update) {
+            store.mutate((nextDatabase) => {
+              const storedJob = nextDatabase.renderJobs.find((item) => item.id === job.id);
+              if (storedJob) Object.assign(storedJob, update, { updatedAt: nowIso() });
+            });
+          }
+        });
+        if (renderResult.started) {
+          job.status = "rendering";
+          store.mutate((nextDatabase) => {
+            const storedJob = nextDatabase.renderJobs.find((item) => item.id === job.id);
+            if (storedJob) Object.assign(storedJob, { status: "rendering", updatedAt: nowIso() });
+          });
+        }
+      }
+      const notice = !ready
+        ? "Add an approved image or video to every scene before rendering."
+        : renderResult.started
+          ? "Your movie is rendering privately inside StoriesLens. You can return to My Stories while it finishes."
+          : "The movie plan is ready, but this server still needs the HyperFrames render worker installed.";
+      sendJson(response, 201, { renderJob: job, notice });
+      return true;
+    }
+
+    const renderOutputMatch = requestUrl.pathname.match(/^\/api\/render-jobs\/([^/]+)\/output$/);
+    if (renderOutputMatch && request.method === "GET") {
+      const { database, user } = sessionFor(request, response);
+      const job = database.renderJobs.find((item) => item.id === cleanId(decodeURIComponent(renderOutputMatch[1])) && item.ownerId === user.id);
+      if (!job || job.status !== "completed" || !job.outputFilePath || !fs.existsSync(job.outputFilePath)) {
+        sendJson(response, 404, { error: "The private movie is not available yet." });
+        return true;
+      }
+      response.writeHead(200, {
+        "Content-Type": "video/mp4",
+        "Content-Length": fs.statSync(job.outputFilePath).size,
+        "Content-Disposition": `attachment; filename="storieslens-${job.id}.mp4"`,
+        "Cache-Control": "private, no-store",
+        "X-Robots-Tag": "noindex, noarchive"
+      });
+      fs.createReadStream(job.outputFilePath).pipe(response);
+      return true;
+    }
+
+    const renderMatch = requestUrl.pathname.match(/^\/api\/render-jobs\/([^/]+)$/);
+    if (renderMatch && request.method === "GET") {
+      const { database, user } = sessionFor(request, response);
+      const job = database.renderJobs.find((item) => item.id === cleanId(decodeURIComponent(renderMatch[1])) && item.ownerId === user.id);
+      if (!job) sendJson(response, 404, { error: "Render job not found." });
+      else sendJson(response, 200, { renderJob: { ...job, outputFilePath: undefined } });
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleNotificationsAndStatus(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/product-events" && request.method === "POST") {
+      const body = await readJsonBody(request, 12_000);
+      const name = cleanText(body.name, 60).replace(/[^a-zA-Z0-9_-]/g, "");
+      if (!name) {
+        sendJson(response, 400, { error: "A valid product event name is required." });
+        return true;
+      }
+      const { user } = sessionFor(request, response);
+      const rawProperties = safeJsonValue(body.properties, 4_000);
+      const properties = Object.fromEntries(Object.entries(rawProperties).filter(([, value]) => ["string", "number", "boolean"].includes(typeof value)).slice(0, 20).map(([key, value]) => [cleanText(key, 40), typeof value === "string" ? cleanText(value, 80) : value]));
+      store.mutate((database) => {
+        database.productEvents.push({
+          id: crypto.randomUUID(),
+          ownerId: user.id,
+          name,
+          page: cleanText(body.page, 100),
+          properties,
+          occurredAt: cleanText(body.at, 40) || nowIso(),
+          receivedAt: nowIso()
+        });
+        database.productEvents = database.productEvents.slice(-20_000);
+      });
+      sendJson(response, 202, { accepted: true });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/platform/status" && request.method === "GET") {
+      sendJson(response, 200, {
+        features: {
+          localCloudSave: true,
+          emailPhoneAuth: process.env.NODE_ENV !== "production" || Boolean(process.env.AUTH_DELIVERY_WEBHOOK_URL),
+          wechatAuth: Boolean(process.env.WECHAT_APP_ID && process.env.WECHAT_APP_SECRET),
+          pushDelivery: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
+          stripeCheckout: Object.values(offerCatalog).some((offer) => Boolean(process.env[offer.envKey])),
+          hyperframesWorker: Boolean(resolveBinary(root)),
+          mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY),
+          safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY)
+        },
+        region: process.env.STORIESLENS_REGION || "local",
+        dataMode: process.env.NODE_ENV === "production" ? "production" : "local-development"
+      });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/notification-subscriptions" && request.method === "POST") {
+      const body = await readJsonBody(request, 20_000);
+      const { user } = sessionFor(request, response);
+      const subscription = safeJsonValue(body.subscription, 16_000);
+      if (!subscription.endpoint) {
+        sendJson(response, 400, { error: "A valid browser notification subscription is required." });
+        return true;
+      }
+      store.mutate((database) => {
+        database.notificationSubscriptions = database.notificationSubscriptions.filter((item) => !(item.ownerId === user.id && item.endpoint === subscription.endpoint));
+        database.notificationSubscriptions.push({ id: crypto.randomUUID(), ownerId: user.id, endpoint: cleanText(subscription.endpoint, 2000), subscription, createdAt: nowIso() });
+      });
+      sendJson(response, 201, { saved: true, deliveryConfigured: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) });
+      return true;
+    }
+    return false;
+  }
+
+  return async function handlePlatformApi(request, response, requestUrl) {
+    try {
+      if (await handleAuth(request, response, requestUrl)) return true;
+      if (await handleProjects(request, response, requestUrl)) return true;
+      if (await handleMedia(request, response, requestUrl)) return true;
+      if (await handleConsentAndSharing(request, response, requestUrl)) return true;
+      if (await handleOrdersAndRender(request, response, requestUrl)) return true;
+      if (await handleNotificationsAndStatus(request, response, requestUrl)) return true;
+      return false;
+    } catch (error) {
+      sendJson(response, error.statusCode || 500, { code: error.code || "PLATFORM_REQUEST_FAILED", error: error.message || "StoriesLens could not complete this request." });
+      return true;
+    }
+  };
+}
+
+module.exports = { createPlatformApi };

@@ -30,7 +30,7 @@ html {
   scroll-behavior: smooth;
 }
 
-body {
+body {font-size:18px;
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
@@ -109,7 +109,7 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 780;
   white-space: nowrap;
 }
@@ -139,7 +139,7 @@ img {
   justify-content: center;
   gap: 36px;
   color: rgba(255, 255, 255, 0.92);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .main-nav a,
@@ -182,7 +182,7 @@ img {
   min-height: 46px;
   gap: 12px;
   padding: 0 18px;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .header-actions {
@@ -198,7 +198,7 @@ img {
   min-height: 46px;
   gap: 9px;
   padding: 0 16px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1;
 }
@@ -263,7 +263,7 @@ img {
   background: rgba(5, 8, 20, 0.58);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.9);
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .mini-badge svg {
@@ -287,7 +287,7 @@ img {
 h1 {
   max-width: 660px;
   margin: 0;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 860;
   line-height: 1.22;
   color: #fff;
@@ -304,7 +304,7 @@ h1 span {
 
 .cn-tagline {
   margin: 14px 0 12px;
-  font-size: 25px;
+  font-size: 27px;
   font-weight: 650;
 }
 
@@ -316,14 +316,14 @@ h1 span {
 .hero-subtitle {
   margin: 0 0 16px;
   color: #c9d2f5;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .hero-description {
   max-width: 550px;
   margin: 0;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.55;
 }
 
@@ -339,7 +339,7 @@ h1 span {
   min-height: 64px;
   gap: 13px;
   padding: 0 22px;
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .primary-button svg {
@@ -447,7 +447,7 @@ h1 span {
   gap: 10px;
   margin: 0;
   color: white;
-  font-size: clamp(20px, 2.2vw, 29px);
+  font-size: clamp(22px, 2.2vw, 31px);
   line-height: 1.08;
 }
 
@@ -458,14 +458,14 @@ h1 span {
 
 .showcase-title-group small {
   color: rgba(219, 213, 255, 0.82);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .showcase-title-group p {
   margin: 10px 0 0;
   color: rgba(232, 236, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -485,7 +485,7 @@ h1 span {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.88);
-  font-size: 21px;
+  font-size: 23px;
   cursor: pointer;
 }
 
@@ -518,7 +518,7 @@ h1 span {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   color: white;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   text-decoration: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -599,7 +599,7 @@ h1 span {
 .story-card h3 {
   margin: 10px 10px 8px;
   color: white;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.22;
 }
 
@@ -619,7 +619,7 @@ h1 span {
   border-radius: 999px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -644,7 +644,7 @@ h1 span {
   border: 0;
   background: transparent;
   color: #a88cff;
-  font-size: 42px;
+  font-size: 44px;
   line-height: 1;
   transform: translateY(-50%);
   cursor: pointer;
@@ -782,7 +782,7 @@ h1 span {
 .tablet p {
   margin: 0;
   font-family: Georgia, serif;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.55;
 }
 
@@ -834,12 +834,12 @@ h1 span {
 
 .card-kicker {
   color: #d6ddff;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .vocab-card h3 {
   margin: 16px 0 2px;
-  font-size: 19px;
+  font-size: 21px;
 }
 
 .phonetic,
@@ -847,7 +847,7 @@ h1 span {
 .vocab-card p {
   margin: 0 0 7px;
   color: rgba(255, 255, 255, 0.86);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.42;
 }
 
@@ -925,7 +925,7 @@ h1 span {
   align-items: center;
   gap: 10px;
   color: white;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .step-number {
@@ -936,7 +936,7 @@ h1 span {
   border: 1px solid rgba(191, 196, 255, 0.8);
   border-radius: 50%;
   background: rgba(83, 65, 211, 0.6);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .play-dot {
@@ -1078,7 +1078,7 @@ h1 span {
   margin: 18px 16px;
   color: #392718;
   font-family: Georgia, serif;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -1247,7 +1247,7 @@ h1 span {
   border-radius: 8px;
   background: rgba(10, 16, 36, 0.86);
   color: white;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.35;
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
 }
@@ -1274,7 +1274,7 @@ h1 span {
   margin: 4px 0 14px;
   padding: 10px 22px;
   color: rgba(255, 255, 255, 0.92);
-  font-size: 22px;
+  font-size: 24px;
 }
 
 .literacy-loop strong:nth-of-type(2) {
@@ -1307,14 +1307,14 @@ h1 span {
 .feature-card h2,
 .workflow-panel h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .feature-card p,
 .workflow-panel p {
   margin: 6px 0 0;
   color: rgba(255, 255, 255, 0.78);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.38;
 }
 
@@ -1584,11 +1584,11 @@ h1 span {
 }
 
 .panel-heading h2 {
-  font-size: 27px;
+  font-size: 29px;
 }
 
 .panel-heading p {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .panel-icon {
@@ -1641,34 +1641,34 @@ h1 span {
   display: block;
   margin-top: 10px;
   color: white;
-  font-size: 13px;
+  font-size: 15px;
   white-space: nowrap;
 }
 
 .read-panel .flow-item > span {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.2;
   white-space: normal;
 }
 
 .write-panel .flow-item > span {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.2;
   white-space: normal;
 }
 
 .flow-arrow {
   color: #9c83ff;
-  font-size: 36px;
+  font-size: 38px;
   text-align: center;
 }
 
 .read-panel .flow-arrow {
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .write-panel .flow-arrow {
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .flow-visual {
@@ -1944,7 +1944,7 @@ h1 span {
 .publish-video {
   margin: 0 !important;
   color: rgba(255, 255, 255, 0.94);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1.12;
   text-align: center;
@@ -1955,7 +1955,7 @@ h1 span {
   min-height: 54px;
   gap: 22px;
   margin: 0 auto;
-  font-size: 21px;
+  font-size: 23px;
 }
 
 .site-footer {
@@ -1965,7 +1965,7 @@ h1 span {
   gap: 18px;
   padding: 28px 4px 0;
   color: rgba(255, 255, 255, 0.67);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .site-footer nav {
@@ -2041,7 +2041,7 @@ h1 span {
 
 .read-hero h1 {
   max-width: 760px;
-  font-size: clamp(40px, 5vw, 58px);
+  font-size: clamp(42px, 5vw, 60px);
   letter-spacing: 0;
 }
 
@@ -2049,7 +2049,7 @@ h1 span {
   max-width: 880px;
   margin: 12px 0 0;
   color: rgba(231, 236, 255, 0.82);
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.55;
 }
 
@@ -2072,7 +2072,7 @@ h1 span {
   color: rgba(232, 237, 255, 0.84);
   background: rgba(6, 12, 30, 0.62);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .read-badges span:last-child,
@@ -2098,7 +2098,7 @@ h1 span {
 .grade-selector-copy span {
   display: block;
   color: #b7c5ff;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -2107,13 +2107,13 @@ h1 span {
   display: block;
   margin-top: 6px;
   color: white;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .grade-selector-copy p {
   margin: 6px 0 0;
   color: rgba(225, 231, 255, 0.76);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -2162,7 +2162,7 @@ h1 span {
 
 .skill-board-heading span {
   color: #b9c6ff;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2171,7 +2171,7 @@ h1 span {
 .skill-board-heading h2 {
   margin: 0;
   color: white;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .skill-board-heading p {
@@ -2243,7 +2243,7 @@ h1 span {
 .skill-card-front small,
 .skill-card-back small {
   color: #c6d0ff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -2251,7 +2251,7 @@ h1 span {
 
 .skill-card-front strong {
   color: white;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.16;
 }
 
@@ -2267,12 +2267,12 @@ h1 span {
 
 .skill-card-back strong {
   color: white;
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .skill-card-back span {
   color: rgba(236, 241, 255, 0.82);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.38;
 }
 
@@ -2306,7 +2306,7 @@ h1 span {
 .story-library-heading span {
   display: block;
   color: #ffd995;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2315,7 +2315,7 @@ h1 span {
 .story-library-heading h2 {
   margin: 4px 0 0;
   color: white;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .story-library-intro {
@@ -2359,7 +2359,7 @@ h1 span {
 
 .story-library-summary span {
   color: #aebcff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2367,7 +2367,7 @@ h1 span {
 
 .story-library-summary strong {
   color: white;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .story-library-summary small {
@@ -2410,13 +2410,13 @@ h1 span {
 .story-pack-group-heading h3 {
   margin: 0;
   color: #ffe0a4;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .story-pack-group-heading p {
   margin: 0;
   color: rgba(232, 237, 255, 0.66);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.42;
 }
 
@@ -2468,7 +2468,7 @@ h1 span {
 
 .story-pack-meta {
   color: #b9c8ff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -2476,28 +2476,28 @@ h1 span {
 
 .story-pack-card strong {
   color: white;
-  font-size: 17px;
+  font-size: 19px;
   line-height: 1.18;
 }
 
 .story-pack-card em {
   color: #ffd996;
   font-style: normal;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
 }
 
 .story-pack-preview {
   margin: 0;
   color: rgba(232, 237, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.4;
 }
 
 .story-pack-quiz-list {
   align-self: end;
   color: #c8b8ff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -2592,20 +2592,20 @@ h1 span {
   border: 1px solid rgba(222, 229, 255, 0.4);
   border-radius: 50%;
   color: white;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .read-step .step-copy {
   margin: 0;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 760;
   line-height: 1.2;
 }
 
 .read-step small {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -2639,7 +2639,7 @@ h1 span {
 
 .step-connector {
   color: rgba(159, 137, 255, 0.74);
-  font-size: 34px;
+  font-size: 36px;
   text-align: center;
 }
 
@@ -2647,7 +2647,7 @@ h1 span {
   margin: 8px 0 8px;
   color: rgba(220, 226, 255, 0.58);
   text-align: center;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .reading-workspace {
@@ -2680,7 +2680,7 @@ h1 span {
 .locked-heading h2 {
   margin: 0;
   color: white;
-  font-size: 19px;
+  font-size: 21px;
 }
 
 .section-title-row h2 span,
@@ -2688,7 +2688,7 @@ h1 span {
 .locked-heading h2 span {
   margin-left: 8px;
   color: rgba(230, 235, 255, 0.7);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .story-title-row {
@@ -2703,7 +2703,7 @@ h1 span {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
   color: white;
-  font-size: clamp(24px, 2.4vw, 32px);
+  font-size: clamp(26px, 2.4vw, 34px);
   font-weight: 500;
 }
 
@@ -2712,7 +2712,7 @@ h1 span {
   margin-top: 18px;
   color: rgba(255, 255, 255, 0.92);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.75;
 }
 
@@ -2841,7 +2841,7 @@ h1 span {
 
 .recording-header small {
   color: var(--gold);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -2849,13 +2849,13 @@ h1 span {
 .recording-header h3 {
   margin: 3px 0 0;
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .recording-header span {
   max-width: 220px;
   color: rgba(229, 235, 255, 0.7);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
   text-align: right;
 }
@@ -2909,7 +2909,7 @@ h1 span {
 .recording-history-card p {
   margin: 0;
   color: rgba(229, 235, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -2985,7 +2985,7 @@ h1 span {
 
 .vocab-card-actions span {
   color: white;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 900;
 }
 
@@ -3167,7 +3167,7 @@ h1 span {
 
 .locked-card-grid p {
   margin: 10px 0 12px;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -3177,7 +3177,7 @@ h1 span {
   border-radius: 6px;
   color: #bcecc4;
   background: rgba(78, 170, 112, 0.28);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -3234,7 +3234,7 @@ h1 span {
   display: inline-flex;
   margin-bottom: 8px;
   color: var(--gold);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -3242,7 +3242,7 @@ h1 span {
 .imitation-stage-card h3 {
   margin: 0 0 8px;
   color: #fff;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .imitation-stage-card p,
@@ -3260,7 +3260,7 @@ h1 span {
   background: rgba(255, 215, 128, 0.1);
   color: #fff;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .imitation-card {
@@ -3315,7 +3315,7 @@ h1 span {
 .word-choice-bank span {
   align-self: center;
   color: #ffd995;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -3328,7 +3328,7 @@ h1 span {
   color: #efe8ff;
   background: rgba(91, 68, 165, 0.35);
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 850;
   cursor: pointer;
 }
@@ -3361,7 +3361,7 @@ h1 span {
 
 .voice-imitation-panel span {
   color: rgba(232, 238, 255, 0.78);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
@@ -3398,7 +3398,7 @@ h1 span {
   color: white;
   background: rgba(30, 53, 112, 0.74);
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 850;
   cursor: pointer;
 }
@@ -3457,7 +3457,7 @@ h1 span {
 
 .tutor-checklist strong {
   color: #fff;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .tutor-checklist ul {
@@ -3475,7 +3475,7 @@ h1 span {
   border-radius: 999px;
   color: rgba(226, 233, 255, 0.7);
   background: rgba(8, 15, 36, 0.45);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 850;
 }
 
@@ -3526,7 +3526,7 @@ h1 span {
 }
 
 .imitation-preview-card p {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .visual-drafts-shelf {
@@ -3549,7 +3549,7 @@ h1 span {
 
 .visual-drafts-heading small {
   color: var(--gold);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -3557,7 +3557,7 @@ h1 span {
 .visual-drafts-heading h3 {
   margin: 2px 0 0;
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .visual-drafts-heading p,
@@ -3593,13 +3593,13 @@ h1 span {
 .visual-draft-card h4 {
   margin: 0 0 6px;
   color: #fff;
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .visual-draft-card p {
   margin: 0;
   color: rgba(229, 235, 255, 0.72);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -3616,7 +3616,7 @@ h1 span {
   border-radius: 999px;
   color: rgba(238, 242, 255, 0.82);
   background: rgba(42, 62, 128, 0.36);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .draft-action-row {
@@ -3660,7 +3660,7 @@ h1 span {
   z-index: 1;
   margin: 0;
   color: rgba(221, 228, 255, 0.6);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .teacher-upload-panel {
@@ -3685,7 +3685,7 @@ h1 span {
   border-radius: 999px;
   color: #bdc9ff;
   background: rgba(35, 45, 90, 0.42);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -3693,7 +3693,7 @@ h1 span {
 .teacher-upload-panel h2 {
   margin: 0;
   color: white;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .teacher-upload-panel p {
@@ -3711,7 +3711,7 @@ h1 span {
   display: grid;
   gap: 7px;
   color: rgba(239, 243, 255, 0.84);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -3780,7 +3780,7 @@ h1 span {
 .ccss-match-output h3 {
   margin: 0 0 10px;
   color: #fff;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .matched-skill-card {
@@ -3798,7 +3798,7 @@ h1 span {
 
 .matched-skill-card strong {
   color: white;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .matched-skill-card p,
@@ -3829,7 +3829,7 @@ h1 span {
   background: radial-gradient(circle at 45% 20%, rgba(255, 255, 255, 0.16), rgba(38, 20, 104, 0.76));
   box-shadow: 0 0 32px rgba(136, 95, 255, 0.48);
   text-align: center;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   line-height: 1.05;
 }
@@ -3890,7 +3890,7 @@ h1 span {
   color: white;
   background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
 }
 
@@ -3901,14 +3901,14 @@ h1 span {
   border-radius: 999px;
   color: #cfd8ff;
   background: rgba(63, 75, 143, 0.3);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
 }
 
 .read-modal-card h2 {
   margin: 16px 0 8px;
   color: white;
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .read-modal-card p {
@@ -3939,7 +3939,7 @@ h1 span {
   gap: 44px;
   padding: 24px 0 0;
   color: rgba(230, 235, 255, 0.72);
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .visual-write-page {
@@ -3965,7 +3965,7 @@ h1 span {
 }
 
 .write-grade-select span {
-  font-size: 13px;
+  font-size: 15px;
   color: rgba(238, 242, 255, 0.8);
   white-space: nowrap;
 }
@@ -4153,7 +4153,7 @@ body[data-identity-mode="teacher"] .student-only {
 
 .write-hero h1 {
   margin: 0;
-  font-size: clamp(32px, 3vw, 52px);
+  font-size: clamp(34px, 3vw, 54px);
   line-height: 1.05;
   letter-spacing: 0;
 }
@@ -4162,7 +4162,7 @@ body[data-identity-mode="teacher"] .student-only {
   max-width: 760px;
   margin: 12px 0 16px;
   color: rgba(235, 239, 255, 0.82);
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .write-badges {
@@ -4286,7 +4286,7 @@ body[data-identity-mode="teacher"] .student-only {
 
 .free-create-header span {
   color: #ffd991;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4295,7 +4295,7 @@ body[data-identity-mode="teacher"] .student-only {
 .free-create-header h2 {
   margin: 4px 0 0;
   color: #fff;
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .free-create-header p {
@@ -4452,19 +4452,19 @@ body[data-identity-mode="teacher"] .student-only {
 
 .ccss-diagnostic-card span {
   color: rgba(238, 243, 255, 0.72);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 850;
 }
 
 .ccss-diagnostic-card strong {
   color: #fff;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .ccss-diagnostic-card p {
   margin: 0;
   color: rgba(228, 235, 255, 0.68);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.38;
 }
 
@@ -4499,7 +4499,7 @@ body[data-identity-mode="teacher"] .student-only {
 
 .open-claw-feedback span {
   color: #ffd991;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -4578,14 +4578,14 @@ body[data-identity-mode="teacher"] .student-only {
 
 .write-panel-title span {
   color: #fff;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 850;
 }
 
 .write-panel-title strong,
 .write-panel-title small {
   color: rgba(219, 228, 255, 0.78);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -4645,7 +4645,7 @@ body[data-identity-mode="teacher"] .student-only {
 }
 
 .skill-copy strong {
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .skill-copy em {
@@ -4659,7 +4659,7 @@ body[data-identity-mode="teacher"] .student-only {
 .skill-copy b,
 .standards-footnote {
   color: rgba(222, 229, 255, 0.74);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.3;
 }
 
@@ -4705,7 +4705,7 @@ body[data-identity-mode="teacher"] .student-only {
   right: 16px;
   bottom: 12px;
   color: rgba(235, 240, 255, 0.78);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -4742,7 +4742,7 @@ body[data-identity-mode="teacher"] .student-only {
   border-radius: 8px;
   color: rgba(229, 236, 255, 0.78);
   background: rgba(7, 15, 38, 0.58);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -4774,7 +4774,7 @@ body[data-identity-mode="teacher"] .student-only {
   display: grid;
   gap: 6px;
   color: rgba(231, 237, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -4903,7 +4903,7 @@ body[data-identity-mode="teacher"] .student-only {
 }
 
 .action-icon::before {
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .image-action::before { content: "▧"; }
@@ -4964,7 +4964,7 @@ body[data-identity-mode="teacher"] .student-only {
 
 .art-style-card small {
   color: rgba(229, 235, 255, 0.76);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .section-mini-title {
@@ -5014,13 +5014,13 @@ body[data-identity-mode="teacher"] .student-only {
   padding: 4px 8px;
   border-radius: 6px;
   background: rgba(2, 8, 18, 0.72);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .image-generation-status {
   margin: 10px 0 0;
   color: rgba(226, 235, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -5042,7 +5042,7 @@ body[data-identity-mode="teacher"] .student-only {
   color: #fff;
   background: linear-gradient(135deg, rgba(44, 104, 244, 0.8), rgba(132, 67, 231, 0.82));
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
   text-decoration: none;
   cursor: pointer;
 }
@@ -5126,13 +5126,13 @@ body[data-identity-mode="teacher"] .student-only {
   display: block;
   margin-bottom: 8px;
   color: #fff;
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .group-writing-grid p {
   margin: 0;
   color: rgba(226, 234, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -5230,7 +5230,7 @@ body[data-identity-mode="teacher"] .student-only {
   padding: 4px 8px;
   border-radius: 6px;
   background: rgba(3, 8, 20, 0.76);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 850;
 }
 
@@ -5266,7 +5266,7 @@ body[data-identity-mode="teacher"] .student-only {
 }
 
 .write-progress-panel strong {
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .write-progress-track {
@@ -5287,7 +5287,7 @@ body[data-identity-mode="teacher"] .student-only {
 .write-progress-panel p {
   margin: 0;
   color: var(--gold);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 850;
 }
 
@@ -5322,7 +5322,7 @@ body[data-identity-mode="teacher"] .student-only {
 }
 
 .write-lobster-tutor span {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1.1;
 }
@@ -5454,7 +5454,7 @@ body[data-identity-mode="teacher"] .student-only {
 
 .dashboard-hero h1 {
   margin: 8px 0 10px;
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .dashboard-hero p {
@@ -5534,7 +5534,7 @@ body[data-identity-mode="teacher"] .student-only {
 }
 
 .dashboard-meter strong {
-  font-size: 54px;
+  font-size: 56px;
   color: var(--gold);
 }
 
@@ -5891,7 +5891,7 @@ body[data-identity-mode="teacher"] .student-only {
   }
 
   h1 {
-    font-size: 25px;
+    font-size: 27px;
   }
 
   .hero {
@@ -5947,7 +5947,7 @@ body[data-identity-mode="teacher"] .student-only {
 
   .literacy-loop {
     flex-wrap: wrap;
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .flow-steps {
@@ -5967,15 +5967,15 @@ body[data-identity-mode="teacher"] .student-only {
 
   .flow-arrow {
     transform: rotate(90deg);
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .read-panel .flow-arrow {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .write-panel .flow-arrow {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .read-panel .flow-visual {
@@ -6035,7 +6035,7 @@ body[data-identity-mode="teacher"] .student-only {
   }
 
   .write-hero h1 {
-    font-size: 28px;
+    font-size: 30px;
   }
 
   .write-hero-art {
@@ -6052,7 +6052,7 @@ body[data-identity-mode="teacher"] .student-only {
   }
 
   .brand {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .brand-mark {
@@ -6063,7 +6063,7 @@ body[data-identity-mode="teacher"] .student-only {
   .top-cta {
     min-width: 150px;
     min-height: 42px;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .student-showcase {
@@ -6096,7 +6096,7 @@ body[data-identity-mode="teacher"] .student-only {
 
   .main-nav {
     gap: 18px;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .badge-row {
@@ -6105,15 +6105,15 @@ body[data-identity-mode="teacher"] .student-only {
 
   .mini-badge {
     padding: 0 12px;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   h1 {
-    font-size: 22px;
+    font-size: 24px;
   }
 
   .cn-tagline {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .hero-actions,
@@ -6158,7 +6158,7 @@ body[data-identity-mode="teacher"] .student-only {
   }
 
   .panel-heading h2 {
-    font-size: 22px;
+    font-size: 24px;
   }
 
   .workflow-panel {
@@ -6189,7 +6189,7 @@ body[data-identity-mode="teacher"] .student-only {
 .teacher-login-bar h2 {
   margin: 0 0 6px;
   color: #fff;
-  font-size: 22px;
+  font-size: 24px;
   letter-spacing: 0;
 }
 
@@ -6231,7 +6231,7 @@ body[data-identity-mode="teacher"] .student-only {
   grid-column: 1 / -1;
   flex-wrap: wrap;
   gap: 8px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .teacher-login-notes span {
@@ -6299,7 +6299,7 @@ body[data-identity-mode="teacher"] .student-only {
   border: 0;
   color: #fff;
   background: transparent;
-  font-size: 24px;
+  font-size: 26px;
   cursor: pointer;
 }
 
@@ -6336,7 +6336,7 @@ body[data-identity-mode="teacher"] .student-only {
 .tip {
   margin: 8px 0 0;
   color: rgba(226, 234, 255, 0.7);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -6377,7 +6377,7 @@ body[data-identity-mode="teacher"] .student-only {
 .group-hero h1 {
   margin: 10px 0;
   color: #fff;
-  font-size: clamp(34px, 4vw, 62px);
+  font-size: clamp(36px, 4vw, 64px);
   letter-spacing: 0;
 }
 
@@ -6414,7 +6414,7 @@ body[data-identity-mode="teacher"] .student-only {
   display: grid;
   gap: 6px;
   color: rgba(231, 237, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -6498,7 +6498,7 @@ body[data-identity-mode="teacher"] .student-only {
   gap: 2px;
   margin: 0;
   color: rgba(230, 237, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .group-chat-log strong {
@@ -6567,13 +6567,13 @@ body[data-identity-mode="teacher"] .student-only {
 .chapter-card h3 {
   margin: 6px 0;
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .chapter-card p {
   margin: 0;
   color: rgba(228, 235, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.42;
 }
 
@@ -6584,7 +6584,7 @@ body[data-identity-mode="teacher"] .student-only {
   border-radius: 999px;
   color: #0b1330;
   background: #ffd991;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -6600,7 +6600,7 @@ body[data-identity-mode="teacher"] .student-only {
 
 .chapter-card-actions button {
   flex: 1 1 100%;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .group-editor-layout {
@@ -6667,7 +6667,7 @@ body[data-identity-mode="teacher"] .student-only {
 .group-book-output figcaption,
 .group-signature-lock {
   color: rgba(226, 234, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
 }
 

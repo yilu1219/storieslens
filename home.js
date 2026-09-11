@@ -39,17 +39,29 @@
     const sourceInput = launchpad.querySelector("[data-source-input]");
     const storyLanguage = launchpad.querySelector("[data-launch-language]");
     const writingLanguageEntries = [...document.querySelectorAll("[data-writing-language-entry]")];
+    const homeLanguageButtons = [...launchpad.querySelectorAll("[data-home-language]")];
     const voiceButton = launchpad.querySelector("[data-voice-input]");
     const voiceLabel = launchpad.querySelector("[data-voice-label]");
     const voicePrivacy = launchpad.querySelector("[data-voice-privacy]");
+    const workUpload = launchpad.querySelector("[data-work-upload]");
+    const workFile = launchpad.querySelector("[data-work-file]");
+    const workFileStatus = launchpad.querySelector("[data-work-file-status]");
+    const workPreview = launchpad.querySelector("[data-work-preview]");
+    const textFile = launchpad.querySelector("[data-text-file]");
+    const submitButton = launchpad.querySelector("[data-launch-submit]");
     const error = launchpad.querySelector("[data-launchpad-error]");
     const t = (text) => window.StoriesLensI18n?.t(text) || text;
     const sourceCopy = {
-      book: ["Which book stayed with you?", "Type the title—or describe it in your own words"],
-      movie: ["Which film sparked an idea?", "Type the title—or describe the moment you remember"],
-      idea: ["What idea is waiting in your imagination?", "One sentence is enough to begin"]
+      work: ["Upload your artwork", "Add a few words about it if you want—optional"],
+      tell: ["Write it down or tell Story Coach", "A scene, memory, draft, or idea…"],
+      inspiration: ["What have you enjoyed lately?", "A book or film you love—or the moment that stayed with you"]
     };
-    let source = "book";
+    let source = "work";
+    let importedWork = null;
+
+    const updateLaunchButton = () => {
+      if (submitButton) submitButton.disabled = !importedWork && !sourceInput.value.trim();
+    };
 
     const renderWritingLanguageEntries = () => {
       const selectedLanguage = storyLanguage?.value === "zh" ? "zh" : "en";
@@ -58,18 +70,125 @@
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-pressed", String(selected));
       });
+      homeLanguageButtons.forEach((button) => {
+        const selected = button.dataset.homeLanguage === selectedLanguage;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      });
     };
 
     const renderSource = () => {
+      launchpad.dataset.source = source;
       sourceButtons.forEach((button) => {
         const selected = button.dataset.sourceChoice === source;
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-pressed", String(selected));
       });
-      sourceLabel.textContent = t(sourceCopy[source][0]);
-      sourceInput.placeholder = t(sourceCopy[source][1]);
+      if (sourceButtons.length) {
+        sourceLabel.textContent = t(sourceCopy[source][0]);
+        sourceInput.placeholder = t(sourceCopy[source][1]);
+      }
+      if (workUpload) workUpload.hidden = source !== "work";
+      updateLaunchButton();
       error.textContent = "";
     };
+
+    sourceInput?.addEventListener("input", updateLaunchButton);
+
+    textFile?.addEventListener("change", async () => {
+      const file = textFile.files?.[0];
+      if (!file) return;
+      if (file.size > 100 * 1024) {
+        textFile.value = "";
+        error.textContent = t("Choose a TXT or Markdown file smaller than 100 KB.");
+        return;
+      }
+      try {
+        const text = (await file.text()).trim();
+        if (!text) throw new Error("empty_text");
+        sourceInput.value = text.slice(0, sourceInput.maxLength || 1200);
+        sourceInput.dispatchEvent(new Event("input", { bubbles: true }));
+        error.textContent = "";
+      } catch (_error) {
+        error.textContent = t("We could not read that text file. Try TXT or Markdown.");
+      } finally {
+        textFile.value = "";
+      }
+    });
+
+    workFile?.addEventListener("change", async () => {
+      const file = workFile.files?.[0];
+      importedWork = null;
+      if (workPreview) {
+        workPreview.hidden = true;
+        workPreview.removeAttribute("src");
+      }
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        workFile.value = "";
+        error.textContent = t("Choose a file smaller than 2 MB.");
+        return;
+      }
+      const isImage = /^image\/(jpeg|png|webp)$/.test(file.type);
+      if (!isImage) {
+        workFile.value = "";
+        error.textContent = t("Choose an artwork file in JPG, PNG, or WEBP format.");
+        return;
+      }
+      if (workFileStatus) workFileStatus.textContent = t("Removing metadata and checking artwork safety…");
+      try {
+        if (!window.StoriesLensArtworkSafety) throw Object.assign(new Error("review_unavailable"), { reasonCode: "review_unavailable" });
+        const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
+        importedWork = { name: "artwork.webp", type: safeArtwork.type, kind: "image", content: safeArtwork.dataUrl, safetyReviewed: true, metadataRemoved: true };
+        sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork));
+        if (workPreview) {
+          workPreview.src = safeArtwork.dataUrl;
+          workPreview.hidden = false;
+        }
+      } catch (uploadError) {
+        importedWork = null;
+        const reasonCode = uploadError.reasonCode || uploadError.message;
+        const privateLocalMode = ["review_unavailable", "real_person", "not_artwork"].includes(reasonCode);
+        if (privateLocalMode && window.StoriesLensArtworkSafety?.removeMetadata) {
+          try {
+            const localArtwork = await window.StoriesLensArtworkSafety.removeMetadata(file);
+            const isPersonalPhoto = reasonCode === "real_person" || reasonCode === "not_artwork";
+            importedWork = { name: isPersonalPhoto ? "private-photo.webp" : "artwork.webp", type: localArtwork.type, kind: isPersonalPhoto ? "photo" : "image", content: localArtwork.dataUrl, safetyReviewed: false, reviewPending: true, metadataRemoved: true, privateOnly: true };
+            sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork));
+            if (workPreview) {
+              workPreview.src = localArtwork.dataUrl;
+              workPreview.hidden = false;
+            }
+            if (workFileStatus) workFileStatus.textContent = t(isPersonalPhoto ? "Private photo mode · metadata removed · never public by default" : "Private draft ready · metadata removed · safety review required before sharing");
+            if (submitButton) submitButton.disabled = false;
+            error.textContent = "";
+            return;
+          } catch (_localError) {
+            // Continue to the standard rejection message when local sanitizing fails.
+          }
+        }
+        workFile.value = "";
+        const reasonMessages = {
+          not_artwork: "Please upload artwork rather than a personal photograph.",
+          real_person: "This upload appears to show a real person. Please upload artwork without identifiable people.",
+          identity_document: "Identity documents cannot be uploaded.",
+          personal_name: "A visible personal name was detected. Please cover or remove it and try again.",
+          school_information: "School information was detected. Please cover or remove it and try again.",
+          contact_information: "Contact information was detected. Please cover or remove it and try again.",
+          unsafe_content: "This artwork did not pass the safe-content review.",
+          uncertain: "We could not confirm that this upload is safe artwork. Please try a clearer image.",
+          invalid_image: "Choose a valid JPG, PNG, or WEBP artwork file.",
+          review_unavailable: "Artwork upload is paused because the safety review is unavailable. You can still write or speak."
+        };
+        error.textContent = t(reasonMessages[reasonCode] || reasonMessages.review_unavailable);
+        if (workFileStatus) workFileStatus.textContent = t("Artwork was not added.");
+        return;
+      }
+      if (!sourceInput.value.trim()) sourceInput.value = file.name;
+      if (workFileStatus) workFileStatus.textContent = t("Safety check passed · personal metadata removed · private by default");
+      if (submitButton) submitButton.disabled = false;
+      error.textContent = "";
+    });
 
     sourceButtons.forEach((button) => button.addEventListener("click", () => {
       source = button.dataset.sourceChoice;
@@ -88,6 +207,17 @@
       renderWritingLanguageEntries();
       window.StoriesLensAnalytics?.track("homepage_writing_language_selected", { storyLanguage: selectedLanguage });
       sourceInput?.focus({ preventScroll: true });
+    }));
+
+    homeLanguageButtons.forEach((button) => button.addEventListener("click", () => {
+      const selectedLanguage = button.dataset.homeLanguage === "zh" ? "zh" : "en";
+      if (storyLanguage) {
+        storyLanguage.value = selectedLanguage;
+        storyLanguage.dataset.changed = "true";
+      }
+      localStorage.setItem("storieslens_locale", selectedLanguage);
+      renderWritingLanguageEntries();
+      window.StoriesLensAnalytics?.track("homepage_writing_language_selected", { storyLanguage: selectedLanguage });
     }));
 
     const storedLocale = localStorage.getItem("storieslens_locale");
@@ -172,7 +302,7 @@
     launchpad.addEventListener("submit", (event) => {
       event.preventDefault();
       const inspiration = sourceInput.value.trim();
-      if (!inspiration) {
+      if (!inspiration && !(source === "work" && importedWork)) {
         error.textContent = t("Add a title or one sentence so Story Coach knows where to begin.");
         sourceInput.focus();
         return;
@@ -182,8 +312,9 @@
         sourceInput.focus();
         return;
       }
-      const params = new URLSearchParams({ source, inspiration, storyLang: storyLanguage?.value || "en" });
-      window.StoriesLensAnalytics?.track("story_dna_started", { source, storyLanguage: storyLanguage?.value || "en" });
+      const effectiveSource = importedWork ? "work" : "tell";
+      const params = new URLSearchParams({ source: effectiveSource, inspiration: inspiration || importedWork?.name || "", storyLang: storyLanguage?.value || "en" });
+      window.StoriesLensAnalytics?.track("story_dna_started", { source: effectiveSource, storyLanguage: storyLanguage?.value || "en" });
       window.location.href = `story-dna.html?${params.toString()}`;
     });
 

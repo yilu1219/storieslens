@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1020" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="app-shell.css" />
+    <link rel="stylesheet" href="h5-app.css" />
+    <title>Movie Studio · StoriesLens</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="app-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" />StoriesLens</a>
+      <nav aria-label="Studio navigation"><a href="my-stories.html">My stories</a><a class="keep-mobile" href="index.html">Home</a></nav>
+    </header>
+
+    <main class="app-shell">
+      <section class="app-hero">
+        <div>
+          <p class="app-kicker">STORY MOVIE STUDIO · 故事电影工作台</p>
+          <h1>Edit and voice it here.</h1>
+          <p class="app-lede">Arrange scenes, add approved artwork, record narration and preview the complete rhythm without leaving StoriesLens.</p>
+        </div>
+        <div class="app-card app-status"><div><strong data-save-state>Opening your story…</strong><span>Private autosave · original uploads are never public</span></div><i class="status-dot" aria-hidden="true"></i></div>
+      </section>
+
+      <section class="studio-grid">
+        <aside class="stack">
+          <article class="app-card film-preview">
+            <div class="film-stage" data-film-stage><p>Choose or create a story to begin.</p></div>
+            <div class="film-controls">
+              <button class="app-secondary" type="button" data-play>▶ Preview</button>
+              <button class="app-secondary" type="button" data-stop>■ Stop</button>
+              <span data-film-time>0:00</span>
+            </div>
+          </article>
+
+          <article class="app-card app-card-pad">
+            <p class="app-kicker">MOVIE SETTINGS</p>
+            <div class="field-grid">
+              <label>Format<select data-aspect><option value="16:9">Landscape · 16:9</option><option value="9:16">Mobile · 9:16</option></select></label>
+              <label>Quality<select data-resolution><option value="720p">Preview · 720p</option><option value="1080p">Keepsake · 1080p</option></select></label>
+              <label class="wide">Narration language<select data-voice-language><option value="en-US">English</option><option value="zh-CN">中文普通话</option></select></label>
+            </div>
+            <p class="helper">Your recorded voice stays private. Browser preview can also read captions aloud; the final MP4 render requires the private HyperFrames worker.</p>
+            <button class="app-primary" type="button" data-create-render>Create movie master</button>
+            <p class="notice" data-render-notice hidden></p>
+          </article>
+
+          <article class="app-card app-card-pad">
+            <p class="app-kicker">BOOK & DELIVERY</p>
+            <h3>Keep the same story as a book</h3>
+            <p class="muted">Download the editable book file now, or reserve printing and delivery after reviewing every page.</p>
+            <div class="project-actions">
+              <button class="app-secondary" type="button" data-export-book>Download book</button>
+              <button class="app-primary" type="button" data-order-story>Print & deliver · $19</button>
+            </div>
+          </article>
+        </aside>
+
+        <div>
+          <form class="app-card app-card-pad field-grid" data-project-form>
+            <label class="wide">Story title<input data-project-title maxlength="160" required /></label>
+            <label>Writing language<select data-project-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+            <label>Privacy<select data-project-visibility><option value="private">Private</option><option value="invite">Invite-only</option></select></label>
+            <label class="wide">Story draft<textarea data-project-draft maxlength="40000" placeholder="Your complete story lives here."></textarea></label>
+          </form>
+
+          <div class="app-toolbar"><h2>Scenes</h2><button class="app-primary" type="button" data-add-scene>＋ Add scene</button></div>
+          <div class="scene-list" data-scene-list></div>
+          <p class="notice" data-studio-notice hidden></p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="h5-bottom-nav" aria-label="App navigation">
+      <a href="app.html"><span aria-hidden="true">＋</span><strong>Create</strong></a>
+      <a class="active" href="my-stories.html"><span aria-hidden="true">▤</span><strong>Stories</strong></a>
+      <a href="classroom-archive.html"><span aria-hidden="true">▦</span><strong>Class</strong></a>
+      <a href="my-stories.html#account"><span aria-hidden="true">○</span><strong>Account</strong></a>
+    </nav>
+
+    <template data-scene-template>
+      <article class="scene-card">
+        <header><strong data-scene-number>Scene</strong><button class="icon-button" type="button" data-move-up aria-label="Move scene up">↑</button><button class="icon-button" type="button" data-move-down aria-label="Move scene down">↓</button><button class="icon-button" type="button" data-delete-scene aria-label="Delete scene">×</button></header>
+        <div class="scene-fields">
+          <label>Scene title<input data-scene-title maxlength="120" /></label>
+          <label>Seconds<input data-scene-duration type="number" min="2" max="12" value="5" /></label>
+          <label class="wide">Caption / narration<textarea data-scene-text maxlength="6000"></textarea></label>
+          <label class="wide">Artwork<input data-scene-image type="file" accept="image/jpeg,image/png,image/webp" /><small>Photos with GPS/device information are rewritten on this device before upload. All imagery is reviewed.</small></label>
+          <div class="scene-preview wide" data-scene-preview><span>No artwork yet</span></div>
+          <div class="project-actions wide">
+            <button class="app-secondary" type="button" data-record>● Record voice</button>
+            <button class="app-secondary" type="button" data-play-voice>▶ Hear narration</button>
+            <span class="muted" data-voice-state>No recording</span>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
+    <script src="movie-studio.js"></script>
+  </body>
+</html>

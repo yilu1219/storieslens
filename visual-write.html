@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Story Studio | StoriesLens</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="pwa.css" />
     <style>
       .visual-write-page {
         max-width: 1440px;
@@ -12,11 +15,11 @@
 
       .write-header-actions { display:flex; align-items:center; gap:10px; }
       .write-language-switcher { display:inline-flex; padding:3px; border:1px solid rgba(143,171,255,.3); border-radius:999px; background:rgba(7,14,34,.7); }
-      .write-language-switcher button { min-width:42px; min-height:31px; padding:0 9px; border:0; border-radius:999px; color:#9facc9; background:transparent; cursor:pointer; font:inherit; font-size:12px; font-weight:800; }
+      .write-language-switcher button { min-width:42px; min-height:31px; padding:0 9px; border:0; border-radius:999px; color:#9facc9; background:transparent; cursor:pointer; font:inherit; font-size:14px; font-weight:800; }
       .write-language-switcher button.is-active { color:#07101f; background:#f6f8ff; }
       .write-language-switcher button:focus-visible { outline:3px solid #65e0ba; outline-offset:2px; }
-      .story-language-control { display:flex; align-items:center; gap:7px; min-height:38px; padding:3px 4px 3px 10px; border:1px solid rgba(121,231,193,.34); border-radius:999px; color:#a9b8d3; background:rgba(7,14,34,.72); font-size:11px; font-weight:850; }
-      .story-language-control select { min-height:30px; padding:0 25px 0 9px; border:0; border-radius:999px; color:#07101f; background:#79e7bd; font:inherit; font-size:11px; font-weight:900; cursor:pointer; }
+      .story-language-control { display:flex; align-items:center; gap:7px; min-height:38px; padding:3px 4px 3px 10px; border:1px solid rgba(121,231,193,.34); border-radius:999px; color:#a9b8d3; background:rgba(7,14,34,.72); font-size:13px; font-weight:850; }
+      .story-language-control select { min-height:30px; padding:0 25px 0 9px; border:0; border-radius:999px; color:#07101f; background:#79e7bd; font:inherit; font-size:13px; font-weight:900; cursor:pointer; }
 
       .student-write-hero {
         display: grid;
@@ -49,7 +52,7 @@
 
       .student-write-hero h1 {
         margin: 18px 0 10px;
-        font-size: clamp(44px, 7vw, 86px);
+        font-size: clamp(46px, 7vw, 88px);
         line-height: 0.95;
         letter-spacing: 0;
       }
@@ -58,7 +61,7 @@
         margin: 0;
         max-width: 760px;
         color: rgba(246, 248, 255, 0.82);
-        font-size: clamp(18px, 2vw, 25px);
+        font-size: clamp(20px, 2vw, 27px);
       }
 
       .student-write-hero img {
@@ -116,20 +119,20 @@
         align-items: center;
         justify-content: center;
         border-radius: 14px;
-        font-size: 24px;
+        font-size: 26px;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.12);
       }
 
       .writing-choice-card h2 {
         margin: 18px 0 8px;
-        font-size: 28px;
+        font-size: 30px;
       }
 
       .writing-choice-card p {
         margin: 0 0 22px;
         color: rgba(246, 248, 255, 0.78);
-        font-size: 16px;
+        font-size: 18px;
         line-height: 1.55;
       }
 
@@ -160,37 +163,37 @@
       .join-project-form input { min-width:0; min-height:48px; padding:0 14px; border:1px solid rgba(143,171,255,.32); border-radius:10px; color:#fff; background:rgba(3,9,25,.74); }
       .join-project-form button { margin-top:0; }
       .project-signal-row { display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 18px; }
-      .project-signal-row b { padding:7px 10px; border:1px solid rgba(126,164,255,.3); border-radius:999px; color:#dbe7ff; background:rgba(5,14,38,.66); font-size:12px; }
+      .project-signal-row b { padding:7px 10px; border:1px solid rgba(126,164,255,.3); border-radius:999px; color:#dbe7ff; background:rgba(5,14,38,.66); font-size:14px; }
       .together-actions { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
-      .together-actions button { margin:0; padding:9px 12px; border:1px solid rgba(143,171,255,.3); background:rgba(5,14,38,.7); box-shadow:none; font-size:13px; }
+      .together-actions button { margin:0; padding:9px 12px; border:1px solid rgba(143,171,255,.3); background:rgba(5,14,38,.7); box-shadow:none; font-size:15px; }
       .together-actions button.is-active { border-color:#75a7ff; background:#234b98; }
       .group-dialog { width:min(620px,calc(100% - 28px)); padding:0; border:1px solid rgba(128,166,255,.46); border-radius:16px; color:#fff; background:#09142f; box-shadow:0 30px 100px rgba(0,0,0,.6); }
       .group-dialog::backdrop { background:rgba(1,4,14,.78); backdrop-filter:blur(7px); }
       .group-dialog-inner { padding:24px; }
       .group-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-      .group-dialog h2 { margin:0; font-size:28px; }
+      .group-dialog h2 { margin:0; font-size:30px; }
       .group-dialog p { color:#b9c5df; line-height:1.5; }
       .group-close { width:38px !important; height:38px; margin:0 !important; padding:0 !important; border:1px solid #40547e !important; border-radius:50% !important; color:#fff; background:#101d3d !important; box-shadow:none !important; }
       .group-form { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-      .group-form label { color:#dce5fb; font-size:13px; font-weight:800; }
+      .group-form label { color:#dce5fb; font-size:15px; font-weight:800; }
       .group-form input,.group-form select { width:100%; min-height:44px; margin-top:6px; padding:0 11px; border:1px solid #40547e; border-radius:9px; color:#fff; background:#050d23; }
       .group-form .wide { grid-column:1/-1; }
       .invite-result { margin-top:16px; padding:15px; border:1px solid rgba(86,220,171,.38); border-radius:10px; background:rgba(24,90,72,.22); }
-      .invite-code { display:block; margin:6px 0; color:#ffd978; font-size:30px; letter-spacing:2px; }
+      .invite-code { display:block; margin:6px 0; color:#ffd978; font-size:32px; letter-spacing:2px; }
       .dialog-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
       .dialog-actions button { margin:0; }
       .class-project-context { margin:0 0 18px; padding:18px; border:1px solid rgba(114,160,255,.3); border-radius:14px; background:rgba(6,15,39,.72); }
       .class-project-head,.class-project-progress-copy { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-      .class-project-head h3 { margin:0; font-size:21px; }
+      .class-project-head h3 { margin:0; font-size:23px; }
       .class-project-head p { margin:5px 0 0; color:rgba(238,243,255,.7); }
       .class-project-head strong { color:#84f0c8; white-space:nowrap; }
-      .class-project-progress-copy { margin-top:15px; color:#c8d5f4; font-size:13px; }
+      .class-project-progress-copy { margin-top:15px; color:#c8d5f4; font-size:15px; }
       .class-project-progress { height:8px; margin-top:7px; overflow:hidden; border-radius:999px; background:#121e3d; }
       .class-project-progress i { display:block; width:60%; height:100%; background:linear-gradient(90deg,#52d7a6,#5d7cff); }
       .class-scene-list { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
       .class-scene { padding:10px; border:1px solid rgba(143,171,255,.2); border-radius:10px; background:rgba(8,16,39,.74); }
       .class-scene strong,.class-scene span { display:block; }
-      .class-scene span { margin-top:5px; color:#9eabc8; font-size:12px; }
+      .class-scene span { margin-top:5px; color:#9eabc8; font-size:14px; }
       .class-scene.is-done { border-color:rgba(82,215,166,.36); }
       .class-scene.is-you { border-color:#6c8dff; box-shadow:0 0 0 2px rgba(72,117,255,.18); }
       .class-scene.is-you span { color:#a9c4ff; font-weight:800; }
@@ -222,9 +225,9 @@
       }
 
       .creator-journey div:last-child { border-right: 0; }
-      .creator-journey span { grid-row: 1 / 3; display: grid; width: 28px; height: 28px; place-items: center; color: #9cadd1; border: 1px solid rgba(143, 171, 255, 0.25); border-radius: 50%; font-size: 11px; font-weight: 900; }
-      .creator-journey strong { color: #e8edfb; font-size: 13px; }
-      .creator-journey small { color: #8493b3; font-size: 11px; }
+      .creator-journey span { grid-row: 1 / 3; display: grid; width: 28px; height: 28px; place-items: center; color: #9cadd1; border: 1px solid rgba(143, 171, 255, 0.25); border-radius: 50%; font-size: 13px; font-weight: 900; }
+      .creator-journey strong { color: #e8edfb; font-size: 15px; }
+      .creator-journey small { color: #8493b3; font-size: 13px; }
       .creator-journey div.is-active { background: linear-gradient(120deg, rgba(92, 107, 255, 0.18), rgba(117, 231, 190, 0.08)); }
       .creator-journey div.is-active span { color: #07141e; border-color: #7ce7c1; background: #7ce7c1; box-shadow: 0 0 20px rgba(124, 231, 193, 0.24); }
       .creator-journey div.is-done span { color: #07141e; border-color: #ffd991; background: #ffd991; }
@@ -274,7 +277,7 @@
       .assignment-code-panel h2 {
         margin: 0 0 8px;
         color: #fff;
-        font-size: 30px;
+        font-size: 32px;
       }
 
       .assignment-code-panel p {
@@ -332,7 +335,7 @@
       }
 
       .session-status { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-      .session-status span { padding: 6px 9px; color: #a9b9db; border: 1px solid rgba(143,171,255,.2); border-radius: 999px; background: rgba(255,255,255,.04); font-size: 11px; font-weight: 800; }
+      .session-status span { padding: 6px 9px; color: #a9b9db; border: 1px solid rgba(143,171,255,.2); border-radius: 999px; background: rgba(255,255,255,.04); font-size: 13px; font-weight: 800; }
 
       .student-writing-panel header p {
         margin: 7px 0 0;
@@ -362,25 +365,25 @@
         padding: 16px 17px 12px;
       }
 
-      .studio-dna-head span { color: #7ce7c1; font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-      .studio-dna-head h3 { margin: 4px 0 0; color: #fff; font-size: 20px; }
-      .creator-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid rgba(255, 217, 145, .32); border-radius: 999px; color: #ffe1a3; background: rgba(255, 217, 145, .08); font-size: 11px; font-weight: 900; }
+      .studio-dna-head span { color: #7ce7c1; font-size: 14px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+      .studio-dna-head h3 { margin: 4px 0 0; color: #fff; font-size: 22px; }
+      .creator-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid rgba(255, 217, 145, .32); border-radius: 999px; color: #ffe1a3; background: rgba(255, 217, 145, .08); font-size: 13px; font-weight: 900; }
       .studio-dna-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: rgba(117, 231, 190, .18); }
       .studio-dna-grid div { min-width: 0; padding: 12px 16px; background: rgba(6, 16, 35, .86); }
-      .studio-dna-grid span { display: block; margin-bottom: 5px; color: #8fa5c9; font-size: 11px; font-weight: 850; text-transform: uppercase; }
-      .studio-dna-grid strong { display: block; color: #f4f7ff; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+      .studio-dna-grid span { display: block; margin-bottom: 5px; color: #8fa5c9; font-size: 13px; font-weight: 850; text-transform: uppercase; }
+      .studio-dna-grid strong { display: block; color: #f4f7ff; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
       .studio-coach-question { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 15px 16px; }
       .studio-coach-avatar { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; color: #07141e; background: linear-gradient(135deg, #74e7bd, #8fb2ff); font-weight: 950; }
-      .studio-coach-question span { display: block; color: #7ce7c1; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+      .studio-coach-question span { display: block; color: #7ce7c1; font-size: 13px; font-weight: 900; text-transform: uppercase; }
       .studio-coach-question p { margin: 3px 0 0; color: #eef5ff; line-height: 1.45; }
-      .studio-coach-question button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; color: #07141e; background: #7ce7c1; font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; }
-      .authorship-note { margin: 0; color: #9eabc8; font-size: 12px; line-height: 1.45; }
+      .studio-coach-question button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; color: #07141e; background: #7ce7c1; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; }
+      .authorship-note { margin: 0; color: #9eabc8; font-size: 14px; line-height: 1.45; }
 
       .student-writing-form label {
         display: grid;
         gap: 8px;
         color: rgba(246, 248, 255, 0.72);
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 800;
       }
 
@@ -415,18 +418,18 @@
       }
 
       .creator-settings { border: 1px solid rgba(143,171,255,.18); border-radius: 12px; background: rgba(255,255,255,.025); }
-      .creator-settings summary { padding: 11px 14px; color: #aeb9d8; cursor: pointer; font-size: 12px; font-weight: 800; }
+      .creator-settings summary { padding: 11px 14px; color: #aeb9d8; cursor: pointer; font-size: 14px; font-weight: 800; }
       .creator-settings .student-writing-row { padding: 0 14px 14px; }
       .chinese-coach-settings { display:grid; gap:12px; margin:0 14px 14px; padding:14px; border:1px solid rgba(223,184,112,.32); border-radius:12px; background:linear-gradient(135deg,rgba(116,67,38,.22),rgba(37,26,52,.24)); }
       .chinese-coach-settings[hidden] { display:none; }
       .chinese-coach-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-      .chinese-coach-heading strong { color:#ffe2a5; font-family:"Songti SC","STSong","Noto Serif SC",serif; font-size:17px; }
-      .chinese-coach-heading span { color:#adb9d5; font-size:11px; font-weight:750; }
+      .chinese-coach-heading strong { color:#ffe2a5; font-family:"Songti SC","STSong","Noto Serif SC",serif; font-size:19px; }
+      .chinese-coach-heading span { color:#adb9d5; font-size:13px; font-weight:750; }
       .chinese-coach-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
-      .chinese-coach-grid label { font-size:12px; }
-      .chinese-coach-description { margin:0; color:#d5dcef; font-family:"Songti SC","STSong","Noto Serif SC",serif; font-size:12px; line-height:1.6; }
+      .chinese-coach-grid label { font-size:14px; }
+      .chinese-coach-description { margin:0; color:#d5dcef; font-family:"Songti SC","STSong","Noto Serif SC",serif; font-size:14px; line-height:1.6; }
       .editor-label-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-      .editor-label-line small { color: #7ce7c1; font-size: 11px; font-weight: 800; }
+      .editor-label-line small { color: #7ce7c1; font-size: 13px; font-weight: 800; }
 
       .skill-focus-card,
       .task-info-list,
@@ -446,13 +449,13 @@
         display: block;
         margin-bottom: 6px;
         color: #ffd991;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 900;
       }
 
       .skill-focus-card strong {
         color: #fff;
-        font-size: 16px;
+        font-size: 18px;
         line-height: 1.45;
       }
 
@@ -480,7 +483,7 @@
       .scene-image-rules h3 {
         margin: 0;
         color: #fff;
-        font-size: 16px;
+        font-size: 18px;
       }
 
       .locked-character-list {
@@ -499,7 +502,7 @@
         border-radius: 999px;
         color: #f6f8ff;
         background: rgba(255, 255, 255, 0.06);
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 850;
       }
 
@@ -512,7 +515,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 13px;
+        font-size: 15px;
       }
 
       .student-action-row {
@@ -553,7 +556,7 @@
 
       .student-action-row button.credit-action small {
         color: rgba(246, 248, 255, 0.66);
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 800;
       }
 
@@ -669,10 +672,10 @@
       }
 
       .context-writing-tools { display: grid; gap: 10px; margin-top: -2px; }
-      .context-writing-tools > header strong { font-size: 17px; }
+      .context-writing-tools > header strong { font-size: 19px; }
       .context-tool-actions .coach-primary { color: #07141e; border-color: #7ce7c1; background: #7ce7c1; font-weight: 900; }
       .more-coach-tools { width: 100%; }
-      .more-coach-tools summary { width: fit-content; color: #98a7c8; cursor: pointer; font-size: 12px; font-weight: 800; }
+      .more-coach-tools summary { width: fit-content; color: #98a7c8; cursor: pointer; font-size: 14px; font-weight: 800; }
       .more-coach-tools .context-tool-actions { margin-top: 9px; }
       .context-writing-tools header,
       .visual-prompt-card header { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
@@ -695,9 +698,9 @@
       .coach-response-grid { display:grid; gap:9px; }
       .coach-response-step { display:grid; grid-template-columns:80px minmax(0,1fr); gap:10px; padding-bottom:8px; border-bottom:1px solid rgba(143,171,255,.13); }
       .coach-response-step:last-child { padding-bottom:0; border-bottom:0; }
-      .coach-response-step b { color:#7ce7c1; font-size:12px; }
+      .coach-response-step b { color:#7ce7c1; font-size:14px; }
       .coach-response-step p { margin:0; color:#edf2ff; }
-      .coach-lens-used { width:fit-content; margin-top:2px; padding:4px 8px; border:1px solid rgba(255,217,145,.28); border-radius:999px; color:#ffe0a1; background:rgba(255,217,145,.06); font-size:10px; font-weight:850; }
+      .coach-lens-used { width:fit-content; margin-top:2px; padding:4px 8px; border:1px solid rgba(255,217,145,.28); border-radius:999px; color:#ffe0a1; background:rgba(255,217,145,.06); font-size:12px; font-weight:850; }
       .visual-prompt-card { margin: 14px 0 0; }
       .visual-readiness { color: #8ff0c4; display: inline-flex; font-size: 0.78rem; margin-top: 8px; }
 
@@ -920,7 +923,7 @@
                 <div class="chinese-coach-grid">
                   <label>Literary lens<select data-chinese-coach-lens><option value="foundation">Chinese story foundations</option><option value="lin-yutang">Lin Yutang · Humor &amp; the art of living</option><option value="cinematic">Cinematic storytelling</option></select></label>
                   <label>Creative stage<select data-chinese-creator-level><option value="expression">Beginning expression</option><option value="developing" selected>Developing writer</option><option value="advanced">Advanced creator</option><option value="l2">Chinese learner</option></select></label>
-                  <label>Work type<select data-chinese-genre><option value="story">Story / fiction</option><option value="essay">Personal essay</option><option value="memoir">Memoir / biography</option><option value="wuxia">Wuxia / historical imagination</option><option value="screenplay">Film / screenplay</option></select></label>
+                  <label>Work type<select data-chinese-genre><option value="story">Story / fiction</option><option value="essay">Personal essay</option><option value="memoir">Memoir / biography</option><option value="wuxia">Wuxia / historical imagination</option><option value="screenplay">Film / screenplay</option><option value="scifi">Science fiction</option></select></label>
                 </div>
                 <p class="chinese-coach-description" data-chinese-coach-description>Make character, action, setting, and cause clear; the coach helps you revise one high-value issue at a time.</p>
               </section>
@@ -1249,7 +1252,7 @@
         } catch {}
         if (!chineseLensDescriptions[chineseCoachPreferences.coachLens]) chineseCoachPreferences.coachLens = "foundation";
         if (!["expression", "developing", "advanced", "l2"].includes(chineseCoachPreferences.creatorLevel)) chineseCoachPreferences.creatorLevel = "developing";
-        if (!["story", "essay", "memoir", "wuxia", "screenplay"].includes(chineseCoachPreferences.genre)) chineseCoachPreferences.genre = "story";
+        if (!["story", "essay", "memoir", "wuxia", "screenplay", "scifi"].includes(chineseCoachPreferences.genre)) chineseCoachPreferences.genre = "story";
         if (chineseCoachLens) chineseCoachLens.value = chineseCoachPreferences.coachLens;
         if (chineseCreatorLevel) chineseCreatorLevel.value = chineseCoachPreferences.creatorLevel;
         if (chineseGenre) chineseGenre.value = chineseCoachPreferences.genre;
@@ -2232,5 +2235,7 @@
       })();
     </script>
     <script src="i18n.js"></script>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
   </body>
 </html>

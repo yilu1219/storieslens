@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f0e6" />
+    <meta name="description" content="Your private StoriesLens story library." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="app-shell.css" />
+    <link rel="stylesheet" href="h5-app.css" />
+    <title>My Stories · StoriesLens</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="app-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" />StoriesLens</a>
+      <nav aria-label="Account navigation">
+        <a href="movie-studio.html">Movie Studio</a>
+        <a class="keep-mobile" href="index.html">Home</a>
+      </nav>
+    </header>
+
+    <main class="app-shell">
+      <section class="app-hero">
+        <div>
+          <p class="app-kicker">PRIVATE CREATOR LIBRARY · 私人创作库</p>
+          <h1>Your stories stay with you.</h1>
+          <p class="app-lede">Keep every draft, drawing, voice, scene and finished book in one private place. Sign in when you want the same library on every device.</p>
+        </div>
+        <div class="app-card app-status">
+          <div><strong data-session-title>Opening your private library…</strong><span data-session-detail>Your local work is safe while we connect.</span></div>
+          <i class="status-dot" aria-hidden="true"></i>
+        </div>
+      </section>
+
+      <section class="account-grid">
+        <aside class="stack">
+          <article class="app-card app-card-pad" id="account" data-signin-card>
+            <p class="app-kicker">ACCOUNT</p>
+            <h3>Save across devices</h3>
+            <p class="muted">Continue as a private guest, or use a one-time code. Your current stories move with you when you sign in.</p>
+            <div class="auth-methods" role="group" aria-label="Sign-in method">
+              <button class="active" type="button" data-auth-method="email">Email</button>
+              <button type="button" data-auth-method="phone">Mobile</button>
+            </div>
+            <form data-auth-start>
+              <label><span data-destination-label>Email address</span><input data-auth-destination type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+              <button class="app-primary" type="submit">Send one-time code</button>
+            </form>
+            <form data-auth-verify hidden>
+              <label>Six-digit code<input data-auth-code inputmode="numeric" autocomplete="one-time-code" maxlength="6" required /></label>
+              <label>Display name<input data-display-name autocomplete="nickname" maxlength="40" placeholder="Creator" /></label>
+              <label>Account type<select data-account-age><option value="adult">18 or older</option><option value="under18">Under 18 · adult-supported</option></select></label>
+              <button class="app-primary" type="submit">Open my library</button>
+            </form>
+            <button class="app-secondary" type="button" data-wechat>Continue with WeChat</button>
+            <p class="notice" data-auth-notice hidden></p>
+          </article>
+
+          <article class="app-card app-card-pad">
+            <p class="app-kicker">PRIVACY</p>
+            <h3>Private by default</h3>
+            <div class="privacy-list">
+              <div><strong>Original uploads are not public</strong><span>Private media requires the signed-in session that owns it.</span></div>
+              <div><strong>Young creators need guardian approval</strong><span>An invite link cannot be created until approval is recorded.</span></div>
+              <div><strong>Delete means a 30-day recovery window</strong><span>Accidental deletion can be recovered before permanent removal.</span></div>
+            </div>
+          </article>
+
+          <article class="app-card app-card-pad" data-guardian-card>
+            <p class="app-kicker">GUARDIAN APPROVAL</p>
+            <h3>Approve a young creator’s project</h3>
+            <form class="field-grid" data-guardian-form>
+              <label class="wide">Project<select data-guardian-project required></select></label>
+              <label>Guardian name<input data-guardian-name maxlength="100" required /></label>
+              <label>Relationship<input data-guardian-relationship maxlength="80" placeholder="Parent / guardian" required /></label>
+              <label class="wide"><span><input data-consent-adult type="checkbox" /> I confirm I am the parent or legal guardian.</span></label>
+              <label class="wide"><span><input data-consent-media type="checkbox" /> I approve private storage of reviewed artwork and voice.</span></label>
+              <label class="wide"><span><input data-consent-share type="checkbox" /> I approve invite-only sharing and print proofs.</span></label>
+              <button class="app-primary wide" type="submit">Record approval</button>
+              <button class="app-secondary wide" type="button" data-revoke-consent>Revoke approval & invitations</button>
+            </form>
+          </article>
+        </aside>
+
+        <div>
+          <div class="app-toolbar">
+            <h2>My stories</h2>
+            <button class="app-primary" type="button" data-new-story>＋ New story</button>
+          </div>
+
+          <form class="app-card app-card-pad field-grid" data-new-story-form hidden>
+            <label class="wide">Story title<input data-new-title maxlength="160" placeholder="The garden behind the moon" required /></label>
+            <label>Language<select data-new-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+            <label>Creator account<select data-new-age><option value="adult">18 or older</option><option value="under18">Under 18 · adult-supported</option></select></label>
+            <label class="wide">First spark<textarea data-new-spark maxlength="1200" placeholder="A drawing, a memory, or one sentence is enough."></textarea></label>
+            <button class="app-secondary" type="button" data-cancel-new>Cancel</button>
+            <button class="app-primary" type="submit">Create private story</button>
+          </form>
+
+          <div class="project-grid" data-project-grid></div>
+          <div class="app-card empty-state" data-empty-state hidden>
+            <strong>Your first story is one spark away.</strong>
+            <p>Start with artwork, words or voice. Yu will ask three questions before helping shape the first scene.</p>
+            <a class="app-primary" href="app.html">Start my first story →</a>
+          </div>
+
+          <div class="app-toolbar"><h2>Orders & exports</h2></div>
+          <article class="app-card app-card-pad">
+            <p class="muted">Paid orders only begin after you choose a finished story and confirm checkout. No automatic subscription is created.</p>
+            <div class="order-list" data-order-list><p class="muted">No orders yet.</p></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <nav class="h5-bottom-nav" aria-label="App navigation">
+      <a href="app.html"><span aria-hidden="true">＋</span><strong>Create</strong></a>
+      <a class="active" href="my-stories.html"><span aria-hidden="true">▤</span><strong>Stories</strong></a>
+      <a href="classroom-archive.html"><span aria-hidden="true">▦</span><strong>Class</strong></a>
+      <a href="my-stories.html#account"><span aria-hidden="true">○</span><strong>Account</strong></a>
+    </nav>
+
+    <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
+    <script src="my-stories.js"></script>
+  </body>
+</html>

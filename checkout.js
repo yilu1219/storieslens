@@ -26,8 +26,8 @@
     },
     "movie-30": {
       name: "30-second Movie Pack",
-      price: "$29",
-      total: "$29 USD",
+      price: "$39",
+      total: "$39 USD",
       description: "Turn a finished storyboard into a 30-second family premiere.",
       features: ["Finished 30-second film", "Creator credits", "Private download", "One production revision"]
     },

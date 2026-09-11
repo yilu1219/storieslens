@@ -25,7 +25,12 @@ const htmlFiles = [
   "beta-interest.html",
   "yc-demo.html",
   "solo-premiere.html",
-  "checkout.html"
+  "checkout.html",
+  "classroom-archive.html",
+  "app.html",
+  "my-stories.html",
+  "movie-studio.html",
+  "showcase.html"
 ].filter((file) => fs.existsSync(path.join(root, file)));
 
 const htmlByFile = Object.fromEntries(htmlFiles.map((file) => [file, read(file)]));
@@ -39,10 +44,15 @@ const groupProjectStudioHtml = htmlByFile["group-project-studio.html"];
 const startHtml = htmlByFile["start.html"];
 const storyDnaHtml = htmlByFile["story-dna.html"];
 const teacherHtml = htmlByFile["teacher-dashboard.html"];
+const classroomArchiveHtml = htmlByFile["classroom-archive.html"];
+const classroomArchiveJs = read("classroom-archive.js");
+const portalHomeJs = read("portal-home.js");
+const h5AppJs = read("h5-app.js");
 const teacherProjectHtml = htmlByFile["teacher-project.html"];
 const projectOutputHtml = htmlByFile["project-output.html"];
 const packageJson = JSON.parse(read("package.json"));
 const serverJs = read("server.js");
+const startJs = read("start.js");
 const scriptJs = read("script.js");
 const envExample = read(".env.example");
 const ccssStandards = JSON.parse(read("resources/ccss/ela-standards.json"));
@@ -56,6 +66,20 @@ const soloPremiereHtml = htmlByFile["solo-premiere.html"];
 const checkoutHtml = htmlByFile["checkout.html"];
 const checkoutJs = read("checkout.js");
 const safetyClientJs = read("safety-client.js");
+const showcaseHtml = htmlByFile["showcase.html"];
+
+assert((indexHtml.match(/class="portal-card-case"/g) || []).length === 3, "Each creation mode should provide one real-case entrance");
+assert((indexHtml.match(/href="showcase\.html#work"/g) || []).length === 3, "Each creation mode should link to the independent showcase");
+
+[
+  "STORIESLENS ORIGINALS",
+  'data-format-filter="book"',
+  'data-format-filter="film"',
+  'data-language-filter="en"',
+  'data-language-filter="zh"',
+  "product examples",
+  "app.html"
+].forEach((token) => assert(showcaseHtml?.includes(token), `Showcase should organize honest bilingual proof: ${token}`));
 
 [
   [createHtml, "Upload", "create-reading-review.html"],
@@ -183,7 +207,7 @@ assert.strictEqual(packageJson.scripts?.start, "node server.js", "Railway/Railpa
 assert.strictEqual(packageJson.main, "server.js", "Package entry should point to the static server");
 assert(serverJs.includes("process.env.PORT"), "Static server should bind to Railway's PORT environment variable");
 assert(serverJs.includes('"X-Content-Type-Options", "nosniff"'), "Static server should prevent MIME sniffing");
-assert(serverJs.includes('"Permissions-Policy", "camera=(), geolocation=(), payment=(), usb=()"'), "Static server should disable unneeded sensitive browser permissions");
+assert(serverJs.includes('"Permissions-Policy", "camera=(self), microphone=(self), geolocation=(), payment=(self), usb=()"'), "Static server should scope camera, microphone, and payment access to the first-party mobile studio");
 assert(serverJs.includes("/api/generate-image"), "Static server should keep the image generation proxy route");
 assert(serverJs.includes("ImageProvider"), "Image generation should use a switchable provider abstraction");
 assert(serverJs.includes("OPENROUTER_IMAGE_API_URL"), "Image generation should support the OpenRouter image endpoint through environment config");
@@ -240,7 +264,7 @@ assert(scriptJs.includes("estimateClassMovie"), "Quota model should estimate cla
   "assets/hero-co-create-v2.png",
   "assets/hero-en-cinematic-studio-v1.png",
   "assets/hero-en-global-cocreation-v2.png",
-  "assets/hero-en-cinematic-cocreation-hd-v4.png",
+  "assets/hero-en-art-to-story-triptych-v1.jpg",
   "assets/hero-zh-ink-cocreation-hd-v2.png",
   "assets/original-garden-door-hd-v2.png",
   "assets/original-ocean-lantern-hd-v2.png",
@@ -270,69 +294,117 @@ assert(ccssStandards.some((standard) => standard.code === "W.4.3"), "CCSS librar
 assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCSS standards should include keyword arrays");
 
 [
-  "One story. Two languages.",
-  "Infinite possibilities.",
-  "Bilingual story incubation · From page to screen",
-  "Write in Chinese, English, or both",
-  "中文写作",
-  "English Writing",
-  'data-writing-language-entry="en"',
-  'data-writing-language-entry="zh"',
-  "AI coaching is included in both · You can add bilingual writing later",
-  "Start with one idea",
-  "A book",
-  "A film",
-  "My own idea",
-  "Build my Story DNA",
-  "AI coaches. You create.",
-  "Publish · Serialize · Adapt",
-  "Serialize",
-  "Get discovered",
-  "Adapt",
-  "StoriesLens Originals",
-  "Three ways into the next world.",
-  "Solo Original",
-  "Story Squad",
-  "Class Premiere",
-  "Questions before answers",
-  "Feedback that makes your story stronger.",
-  "The creative payoff",
-  "Illustrated book",
-  "data-flipbook",
-  "data-book-next",
-  "The star was no bigger than a button",
-  "Comic story",
-  "Cinematic trailer",
-  "AI short film",
-  "Open to every age · Extra care for younger creators",
-  "Private by default",
-  "Age-aware safety",
-  "No open direct messages",
-  "Founding beta pricing",
-  "Story Pass",
-  "$19",
-  "Guided Story Squad",
-  "$49",
-  "Optional Movie Pack:",
-  "For educators",
-  "For language teachers · 中文课堂",
-  "Turn one reading into original writing—and a class premiere.",
-  "Text → Questions",
-  "Reading → Writing",
-  "Class → Premiere",
-  "assets/hero-zh-ink-cocreation-hd-v2.png",
-  "assets/hero-en-cinematic-cocreation-hd-v4.png",
-  "start.html?mode=solo",
+  "YOUR PERSONAL AI STORY MENTOR",
+  "START WITH ONE CREATION",
+  "Your next storybook or short film starts with",
+  "something you made.",
+  'data-home-locale="en"',
+  'data-home-locale="zh"',
+  'data-home-t="hero-title-one"',
+  'data-home-upload',
+  "Upload artwork or a photo",
+  'data-home-speech',
+  "Speak one idea",
+  'data-home-story-language',
+  'data-story-language="en"',
+  'data-story-language="zh"',
+  "What language would you like to create in today?",
+  'data-home-continue',
+  "Let Yu ask me three questions",
+  "Location and camera details removed",
+  "CREATE YOUR WAY · 选择创作方式",
+  "SOLO CREATOR · 个人创作",
+  "Build a story world that is entirely yours.",
+  "href=\"app.html\"",
+  "PRIVATE STORY SQUAD · 私密共创",
+  "Create with family or friends you invite.",
+  "Invite 2–6 people by private link or Story Code. Every contribution keeps its author’s name.",
   "start.html?mode=squad",
-  "teacher-dashboard.html",
-  'src="home.js"',
-  'src="i18n.js"',
-  'data-locale="en"',
-  'data-locale="zh"',
-  'href="home.css"'
+  "FOR TEACHERS · 教师入口",
+  "Turn bulletin boards and student work into a dated class book.",
+  "Photograph the wall once—or upload each work—to create a digital or printed keepsake.",
+  "Open Teacher Publisher",
+  "classroom-archive.html",
+  'class="company-family"',
+  "Every age has a story worth keeping.",
+  "Lightyear Story helps real lives be heard, organized, and passed on.",
+  'href="https://lightyearstory.com/"',
+  'data-audience="lightyear-story"',
+  "Make writing an autobiography as easy as having a conversation.",
+  "Turn your memories into a digital or printed autobiography.",
+  "Turn your autobiography into an AI life film with one click.",
+  "With your consent, clone 10 seconds of your own voice",
+  "Create the world you imagine next.",
+  "Preserve the life you have already lived.",
+  "Real case showcase",
+  'data-audience="showcase-solo"',
+  'data-audience="showcase-cocreate"',
+  'data-audience="showcase-teacher"',
+  "data-audience=\"solo\"",
+  "data-audience=\"cocreate\"",
+  "data-audience=\"teacher\"",
+  'href="portal-home.css?',
+  'src="artwork-upload-safety.js"',
+  'src="portal-home.js?'
 ].forEach((token) => {
   assert(indexHtml.includes(token), `Homepage should include: ${token}`);
 });
+
+assert(!indexHtml.includes("Or choose your studio."), "Homepage should not retain the retired three-studio section");
+assert(!indexHtml.includes("simple-results"), "Homepage should avoid the retired results section");
+assert(!indexHtml.includes("simple-price"), "Homepage should not place pricing beside the two audience entrances");
+assert(!indexHtml.includes('class="outcome-proof"'), "Homepage should not show the retired flagship product example");
+assert(!indexHtml.includes("The Star Keeper"), "Homepage should not retain the flagship showcase content");
+assert(!indexHtml.includes('class="lightyear-mark"'), "Lightyear Story card should not retain the decorative character badge");
+assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
+assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
+assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
+
+[
+  'requestUrl.pathname === "/api/review-artwork"',
+  "reviewArtworkImage",
+  "privateByDefault: true"
+].forEach((token) => {
+  assert(serverJs.includes(token), `Artwork privacy server should include: ${token}`);
+});
+
+[
+  'privacy: "private"',
+  "guardianApprovalRequired",
+  "StoriesLensArtworkSafety.processArtwork"
+].forEach((token) => {
+  assert(startJs.includes(token), `Creator setup should include: ${token}`);
+});
+
+[
+  "Scan the board.",
+  "PRIVATE BY DEFAULT",
+  'capture="environment" data-board-photo',
+  "multiple data-work-photos",
+  "One bulletin-board photo",
+  "Individual student works",
+  "Collection date",
+  "Cover theme",
+  "data-page-editor",
+  "data-approval-check",
+  "data-book-page-panel",
+  "data-download-book",
+  "data-print-book",
+  "Class film",
+  'src="classroom-archive.js?',
+  'href="classroom-archive.css?'
+].forEach((token) => assert(classroomArchiveHtml?.includes(token), `Classroom archive should include: ${token}`));
+
+[
+  "sanitizeFile",
+  "cropBoard",
+  "indexedDB.open",
+  "buildBookHtml",
+  "downloadBook",
+  "printBook",
+  "metadata-free previews",
+  "visibility: \"private-device\""
+].forEach((token) => assert(classroomArchiveJs.includes(token), `Classroom archive app should include: ${token}`));
 
 [
   "How do you want to create?",
@@ -341,9 +413,17 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "Invent a world",
   "Tell my story",
   "Start from a picture",
-  "Start a new squad",
+  "Bring my own work",
+  "Upload your work",
+  'data-work-file',
+  "Start a private squad",
+  "Invite 1–5 family members or friends after setup",
   "Join with a code",
-  "Coach style",
+  "Writing level",
+  "New storyteller · pictures and voice",
+  "Growing writer · school and independent practice",
+  "Teen or adult writer · deeper craft feedback",
+  "Story Coach adapts its questions to your experience and goal—not just your age.",
   "Account & safety",
   "I am 18 or older · independent account",
   "I am under 18 · creating with adult support",
@@ -354,9 +434,12 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "data-step-current",
   "data-step-next",
   "data-step-back",
-  'src="start.js"',
-  'href="start.css"'
+  'src="start.js?',
+  'href="start.css?'
 ].forEach((token) => assert(startHtml?.includes(token), `Start page should include: ${token}`));
+
+assert(read("home.js").includes("storieslens_imported_work"), "Homepage should preserve an imported work on the current device");
+assert(read("start.js").includes("storieslens_imported_work"), "Creator setup should preserve an imported work on the current device");
 
 [
   "Discover your Story DNA",
@@ -422,7 +505,7 @@ assert(founderLabHtml.includes("Local validation only"), "Founder dashboard shou
 assert(founderLabHtml.includes("Three experiments before building more"), "Founder dashboard should prioritize evidence-building experiments");
 assert(betaInterestHtml.includes("it does not create an account or charge money"), "Pricing test should clearly disclose that it is not a live checkout");
 assert(betaInterestHtml.includes("pricing_intent_recorded"), "Pricing test should record an explicit, non-revenue intent event");
-assert(indexHtml.includes("checkout.html?offer=story-pass"), "Homepage should lead the Story Pass offer to parent checkout");
+assert(indexHtml.includes('href="app.html"'), "Homepage family entrance should lead directly to the mobile creation flow");
 assert(checkoutHtml.includes("Creator or guardian checkout"), "Checkout should support adult creators and guardian purchases for minors");
 assert(checkoutHtml.includes("No subscription"), "Checkout should clarify that Story Pass is not a subscription");
 assert(checkoutJs.includes('fetch("/api/checkout-link"'), "Checkout should request a server-approved Payment Link");
@@ -616,46 +699,25 @@ assert(!visualWriteHtml.includes('resolution: "2K"'), "Visual Write image reques
 });
 
 [
-  "Turn a class story into something worth sharing.",
-  "Create a new project",
-  "Current class code",
-  "Continue where you left off",
-  "Student creations",
-  "Student Bookshelf",
-  "Class Screening Room",
-  "Enter the bookshelf",
-  "Enter the screening room",
-  "Current projects",
-  "Teacher tools, plan and usage",
-  "project-output.html?type=class-book",
-  "project-output.html?type=class-movie",
-  "Class Projects",
-  "Writing Assignments",
-  "Student Submissions",
-  "Publish Queue",
-  "Current Plan",
-  "Teacher Pro",
-  "Projects",
-  "8 / 20",
-  "Class Books",
-  "3 / 8",
-  "Image Credits",
-  "142 / 200",
-  "Video Credits",
-  "18 / 24",
-  "This movie has 8 scenes and needs 8 video credits.",
-  "You have 18 video credits.",
-  "The Mystery of the Lost Map",
-  "Review Scenes",
-  "Generate Missing Videos",
-  "Generate Class Movie",
-  "Export Report",
-  "teacher-dashboard.css",
-  "data-copy-class-code",
-  "data-gallery-action"
+  "StoriesLens Bulletin Board Publisher",
+  "Photograph the wall. Keep every story.",
+  "One focused teacher workflow",
+  "ONE SIMPLE WORKFLOW",
+  "Turn one bulletin board into a class keepsake",
+  "Create a free private proof",
+  "Turn the wall into a book",
+  "Free to begin",
+  "Teacher controlled",
+  "No inventory",
+  "Private digital book",
+  "Printed class book",
+  "Class premiere",
+  "classroom-archive.html",
+  "teacher-dashboard.css"
 ].forEach((token) => {
   assert(teacherHtml.includes(token), `Teacher Studio should include: ${token}`);
 });
+assert(!teacherHtml.includes("create-reading-project.html"), "Teacher Studio should expose only the bulletin-board publishing workflow");
 
 const forbiddenVisibleTokens = [
   "AI Feedback API Contract",

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5efe4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="StoriesLens" />
+    <meta name="description" content="Upload one creation, answer three questions, and see your first signed story page." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="family-flow.css?v=20260911-2" />
+    <link rel="stylesheet" href="pwa.css" />
+    <title>Create a Story · StoriesLens</title>
+  </head>
+  <body>
+    <header class="flow-header">
+      <a class="flow-brand" href="index.html" aria-label="StoriesLens home">
+        <img src="assets/storieslens-logo.png" alt="" width="48" height="48" />
+        <span><strong>StoriesLens</strong><small data-t="brand-subtitle">语镜故事</small></span>
+      </a>
+      <div class="flow-header-actions">
+        <div class="language-toggle" aria-label="Interface language">
+          <button class="active" type="button" data-locale="en">EN</button>
+          <button type="button" data-locale="zh">中文</button>
+        </div>
+        <a href="my-stories.html" data-t="my-stories">My stories</a>
+      </div>
+    </header>
+
+    <main class="flow-main">
+      <section class="flow-stage" data-stage="start" aria-labelledby="start-title">
+        <div class="flow-intro">
+          <p class="flow-kicker" data-t="start-kicker">ONE CREATION · THREE QUESTIONS · YOUR STORY</p>
+          <h1 id="start-title"><span data-t="start-title-one">Your first story page</span><em data-t="start-title-two">starts with you.</em></h1>
+          <p data-t="start-intro">Upload something you made—or begin with words or voice. Yu asks three questions. You answer and remain the author.</p>
+        </div>
+
+        <form class="spark-form" data-create-form novalidate>
+          <div class="spark-heading">
+            <div><span data-t="step-one">STEP 1</span><strong data-t="bring-one">Bring one piece of your world.</strong></div>
+            <b data-t="free">FREE</b>
+          </div>
+
+          <label class="spark-upload" data-upload-label>
+            <input type="file" accept="image/jpeg,image/png,image/webp" data-artwork hidden />
+            <span class="spark-upload-icon" aria-hidden="true">＋</span>
+            <strong data-t="upload-title">Upload your artwork or photo</strong>
+            <small data-t="upload-help">JPG, PNG or WEBP · private by default</small>
+            <img data-artwork-preview alt="Selected artwork preview" hidden />
+          </label>
+          <p class="privacy-note" data-t="privacy-note">Location and camera information are removed before the image is used.</p>
+
+          <div class="words-heading"><strong data-t="or-words">Or begin with your own words</strong><span data-t="write-speak">WRITE · SPEAK</span></div>
+          <div class="voice-field">
+            <textarea data-seed maxlength="1800" rows="4" data-placeholder-t="seed-placeholder" placeholder="Tell Yu what is happening in the artwork—or begin with one idea."></textarea>
+            <button type="button" data-speech aria-label="Start voice input"><span aria-hidden="true">●</span><b data-t="speak">Speak</b></button>
+          </div>
+          <small class="speech-note" data-t="speech-note">Speech becomes editable text. Live audio is not stored.</small>
+
+          <div class="creator-fields">
+            <label><span data-t="creator-name">Creator name or nickname</span><input data-creator-name maxlength="40" autocomplete="nickname" data-placeholder-t="name-placeholder" placeholder="The name printed on the story" /></label>
+            <label><span data-t="story-language">Story language</span><select data-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+            <label><span data-t="creator-account">Who is creating?</span><select data-age><option value="adult" data-t="adult">An adult or parent</option><option value="under18" data-t="young">A young creator with adult support</option></select></label>
+          </div>
+
+          <label class="guardian-check" data-guardian-check hidden><input type="checkbox" data-adult-support /><span data-t="adult-confirm">I am the adult supporting this young creator.</span></label>
+          <p class="form-message" data-form-message role="alert"></p>
+          <button class="primary-action" type="submit"><span data-t="meet-questions">Meet Yu’s three questions</span><b aria-hidden="true">→</b></button>
+          <p class="trust-line" data-t="trust-line">Private by default · AI asks · You create · Every word remains yours</p>
+        </form>
+
+        <a class="flow-teacher-publisher-card" href="classroom-archive.html?source=app">
+          <span aria-hidden="true">▦</span>
+          <div><small data-t="teacher-tool">FOR TEACHERS</small><strong data-t="teacher-publisher">Turn a bulletin board into a dated class book.</strong><p data-t="teacher-publisher-copy">Photograph the wall once, or upload each student work separately.</p></div>
+          <b aria-hidden="true">→</b>
+        </a>
+      </section>
+
+      <section class="flow-stage coach-stage" data-stage="coach" aria-labelledby="coach-title" hidden>
+        <div class="coach-progress"><span data-t="yu-asks">YU ASKS · YOU ANSWER</span><strong><b data-question-number>1</b> / 3</strong></div>
+        <div class="coach-layout">
+          <div class="coach-context">
+            <img data-coach-image alt="Your selected creation" hidden />
+            <span data-t="your-spark">YOUR STARTING SPARK</span>
+            <p data-coach-seed></p>
+          </div>
+          <div class="coach-question-card">
+            <div class="yu-mark" aria-hidden="true">Yu</div>
+            <p class="flow-kicker" data-t="personal-mentor">YOUR PERSONAL STORY MENTOR</p>
+            <h1 id="coach-title" data-question>Who is in this story, and what do they want?</h1>
+            <p data-t="answer-own-words">Answer in your own words. A short sentence is enough.</p>
+            <textarea data-answer rows="5" maxlength="1000" data-placeholder-t="answer-placeholder" placeholder="In my story..."></textarea>
+            <p class="form-message" data-question-error role="alert"></p>
+            <button class="primary-action" type="button" data-next-question><span data-t="next-question">Next question</span><b aria-hidden="true">→</b></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="flow-stage result-stage" data-stage="result" aria-labelledby="result-title" hidden>
+        <div class="result-intro">
+          <p class="flow-kicker" data-t="magic-ready">YOUR FIRST STORY PAGE IS READY</p>
+          <h1 id="result-title" data-t="made-by-you">Made from your answers. Written by you.</h1>
+          <p data-t="edit-before-save">Read it, edit anything you want, and save only when it feels like your story.</p>
+        </div>
+
+        <div class="result-layout">
+          <article class="story-page" data-story-page>
+            <div class="story-page-art"><img data-result-image alt="Story artwork" hidden /><span data-result-monogram aria-hidden="true">SL</span></div>
+            <div class="story-page-words">
+              <input data-story-title aria-label="Story title" />
+              <textarea data-story-draft aria-label="Your first story page"></textarea>
+              <p><span data-t="written-by">Written by</span> <strong data-result-author></strong></p>
+            </div>
+          </article>
+
+          <aside class="result-actions">
+            <div class="authorship-card"><span aria-hidden="true">✓</span><div><strong data-t="creator-authored">Creator authored</strong><p data-t="creator-authored-copy">Yu asked the questions. The page uses the creator’s own answers and remains editable.</p></div></div>
+            <p class="save-status" data-save-status aria-live="polite"></p>
+            <a class="primary-action" href="visual-write.html?mode=free&amp;from=h5" data-continue><span data-t="continue-writing">Continue writing</span><b aria-hidden="true">→</b></a>
+            <a class="secondary-action" href="checkout.html?offer=story-pass" data-checkout><span data-t="keep-story">Finish the full story · $19</span><b aria-hidden="true">→</b></a>
+            <button class="text-action" type="button" data-start-over data-t="start-over">Start another story</button>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <script src="analytics.js"></script>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
+    <script src="safety-client.js"></script>
+    <script src="artwork-upload-safety.js"></script>
+    <script src="h5-app.js?v=20260911-4"></script>
+  </body>
+</html>

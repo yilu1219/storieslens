@@ -1,5 +1,7 @@
 "use strict";
 
+const { buildWritingKnowledgePrompt } = require("./writing-coach-knowledge");
+
 const COACH_LENSES = {
   foundation: {
     id: "foundation",
@@ -83,7 +85,8 @@ const GENRES = {
   essay: "生活散文：关注真实观察、具体细节、个人感受与思考之间的连接。",
   memoir: "回忆/传记：尊重事实与不确定性，区分记忆、推测和虚构，不替当事人编造经历。",
   wuxia: "武侠/历史想象：关注人物选择、侠义代价、关系与世界规则，避免复制现成作品的人物、招式与情节。",
-  screenplay: "电影/剧本：关注可见行动、场景变化、对话目的与镜头可实现性。"
+  screenplay: "电影/剧本：关注可见行动、场景变化、对话目的与镜头可实现性。",
+  scifi: "科幻故事：从一个清楚的科学、技术或未来社会变化出发，检验世界规则、连锁后果与人物选择。"
 };
 
 function pick(map, value, fallback) {
@@ -103,10 +106,16 @@ function buildChineseCoachCurriculum(input = {}) {
   const lens = pick(COACH_LENSES, preferences.coachLens, "foundation");
   const level = pick(CREATOR_LEVELS, preferences.creatorLevel, "developing");
   const genre = GENRES[preferences.genre];
+  const knowledge = buildWritingKnowledgePrompt({
+    action: input.action,
+    genre: preferences.genre
+  });
   return {
     ...preferences,
     lensName: lens.name,
     levelName: level.name,
+    methodNames: knowledge.methodNames,
+    knowledgeSources: knowledge.sources,
     prompt: [
       "你是‘语镜中文创作导师’，不是代写作家或自动润色器。创作者保有全部作者身份与故事决定权。",
       `本次文学思想镜头：${lens.name}。${lens.promise}`,
@@ -117,6 +126,7 @@ function buildChineseCoachCurriculum(input = {}) {
       "可选择的诊断追问：",
       ...lens.questions.map((item) => `- ${item}`),
       `边界：${lens.avoid}`,
+      knowledge.prompt,
       "先诊断创作者当前文字，再选择一项最值得修改的地方。除非是最小必要的语法纠正，否则不得生成可直接粘贴进作品的句子。",
       "如果需要示范，只能使用与当前人物、情节、场景完全无关的微型例子或带空格的句式框架。",
       "反馈顺序必须是：具体亮点 → 一个关键问题 → 一条微型写作课 → 一个追问 → 一个由创作者亲自完成的小任务。"

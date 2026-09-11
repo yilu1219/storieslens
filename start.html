@@ -6,11 +6,14 @@
     <meta name="theme-color" content="#070817" />
     <meta name="description" content="Start a Solo Story or create an invite-only Story Squad with StoriesLens." />
     <title>Start Creating | StoriesLens</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css" />
+    <link rel="stylesheet" href="start.css?v=20260909-2" />
+    <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
     <a class="skip-link" href="#start-main">Skip to creator setup</a>
@@ -52,7 +55,7 @@
               <button class="start-choice" type="button" data-mode-choice="squad" aria-pressed="false">
                 <span class="choice-kicker">Story Squad</span>
                 <strong>One world. Many creators.</strong>
-                <small>Start an invite-only project or join friends with a Story Code.</small>
+                <small>Create privately with family or friends using an invitation link or Story Code.</small>
               </button>
             </div>
           </fieldset>
@@ -63,14 +66,15 @@
               <button class="origin-choice is-selected" type="button" data-origin="imagination" aria-pressed="true"><strong>Invent a world</strong><small>Characters, quests, mysteries</small></button>
               <button class="origin-choice" type="button" data-origin="memory" aria-pressed="false"><strong>Tell my story</strong><small>A memory or life moment</small></button>
               <button class="origin-choice" type="button" data-origin="picture" aria-pressed="false"><strong>Start from a picture</strong><small>Imagine what happens next</small></button>
+              <button class="origin-choice" type="button" data-origin="work" aria-pressed="false"><strong>Bring my own work</strong><small>Artwork, handwriting, or a text file</small></button>
             </div>
           </fieldset>
 
           <fieldset class="choice-fieldset step-panel" data-step-panel="2" data-squad-options hidden>
             <legend>What would you like to do?</legend>
             <div class="story-origin-grid two-up">
-              <button class="origin-choice is-selected" type="button" data-squad-action="create" aria-pressed="true"><strong>Start a new squad</strong><small>Invite 1–5 people after setup</small></button>
-              <button class="origin-choice" type="button" data-squad-action="join" aria-pressed="false"><strong>Join with a code</strong><small>Use the code from a friend</small></button>
+              <button class="origin-choice is-selected" type="button" data-squad-action="create" aria-pressed="true"><strong>Start a private squad</strong><small>Invite 1–5 family members or friends after setup</small></button>
+              <button class="origin-choice" type="button" data-squad-action="join" aria-pressed="false"><strong>Join with a code</strong><small>Use the code from family or a friend</small></button>
             </div>
           </fieldset>
 
@@ -89,13 +93,14 @@
               <label><input type="checkbox" data-supervision-confirm /> <span>I am an adult responsible for supervising this account.</span></label>
             </section>
             <label>
-              Coach style
+              Writing level
               <select data-creator-level required>
-                <option value="starter">Gentle starter</option>
-                <option value="growing">Growing writer</option>
-                <option value="independent">Independent writer</option>
+                <option value="starter">New storyteller · pictures and voice</option>
+                <option value="growing">Growing writer · school and independent practice</option>
+                <option value="independent">Teen or adult writer · deeper craft feedback</option>
                 <option value="family">Family creating together</option>
               </select>
+              <small>Story Coach adapts its questions to your experience and goal—not just your age.</small>
             </label>
             <label>
               Display name
@@ -115,10 +120,15 @@
               <textarea data-story-seed rows="3" maxlength="280" placeholder="A shy inventor discovers that the moon is sending secret messages..."></textarea>
               <small>One sentence is enough. Story Coach will ask what comes next.</small>
             </label>
+            <label class="wide work-file-field" data-work-file-field hidden>
+              Upload your work
+              <input type="file" data-work-file accept="image/jpeg,image/png,image/webp,text/plain,text/markdown,.txt,.md" />
+              <small data-work-file-status>Choose a drawing, manuscript image, TXT, or MD file up to 2 MB. Artwork is reviewed before private upload.</small>
+            </label>
             <label class="wide" data-code-field hidden>
               Story Code
               <input data-story-code maxlength="16" autocomplete="off" placeholder="Example: STAR-4821" />
-              <small>Ask the project owner for the invite code.</small>
+              <small>Ask the family member, friend, or project owner for the private invite code.</small>
             </label>
           </div>
 
@@ -142,8 +152,11 @@
     </main>
 
     <script src="safety-client.js"></script>
+    <script src="artwork-upload-safety.js"></script>
     <script src="i18n.js"></script>
     <script src="analytics.js"></script>
-    <script src="start.js"></script>
+    <script src="start.js?v=20260909-2"></script>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
   </body>
 </html>

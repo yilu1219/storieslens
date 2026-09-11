@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4efe4" />
+    <meta name="description" content="Photograph a classroom bulletin board and turn student work into a private digital or printed class collection." />
+    <title>Bulletin Board to Book | StoriesLens</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="teacher-dashboard.css" />
+    <link rel="stylesheet" href="classroom-archive.css?v=20260911-4" />
+    <link rel="stylesheet" href="pwa.css" />
+    <link rel="stylesheet" href="h5-app.css" />
+  </head>
+  <body class="teacher-hub archive-page">
+    <header class="archive-topbar page-shell">
+      <a class="brand" href="index.html" aria-label="StoriesLens home">
+        <span class="brand-mark"><img src="assets/storieslens-logo.png" alt="" /></span>
+        <span>StoriesLens</span>
+      </a>
+      <a class="archive-back" href="index.html" data-archive-copy="home">← StoriesLens home</a>
+      <div class="teacher-language-switcher" aria-label="Interface language">
+        <button type="button" data-locale="en" aria-pressed="true">EN</button>
+        <button type="button" data-locale="zh" aria-pressed="false">中文</button>
+      </div>
+    </header>
+
+    <main class="archive-shell page-shell">
+      <section class="archive-hero">
+        <div>
+          <span class="archive-kicker" data-archive-copy="heroKicker">TEACHER PUBLISHER · PRIVATE BY DEFAULT</span>
+          <h1><span data-archive-copy="heroOne">Scan the board.</span><br /><em data-archive-copy="heroTwo">Publish the class story.</em></h1>
+        </div>
+        <p data-archive-copy="heroCopy">Take one wide photo of a finished bulletin board. StoriesLens creates a page draft, adds a dated cover, and turns the approved work into a private digital book. If the wall photo is unclear, upload each work separately.</p>
+      </section>
+
+      <ol class="archive-progress" aria-label="Publishing progress">
+        <li class="is-active" data-progress-step="1"><span>1</span><b data-archive-copy="capture">Capture</b><small data-archive-copy="captureSmall">Photograph or upload</small></li>
+        <li data-progress-step="2"><span>2</span><b data-archive-copy="organize">Organize</b><small data-archive-copy="organizeSmall">Review every page</small></li>
+        <li data-progress-step="3"><span>3</span><b data-archive-copy="book">Book</b><small data-archive-copy="bookSmall">Preview and export</small></li>
+      </ol>
+
+      <section class="archive-intake-layout">
+        <form class="archive-capture-card" data-archive-form novalidate>
+          <header>
+            <span data-archive-copy="stepOne">STEP 1</span>
+            <h2 data-archive-copy="captureTitle">How are you capturing the class?</h2>
+            <p data-archive-copy="captureCopy">Start with the fastest option. You can switch to individual works whenever the board photo is not clear enough.</p>
+            <button class="archive-resume-button" type="button" hidden data-resume-last><span data-archive-copy="resumeLast">Resume the latest private book</span> <span aria-hidden="true">→</span></button>
+          </header>
+
+          <div class="archive-mode-picker" role="tablist" aria-label="Capture method">
+            <button class="is-active" type="button" role="tab" aria-selected="true" data-capture-mode="board">
+              <span aria-hidden="true">▣</span><b data-archive-copy="boardMode">One bulletin-board photo</b><small data-archive-copy="boardModeSmall">Fastest · use the phone camera</small>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-capture-mode="individual">
+              <span aria-hidden="true">▤</span><b data-archive-copy="individualMode">Individual student works</b><small data-archive-copy="individualModeSmall">Best quality · select several images</small>
+            </button>
+          </div>
+
+          <div class="archive-capture-panel" data-mode-panel="board">
+            <label class="archive-dropzone" for="board-photo" data-dropzone="board">
+              <input id="board-photo" type="file" accept="image/*" capture="environment" data-board-photo />
+              <span class="archive-camera" aria-hidden="true"><i></i></span>
+              <strong data-archive-copy="takeBoard">Photograph the entire bulletin board</strong>
+              <small data-archive-copy="takeBoardSmall">Hold the phone straight · include all four corners · one image</small>
+            </label>
+            <div class="archive-photo-guide" aria-label="Photo tips">
+              <span><b>1</b><small data-archive-copy="tipOne">Stand directly in front</small></span>
+              <span><b>2</b><small data-archive-copy="tipTwo">Fill the frame</small></span>
+              <span><b>3</b><small data-archive-copy="tipThree">Avoid glare</small></span>
+            </div>
+          </div>
+
+          <div class="archive-capture-panel" data-mode-panel="individual" hidden>
+            <label class="archive-dropzone" for="work-photos" data-dropzone="individual">
+              <input id="work-photos" type="file" accept="image/*" multiple data-work-photos />
+              <span class="archive-pages-icon" aria-hidden="true">＋</span>
+              <strong data-archive-copy="uploadWorks">Upload each student work</strong>
+              <small data-archive-copy="uploadWorksSmall">Choose up to 30 drawings or writing pages</small>
+            </label>
+          </div>
+
+          <section class="archive-selection" hidden data-selection>
+            <div class="archive-selection-heading">
+              <strong data-selection-title>1 image ready</strong>
+              <button type="button" data-clear-selection data-archive-copy="clear">Clear</button>
+            </div>
+            <div class="archive-file-strip" data-file-list></div>
+            <p data-processing-status role="status" aria-live="polite"></p>
+          </section>
+
+          <div class="archive-fields">
+            <label><span data-archive-copy="collectionTitle">Book title</span><input type="text" maxlength="70" value="Our Classroom Stories" data-collection-title /></label>
+            <label><span data-archive-copy="collectionDate">Collection date</span><input type="date" data-collection-date /></label>
+            <label><span data-archive-copy="edition">Edition</span><select data-edition><option value="single" data-archive-copy="editionSingle">One bulletin board</option><option value="monthly" data-archive-copy="editionMonthly">Monthly collection</option><option value="quarterly" data-archive-copy="editionQuarterly">Quarterly collection</option><option value="year" data-archive-copy="editionYear">Year-end book</option></select></label>
+            <label><span><span data-archive-copy="classLabel">Class label</span> <small data-archive-copy="classLabelSmall">Use a nickname, not student names</small></span><input type="text" maxlength="40" placeholder="Example: Room 12 Creators" data-class-label /></label>
+            <label><span data-archive-copy="coverTheme">Cover theme</span><select data-cover-theme><option value="ink" data-archive-copy="coverInk">Ink blue</option><option value="coral" data-archive-copy="coverCoral">Warm coral</option><option value="sage" data-archive-copy="coverSage">Classroom sage</option></select></label>
+          </div>
+
+          <div class="archive-local-note"><span aria-hidden="true">⌁</span><p><strong data-archive-copy="deviceOnly">Device-first private workflow.</strong> <span data-archive-copy="deviceOnlyCopy">Photos are resized and stripped of camera metadata in this browser. The draft stays on this device until the teacher chooses to export it.</span></p></div>
+          <p class="archive-error" role="alert" data-archive-error></p>
+          <button class="archive-primary-button" type="submit" disabled data-create-proof><span data-archive-copy="createDraft">Create the page draft</span> <span aria-hidden="true">→</span></button>
+        </form>
+
+        <aside class="archive-explainer">
+          <span class="archive-kicker" data-archive-copy="whatHappens">WHAT HAPPENS NEXT</span>
+          <ol>
+            <li><span>01</span><div><strong data-archive-copy="findWorks">Find the works</strong><small data-archive-copy="findWorksSmall">The board photo becomes editable page candidates.</small></div></li>
+            <li><span>02</span><div><strong data-archive-copy="buildCover">Build the cover</strong><small data-archive-copy="buildCoverSmall">Use the title, class label and collection date.</small></div></li>
+            <li><span>03</span><div><strong data-archive-copy="teacherReview">Teacher review</strong><small data-archive-copy="teacherReviewSmall">Check crops, anonymous credits and visible personal details.</small></div></li>
+            <li><span>04</span><div><strong data-archive-copy="exportBook">Export the book</strong><small data-archive-copy="exportBookSmall">Download a private digital book or print-ready proof.</small></div></li>
+          </ol>
+          <div class="archive-economics"><strong data-archive-copy="freeTeacher">Free for teachers to create.</strong><p data-archive-copy="freeTeacherCopy">No inventory. Families decide later whether they want a printed keepsake.</p></div>
+        </aside>
+      </section>
+
+      <section class="archive-review" hidden data-review-section>
+        <header class="archive-section-heading">
+          <span class="archive-kicker" data-archive-copy="stepTwo">STEP 2 · TEACHER REVIEW</span>
+          <h2 data-archive-copy="reviewTitle">Put every work in the right order.</h2>
+          <p data-archive-copy="reviewCopy">A single board photo becomes candidate crops; individual uploads become full pages. Rename, reorder or remove anything before creating the book.</p>
+        </header>
+        <div class="archive-review-grid archive-review-grid-v2">
+          <div>
+            <div class="archive-page-summary"><strong data-page-count>0 pages</strong><span data-archive-copy="dragHelp">Use the arrows to change order</span></div>
+            <div class="archive-page-editor" data-page-editor></div>
+          </div>
+          <aside class="archive-approval">
+            <span class="archive-kicker" data-archive-copy="approval">TEACHER APPROVAL</span>
+            <h3 data-archive-copy="checksTitle">Three checks before creating the book</h3>
+            <label><input type="checkbox" data-approval-check /><span><b data-archive-copy="checkCrops">I reviewed every crop.</b><small data-archive-copy="checkCropsSmall">No work is missing or cut off.</small></span></label>
+            <label><input type="checkbox" data-approval-check /><span><b data-archive-copy="checkPrivacy">I checked names, faces and school details.</b><small data-archive-copy="checkPrivacySmall">Only approved identifying information remains visible.</small></span></label>
+            <label><input type="checkbox" data-approval-check /><span><b data-archive-copy="checkPermission">I have the required permission.</b><small data-archive-copy="checkPermissionSmall">Permission is required before family sharing or printing.</small></span></label>
+            <button class="archive-primary-button" type="button" disabled data-approve-proof><span data-archive-copy="makeBook">Create my private digital book</span> <span aria-hidden="true">→</span></button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="archive-publish" hidden data-publish-section>
+        <div class="archive-ebook-viewer" data-cover-theme-view="ink">
+          <div class="archive-book-stage">
+            <article class="archive-book-cover" data-book-cover-panel>
+              <img data-cover-image alt="Class collection cover preview" />
+              <span>STORIESLENS CLASS EDITION</span>
+              <strong data-cover-title>Our Classroom Stories</strong>
+              <small data-cover-class>A private class collection</small>
+              <time data-cover-date></time>
+            </article>
+            <article class="archive-ebook-page" hidden data-book-page-panel>
+              <img data-book-page-image alt="Class book page preview" />
+              <div><span data-book-page-number>PAGE 01</span><h3 data-book-page-title></h3><p data-book-page-credit></p></div>
+            </article>
+          </div>
+          <div class="archive-book-controls">
+            <button type="button" data-book-prev aria-label="Previous page">←</button>
+            <strong data-book-position>Cover</strong>
+            <button type="button" data-book-next aria-label="Next page">→</button>
+          </div>
+        </div>
+        <div class="archive-publish-copy">
+          <span class="archive-kicker" data-archive-copy="stepThree">STEP 3 · DIGITAL BOOK READY</span>
+          <h2 data-archive-copy="readyTitle">The class work is no longer temporary.</h2>
+          <p data-archive-copy="readyCopy">The private edition is stored on this device. Download it as a self-contained digital book or print it as a PDF proof.</p>
+          <div class="archive-output-actions">
+            <button class="archive-primary-button" type="button" data-download-book><span data-archive-copy="downloadBook">Download digital book</span> <span aria-hidden="true">↓</span></button>
+            <button class="archive-secondary-button" type="button" data-print-book><span data-archive-copy="printBook">Print / Save PDF</span></button>
+          </div>
+          <div class="archive-save-state" role="status" aria-live="polite" data-save-state></div>
+          <div class="archive-output-options">
+            <div><span>01</span><strong data-archive-copy="familyViewer">Family viewer</strong><small data-archive-copy="familyViewerSmall">A private, mobile-friendly edition.</small></div>
+            <div><span>02</span><strong data-archive-copy="printedBook">Printed book</strong><small data-archive-copy="printedBookSmall">Made only after a family orders.</small></div>
+            <div><span>03</span><strong data-archive-copy="classFilm">Class film</strong><small data-archive-copy="classFilmSmall">The same pages can later become a narrated premiere.</small></div>
+          </div>
+          <button class="archive-text-button" type="button" data-start-another data-archive-copy="startAnother">Start another class collection</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="h5-bottom-nav" aria-label="App navigation">
+      <a href="app.html"><span aria-hidden="true">＋</span><strong data-archive-copy="createNav">Create</strong></a>
+      <a href="my-stories.html"><span aria-hidden="true">▤</span><strong data-archive-copy="storiesNav">Stories</strong></a>
+      <a class="active" href="classroom-archive.html"><span aria-hidden="true">▦</span><strong data-archive-copy="classNav">Class</strong></a>
+      <a href="my-stories.html#account"><span aria-hidden="true">○</span><strong data-archive-copy="accountNav">Account</strong></a>
+    </nav>
+
+    <footer class="archive-footer page-shell"><span>StoriesLens Teacher Publisher</span><span data-archive-copy="footer">Private first · Teacher approved · Print on demand</span></footer>
+
+    <script src="analytics.js"></script>
+    <script src="i18n.js?v=20260908-1"></script>
+    <script src="classroom-archive.js?v=20260911-3"></script>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
+  </body>
+</html>

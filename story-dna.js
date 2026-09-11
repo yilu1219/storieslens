@@ -1,7 +1,8 @@
 (() => {
   const params = new URLSearchParams(window.location.search);
-  const source = ["book", "movie", "idea"].includes(params.get("source")) ? params.get("source") : "idea";
+  const source = ["work", "tell", "inspiration", "picture", "text", "voice", "book", "movie", "idea"].includes(params.get("source")) ? params.get("source") : "inspiration";
   const inspiration = params.get("inspiration")?.trim() || "Your inspiration";
+  const fromH5 = params.get("from") === "h5";
   let storyLanguage = ["en", "zh", "bilingual"].includes(params.get("storyLang")) ? params.get("storyLang") : "en";
   const storyLanguageSelect = document.querySelector("[data-dna-story-language]");
   if (storyLanguageSelect) storyLanguageSelect.value = storyLanguage;
@@ -17,12 +18,17 @@
   let memory = "";
   let shift = "";
 
+  if (fromH5) {
+    const exit = document.querySelector(".dna-exit");
+    if (exit) exit.href = "app.html";
+  }
+
   const copy = {
     1: ["Find the spark", "What stayed with you most?", "Choose the part that keeps returning to your imagination."],
     2: ["Make the first change", "What would you make different?", "Changing one important choice begins a story only you can tell."],
     3: ["Build originality", "Now move beyond the original.", "Choose one big shift that will help your new world stand on its own."]
   };
-  const sourceNames = { book: "A book", movie: "A film", idea: "My own idea" };
+  const sourceNames = { work: "My work", tell: "My own words or voice", inspiration: "A book or film", picture: "One picture", text: "A paragraph", voice: "My own voice", book: "A book", movie: "A film", idea: "My own idea" };
   const memoryNames = { character: "A character’s choice", world: "The world", feeling: "The feeling", surprise: "The surprise" };
   const shiftNames = { setting: "A completely new setting", goal: "A different hero goal", rule: "One impossible rule" };
 
@@ -83,8 +89,12 @@
     document.querySelector("[data-result-change]").textContent = changeAnswer.value.trim();
     document.querySelector("[data-result-shift]").textContent = t(shiftNames[shift]);
     const base = { source, inspiration, storyLang: storyLanguage, dna: dnaSeed };
-    document.querySelector("[data-result-solo]").href = `start.html?${new URLSearchParams({ ...base, mode: "solo" })}`;
+    document.querySelector("[data-result-solo]").href = fromH5
+      ? `visual-write.html?${new URLSearchParams({ mode: "free", from: "h5", storyLang: storyLanguage })}`
+      : `start.html?${new URLSearchParams({ ...base, mode: "solo" })}`;
+    if (fromH5) document.querySelector("[data-result-solo]").textContent = t("Continue writing →");
     document.querySelector("[data-result-squad]").href = `start.html?${new URLSearchParams({ ...base, mode: "squad" })}`;
+    window.StoriesLensPlatform?.syncLocalProject(true);
     flow.hidden = true;
     result.hidden = false;
     result.querySelector("h1").focus?.();

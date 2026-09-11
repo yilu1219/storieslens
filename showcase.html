@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta name="description" content="Explore storybooks and films created with StoriesLens in English and Chinese." />
+    <title>StoriesLens | Books and Films</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="showcase.css?v=20260909-1" />
+    <link rel="stylesheet" href="pwa.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#work">Skip to the work</a>
+
+    <header class="showcase-header">
+      <a class="showcase-brand" href="index.html" aria-label="StoriesLens home">
+        <img src="assets/storieslens-logo.png" alt="" width="48" height="48" />
+        <span>StoriesLens</span>
+      </a>
+      <a class="showcase-back" href="index.html">Home&nbsp; / &nbsp;首页</a>
+    </header>
+
+    <main id="work">
+      <section class="showcase-hero" aria-labelledby="showcase-title">
+        <p class="eyebrow">STORIESLENS ORIGINALS · 语镜原创示例</p>
+        <h1 id="showcase-title">Stories made<br />to be <em>kept.</em></h1>
+        <p class="showcase-lede">One drawing, photo, voice, or piece of writing can grow into a book or a film—in English or Chinese.</p>
+        <p class="sample-note">These are product examples. Family and classroom work stays private unless its creator chooses to publish it.</p>
+      </section>
+
+      <section class="showcase-library" aria-label="StoriesLens examples">
+        <div class="showcase-controls">
+          <div class="format-tabs" role="tablist" aria-label="Choose a format">
+            <button class="is-active" type="button" role="tab" aria-selected="true" data-format-filter="book">Books <span>书</span></button>
+            <button type="button" role="tab" aria-selected="false" data-format-filter="film">Films <span>电影</span></button>
+          </div>
+          <div class="language-filters" aria-label="Filter by language">
+            <button class="is-active" type="button" aria-pressed="true" data-language-filter="all">All</button>
+            <button type="button" aria-pressed="false" data-language-filter="en">English</button>
+            <button type="button" aria-pressed="false" data-language-filter="zh">中文</button>
+          </div>
+        </div>
+
+        <div class="work-grid" aria-live="polite">
+          <article class="work-card book-card" data-format="book" data-language="en">
+            <div class="book-object">
+              <img src="assets/storybook-cover-star-keeper-v1.jpg" alt="Illustrated cover of The Star Keeper" />
+            </div>
+            <div class="work-meta"><span>STORYBOOK · ENGLISH</span><h2>The Star Keeper</h2><p>A small light. A very big night.</p></div>
+          </article>
+
+          <article class="work-card book-card" data-format="book" data-language="zh">
+            <div class="book-object">
+              <img src="assets/outcome-zh-ink-book-v1.png" alt="水墨风格的中文故事书封面" />
+            </div>
+            <div class="work-meta"><span>绘本 · 中文</span><h2>灯下有一条龙</h2><p>一幅画，长成一个东方故事。</p></div>
+          </article>
+
+          <article class="work-card book-card" data-format="book" data-language="en">
+            <div class="book-object">
+              <img src="assets/storybook-cover-garden-door-v1.jpg" alt="Illustrated cover of The Garden Door" />
+            </div>
+            <div class="work-meta"><span>STORYBOOK · ENGLISH</span><h2>The Garden Door</h2><p>Some doors remember who opened them.</p></div>
+          </article>
+
+          <article class="work-card book-card" data-format="book" data-language="zh">
+            <div class="book-object">
+              <img src="assets/outcome-zh-lianhuanhua-v1.png" alt="中国连环画风格的故事封面" />
+            </div>
+            <div class="work-meta"><span>连环画 · 中文</span><h2>月下小侠</h2><p>从一句口述开始的纸上江湖。</p></div>
+          </article>
+
+          <article class="work-card film-card" data-format="film" data-language="en" hidden>
+            <div class="film-frame">
+              <img src="assets/original-ocean-lantern-hd-v2.png" alt="Cinematic still from The Ocean Lantern" />
+              <span class="play-mark" aria-hidden="true">▶</span>
+              <small>FILM CONCEPT</small>
+            </div>
+            <div class="work-meta"><span>SHORT FILM · ENGLISH</span><h2>The Ocean Lantern</h2><p>A lost light searches for its shore.</p></div>
+          </article>
+
+          <article class="work-card film-card" data-format="film" data-language="zh" hidden>
+            <div class="film-frame">
+              <img src="assets/outcome-zh-cocreated-film-v1.png" alt="共创中文动画电影画面" />
+              <span class="play-mark" aria-hidden="true">▶</span>
+              <small>电影概念片</small>
+            </div>
+            <div class="work-meta"><span>动画短片 · 中文</span><h2>七个小小造梦家</h2><p>来自不同地方的创作者，完成同一个世界。</p></div>
+          </article>
+
+          <article class="work-card film-card" data-format="film" data-language="en" hidden>
+            <div class="film-frame">
+              <img src="assets/original-garden-door-hd-v2.png" alt="Cinematic still from The Garden Door" />
+              <span class="play-mark" aria-hidden="true">▶</span>
+              <small>FILM CONCEPT</small>
+            </div>
+            <div class="work-meta"><span>SHORT FILM · ENGLISH</span><h2>Beyond the Garden Door</h2><p>The same story, now built for the screen.</p></div>
+          </article>
+
+          <article class="work-card film-card" data-format="film" data-language="zh" hidden>
+            <div class="film-frame">
+              <img src="assets/outcome-zh-cinematic-trailer-v1.png" alt="水墨电影预告片画面" />
+              <span class="play-mark" aria-hidden="true">▶</span>
+              <small>电影概念片</small>
+            </div>
+            <div class="work-meta"><span>水墨电影 · 中文</span><h2>山河入梦</h2><p>让自己的文字，第一次拥有镜头。</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="showcase-cta" aria-labelledby="cta-title">
+        <p>YOUR STORY CAN BE NEXT · 下一个可以是你的故事</p>
+        <h2 id="cta-title">Start with one thing you made.</h2>
+        <a href="app.html" data-showcase-create>Make my first story page <span aria-hidden="true">→</span></a>
+      </section>
+    </main>
+
+    <footer class="showcase-footer">
+      <span>© 2026 StoriesLens</span>
+      <span>Books · Films · English · 中文</span>
+    </footer>
+
+    <script src="analytics.js"></script>
+    <script src="pwa.js"></script>
+    <script src="showcase.js"></script>
+  </body>
+</html>

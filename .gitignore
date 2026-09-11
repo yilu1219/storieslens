@@ -3,3 +3,4 @@ assets/_preview_*.png
 .env
 node_modules/
 public/generated/
+.data/

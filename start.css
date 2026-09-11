@@ -1,4 +1,4 @@
-.start-page {
+html[lang] body.start-page {
   min-height: 100vh;
   color: white;
   background:
@@ -17,7 +17,7 @@
 
 .back-link {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -63,7 +63,7 @@
   justify-content: space-between;
   gap: 20px;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -93,8 +93,13 @@
 .start-panel h1 {
   max-width: 720px;
   margin-bottom: 14px;
-  font-size: clamp(42px, 5.4vw, 68px);
+  color: white;
+  font-size: clamp(44px, 5.4vw, 70px);
 }
+
+.start-panel .eyebrow { color: var(--gold); }
+.start-page .brand,
+.start-page .back-link { color: white; }
 
 .start-panel h1:focus {
   outline: 0;
@@ -104,7 +109,7 @@
   max-width: 650px;
   margin: 0 0 36px;
   color: rgba(255, 255, 255, 0.63);
-  font-size: 17px;
+  font-size: 19px;
   line-height: 1.6;
 }
 
@@ -127,7 +132,7 @@
   width: 100%;
   margin-bottom: 12px;
   color: rgba(255, 255, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -142,7 +147,24 @@
 }
 
 .story-origin-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.work-file-field[hidden] { display: none; }
+
+.setup-fields .work-file-field input[type="file"] {
+  height: auto;
+  padding: 12px 14px;
+}
+
+.setup-fields .work-file-field input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 11px;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .1);
+  cursor: pointer;
 }
 
 .story-origin-grid.two-up {
@@ -202,7 +224,7 @@
   color: var(--gold);
   border: 1px solid rgba(244, 199, 109, 0.44);
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -210,7 +232,7 @@
 
 .start-choice strong {
   font-family: "Fraunces", Georgia, serif;
-  font-size: 23px;
+  font-size: 25px;
 }
 
 .start-choice small,
@@ -221,7 +243,7 @@
 }
 
 .origin-choice strong {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .setup-fields {
@@ -235,7 +257,7 @@
   display: grid;
   gap: 8px;
   color: rgba(255, 255, 255, 0.78);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -257,8 +279,8 @@
 .supervision-panel[hidden] { display: none; }
 .supervision-icon { display: grid; width: 34px; height: 34px; grid-row: 1; place-items: center; color: var(--night); border-radius: 50%; background: var(--gold); font-weight: 900; }
 .supervision-panel strong { color: white; }
-.supervision-panel p { margin: 4px 0 0; color: rgba(255,255,255,.58); font-size: 12px; line-height: 1.5; }
-.supervision-panel > label { display: flex; grid-column: 1 / -1; align-items: flex-start; gap: 9px; padding-top: 8px; color: white; font-size: 13px; }
+.supervision-panel p { margin: 4px 0 0; color: rgba(255,255,255,.58); font-size: 14px; line-height: 1.5; }
+.supervision-panel > label { display: flex; grid-column: 1 / -1; align-items: flex-start; gap: 9px; padding-top: 8px; color: white; font-size: 15px; }
 .supervision-panel input { width: 18px; height: 18px; min-height: 0; flex: 0 0 auto; margin: 1px 0 0; accent-color: var(--mint); }
 
 .setup-fields input,
@@ -293,7 +315,7 @@
   min-height: 22px;
   margin: 14px 0 0;
   color: #ffb8a9;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .start-actions {
@@ -323,7 +345,7 @@
 .start-actions p {
   margin: 0 0 0 auto;
   color: rgba(255, 255, 255, 0.45);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .start-actions p span {
@@ -370,7 +392,7 @@
 .visual-overlay > p {
   margin: 0 0 18px;
   font-family: "Fraunces", Georgia, serif;
-  font-size: clamp(24px, 2.4vw, 34px);
+  font-size: clamp(26px, 2.4vw, 36px);
   line-height: 1.2;
 }
 
@@ -379,7 +401,7 @@
   justify-content: space-between;
   gap: 14px;
   color: rgba(255, 255, 255, 0.54);
-  font-size: 11px;
+  font-size: 13px;
   text-transform: uppercase;
 }
 
@@ -423,7 +445,7 @@
   }
 
   .start-panel h1 {
-    font-size: 43px;
+    font-size: 45px;
   }
 
   .start-mode-grid,

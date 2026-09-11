@@ -38,6 +38,15 @@
       properties: safeProperties
     });
     localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(-MAX_EVENTS)));
+
+    const latest = events[events.length - 1];
+    fetch("/api/product-events", {
+      method: "POST",
+      credentials: "same-origin",
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: latest.name, at: latest.at, page: latest.page, properties: latest.properties })
+    }).catch(() => {});
   };
 
   window.StoriesLensAnalytics = {

@@ -3,7 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = require("docx");
 const { checkImageSafety, checkTextSafety } = require("./content-safety");
+const { reviewArtworkImage } = require("./artwork-safety-server");
 const { buildChineseCoachCurriculum } = require("./chinese-writing-coach");
+const { createPlatformApi } = require("./platform-api");
 
 const root = __dirname;
 
@@ -56,7 +58,7 @@ class SafetyPolicyError extends Error {
 async function enforceTextSafety(text, { media = false } = {}) {
   const requireExternal = media
     ? process.env.REQUIRE_EXTERNAL_MEDIA_MODERATION !== "false"
-    : process.env.REQUIRE_EXTERNAL_TEXT_MODERATION !== "false";
+    : process.env.REQUIRE_EXTERNAL_TEXT_MODERATION === "true";
   const result = await checkTextSafety(text, { requireExternal });
   if (result.unavailable) {
     throw new SafetyPolicyError("Media generation is paused because the safety review service is unavailable.", 503);
@@ -101,7 +103,7 @@ const checkoutOffers = {
   },
   "movie-30": {
     name: "30-second Movie Pack",
-    price: "$29",
+    price: "$39",
     envKey: "STRIPE_MOVIE_30_URL",
     fallbackUrl: "/beta-interest.html?offer=movie-30"
   },
@@ -134,6 +136,14 @@ function resolveRequestPath(urlPathname) {
   return filePath;
 }
 
+const pageAliases = Object.freeze({
+  "/app": "/app.html",
+  "/create": "/app.html",
+  "/stories": "/my-stories.html",
+  "/studio": "/movie-studio.html",
+  "/classroom": "/classroom-archive.html"
+});
+
 function sendFile(response, filePath) {
   fs.readFile(filePath, (error, data) => {
     if (error) {
@@ -150,11 +160,11 @@ function sendFile(response, filePath) {
 }
 
 function sendJson(response, statusCode, payload) {
-  response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
+  response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store, max-age=0" });
   response.end(JSON.stringify(payload));
 }
 
-function readJsonBody(request) {
+function readJsonBody(request, maxLength = 1_000_000) {
   return new Promise((resolve, reject) => {
     let body = "";
     let rejected = false;
@@ -162,7 +172,7 @@ function readJsonBody(request) {
     request.on("data", (chunk) => {
       if (rejected) return;
       body += chunk;
-      if (body.length > 1_000_000) {
+      if (body.length > maxLength) {
         rejected = true;
         reject(new Error("Request body too large"));
       }
@@ -179,6 +189,31 @@ function readJsonBody(request) {
 
     request.on("error", reject);
   });
+}
+
+async function handleArtworkReview(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(request, 6_000_000);
+    if (body.metadataRemoved !== true) {
+      sendJson(response, 400, { approved: false, reasonCode: "metadata_not_removed" });
+      return;
+    }
+    const result = await reviewArtworkImage(body.imageDataUrl);
+    sendJson(response, result.statusCode || (result.approved ? 200 : 422), {
+      approved: result.approved,
+      reasonCode: result.reasonCode,
+      checks: result.checks || null,
+      metadataRemoved: true,
+      privateByDefault: true
+    });
+  } catch (error) {
+    sendJson(response, 400, { approved: false, reasonCode: "invalid_request", error: error.message || "Artwork review failed" });
+  }
 }
 
 async function handleCheckoutLink(request, response) {
@@ -891,7 +926,8 @@ async function handleAIReport(request, response) {
     const chineseCurriculum = storyLanguage === "en" ? null : buildChineseCoachCurriculum({
       coachLens: body.coachLens,
       creatorLevel: body.creatorLevel,
-      genre: body.genre
+      genre: body.genre,
+      action: "report"
     });
     const languageInstruction = storyLanguage === "zh"
       ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
@@ -991,7 +1027,8 @@ async function handleWritingAssistant(request, response) {
     const chineseCurriculum = storyLanguage === "en" ? null : buildChineseCoachCurriculum({
       coachLens: body.coachLens,
       creatorLevel: body.creatorLevel,
-      genre: body.genre
+      genre: body.genre,
+      action
     });
     const languageInstruction = storyLanguage === "zh"
       ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
@@ -1085,7 +1122,8 @@ async function handleWritingAssistant(request, response) {
         lensName: chineseCurriculum.lensName,
         creatorLevel: chineseCurriculum.creatorLevel,
         levelName: chineseCurriculum.levelName,
-        genre: chineseCurriculum.genre
+        genre: chineseCurriculum.genre,
+        methods: chineseCurriculum.methodNames
       } : null
     };
     if (action === "begin" && !safeResult.question) safeResult.question = safeResult.reply;
@@ -1096,15 +1134,28 @@ async function handleWritingAssistant(request, response) {
   }
 }
 
-const server = http.createServer((request, response) => {
+const handlePlatformApi = createPlatformApi({
+  root,
+  sendJson,
+  readJsonBody,
+  enforceTextSafety,
+  enforceImageSafety,
+  reviewArtworkSafety: reviewArtworkImage
+});
+
+const server = http.createServer(async (request, response) => {
   response.setHeader("X-Content-Type-Options", "nosniff");
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   response.setHeader("X-Frame-Options", "SAMEORIGIN");
-  response.setHeader("Permissions-Policy", "camera=(), geolocation=(), payment=(), usb=()");
+  response.setHeader("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(), payment=(self), usb=()");
   const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
   const projectPartImageMatch = requestUrl.pathname.match(/^\/api\/project-parts\/([^/]+)\/generate-image$/);
   const imageTaskMatch = requestUrl.pathname.match(/^\/api\/image-tasks\/([^/]+)$/);
   const videoJobMatch = requestUrl.pathname.match(/^\/api\/video-jobs\/([^/]+)$/);
+
+  if (await handlePlatformApi(request, response, requestUrl)) {
+    return;
+  }
 
   if (projectPartImageMatch) {
     handleCreateProjectPartImageTask(request, response, projectPartImageMatch[1]);
@@ -1118,6 +1169,11 @@ const server = http.createServer((request, response) => {
 
   if (requestUrl.pathname === "/api/generate-image") {
     handleGenerateImage(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/review-artwork") {
+    handleArtworkReview(request, response);
     return;
   }
 
@@ -1151,7 +1207,7 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  const requestedPath = resolveRequestPath(requestUrl.pathname);
+  const requestedPath = resolveRequestPath(pageAliases[requestUrl.pathname] || requestUrl.pathname);
 
   if (!requestedPath) {
     response.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
