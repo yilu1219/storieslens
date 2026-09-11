@@ -356,6 +356,7 @@ assert(!indexHtml.includes("simple-price"), "Homepage should not place pricing b
 assert(!indexHtml.includes('class="outcome-proof"'), "Homepage should not show the retired flagship product example");
 assert(!indexHtml.includes("The Star Keeper"), "Homepage should not retain the flagship showcase content");
 assert(!indexHtml.includes('class="lightyear-mark"'), "Lightyear Story card should not retain the decorative character badge");
+assert((indexHtml.match(/class="lightyear-feature-icon"/g) || []).length === 3, "Lightyear Story should use one restrained icon for each of its three outcomes");
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");

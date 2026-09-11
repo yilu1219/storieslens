@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v40-20260911";
+const VERSION = "storieslens-h5-v41-20260911";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -13,8 +13,8 @@ const APP_SHELL = [
   "/classroom-archive.js?v=20260911-3",
   "/analytics.js",
   "/i18n.js?v=20260908-1",
-  "/portal-home.css?v=20260911-27",
-  "/portal-home.js?v=20260911-26",
+  "/portal-home.css?v=20260911-28",
+  "/portal-home.js?v=20260911-28",
   "/family-flow.css?v=20260911-2",
   "/h5-app.js?v=20260911-4",
   "/showcase.html",
