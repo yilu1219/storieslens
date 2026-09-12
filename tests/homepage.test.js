@@ -358,7 +358,7 @@ assert(!indexHtml.includes("The Star Keeper"), "Homepage should not retain the f
 assert(!indexHtml.includes('class="lightyear-mark"'), "Lightyear Story card should not retain the decorative character badge");
 assert((indexHtml.match(/class="lightyear-feature-icon"/g) || []).length === 3, "Lightyear Story should use one restrained icon for each of its three outcomes");
 assert(indexHtml.includes('class="lightyear-card-art"'), "Lightyear Story should carry a content-led watercolor illustration");
-assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-v3.jpg"), "Lightyear Story should load its family-reference three-generation watercolor image");
+assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-v4.jpg"), "Lightyear Story should load its updated three-generation watercolor image with a narrated autobiography book");
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
