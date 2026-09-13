@@ -15,7 +15,7 @@
     <title>StoriesLens | Start with your creation</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="portal-home.css?v=20260911-29" />
+    <link rel="stylesheet" href="portal-home.css?v=20260913-30" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body>
@@ -52,12 +52,25 @@
           <div class="magic-actions">
             <label class="magic-action magic-action-upload" data-home-upload-label>
               <input type="file" accept="image/jpeg,image/png,image/webp" data-home-upload hidden />
-              <span class="magic-action-icon" aria-hidden="true">＋</span>
+              <span class="magic-action-icon magic-upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" focusable="false">
+                  <path d="M16 20V5" />
+                  <path d="m10 11 6-6 6 6" />
+                  <path d="M5 19v7h22v-7" />
+                </svg>
+              </span>
               <strong data-home-t="upload-primary">Upload artwork or a photo</strong>
               <small data-home-t="upload-secondary">上传画作或照片</small>
             </label>
             <button class="magic-action magic-action-voice" type="button" data-home-speech>
-              <span class="magic-action-icon" aria-hidden="true">●</span>
+              <span class="magic-action-icon magic-mouth-icon" aria-hidden="true">
+                <svg viewBox="0 0 38 32" focusable="false">
+                  <path d="M3.5 16c4.6-1.5 7.7-4.7 11.1-8.4 3.3 3.5 6.3 6.7 10.8 8.4-4.3 5.2-7.4 7.4-10.8 7.4S8 21.2 3.5 16Z" />
+                  <path d="M7.2 16h14.7" />
+                  <path d="M28 11.5c2.1 2.2 2.1 6.8 0 9" />
+                  <path d="M32 8.3c4.2 4.1 4.2 11.3 0 15.4" />
+                </svg>
+              </span>
               <strong data-home-t="voice-primary">Speak one idea</strong>
               <small data-home-t="voice-secondary">口述一个想法</small>
             </button>
