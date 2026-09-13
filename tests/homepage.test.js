@@ -347,7 +347,7 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "data-audience=\"cocreate\"",
   "data-audience=\"teacher\"",
   'href="portal-home.css?',
-  'src="artwork-upload-safety.js"',
+  'src="artwork-upload-safety.js?',
   'src="portal-home.js?'
 ].forEach((token) => {
   assert(indexHtml.includes(token), `Homepage should include: ${token}`);

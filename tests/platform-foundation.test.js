@@ -34,7 +34,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(app.includes("data-create-form") && app.includes("data-artwork") && app.includes("data-seed") && app.includes("data-speech"), "formal H5 should begin with artwork, words, or voice");
   assert(app.includes('data-stage="coach"') && app.includes('data-stage="result"'), "formal H5 should keep the three questions and first story page in one flow");
   assert(appJs.includes("coach_question_answered") && appJs.includes("first_story_page_created"), "formal H5 should measure its activation moment");
-  assert(app.includes('src="artwork-upload-safety.js"') && appJs.includes("StoriesLensArtworkSafety.processArtwork"), "formal H5 should privacy-review artwork before it can be stored");
+  assert(app.includes('src="artwork-upload-safety.js?') && appJs.includes("StoriesLensArtworkSafety.processArtwork"), "formal H5 should privacy-review artwork before it can be stored");
   assert(api.includes("reviewArtworkSafety(body.dataUrl)") && api.includes("Real-person photos are not stored"), "private media API should reject real-person photos server-side");
   assert(appJs.includes('platform.api("/api/projects"') && appJs.includes('platform.api("/api/media"'), "formal H5 should save real private projects and artwork");
   assert(appJs.includes('from: "h5"'), "formal H5 should continue directly into the guided creation path");

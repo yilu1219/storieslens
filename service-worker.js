@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v47-20260913";
+const VERSION = "storieslens-h5-v48-20260913";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -25,7 +25,7 @@ const APP_SHELL = [
   "/pwa.css",
   "/platform-client.js",
   "/safety-client.js",
-  "/artwork-upload-safety.js",
+  "/artwork-upload-safety.js?v=20260913-1",
   "/pwa.js",
   "/offline.js",
   "/assets/storieslens-logo.png",
