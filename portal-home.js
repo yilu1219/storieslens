@@ -85,8 +85,8 @@
       "showcase-title": "See what StoriesLens can make.",
       "showcase-cta": "View finished work →",
       "footer-trust": "Private by default · AI guides, people create",
-      "invalid-image": "Choose a JPG, PNG or WEBP image under 8 MB.",
-      "checking-image": "Removing location and camera details, then checking the image…",
+      "invalid-image": "Choose a JPG, PNG, WEBP, HEIC or HEIF image under 15 MB.",
+      "checking-image": "Converting on this device, removing location and camera details, then checking the image…",
       "private-ready": "Ready in device-only private mode. The original photo is not uploaded.",
       "image-ready": "Your creation is ready. The original file is not saved.",
       "image-failed": "This image could not be used. Please try another one.",
@@ -164,8 +164,8 @@
       "showcase-title": "看看 StoriesLens 可以创造什么。",
       "showcase-cta": "浏览完成作品 →",
       "footer-trust": "默认私密 · AI 负责引导，由人亲自创作",
-      "invalid-image": "请选择不超过 8MB 的 JPG、PNG 或 WEBP 图片。",
-      "checking-image": "正在删除位置与拍摄设备信息，并检查图片……",
+      "invalid-image": "请选择不超过 15MB 的 JPG、PNG、WEBP、HEIC 或 HEIF 图片。",
+      "checking-image": "正在本机转换图片、删除位置与拍摄设备信息，并进行检查……",
       "private-ready": "已进入仅本机私密模式，原始照片不会上传。",
       "image-ready": "你的作品已经准备好，原始文件不会保存。",
       "image-failed": "这张图片暂时无法使用，请换一张再试。",
@@ -235,7 +235,7 @@
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 8 * 1024 * 1024) {
+    if (!window.StoriesLensArtworkSafety?.isSupportedImage(file) || file.size > 15 * 1024 * 1024) {
       setStatus(t("invalid-image"), true);
       return;
     }
@@ -254,12 +254,14 @@
         privateOnly = true;
         personalPhoto = reason === "real_person" || reason === "not_artwork";
       }
-      preparedImage = { dataUrl: result.dataUrl, name: file.name, privateOnly, personalPhoto };
+      preparedImage = { dataUrl: result.dataUrl, name: file.name, privateOnly, personalPhoto, convertedFromHeic: Boolean(result.convertedFromHeic) };
       imagePreview.src = result.dataUrl;
       imageName.textContent = file.name;
       imageWrap.hidden = false;
       uploadLabel.classList.add("has-selection");
-      setStatus(privateOnly ? t("private-ready") : t("image-ready"));
+      setStatus(result.convertedFromHeic
+        ? (homeLocale === "zh" ? "HEIC 已在本机安全转换；原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.")
+        : (privateOnly ? t("private-ready") : t("image-ready")));
       showContinue();
       window.StoriesLensAnalytics?.track("homepage_image_prepared", { privateOnly, personalPhoto });
     } catch (_error) {

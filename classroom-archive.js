@@ -106,26 +106,10 @@
   }
 
   async function sanitizeFile(file) {
-    if (!(file.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp)$/i.test(file.name))) throw new Error("unsupported_type");
+    if (!window.StoriesLensArtworkSafety?.isSupportedImage(file)) throw new Error("unsupported_type");
     if (file.size > 25 * 1024 * 1024) throw new Error("too_large");
-    const objectUrl = URL.createObjectURL(file);
-    try {
-      const image = await loadImage(objectUrl);
-      const longest = Math.max(image.naturalWidth, image.naturalHeight);
-      const scale = Math.min(1, 2000 / longest);
-      const width = Math.max(1, Math.round(image.naturalWidth * scale));
-      const height = Math.max(1, Math.round(image.naturalHeight * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const context = canvas.getContext("2d", { alpha: false });
-      context.fillStyle = "#fff";
-      context.fillRect(0, 0, width, height);
-      context.drawImage(image, 0, 0, width, height);
-      return { name: file.name.slice(0, 120), dataUrl: canvasDataUrl(canvas), width, height };
-    } finally {
-      URL.revokeObjectURL(objectUrl);
-    }
+    const sanitized = await window.StoriesLensArtworkSafety.removeMetadata(file);
+    return { name: file.name.slice(0, 120), dataUrl: sanitized.dataUrl, width: sanitized.width, height: sanitized.height, convertedFromHeic: Boolean(sanitized.convertedFromHeic) };
   }
 
   async function cropBoard(source) {
@@ -187,13 +171,18 @@
         setStatus(say(`Preparing image ${index + 1} of ${files.length}…`, `正在处理第 ${index + 1}／${files.length} 张……`));
         state.sources.push(await sanitizeFile(files[index]));
       }
-      setStatus(say("Ready. Original camera metadata is not included in this draft.", "处理完成。候选页面不包含原始相机元数据。"));
+      const convertedHeic = state.sources.some((source) => source.convertedFromHeic);
+      setStatus(convertedHeic
+        ? say("Ready. HEIC was converted on this device; originals were not uploaded.", "处理完成。HEIC 已在本机转换，原始照片没有上传。")
+        : say("Ready. Original camera metadata is not included in this draft.", "处理完成。候选页面不包含原始相机元数据。"));
       window.StoriesLensAnalytics?.track("classroom_capture_ready", { mode, count: state.sources.length });
     } catch (uploadError) {
       state.sources = [];
       const message = uploadError.message === "too_large"
         ? say("Each image must be under 25 MB.", "每张图片需小于25MB。")
-        : say("This image could not be opened. On some devices, HEIC must first be saved as JPG.", "无法读取这张图片。部分设备需要先把HEIC照片另存为JPG。" );
+        : uploadError.message === "heic_conversion_unavailable"
+          ? say("HEIC support could not load. Check your connection and try again.", "HEIC 转换组件暂时无法加载，请检查网络后重试。")
+          : say("This image could not be opened. Try a different image.", "无法读取这张图片，请换一张图片重试。" );
       showError(message);
       setStatus();
     }

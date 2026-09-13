@@ -25,26 +25,11 @@
     notice.textContent = message;
   }
 
-  function readFile(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("This file could not be read."));
-      reader.readAsDataURL(file);
-    });
-  }
-
   async function rewriteImage(file) {
-    const dataUrl = await readFile(file);
-    const image = new Image();
-    await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; image.src = dataUrl; });
-    const max = 2200;
-    const scale = Math.min(1, max / Math.max(image.naturalWidth, image.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-    canvas.getContext("2d", { alpha: false }).drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/webp", .88);
+    if (!window.StoriesLensArtworkSafety?.isSupportedImage(file)) throw new Error("Choose a JPG, PNG, WEBP, HEIC or HEIF image.");
+    if (file.size > 15 * 1024 * 1024) throw new Error("Choose an image under 15 MB.");
+    const sanitized = await window.StoriesLensArtworkSafety.removeMetadata(file);
+    return sanitized.dataUrl;
   }
 
   async function uploadMedia(dataUrl, metadataRemoved = false) {
@@ -104,7 +89,7 @@
       const file = event.target.files?.[0];
       if (!file) return;
       const state = $("[data-voice-state]", card);
-      state.textContent = "Reviewing artwork…";
+      state.textContent = /\.(heic|heif)$/i.test(file.name) ? "Converting HEIC privately on this device…" : "Reviewing artwork…";
       try {
         const rewritten = await rewriteImage(file);
         const media = await uploadMedia(rewritten, true);

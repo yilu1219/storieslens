@@ -48,6 +48,7 @@ const classroomArchiveHtml = htmlByFile["classroom-archive.html"];
 const classroomArchiveJs = read("classroom-archive.js");
 const portalHomeJs = read("portal-home.js");
 const h5AppJs = read("h5-app.js");
+const artworkSafetyJs = read("artwork-upload-safety.js");
 const teacherProjectHtml = htmlByFile["teacher-project.html"];
 const projectOutputHtml = htmlByFile["project-output.html"];
 const packageJson = JSON.parse(read("package.json"));
@@ -364,6 +365,25 @@ assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
+
+[
+  indexHtml,
+  startHtml,
+  htmlByFile["app.html"],
+  classroomArchiveHtml,
+  htmlByFile["movie-studio.html"]
+].forEach((html) => {
+  assert(html?.includes("image/heic") && html.includes(".heic"), "Every creation upload should accept iPhone HEIC photos");
+});
+assert(fs.existsSync(path.join(root, "vendor/heic2any-0.0.4.min.js")), "The HEIC converter should be served locally rather than loading from a third-party CDN");
+[
+  "isHeicFile",
+  "isSupportedImage",
+  "heic2any",
+  "convertedFromHeic",
+  "originalNotUploaded"
+].forEach((token) => assert(artworkSafetyJs.includes(token), `HEIC privacy pipeline should include: ${token}`));
+assert(classroomArchiveHtml.indexOf("artwork-upload-safety.js") < classroomArchiveHtml.indexOf("classroom-archive.js"), "Teacher Publisher should load HEIC sanitizing before classroom capture");
 
 [
   'requestUrl.pathname === "/api/review-artwork"',

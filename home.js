@@ -129,10 +129,10 @@
         error.textContent = t("Choose a file smaller than 2 MB.");
         return;
       }
-      const isImage = /^image\/(jpeg|png|webp)$/.test(file.type);
+      const isImage = Boolean(window.StoriesLensArtworkSafety?.isSupportedImage(file));
       if (!isImage) {
         workFile.value = "";
-        error.textContent = t("Choose an artwork file in JPG, PNG, or WEBP format.");
+        error.textContent = t("Choose an artwork file in JPG, PNG, WEBP, HEIC, or HEIF format.");
         return;
       }
       if (workFileStatus) workFileStatus.textContent = t("Removing metadata and checking artwork safety…");
@@ -177,7 +177,7 @@
           contact_information: "Contact information was detected. Please cover or remove it and try again.",
           unsafe_content: "This artwork did not pass the safe-content review.",
           uncertain: "We could not confirm that this upload is safe artwork. Please try a clearer image.",
-          invalid_image: "Choose a valid JPG, PNG, or WEBP artwork file.",
+          invalid_image: "Choose a valid JPG, PNG, WEBP, HEIC, or HEIF artwork file.",
           review_unavailable: "Artwork upload is paused because the safety review is unavailable. You can still write or speak."
         };
         error.textContent = t(reasonMessages[reasonCode] || reasonMessages.review_unavailable);

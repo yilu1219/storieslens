@@ -142,16 +142,17 @@
     const file = workFile.files?.[0];
     importedWork = null;
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
+    const isText = file.type === "text/plain" || file.type === "text/markdown" || /\.(txt|md)$/i.test(file.name);
+    const isImage = Boolean(window.StoriesLensArtworkSafety?.isSupportedImage(file));
+    const maximumSize = isImage ? 15 * 1024 * 1024 : 2 * 1024 * 1024;
+    if (file.size > maximumSize) {
       workFile.value = "";
-      error.textContent = t("Choose a file smaller than 2 MB.");
+      error.textContent = t(isImage ? "Choose an image smaller than 15 MB." : "Choose a file smaller than 2 MB.");
       return;
     }
-    const isText = file.type === "text/plain" || file.type === "text/markdown" || /\.(txt|md)$/i.test(file.name);
-    const isImage = /^image\/(jpeg|png|webp)$/.test(file.type);
     if (!isText && !isImage) {
       workFile.value = "";
-      error.textContent = t("Choose a JPG, PNG, WEBP, TXT, or MD file.");
+      error.textContent = t("Choose a JPG, PNG, WEBP, HEIC, HEIF, TXT, or MD file.");
       return;
     }
     let content;
@@ -168,7 +169,7 @@
         content = safeArtwork.dataUrl;
         storedName = "artwork.webp";
         storedType = safeArtwork.type;
-        artworkReview = { safetyReviewed: true, metadataRemoved: true };
+        artworkReview = { safetyReviewed: true, metadataRemoved: true, convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
       } catch (uploadError) {
         workFile.value = "";
         const message = uploadError.reasonCode === "real_person" ? "This upload appears to show a real person. Please upload artwork without identifiable people." : uploadError.reasonCode === "personal_name" ? "A visible personal name was detected. Please cover or remove it and try again." : uploadError.reasonCode === "school_information" ? "School information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "contact_information" ? "Contact information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "identity_document" ? "Identity documents cannot be uploaded." : uploadError.reasonCode === "not_artwork" ? "Please upload artwork rather than a personal photograph." : uploadError.reasonCode === "unsafe_content" ? "This artwork did not pass the safe-content review." : "Artwork upload is paused because the safety review is unavailable. You can still write or speak.";
@@ -189,7 +190,9 @@
       return;
     }
     if (isText && !storySeed.value.trim()) storySeed.value = String(content).trim().slice(0, storySeed.maxLength || 280);
-    if (workFileStatus) workFileStatus.textContent = isText ? `${t("Ready")}: ${file.name}` : t("Safety check passed · personal metadata removed · private by default");
+    if (workFileStatus) workFileStatus.textContent = isText
+      ? `${t("Ready")}: ${file.name}`
+      : (artworkReview?.convertedFromHeic ? t("HEIC converted on this device · original not uploaded · private by default") : t("Safety check passed · personal metadata removed · private by default"));
     error.textContent = "";
   });
 

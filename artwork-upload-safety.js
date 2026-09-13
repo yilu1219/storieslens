@@ -3,6 +3,45 @@
 
   const MAX_DIMENSION = 1800;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+  const HEIC_TYPES = new Set(["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"]);
+  const HEIC_CONVERTER_SRC = "vendor/heic2any-0.0.4.min.js";
+  let heicConverterPromise = null;
+
+  const fileExtensionMatches = (file, pattern) => pattern.test(String(file?.name || ""));
+  const isHeicFile = (file) => Boolean(file) && (HEIC_TYPES.has(String(file.type || "").toLowerCase()) || fileExtensionMatches(file, /\.(heic|heif)$/i));
+  const isSupportedImage = (file) => Boolean(file) && (ALLOWED_TYPES.has(String(file.type || "").toLowerCase()) || isHeicFile(file) || fileExtensionMatches(file, /\.(jpe?g|png|webp)$/i));
+
+  function ensureHeicConverter() {
+    if (typeof window.heic2any === "function") return Promise.resolve(window.heic2any);
+    if (heicConverterPromise) return heicConverterPromise;
+    heicConverterPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = new URL(HEIC_CONVERTER_SRC, document.baseURI).href;
+      script.async = true;
+      script.dataset.heicConverter = "heic2any";
+      script.onload = () => typeof window.heic2any === "function" ? resolve(window.heic2any) : reject(new Error("heic_conversion_unavailable"));
+      script.onerror = () => reject(new Error("heic_conversion_unavailable"));
+      document.head.append(script);
+    }).catch((error) => {
+      heicConverterPromise = null;
+      throw error;
+    });
+    return heicConverterPromise;
+  }
+
+  async function convertHeic(file) {
+    const heic2any = await ensureHeicConverter();
+    try {
+      const conversion = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+      const jpeg = Array.isArray(conversion) ? conversion[0] : conversion;
+      if (!(jpeg instanceof Blob)) throw new Error("heic_conversion_failed");
+      return jpeg;
+    } catch (error) {
+      const conversionError = new Error("heic_conversion_failed");
+      conversionError.cause = error;
+      throw conversionError;
+    }
+  }
 
   const loadImage = (file) => new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -16,8 +55,18 @@
   });
 
   async function removeMetadata(file) {
-    if (!file || !ALLOWED_TYPES.has(file.type)) throw new Error("invalid_image");
-    const { image, url } = await loadImage(file);
+    if (!isSupportedImage(file)) throw new Error("invalid_image");
+    const convertedFromHeic = isHeicFile(file);
+    let preparedFile = file;
+    let loaded;
+    if (convertedFromHeic) {
+      try {
+        loaded = await loadImage(file);
+      } catch (_nativeDecodeError) {
+        preparedFile = await convertHeic(file);
+      }
+    }
+    const { image, url } = loaded || await loadImage(preparedFile);
     try {
       const scale = Math.min(1, MAX_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight));
       const width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -31,7 +80,15 @@
       context.fillRect(0, 0, width, height);
       context.drawImage(image, 0, 0, width, height);
       const dataUrl = canvas.toDataURL("image/webp", 0.86);
-      return { dataUrl, type: dataUrl.startsWith("data:image/webp") ? "image/webp" : "image/png", width, height, metadataRemoved: true };
+      return {
+        dataUrl,
+        type: dataUrl.startsWith("data:image/webp") ? "image/webp" : "image/png",
+        width,
+        height,
+        metadataRemoved: true,
+        convertedFromHeic,
+        originalNotUploaded: true
+      };
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -58,5 +115,5 @@
     return { ...sanitized, review };
   }
 
-  window.StoriesLensArtworkSafety = { processArtwork, removeMetadata, reviewSanitizedArtwork };
+  window.StoriesLensArtworkSafety = { processArtwork, removeMetadata, reviewSanitizedArtwork, isSupportedImage, isHeicFile, convertHeic };
 })();

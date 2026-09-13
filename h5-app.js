@@ -28,7 +28,7 @@
       "bring-one": "Bring one piece of your world.",
       "free": "FREE",
       "upload-title": "Upload your artwork or photo",
-      "upload-help": "JPG, PNG or WEBP · private by default",
+      "upload-help": "JPG, PNG, WEBP or HEIC · converted privately on this device",
       "privacy-note": "Location and camera information are removed before the image is used.",
       "or-words": "Or begin with your own words",
       "write-speak": "WRITE · SPEAK",
@@ -83,7 +83,7 @@
       "bring-one": "带来一份属于你的创作。",
       "free": "免费体验",
       "upload-title": "上传你的画作或照片",
-      "upload-help": "JPG、PNG 或 WEBP · 默认私密",
+      "upload-help": "支持 JPG、PNG、WEBP、HEIC · 在本机私密转换",
       "privacy-note": "图片使用前会先删除位置与拍摄设备信息。",
       "or-words": "也可以从自己的话开始",
       "write-speak": "写下 · 口述",
@@ -317,21 +317,21 @@
   }
 
   async function processArtwork(file) {
-    if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 8 * 1024 * 1024) {
-      toast(locale === "zh" ? "请选择不超过 8MB 的 JPG、PNG 或 WEBP 图片。" : "Choose a JPG, PNG or WEBP image under 8 MB.", true);
+    if (!window.StoriesLensArtworkSafety?.isSupportedImage(file) || file.size > 15 * 1024 * 1024) {
+      toast(locale === "zh" ? "请选择不超过 15MB 的 JPG、PNG、WEBP、HEIC 或 HEIF 图片。" : "Choose a JPG, PNG, WEBP, HEIC or HEIF image under 15 MB.", true);
       return;
     }
     try {
       toast(locale === "zh" ? "正在删除位置与设备信息并进行安全检查……" : "Removing location and device information, then checking safety…");
       const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
       selectedArtworkData = safeArtwork.dataUrl;
-      selectedArtwork = { name: file.name, privateOnly: false };
+      selectedArtwork = { name: file.name, privateOnly: false, convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
     } catch (error) {
       const reasonCode = error.reasonCode || error.message;
       if (["review_unavailable", "real_person", "not_artwork"].includes(reasonCode) && window.StoriesLensArtworkSafety?.removeMetadata) {
         const localArtwork = await window.StoriesLensArtworkSafety.removeMetadata(file);
         selectedArtworkData = localArtwork.dataUrl;
-        selectedArtwork = { name: file.name, privateOnly: true, personalPhoto: reasonCode !== "review_unavailable" };
+        selectedArtwork = { name: file.name, privateOnly: true, personalPhoto: reasonCode !== "review_unavailable", convertedFromHeic: Boolean(localArtwork.convertedFromHeic) };
         toast(locale === "zh" ? "已进入仅本机私密模式；图片不会公开。" : "Device-only private mode is on. This image will not be public.");
       } else {
         selectedArtworkData = "";
@@ -346,7 +346,8 @@
     $("[data-upload-label]").classList.add("has-image");
     $("[data-coach-image]").src = selectedArtworkData;
     $("[data-coach-image]").hidden = false;
-    window.StoriesLensAnalytics?.track("family_artwork_ready", { privateOnly: Boolean(selectedArtwork.privateOnly) });
+    if (selectedArtwork.convertedFromHeic) toast(locale === "zh" ? "HEIC 已在本机安全转换，原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.");
+    window.StoriesLensAnalytics?.track("family_artwork_ready", { privateOnly: Boolean(selectedArtwork.privateOnly), convertedFromHeic: Boolean(selectedArtwork.convertedFromHeic) });
   }
 
   $("[data-create-form]").addEventListener("submit", (event) => {
