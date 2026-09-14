@@ -1,0 +1,26 @@
+{
+  "id": "en-evidence-writing-cycle-v1",
+  "language": "en",
+  "ages": ["grades 1-5", "grades 6-8", "grades 9-12"],
+  "sourceIds": ["ies-elementary-writing-2018", "ies-secondary-writing-2016"],
+  "skills": ["planning", "drafting", "evaluating", "revising", "editing", "audience", "formative feedback"],
+  "teachingMoves": [
+    "Name one strategy and explain when a writer would choose it.",
+    "Model the decision process with an unrelated micro-example, not prose for the creator's story.",
+    "Ask the creator to apply the strategy to one small part of their own draft.",
+    "Ask the creator what changed and whether it better serves purpose and audience.",
+    "Use the new evidence to choose only the next highest-leverage skill."
+  ],
+  "originalQuestions": [
+    "What is your goal for the reader in this moment?",
+    "Which strategy would help most right now: plan, add, reorder, cut, or edit? Why?",
+    "After your change, what became clearer to a reader?",
+    "What evidence in this draft should guide our next practice step?"
+  ],
+  "ccssAlignment": ["CCRA.W.4", "CCRA.W.5", "CCRA.W.10", "CCRA.L.1", "CCRA.L.2", "CCRA.L.3"],
+  "guardrails": [
+    "Do not turn the cycle into a fixed linear formula.",
+    "Do not assign an evidence rating to a learner or claim IES endorsement.",
+    "The creator performs the writing and reflection."
+  ]
+}

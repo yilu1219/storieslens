@@ -10,7 +10,8 @@
     <meta name="description" content="Upload one creation, answer three questions, and see your first signed story page." />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260911-2" />
+    <link rel="stylesheet" href="family-flow.css?v=20260913-5" />
+    <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
     <link rel="stylesheet" href="pwa.css" />
     <title>Create a Story · StoriesLens</title>
   </head>
@@ -35,6 +36,7 @@
           <p class="flow-kicker" data-t="start-kicker">ONE CREATION · THREE QUESTIONS · YOUR STORY</p>
           <h1 id="start-title"><span data-t="start-title-one">Your first story page</span><em data-t="start-title-two">starts with you.</em></h1>
           <p data-t="start-intro">Upload something you made—or begin with words or voice. Yu asks three questions. You answer and remain the author.</p>
+          <button class="yu-profile-trigger" type="button" data-yu-profile-open><img src="assets/yu-feather-mark.svg" alt="" /><span><strong data-t="yu-profile-cta">Meet Yu</strong><small data-t="yu-profile-sub">See how your bilingual mentor is trained</small></span></button>
         </div>
 
         <form class="spark-form" data-create-form novalidate>
@@ -61,9 +63,47 @@
 
           <div class="creator-fields">
             <label><span data-t="creator-name">Creator name or nickname</span><input data-creator-name maxlength="40" autocomplete="nickname" data-placeholder-t="name-placeholder" placeholder="The name printed on the story" /></label>
-            <label><span data-t="story-language">Story language</span><select data-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label>
+            <select data-language aria-label="Story language" hidden><option value="en" selected>English</option></select>
             <label><span data-t="creator-account">Who is creating?</span><select data-age><option value="adult" data-t="adult">An adult or parent</option><option value="under18" data-t="young">A young creator with adult support</option></select></label>
           </div>
+
+          <a class="studio-route-switch" href="chinese-studio.html?from=english-studio" data-chinese-studio-switch><span><strong>想用中文创作？</strong><small>进入水墨、连环画、绘本与故事电影创作馆</small></span><b aria-hidden="true">进入中文创作馆 →</b></a>
+
+          <details class="learning-profile" data-learning-profile>
+            <summary>
+              <span><strong data-t="learning-profile-title">Learning Profile｜学习档案</strong><small data-t="learning-profile-summary">Optional · Add MAP Language Usage results to personalize Yu’s guidance.</small></span>
+              <b data-t="optional">OPTIONAL</b>
+            </summary>
+            <div class="learning-profile-body">
+              <div class="learning-profile-intro">
+                <div><span aria-hidden="true"><img src="assets/yu-feather-mark.svg" alt="" /></span><p><strong data-t="map-informed-title">MAP-informed guidance</strong><small data-t="map-informed-copy">Yu uses only the results you enter to adjust question difficulty and plan the next three learning goals. This is not an official MAP service or score prediction.</small></p></div>
+                <p data-t="map-privacy">Enter numbers only. Do not enter a learner’s name, school, student ID, birthday, or upload a report.</p>
+              </div>
+
+              <div class="map-basics">
+                <label><span data-t="map-grade">Grade at the time of the test</span><select data-map-grade><option value="" data-t="choose-grade">Choose grade</option><option value="K">K</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></label>
+                <label><span data-t="map-term">Test season</span><select data-map-term><option value="" data-t="choose-season">Choose season</option><option value="fall" data-t="fall">Fall</option><option value="winter" data-t="winter">Winter</option><option value="spring" data-t="spring">Spring</option></select></label>
+                <label><span data-t="map-subject">Subject</span><input value="Language Usage" readonly aria-readonly="true" /></label>
+                <label><span data-t="map-overall">Overall RIT (optional)</span><input type="number" min="100" max="350" step="1" inputmode="numeric" placeholder="e.g. 214" data-map-overall-rit /></label>
+              </div>
+
+              <fieldset class="map-domains">
+                <legend><span data-t="map-domains-title">Instructional area RIT ranges</span><small data-t="map-domains-help">Enter the low and high number shown for any available area.</small></legend>
+                <div class="map-domain-head" aria-hidden="true"><span data-t="map-area">Area</span><span data-t="map-low">Low</span><span data-t="map-high">High</span></div>
+                <label class="map-domain"><span data-t="domain-genre">Writing genres</span><input type="number" min="100" max="350" inputmode="numeric" aria-label="Writing genres low RIT" data-map-low="genre" /><input type="number" min="100" max="350" inputmode="numeric" aria-label="Writing genres high RIT" data-map-high="genre" /></label>
+                <label class="map-domain"><span data-t="domain-craft">Structure, development, cohesion &amp; style</span><input type="number" min="100" max="350" inputmode="numeric" aria-label="Craft low RIT" data-map-low="craft" /><input type="number" min="100" max="350" inputmode="numeric" aria-label="Craft high RIT" data-map-high="craft" /></label>
+                <label class="map-domain"><span data-t="domain-process">Writing process, purpose &amp; audience</span><input type="number" min="100" max="350" inputmode="numeric" aria-label="Writing process low RIT" data-map-low="process" /><input type="number" min="100" max="350" inputmode="numeric" aria-label="Writing process high RIT" data-map-high="process" /></label>
+                <label class="map-domain"><span data-t="domain-grammar">Grammar &amp; usage</span><input type="number" min="100" max="350" inputmode="numeric" aria-label="Grammar low RIT" data-map-low="grammar" /><input type="number" min="100" max="350" inputmode="numeric" aria-label="Grammar high RIT" data-map-high="grammar" /></label>
+                <label class="map-domain"><span data-t="domain-mechanics">Capitalization, punctuation &amp; spelling</span><input type="number" min="100" max="350" inputmode="numeric" aria-label="Mechanics low RIT" data-map-low="mechanics" /><input type="number" min="100" max="350" inputmode="numeric" aria-label="Mechanics high RIT" data-map-high="mechanics" /></label>
+              </fieldset>
+
+              <div class="map-goals">
+                <label><span data-t="map-priority">Area to prioritize</span><select data-map-priority><option value="" data-t="let-yu-choose">Let Yu choose from the results</option><option value="genre" data-t="domain-genre">Writing genres</option><option value="craft" data-t="domain-craft">Structure, development, cohesion &amp; style</option><option value="process" data-t="domain-process">Writing process, purpose &amp; audience</option><option value="grammar" data-t="domain-grammar">Grammar &amp; usage</option><option value="mechanics" data-t="domain-mechanics">Capitalization, punctuation &amp; spelling</option></select></label>
+                <label><span data-t="parent-goal">What would you like the learner to improve?</span><select data-map-goal><option value="" data-t="choose-goal">Choose a goal</option><option value="organize ideas clearly" data-t="goal-organize">Organize ideas clearly</option><option value="develop stories with vivid details" data-t="goal-details">Develop stories with vivid details</option><option value="use stronger sentence structure and grammar" data-t="goal-grammar">Strengthen sentence structure and grammar</option><option value="edit capitalization punctuation and spelling" data-t="goal-edit">Edit conventions independently</option><option value="revise independently for purpose and audience" data-t="goal-revise">Revise independently for purpose and audience</option></select></label>
+              </div>
+              <p class="learning-profile-status" data-learning-profile-status aria-live="polite"></p>
+            </div>
+          </details>
 
           <label class="guardian-check" data-guardian-check hidden><input type="checkbox" data-adult-support /><span data-t="adult-confirm">I am the adult supporting this young creator.</span></label>
           <p class="form-message" data-form-message role="alert"></p>
@@ -87,7 +127,7 @@
             <p data-coach-seed></p>
           </div>
           <div class="coach-question-card">
-            <div class="yu-mark" aria-hidden="true">Yu</div>
+            <div class="yu-mark" aria-hidden="true"><img src="assets/yu-feather-mark.svg" alt="" /></div>
             <p class="flow-kicker" data-t="personal-mentor">YOUR PERSONAL STORY MENTOR</p>
             <h1 id="coach-title" data-question>Who is in this story, and what do they want?</h1>
             <p data-t="answer-own-words">Answer in your own words. A short sentence is enough.</p>
@@ -132,6 +172,7 @@
     <script src="platform-client.js"></script>
     <script src="safety-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
-    <script src="h5-app.js?v=20260913-5"></script>
+    <script src="yu-profile.js?v=20260914-2"></script>
+    <script src="h5-app.js?v=20260913-11"></script>
   </body>
 </html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3eee2" />
+    <meta name="description" content="从一幅画、一段话或一个声音开始，在羽大师的引导下创作水墨故事、连环画、绘本或故事电影。" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="family-flow.css?v=20260913-5" />
+    <link rel="stylesheet" href="chinese-studio.css?v=20260914-3" />
+    <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
+    <link rel="stylesheet" href="pwa.css" />
+    <title>中文创作馆 · 语镜故事</title>
+  </head>
+  <body class="chinese-studio" data-studio-language="zh">
+    <header class="flow-header chinese-header">
+      <a class="flow-brand" href="index.html" aria-label="返回语镜故事首页">
+        <img src="assets/storieslens-zh-seal-v2.png" alt="" width="48" height="48" />
+        <span><strong>语镜故事</strong><small>中文创作馆</small></span>
+      </a>
+      <div class="flow-header-actions">
+        <a class="studio-switch" href="app.html?locale=en">English Studio</a>
+        <a href="my-stories.html">我的作品</a>
+      </div>
+    </header>
+
+    <main class="flow-main">
+      <section class="flow-stage" data-stage="start" aria-labelledby="start-title">
+        <div class="chinese-hero">
+          <div class="chinese-hero-copy">
+            <p class="chinese-eyebrow">语镜中文创作馆</p>
+            <h1 id="start-title">一笔入境，<br /><em>万象成篇。</em></h1>
+            <p>上传一幅画或照片，也可以写下、说出一个念头。羽大师先问三个问题，再陪你把自己的想法写成故事。</p>
+            <button class="yu-profile-trigger chinese-yu-trigger" type="button" data-yu-profile-open><img src="assets/yu-feather-mark.svg" alt="" /><span><strong>认识羽大师</strong><small>中英文创作导师如何训练而成</small></span></button>
+            <div class="chinese-promise"><span>羽大师提问</span><i>→</i><span>你亲自回答</span><i>→</i><strong>作品始终属于你</strong></div>
+          </div>
+          <div class="chinese-hero-art" role="img" aria-label="水墨山水中的创作者、书页与电影画格"></div>
+        </div>
+
+        <form class="spark-form chinese-spark-form" data-create-form novalidate>
+          <div class="spark-heading">
+            <div><span>第一步</span><strong>带来你的第一笔灵感</strong></div>
+            <b>免费体验</b>
+          </div>
+
+          <div class="chinese-start-options">
+            <label class="spark-upload chinese-upload" data-upload-label>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" data-artwork hidden />
+              <span class="spark-upload-icon" aria-hidden="true">＋</span>
+              <strong>上传你的画作或照片</strong>
+              <small>支持 JPG、PNG、WEBP、HEIC · 图片先在本机安全处理</small>
+              <img data-artwork-preview alt="已选择的作品" hidden />
+            </label>
+            <button class="chinese-voice-entry" type="button" data-chinese-voice-entry aria-pressed="false">
+              <span class="chinese-voice-icon" aria-hidden="true">
+                <svg viewBox="0 0 38 32" focusable="false"><path d="M3.5 16c4.6-1.5 7.7-4.7 11.1-8.4 3.3 3.5 6.3 6.7 10.8 8.4-4.3 5.2-7.4 7.4-10.8 7.4S8 21.2 3.5 16Z"/><path d="M7.2 16h14.7"/><path d="M28 11.5c2.1 2.2 2.1 6.8 0 9"/><path d="M32 8.3c4.2 4.1 4.2 11.3 0 15.4"/></svg>
+              </span>
+              <strong>口述一个想法</strong>
+              <small>不用先画，也可以从一句话开始</small>
+            </button>
+          </div>
+          <p class="privacy-note">图片使用前会删除位置与拍摄设备信息；默认私密。</p>
+
+          <fieldset class="chinese-format-picker">
+            <legend><span>你想让它长成什么？</span><small>羽大师会根据选择调整三个问题</small></legend>
+            <div class="chinese-format-grid">
+              <label class="format-card format-ink">
+                <input type="radio" name="chinese-format" value="ink-story" checked />
+                <span><b>水墨故事</b><small>从意境与人物开始</small></span>
+              </label>
+              <label class="format-card format-comic">
+                <input type="radio" name="chinese-format" value="comic" />
+                <span><b>连环画</b><small>一格一格推进情节</small></span>
+              </label>
+              <label class="format-card format-picturebook">
+                <input type="radio" name="chinese-format" value="picturebook" />
+                <span><b>绘本</b><small>让文字与画面一起讲述</small></span>
+              </label>
+              <label class="format-card format-film">
+                <input type="radio" name="chinese-format" value="film" />
+                <span><b>故事电影</b><small>把故事写成可见的场景</small></span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="words-heading"><strong>也可以从自己的话开始</strong><span>写下 · 口述</span></div>
+          <div class="voice-field">
+            <textarea data-seed maxlength="1800" rows="4" placeholder="告诉羽大师画面里正在发生什么，或者先说出一个想法。"></textarea>
+            <button type="button" data-speech aria-label="开始语音输入"><span aria-hidden="true">●</span><b>口述</b></button>
+          </div>
+          <small class="speech-note">口述会转成可修改的文字，不保存现场录音。</small>
+
+          <div class="creator-fields chinese-creator-fields">
+            <label><span>创作者姓名或昵称</span><input data-creator-name maxlength="40" autocomplete="nickname" placeholder="将印在故事上的名字" /></label>
+            <select data-language aria-label="创作语言" hidden><option value="zh" selected>中文</option></select>
+            <label><span>谁在创作？</span><select data-age><option value="adult">成年人或家长</option><option value="under18">由成年人支持的年轻创作者</option></select></label>
+          </div>
+
+          <details class="chinese-profile">
+            <summary><span><strong>中文创作档案</strong><small>选填 · 让羽大师更了解你的语言背景与目标</small></span><b>选填</b></summary>
+            <div class="chinese-profile-body">
+              <label><span>中文背景</span><select data-chinese-background><option value="">请选择</option><option value="native">中文母语</option><option value="heritage">海外华裔学习者</option><option value="second-language">中文第二语言</option></select></label>
+              <label><span>创作阶段</span><select data-chinese-level><option value="">请选择</option><option value="expression">启蒙表达</option><option value="developing">学习创作</option><option value="advanced">进阶创作</option></select></label>
+              <label><span>这次最想提升</span><select data-chinese-goal><option value="">由羽大师从作品判断</option><option value="imagination">想象力</option><option value="description">细节描写</option><option value="structure">故事结构</option><option value="language">词语与表达</option><option value="cinematic">电影化叙事</option></select></label>
+            </div>
+          </details>
+
+          <label class="guardian-check" data-guardian-check hidden><input type="checkbox" data-adult-support /><span>我是支持这位年轻创作者的成年人。</span></label>
+          <p class="form-message" data-form-message role="alert"></p>
+          <button class="primary-action" type="submit"><span>让羽大师问我三个问题</span><b aria-hidden="true">→</b></button>
+          <p class="trust-line">默认私密 · AI 负责引导 · 由你亲自创作 · 每一个字都属于你</p>
+        </form>
+
+        <section class="chinese-outcomes" aria-labelledby="chinese-outcomes-title">
+          <div><p>从同一份原创出发</p><h2 id="chinese-outcomes-title">你的故事，可以有不同的生命。</h2></div>
+          <div class="chinese-outcome-grid">
+            <article><img src="assets/outcome-zh-ink-book-v1.png" alt="水墨故事书示例" /><span><b>水墨故事书</b><small>可阅读、珍藏与印刷</small></span></article>
+            <article><img src="assets/outcome-zh-lianhuanhua-v1.png" alt="中国风连环画示例" /><span><b>连环画</b><small>让动作与情节一格格展开</small></span></article>
+            <article><img src="assets/outcome-zh-cinematic-trailer-v1.png" alt="故事电影示例" /><span><b>故事电影</b><small>让同一人物与世界走上银幕</small></span></article>
+          </div>
+        </section>
+      </section>
+
+      <section class="flow-stage coach-stage" data-stage="coach" aria-labelledby="coach-title" hidden>
+        <div class="coach-progress"><span>羽大师提问 · 由你回答</span><strong><b data-question-number>1</b> / 3</strong></div>
+        <div class="coach-layout">
+          <div class="coach-context"><img data-coach-image alt="你的起点作品" hidden /><span>你的创作起点</span><p data-coach-seed></p></div>
+          <div class="coach-question-card">
+            <div class="yu-mark" aria-hidden="true"><img src="assets/yu-feather-mark.svg" alt="" /></div>
+            <p class="flow-kicker">你的专属中文创作导师</p>
+            <h1 id="coach-title" data-question>画面中最重要的人是谁？</h1>
+            <p>请用自己的话回答。一句话就足够。</p>
+            <textarea data-answer rows="5" maxlength="1000" placeholder="在我的故事里……"></textarea>
+            <p class="form-message" data-question-error role="alert"></p>
+            <button class="primary-action" type="button" data-next-question><span>下一个问题</span><b aria-hidden="true">→</b></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="flow-stage result-stage" data-stage="result" aria-labelledby="result-title" hidden>
+        <div class="result-intro"><p class="flow-kicker">你的第一张故事页完成了</p><h1 id="result-title">来自你的回答，<br />也由你亲自写成。</h1><p>读一读，修改任何你想改变的地方，确定它真正属于你之后再保存。</p></div>
+        <div class="result-layout">
+          <article class="story-page" data-story-page><div class="story-page-art"><img data-result-image alt="故事画面" hidden /><span data-result-monogram aria-hidden="true">语</span></div><div class="story-page-words"><input data-story-title aria-label="故事标题" /><textarea data-story-draft aria-label="你的故事第一页"></textarea><p>作者 <strong data-result-author></strong></p></div></article>
+          <aside class="result-actions"><div class="authorship-card"><span aria-hidden="true">✓</span><div><strong>创作者亲自完成</strong><p>羽大师负责提问，页面只使用你的回答，并且可以继续修改。</p></div></div><p class="save-status" data-save-status aria-live="polite"></p><a class="primary-action" href="visual-write.html?mode=free&amp;from=h5&amp;storyLang=zh" data-continue><span>继续创作</span><b aria-hidden="true">→</b></a><a class="secondary-action" href="checkout.html?offer=story-pass" data-checkout><span>完成整本故事 · $19</span><b aria-hidden="true">→</b></a><button class="text-action" type="button" data-start-over>再创作一个故事</button></aside>
+        </div>
+      </section>
+    </main>
+
+    <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <script src="analytics.js"></script>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
+    <script src="safety-client.js"></script>
+    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="yu-profile.js?v=20260914-2"></script>
+    <script src="h5-app.js?v=20260914-12"></script>
+  </body>
+</html>

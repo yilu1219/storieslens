@@ -108,7 +108,8 @@ function buildChineseCoachCurriculum(input = {}) {
   const genre = GENRES[preferences.genre];
   const knowledge = buildWritingKnowledgePrompt({
     action: input.action,
-    genre: preferences.genre
+    genre: preferences.genre,
+    language: "zh"
   });
   return {
     ...preferences,

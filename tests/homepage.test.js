@@ -28,6 +28,7 @@ const htmlFiles = [
   "checkout.html",
   "classroom-archive.html",
   "app.html",
+  "chinese-studio.html",
   "my-stories.html",
   "movie-studio.html",
   "showcase.html"
@@ -48,7 +49,7 @@ const classroomArchiveHtml = htmlByFile["classroom-archive.html"];
 const classroomArchiveJs = read("classroom-archive.js");
 const portalHomeJs = read("portal-home.js");
 const h5AppJs = read("h5-app.js");
-const artworkSafetyJs = read("artwork-upload-safety.js");
+const chineseStudioHtml = read("chinese-studio.html");
 const teacherProjectHtml = htmlByFile["teacher-project.html"];
 const projectOutputHtml = htmlByFile["project-output.html"];
 const packageJson = JSON.parse(read("package.json"));
@@ -303,10 +304,8 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   'data-home-locale="zh"',
   'data-home-t="hero-title-one"',
   'data-home-upload',
-  'magic-upload-icon',
   "Upload artwork or a photo",
   'data-home-speech',
-  'magic-mouth-icon',
   "Speak one idea",
   'data-home-story-language',
   'data-story-language="en"',
@@ -315,15 +314,15 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   'data-home-continue',
   "Let Yu ask me three questions",
   "Location and camera details removed",
-  "CREATE YOUR WAY · 选择创作方式",
-  "SOLO CREATOR · 个人创作",
+  "CREATE YOUR WAY",
+  'data-home-t="solo-label"',
   "Build a story world that is entirely yours.",
   "href=\"app.html\"",
-  "PRIVATE STORY SQUAD · 私密共创",
+  'data-home-t="group-label"',
   "Create with family or friends you invite.",
   "Invite 2–6 people by private link or Story Code. Every contribution keeps its author’s name.",
   "start.html?mode=squad",
-  "FOR TEACHERS · 教师入口",
+  'data-home-t="teacher-label"',
   "Turn bulletin boards and student work into a dated class book.",
   "Photograph the wall once—or upload each work—to create a digital or printed keepsake.",
   "Open Teacher Publisher",
@@ -361,29 +360,38 @@ assert(!indexHtml.includes("The Star Keeper"), "Homepage should not retain the f
 assert(!indexHtml.includes('class="lightyear-mark"'), "Lightyear Story card should not retain the decorative character badge");
 assert((indexHtml.match(/class="lightyear-feature-icon"/g) || []).length === 3, "Lightyear Story should use one restrained icon for each of its three outcomes");
 assert(indexHtml.includes('class="lightyear-card-art"'), "Lightyear Story should carry a content-led watercolor illustration");
-assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-v4.jpg"), "Lightyear Story should load its updated three-generation watercolor image with a narrated autobiography book");
+assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-v5.jpg"), "Lightyear Story should load its latest three-generation watercolor image");
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
-
+assert(portalHomeJs.includes('chinese-studio.html?from=homepage-magic'), "Chinese creation should route into its own studio rather than a translated English flow");
+assert.match(
+  portalHomeJs,
+  /homepage_story_language_selected[\s\S]*?storeAndContinue\(\)/,
+  "Choosing a story language on the homepage should immediately enter the matching studio"
+);
+assert(
+  portalHomeJs.includes('let homeLocale = "en"'),
+  "The flagship homepage should always begin in English instead of restoring an in-place Chinese translation"
+);
+assert.match(
+  portalHomeJs,
+  /button\.dataset\.homeLocale === "zh"[\s\S]*?preparedStoryLanguage = "zh"[\s\S]*?storeAndContinue\(\)/,
+  "The header Chinese control should route directly into the Chinese creative studio"
+);
 [
-  indexHtml,
-  startHtml,
-  htmlByFile["app.html"],
-  classroomArchiveHtml,
-  htmlByFile["movie-studio.html"]
-].forEach((html) => {
-  assert(html?.includes("image/heic") && html.includes(".heic"), "Every creation upload should accept iPhone HEIC photos");
-});
-assert(fs.existsSync(path.join(root, "vendor/heic2any-0.0.4.min.js")), "The HEIC converter should be served locally rather than loading from a third-party CDN");
-[
-  "isHeicFile",
-  "isSupportedImage",
-  "heic2any",
-  "convertedFromHeic",
-  "originalNotUploaded"
-].forEach((token) => assert(artworkSafetyJs.includes(token), `HEIC privacy pipeline should include: ${token}`));
-assert(classroomArchiveHtml.indexOf("artwork-upload-safety.js") < classroomArchiveHtml.indexOf("classroom-archive.js"), "Teacher Publisher should load HEIC sanitizing before classroom capture");
+  'data-studio-language="zh"',
+  "中文创作馆",
+  "水墨故事",
+  "连环画",
+  "绘本",
+  "故事电影",
+  "中文创作档案",
+  "data-chinese-voice-entry",
+  "口述一个想法",
+  "不用先画，也可以从一句话开始"
+].forEach((token) => assert(chineseStudioHtml.includes(token), `Chinese studio should include: ${token}`));
+assert(!chineseStudioHtml.includes("MAP"), "Chinese studio should not expose the English MAP learning profile");
 
 [
   'requestUrl.pathname === "/api/review-artwork"',

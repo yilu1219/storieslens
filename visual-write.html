@@ -1223,6 +1223,11 @@
         try {
           creatorSetup = JSON.parse(localStorage.getItem("storieslens_creator_setup") || "null");
         } catch {}
+        let learningProfile = creatorSetup?.learningProfile || null;
+        if (!learningProfile) {
+          try { learningProfile = JSON.parse(localStorage.getItem("storieslens_learning_profile") || "null"); }
+          catch {}
+        }
         if (creatorSetup?.ageGroup === "under18" && creatorSetup.supervisionConfirmed !== true) {
           window.location.replace("start.html?safety=required");
           return;
@@ -1237,10 +1242,34 @@
         let activeStoryLanguage = creatorSetup?.storyLanguage || pageParams.get("storyLang") || "en";
         if (!["en", "zh", "bilingual"].includes(activeStoryLanguage)) activeStoryLanguage = "en";
         if (liveStoryLanguage) liveStoryLanguage.value = activeStoryLanguage;
+        if (freeGradeSelect && learningProfile?.grade && ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"].includes(String(learningProfile.grade))) {
+          freeGradeSelect.value = String(learningProfile.grade);
+        }
         const t = (text) => window.StoriesLensI18n?.t(text) || text;
         const FRIEND_PROJECTS_KEY = "storieslens_friend_group_projects";
         const CHINESE_COACH_PREFERENCES_KEY = "storieslens_chinese_coach_preferences";
         const COACH_SNAPSHOT_KEY = "storieslens_last_coach_snapshot";
+        const MAP_DOMAIN_KEYS = ["genre", "craft", "process", "grammar", "mechanics"];
+
+        function getMapLearningContext() {
+          if (!learningProfile || learningProfile.source !== "parent-manual-entry") return {};
+          const completeAreas = Object.entries(learningProfile.areaRanges || {})
+            .filter(([key, range]) => MAP_DOMAIN_KEYS.includes(key) && Number.isFinite(Number(range?.low)) && Number.isFinite(Number(range?.high)) && Number(range.low) <= Number(range.high));
+          const fallbackArea = completeAreas
+            .slice()
+            .sort(([, first], [, second]) => ((Number(first.low) + Number(first.high)) / 2) - ((Number(second.low) + Number(second.high)) / 2))[0]?.[0] || "";
+          const mapInstructionalArea = MAP_DOMAIN_KEYS.includes(learningProfile.priorityArea) ? learningProfile.priorityArea : fallbackArea;
+          const range = completeAreas.find(([key]) => key === mapInstructionalArea)?.[1] || null;
+          const overallRit = Number(learningProfile.overallRit);
+          return {
+            mapRitScore: Number.isFinite(overallRit) && overallRit >= 100 && overallRit <= 350 ? overallRit : undefined,
+            mapRitLow: range ? Number(range.low) : undefined,
+            mapRitHigh: range ? Number(range.high) : undefined,
+            mapInstructionalArea: mapInstructionalArea || undefined,
+            mapReadiness: "developing",
+            learningGoal: String(learningProfile.parentGoal || "").slice(0, 300)
+          };
+        }
         const chineseLensDescriptions = {
           foundation: "Make character, action, setting, and cause clear; the coach helps you revise one high-value issue at a time.",
           "lin-yutang": "Learn to observe through humor, ease, personality, daily life, and cross-cultural understanding—study the ideas, never imitate the text.",
@@ -1493,11 +1522,12 @@
 
         function getModeContext(mode) {
           const normalizedMode = normalizeMode(mode);
+          const mapContext = normalizedMode === "free" ? getMapLearningContext() : {};
           return {
             mode: normalizedMode,
             grade: normalizedMode === "assignment"
               ? document.querySelector('[data-writing-field="teacher-grade"]')?.value || "Grade 3"
-              : freeGradeSelect?.value || "3",
+              : learningProfile?.grade || freeGradeSelect?.value || "3",
             skillFocus: normalizedMode === "assignment"
               ? document.querySelector('[data-task-skill-input]')?.value || "narrative writing"
               : freeSkillFocus?.textContent || "visual storytelling",
@@ -1520,7 +1550,8 @@
             coachLens: chineseCoachPreferences.coachLens,
             creatorLevel: chineseCoachPreferences.creatorLevel,
             genre: chineseCoachPreferences.genre,
-            revisionHistory: buildRevisionHistory(normalizedMode)
+            revisionHistory: buildRevisionHistory(normalizedMode),
+            ...mapContext
           };
         }
 

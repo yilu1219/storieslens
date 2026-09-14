@@ -4,7 +4,7 @@ const path = require("path");
 const { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = require("docx");
 const { checkImageSafety, checkTextSafety } = require("./content-safety");
 const { reviewArtworkImage } = require("./artwork-safety-server");
-const { buildChineseCoachCurriculum } = require("./chinese-writing-coach");
+const { buildYuMentorCurriculum } = require("./yu-mentor");
 const { createPlatformApi } = require("./platform-api");
 
 const root = __dirname;
@@ -920,29 +920,32 @@ async function handleAIReport(request, response) {
 
     const grade = String(body.grade || "3");
     const customPrompt = String(body.prompt || "").trim();
-    const avatarModel = String(body.avatarModel || "Ivy Mentor");
+    const avatarModel = String(body.avatarModel || "Yu Mentor");
     const ccssSkill = String(body.ccssSkill || "Narrative Writing");
     const storyLanguage = ["zh", "bilingual"].includes(body.storyLanguage) ? body.storyLanguage : "en";
-    const chineseCurriculum = storyLanguage === "en" ? null : buildChineseCoachCurriculum({
+    const yuCurriculum = buildYuMentorCurriculum({
+      storyLanguage,
+      grade,
+      skillFocus: ccssSkill,
+      mapRitScore: body.mapRitScore,
+      mapRitLow: body.mapRitLow,
+      mapRitHigh: body.mapRitHigh,
+      mapInstructionalArea: body.mapInstructionalArea,
+      mapReadiness: body.mapReadiness,
       coachLens: body.coachLens,
       creatorLevel: body.creatorLevel,
       genre: body.genre,
       action: "report"
     });
-    const languageInstruction = storyLanguage === "zh"
-      ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
-      : storyLanguage === "bilingual"
-        ? "Respond bilingually: concise English first, followed by clear Simplified Chinese."
-        : "Respond in clear English appropriate to the requested creator level.";
     const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
     const model = body.model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
     const systemPrompt = [
-      "You are Ivy, the StoriesLens feedback coach for creators of any age.",
-      languageInstruction,
+      "You are Yu, the StoriesLens writing mentor for creators of any age.",
+      yuCurriculum.languageInstruction,
       "Give kind, specific feedback that matches the creator's requested level.",
       "Use clear sentences and do not rewrite the whole draft for the creator.",
-      chineseCurriculum ? chineseCurriculum.prompt : "Use established narrative-writing pedagogy and preserve the creator's own voice.",
+      yuCurriculum.prompt,
       "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Return strict JSON with keys: overall, glow, grow, nextStep, ccssNotes, sentenceComments, videoScript.",
       "ccssNotes must be an array of objects with skill, rating, evidence, and suggestion.",
@@ -953,7 +956,8 @@ async function handleAIReport(request, response) {
     const userPrompt = [
       `Grade: ${grade}`,
       `CCSS focus: ${ccssSkill}`,
-      chineseCurriculum ? `Chinese coach lens: ${chineseCurriculum.lensName}; creator stage: ${chineseCurriculum.levelName}; genre: ${chineseCurriculum.genre}.` : "",
+      yuCurriculum.chinese ? `Chinese coach lens: ${yuCurriculum.chinese.lensName}; creator stage: ${yuCurriculum.chinese.levelName}; genre: ${yuCurriculum.chinese.genre}.` : "",
+      yuCurriculum.ccss ? `Verified teaching targets: ${yuCurriculum.ccss.targets.map((target) => target.gradeCode).join(", ")}.` : "",
       `Digital human avatar: ${avatarModel}`,
       customPrompt ? `Teacher prompt: ${customPrompt}` : "Teacher prompt: Give a concise writing report.",
       "Student draft:",
@@ -999,6 +1003,24 @@ async function handleAIReport(request, response) {
 
     sendJson(response, 200, {
       report,
+      coachMeta: {
+        coach: yuCurriculum.coachName,
+        language: yuCurriculum.language,
+        methods: yuCurriculum.methodNames,
+        ccss: yuCurriculum.ccss ? {
+          gradeBand: yuCurriculum.ccss.gradeBand,
+          focus: yuCurriculum.ccss.requestedFocus,
+          targets: yuCurriculum.ccss.targets.map((target) => target.gradeCode),
+          status: yuCurriculum.ccss.status
+        } : null,
+        mapGrowth: yuCurriculum.mapGrowth ? {
+          instructionalArea: yuCurriculum.mapGrowth.instructionalArea.name,
+          adaptiveStep: yuCurriculum.mapGrowth.adaptiveStep.id,
+          evidenceMode: yuCurriculum.mapGrowth.evidenceMode,
+          reportedRit: yuCurriculum.mapGrowth.reportedRit,
+          status: yuCurriculum.mapGrowth.status
+        } : null
+      },
       usage: upstreamData.usage || null
     });
   } catch (error) {
@@ -1024,17 +1046,20 @@ async function handleWritingAssistant(request, response) {
     const storyDnaContext = String(body.storyDnaContext || "").trim();
     const inspiration = String(body.inspiration || "").trim();
     const storyLanguage = ["zh", "bilingual"].includes(body.storyLanguage) ? body.storyLanguage : "en";
-    const chineseCurriculum = storyLanguage === "en" ? null : buildChineseCoachCurriculum({
+    const yuCurriculum = buildYuMentorCurriculum({
+      storyLanguage,
+      grade: body.grade,
+      skillFocus: body.skillFocus,
+      mapRitScore: body.mapRitScore,
+      mapRitLow: body.mapRitLow,
+      mapRitHigh: body.mapRitHigh,
+      mapInstructionalArea: body.mapInstructionalArea,
+      mapReadiness: body.mapReadiness,
       coachLens: body.coachLens,
       creatorLevel: body.creatorLevel,
       genre: body.genre,
       action
     });
-    const languageInstruction = storyLanguage === "zh"
-      ? "Respond in clear Simplified Chinese appropriate to the requested creator level."
-      : storyLanguage === "bilingual"
-        ? "Respond bilingually: concise English first, followed by clear Simplified Chinese."
-        : "Respond in clear English appropriate to the requested creator level.";
     if (!draft && action !== "begin") {
       sendJson(response, 400, { error: "Write at least one sentence first." });
       return;
@@ -1054,10 +1079,10 @@ async function handleWritingAssistant(request, response) {
     };
     const systemPrompt = [
       "You are the StoriesLens Story Coach for creators of any age, including young people, adults, and families.",
-      languageInstruction,
+      yuCurriculum.languageInstruction,
       "Support the creator's thinking without replacing their full draft.",
       "The human creator is the author. Never claim authorship, imitate source text, or insert finished story prose for them.",
-      chineseCurriculum ? chineseCurriculum.prompt : "Use friendly language that matches the requested creator level and keep the reply concise.",
+      yuCurriculum.prompt,
       storyLanguage === "zh" ? "Keep the complete coaching response under 220 Chinese characters." : "Keep the complete coaching response under 110 words.",
       "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Respect the teacher task, skill focus, approved characters, and source text context.",
@@ -1069,8 +1094,10 @@ async function handleWritingAssistant(request, response) {
       `Mode: ${body.mode || "free"}`,
       `Grade: ${body.grade || "3"}`,
       `Skill focus: ${body.skillFocus || "narrative writing"}`,
-      chineseCurriculum ? `Chinese coach lens: ${chineseCurriculum.lensName}; creator stage: ${chineseCurriculum.levelName}; genre: ${chineseCurriculum.genre}.` : "",
+      yuCurriculum.chinese ? `Chinese coach lens: ${yuCurriculum.chinese.lensName}; creator stage: ${yuCurriculum.chinese.levelName}; genre: ${yuCurriculum.chinese.genre}.` : "",
+      yuCurriculum.ccss ? `CCSS-aligned targets: ${yuCurriculum.ccss.targets.map((target) => target.gradeCode).join(", ")}.` : "",
       body.teacherInstructions ? `Teacher instructions: ${body.teacherInstructions}` : "",
+      body.learningGoal ? `Family learning goal: ${String(body.learningGoal).slice(0, 300)}` : "",
       body.characterRules ? `Approved character rules: ${body.characterRules}` : "",
       storyDnaContext ? `Student-created Story DNA:\n${storyDnaContext.slice(0, 2000)}` : "",
       body.revisionHistory ? `Revision since the previous coaching turn:\n${String(body.revisionHistory).slice(0, 3200)}` : "",
@@ -1117,14 +1144,29 @@ async function handleWritingAssistant(request, response) {
       readyForVisual: result.readyForVisual === true,
       visualBrief: limit(result.visualBrief, 500),
       authorshipCheck: result.authorshipCheck === "pass" ? "pass" : "review",
-      coachMeta: chineseCurriculum ? {
-        lens: chineseCurriculum.coachLens,
-        lensName: chineseCurriculum.lensName,
-        creatorLevel: chineseCurriculum.creatorLevel,
-        levelName: chineseCurriculum.levelName,
-        genre: chineseCurriculum.genre,
-        methods: chineseCurriculum.methodNames
-      } : null
+      coachMeta: {
+        coach: yuCurriculum.coachName,
+        language: yuCurriculum.language,
+        lens: yuCurriculum.chinese?.coachLens || "english-craft",
+        lensName: yuCurriculum.chinese?.lensName || "English writing craft",
+        creatorLevel: yuCurriculum.chinese?.creatorLevel || yuCurriculum.english?.creatorLevel || "developing",
+        levelName: yuCurriculum.chinese?.levelName || yuCurriculum.english?.creatorLevel || "developing",
+        genre: yuCurriculum.chinese?.genre || yuCurriculum.english?.genre || "story",
+        methods: yuCurriculum.methodNames,
+        ccss: yuCurriculum.ccss ? {
+          gradeBand: yuCurriculum.ccss.gradeBand,
+          focus: yuCurriculum.ccss.requestedFocus,
+          targets: yuCurriculum.ccss.targets.map((target) => target.gradeCode),
+          status: yuCurriculum.ccss.status
+        } : null,
+        mapGrowth: yuCurriculum.mapGrowth ? {
+          instructionalArea: yuCurriculum.mapGrowth.instructionalArea.name,
+          adaptiveStep: yuCurriculum.mapGrowth.adaptiveStep.id,
+          evidenceMode: yuCurriculum.mapGrowth.evidenceMode,
+          reportedRit: yuCurriculum.mapGrowth.reportedRit,
+          status: yuCurriculum.mapGrowth.status
+        } : null
+      }
     };
     if (action === "begin" && !safeResult.question) safeResult.question = safeResult.reply;
     if (action === "begin" && !safeResult.reply) safeResult.reply = safeResult.question;

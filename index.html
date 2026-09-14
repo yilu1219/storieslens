@@ -15,7 +15,8 @@
     <title>StoriesLens | Start with your creation</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="portal-home.css?v=20260913-30" />
+    <link rel="stylesheet" href="portal-home.css?v=20260913-35" />
+    <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body>
@@ -26,7 +27,7 @@
         <img src="assets/storieslens-logo.png" alt="" width="64" height="64" />
         <span>StoriesLens</span>
       </a>
-      <div class="portal-language-toggle" aria-label="Website language">
+      <div class="portal-language-toggle" aria-label="Creation language">
         <button class="is-active" type="button" data-home-locale="en" aria-pressed="true">EN</button>
         <button type="button" data-home-locale="zh" aria-pressed="false">中文</button>
       </div>
@@ -35,9 +36,15 @@
     <main id="main">
       <section class="magic-hero" aria-labelledby="portal-title">
         <div class="magic-copy">
-          <p class="portal-kicker yu-kicker"><span class="yu-kicker-mark" aria-hidden="true">YU</span><b data-home-t="hero-kicker">YOUR PERSONAL AI STORY MENTOR</b></p>
+          <p class="portal-kicker yu-kicker">
+            <span class="yu-kicker-mark" aria-hidden="true">
+              <img src="assets/yu-feather-mark.svg" alt="" />
+            </span>
+            <b><strong>YU</strong><i aria-hidden="true">·</i><span data-home-t="hero-kicker">YOUR PERSONAL AI STORY MENTOR</span></b>
+          </p>
           <h1 id="portal-title"><span data-home-t="hero-title-one">Your next storybook or short film starts with</span> <em data-home-t="hero-title-two">something you made.</em></h1>
           <p class="magic-lede" data-home-t="hero-lede">Upload your artwork or photo—or speak one idea. Yu asks three questions and guides you toward a first scene written in your voice.</p>
+          <button class="yu-profile-trigger" type="button" data-yu-profile-open><img src="assets/yu-feather-mark.svg" alt="" /><span><strong data-home-t="yu-profile-cta">Meet Yu</strong><small data-home-t="yu-profile-sub">See how your bilingual mentor is trained</small></span></button>
           <div class="hero-authorship" aria-label="StoriesLens authorship promise">
             <span data-home-t="promise-one">YU ASKS</span><i aria-hidden="true">→</i><span data-home-t="promise-two">YOU ANSWER</span><i aria-hidden="true">→</i><strong data-home-t="promise-three">YOU REMAIN THE AUTHOR</strong>
           </div>
@@ -87,7 +94,7 @@
             <small data-home-t="speech-note">Speech becomes editable text. Live audio is not saved.</small>
           </div>
 
-          <fieldset class="story-language-choice" data-home-story-language hidden>
+          <fieldset class="story-language-choice" data-home-story-language>
             <legend data-home-t="language-question">What language would you like to create in today?</legend>
             <div>
               <button type="button" data-story-language="en" aria-pressed="false"><span>EN</span><strong data-home-t="language-en">Create in English</strong></button>
@@ -108,7 +115,7 @@
 
       <section class="portal-spaces" aria-labelledby="spaces-title">
         <div class="spaces-heading">
-          <p class="portal-kicker" data-home-t="ways-kicker">CREATE YOUR WAY · 选择创作方式</p>
+          <p class="portal-kicker" data-home-t="ways-kicker">CREATE YOUR WAY</p>
           <h2 id="spaces-title" data-home-t="ways-title">Create alone—or with people you trust.</h2>
         </div>
         <nav class="portal-choices" aria-label="Choose a StoriesLens space">
@@ -116,7 +123,7 @@
             <span class="portal-card-number" aria-hidden="true">01</span>
             <a class="portal-card-main" href="app.html" data-audience="solo">
               <div class="portal-card-copy">
-                <span class="portal-card-label">SOLO CREATOR · 个人创作</span>
+                <span class="portal-card-label" data-home-t="solo-label">SOLO CREATOR</span>
                 <h3 data-home-t="solo-title">Build a story world that is entirely yours.</h3>
                 <p data-home-t="solo-copy">Write at your pace, keep every decision, and choose when to share.</p>
                 <strong><b data-home-t="solo-cta">Start solo</b> <span aria-hidden="true">→</span></strong>
@@ -129,7 +136,7 @@
             <span class="portal-card-number" aria-hidden="true">02</span>
             <a class="portal-card-main" href="start.html?mode=squad" data-audience="cocreate">
               <div class="portal-card-copy">
-                <span class="portal-card-label">PRIVATE STORY SQUAD · 私密共创</span>
+                <span class="portal-card-label" data-home-t="group-label">PRIVATE STORY SQUAD</span>
                 <h3 data-home-t="group-title">Create with family or friends you invite.</h3>
                 <p data-home-t="group-copy">Invite 2–6 people by private link or Story Code. Every contribution keeps its author’s name.</p>
                 <strong><b data-home-t="group-cta">Create or join a squad</b> <span aria-hidden="true">→</span></strong>
@@ -142,7 +149,7 @@
             <span class="portal-card-number" aria-hidden="true">03</span>
             <a class="portal-card-main" href="classroom-archive.html" data-audience="teacher">
               <div class="portal-card-copy">
-                <span class="portal-card-label">FOR TEACHERS · 教师入口</span>
+                <span class="portal-card-label" data-home-t="teacher-label">FOR TEACHERS</span>
                 <h3 data-home-t="teacher-title">Turn bulletin boards and student work into a dated class book.</h3>
                 <p data-home-t="teacher-copy">Photograph the wall once—or upload each work—to create a digital or printed keepsake.</p>
                 <strong><b data-home-t="teacher-cta">Open Teacher Publisher</b> <span aria-hidden="true">→</span></strong>
@@ -180,7 +187,7 @@
               </li>
             </ul>
           </span>
-          <span class="lightyear-card-art"><img src="assets/lightyear-three-generations-family-watercolor-v4.jpg" alt="Watercolor scene of a grandmother speaking into a phone beside her daughter and two grandchildren, with a family album and a book titled 我的自传" /></span>
+          <span class="lightyear-card-art"><img src="assets/lightyear-three-generations-family-watercolor-v5.jpg" alt="Watercolor scene of a grandmother speaking into a phone beside her daughter and two grandchildren, surrounded by an album and filmstrip of her younger years in military service" /></span>
           <span class="lightyear-cta" data-home-t="lightyear-cta">Discover Lightyear Story →</span>
         </a>
 
@@ -201,6 +208,7 @@
     <script src="analytics.js"></script>
     <script src="pwa.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
-    <script src="portal-home.js?v=20260913-30"></script>
+    <script src="yu-profile.js?v=20260914-2"></script>
+    <script src="portal-home.js?v=20260914-37"></script>
   </body>
 </html>

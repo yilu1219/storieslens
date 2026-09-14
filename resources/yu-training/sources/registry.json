@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "lastReviewed": "2026-09-13",
+  "sources": [
+    {
+      "id": "ies-elementary-writing-2018",
+      "status": "adopted",
+      "language": "en",
+      "title": "Teaching Elementary School Students to Be Effective Writers",
+      "authorOrInstitution": "What Works Clearinghouse, Institute of Education Sciences, U.S. Department of Education",
+      "published": "2012-06; revised 2018-10",
+      "retrieved": "2026-09-13",
+      "url": "https://ies.ed.gov/ncee/wwc/Docs/PracticeGuide/WWC_Elem_Writing_PG_Dec182018.pdf",
+      "rights": "Public domain; the report states this explicitly on PDF page 4 (printed page ii). Citation requested.",
+      "ages": ["grades 1-6"],
+      "skills": ["writing process", "purpose", "sentence fluency", "writer community", "feedback"],
+      "credibility": "high; U.S. federal evidence practice guide with expert panel and evidence ratings",
+      "localRecord": "sources/en/ies-writing-practice-guides.md"
+    },
+    {
+      "id": "ies-secondary-writing-2016",
+      "status": "adopted",
+      "language": "en",
+      "title": "Teaching Secondary Students to Write Effectively",
+      "authorOrInstitution": "What Works Clearinghouse, Institute of Education Sciences, U.S. Department of Education",
+      "published": "2016-11; revised 2019-12",
+      "retrieved": "2026-09-13",
+      "url": "https://ies.ed.gov/ncee/wwc/Docs/PracticeGuide/wwc_secondary_writing_110116.pdf",
+      "rights": "Public domain; the report states this explicitly on PDF page 4 (printed page ii). Citation requested.",
+      "ages": ["grades 6-12"],
+      "skills": ["Model-Practice-Reflect", "reading-writing integration", "formative assessment", "audience", "revision"],
+      "credibility": "high; U.S. federal evidence practice guide with expert panel, external review, and evidence ratings",
+      "localRecord": "sources/en/ies-writing-practice-guides.md"
+    },
+    {
+      "id": "wenxin-diaolong-craft",
+      "status": "adopted",
+      "language": "zh",
+      "title": "《文心雕龙》创作论选章：神思、情采、镕裁、知音",
+      "authorOrInstitution": "刘勰（约465—约522）；核查版本为中文维基文库",
+      "published": "南朝梁；网页版本持续维护",
+      "retrieved": "2026-09-13",
+      "url": "https://zh.wikisource.org/wiki/文心雕龍",
+      "rights": "Underlying ancient text is public domain. Wikisource page text is provided under CC BY-SA; this knowledge base stores only original pedagogical abstractions and source links.",
+      "ages": ["secondary", "adult"],
+      "skills": ["构思", "情理与文采", "篇章剪裁", "读者视角", "修改"],
+      "credibility": "high for classical Chinese literary thought; modern teaching translation requires human review",
+      "localRecord": "sources/zh/wenxin-diaolong-craft.md"
+    },
+    {
+      "id": "openstax-writing-guide-2021",
+      "status": "rejected",
+      "language": "en",
+      "title": "Writing Guide with Handbook",
+      "authorOrInstitution": "OpenStax, Rice University",
+      "published": "2021-12-21",
+      "retrieved": "2026-09-13",
+      "url": "https://openstax.org/books/writing-guide/pages/preface",
+      "rights": "CC BY-NC-SA 4.0 plus an explicit page notice prohibiting use in LLM or generative-AI training without permission.",
+      "rejectionReason": "StoriesLens is a commercial product and does not have OpenStax permission for AI training. No content was ingested."
+    },
+    {
+      "id": "unverified-commercial-writing-books",
+      "status": "quarantined",
+      "language": "mixed",
+      "title": "Previously supplied commercial writing books",
+      "authorOrInstitution": "multiple",
+      "retrieved": "2026-09-13",
+      "url": null,
+      "rights": "Unverified in the current repository.",
+      "rejectionReason": "Keep only independently authored method summaries already in code; do not copy, redistribute, or add source text until rights and editions are verified."
+    }
+  ]
+}

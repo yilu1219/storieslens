@@ -14,7 +14,9 @@
   let preparedImage = null;
   let preparedStoryLanguage = "";
   let recognition = null;
-  let homeLocale = localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en";
+  // The public homepage is the English flagship. Chinese is a distinct
+  // creative route—not an in-place translation of this page.
+  let homeLocale = "en";
 
   const homeCopy = {
     en: {
@@ -22,18 +24,20 @@
       "hero-title-one": "Your next storybook or short film starts with",
       "hero-title-two": "something you made.",
       "hero-lede": "Upload your artwork or photo—or speak one idea. Yu asks three questions and guides you toward a first scene written in your voice.",
+      "yu-profile-cta": "Meet Yu",
+      "yu-profile-sub": "See how your bilingual mentor is trained",
       "promise-one": "YU ASKS",
       "promise-two": "YOU ANSWER",
       "promise-three": "YOU REMAIN THE AUTHOR",
       "start-here": "START WITH ONE CREATION",
       "free-questions": "FREE FIRST-SCENE PREVIEW",
       "upload-primary": "Upload artwork or a photo",
-      "upload-secondary": "上传画作或照片",
+      "upload-secondary": "",
       "voice-primary": "Speak one idea",
-      "voice-secondary": "口述一个想法",
+      "voice-secondary": "",
       "spark-label": "YOUR STARTING SPARK",
       "spark-ready": "Ready for Yu’s three questions.",
-      "idea-label": "Your idea · 你的想法",
+      "idea-label": "Your idea",
       "idea-placeholder": "Speak—or type—what happens first...",
       "speech-note": "Speech becomes editable text. Live audio is not saved.",
       "language-question": "What language would you like to create in today?",
@@ -43,14 +47,17 @@
       "metadata-removed": "Location and camera details removed",
       "private-default": "Private by default",
       "type-link": "Prefer to type? Start with words →",
-      "ways-kicker": "CREATE YOUR WAY · 选择创作方式",
+      "ways-kicker": "CREATE YOUR WAY",
       "ways-title": "Create alone—or with people you trust.",
+      "solo-label": "SOLO CREATOR",
       "solo-title": "Build a story world that is entirely yours.",
       "solo-copy": "Write at your pace, keep every decision, and choose when to share.",
       "solo-cta": "Start solo",
+      "group-label": "PRIVATE STORY SQUAD",
       "group-title": "Create with family or friends you invite.",
       "group-copy": "Invite 2–6 people by private link or Story Code. Every contribution keeps its author’s name.",
       "group-cta": "Create or join a squad",
+      "teacher-label": "FOR TEACHERS",
       "teacher-title": "Turn bulletin boards and student work into a dated class book.",
       "teacher-copy": "Photograph the wall once—or upload each work—to create a digital or printed keepsake.",
       "teacher-cta": "Open Teacher Publisher",
@@ -101,18 +108,20 @@
       "hero-title-one": "让你的作品，成为",
       "hero-title-two": "一本书或一部短片。",
       "hero-lede": "上传一幅画、一张照片，或说出一个想法。你的 AI 故事导师 Yu 会先提出三个问题，再陪你写出属于自己的故事第一幕。",
+      "yu-profile-cta": "认识羽大师",
+      "yu-profile-sub": "看看中英文语言导师是怎样训练出来的",
       "promise-one": "YU 提问",
       "promise-two": "你回答",
       "promise-three": "你始终是作者",
       "start-here": "从一件原创作品开始",
       "free-questions": "免费预览故事第一幕",
       "upload-primary": "上传你的画作或照片",
-      "upload-secondary": "Upload artwork or a photo",
+      "upload-secondary": "",
       "voice-primary": "口述一个想法",
-      "voice-secondary": "Speak one idea",
+      "voice-secondary": "",
       "spark-label": "你的创作起点",
       "spark-ready": "已经可以回答 Yu 导师的三个问题。",
-      "idea-label": "你的想法 · YOUR IDEA",
+      "idea-label": "你的想法",
       "idea-placeholder": "说出或写下故事最先发生了什么……",
       "speech-note": "语音会转成可以修改的文字，不保存现场录音。",
       "language-question": "今天想用什么语言创作？",
@@ -122,14 +131,17 @@
       "metadata-removed": "删除位置和拍摄设备信息",
       "private-default": "默认私密",
       "type-link": "更喜欢打字？从文字开始 →",
-      "ways-kicker": "选择创作方式 · CREATE YOUR WAY",
+      "ways-kicker": "选择创作方式",
       "ways-title": "独立创作，或和你信任的人一起完成。",
+      "solo-label": "个人创作",
       "solo-title": "建立一个完全属于你的故事世界。",
       "solo-copy": "按照自己的节奏创作，保留每一个决定，由你选择何时分享。",
       "solo-cta": "开始个人创作",
+      "group-label": "私密共创",
       "group-title": "和你邀请的家人或朋友一起创作。",
       "group-copy": "通过私密链接或故事码邀请 2–6 人，每一段创作都保留作者署名。",
       "group-cta": "创建或加入创作小组",
+      "teacher-label": "教师入口",
       "teacher-title": "把公告栏和学生作品变成带日期的班级纪念书。",
       "teacher-copy": "拍摄整面作品墙，或逐张上传，制作电子书或实体纪念册。",
       "teacher-cta": "进入教师出版空间",
@@ -203,7 +215,7 @@
   };
 
   const showLanguageChoice = () => {
-    storyLanguageWrap.hidden = !(preparedImage || voiceText.value.trim() || !voiceWrap.hidden);
+    storyLanguageWrap.hidden = false;
   };
 
   const showContinue = () => {
@@ -226,9 +238,13 @@
       return;
     }
     window.StoriesLensAnalytics?.track("homepage_magic_moment_started", {
-      source: preparedImage && payload.seed ? "image_and_voice" : (preparedImage ? "image" : "voice")
+      source: preparedImage && payload.seed
+        ? "image_and_voice"
+        : (preparedImage ? "image" : (payload.seed ? "voice" : "language_only"))
     });
-    location.href = "app.html?from=homepage-magic";
+    location.href = preparedStoryLanguage === "zh"
+      ? "chinese-studio.html?from=homepage-magic"
+      : "app.html?locale=en&from=homepage-magic";
   };
 
   uploadInput?.addEventListener("change", async (event) => {
@@ -318,11 +334,19 @@
       });
       showContinue();
       window.StoriesLensAnalytics?.track("homepage_story_language_selected", { language: preparedStoryLanguage });
+      storeAndContinue();
     });
   });
   continueButton?.addEventListener("click", storeAndContinue);
   document.querySelectorAll("[data-home-locale]").forEach((button) => {
-    button.addEventListener("click", () => applyHomeLocale(button.dataset.homeLocale));
+    button.addEventListener("click", () => {
+      if (button.dataset.homeLocale === "zh") {
+        preparedStoryLanguage = "zh";
+        storeAndContinue();
+        return;
+      }
+      applyHomeLocale("en");
+    });
   });
 
   document.querySelectorAll("[data-audience]").forEach((link) => {
@@ -333,5 +357,5 @@
     });
   });
 
-  applyHomeLocale(homeLocale);
+  applyHomeLocale("en");
 })();

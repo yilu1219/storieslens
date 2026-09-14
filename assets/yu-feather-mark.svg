@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Yu mentor feather</title>
+  <desc id="desc">A green feather shaped like a writing pen with three golden question points.</desc>
+  <defs>
+    <linearGradient id="feather" x1="28" y1="18" x2="91" y2="104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2DAA76"/>
+      <stop offset="1" stop-color="#0B5F43"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#feather)" d="M103 18c-28 2-50 14-64 34-13 19-14 39-8 53 14-5 28-14 40-27 17-18 27-39 32-60Z"/>
+  <path fill="#F4CB70" d="M29 109c15-24 33-45 57-67-17 20-31 43-43 69l-14-2Z"/>
+  <path fill="none" stroke="#F8E4AA" stroke-linecap="round" stroke-width="4" d="M43 84 30 79M53 70 35 63M65 56 48 47M57 91l16-1M69 77l18-3M80 62l15-5" opacity=".9"/>
+  <circle cx="79" cy="33" r="4" fill="#F4CB70"/>
+  <circle cx="91" cy="26" r="3" fill="#F4CB70" opacity=".78"/>
+  <circle cx="99" cy="20" r="2" fill="#F4CB70" opacity=".55"/>
+</svg>

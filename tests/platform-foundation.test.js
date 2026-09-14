@@ -14,6 +14,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   const studioJs = read("movie-studio.js");
   const app = read("app.html");
   const appJs = read("h5-app.js");
+  const chineseStudio = read("chinese-studio.html");
   const manifest = JSON.parse(read("manifest.webmanifest"));
   const worker = read("service-worker.js");
   const renderer = read("hyperframes-renderer.js");
@@ -33,6 +34,20 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(studioJs.includes("/api/export-book-docx"), "book export should remain in-product");
   assert(app.includes("data-create-form") && app.includes("data-artwork") && app.includes("data-seed") && app.includes("data-speech"), "formal H5 should begin with artwork, words, or voice");
   assert(app.includes('data-stage="coach"') && app.includes('data-stage="result"'), "formal H5 should keep the three questions and first story page in one flow");
+  const englishStoryLanguage = app.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
+  const chineseStoryLanguage = chineseStudio.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
+  assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");
+  assert(chineseStoryLanguage.includes('value="zh"') && !chineseStoryLanguage.includes('value="en"'), "Chinese studio should keep its creation language fixed to Chinese");
+  assert(chineseStudio.includes("data-chinese-voice-entry") && appJs.includes("chineseVoiceEntry") && appJs.includes("handleSpeechInput"), "Chinese studio should expose a first-class voice entry wired to editable speech input");
+  assert(app.includes("data-chinese-studio-switch"), "English studio should provide one explicit route to the Chinese studio");
+  assert(app.includes("Learning Profile｜学习档案") && app.includes("data-map-overall-rit"), "parent flow should offer an optional manual MAP Learning Profile");
+  assert(["genre", "craft", "process", "grammar", "mechanics"].every((area) => app.includes(`data-map-low="${area}"`) && app.includes(`data-map-high="${area}"`)), "Learning Profile should accept all five Language Usage area ranges");
+  const learningProfileMarkup = app.match(/<details class="learning-profile"[\s\S]*?<\/details>/)?.[0] || "";
+  assert(!/<input[^>]+type="file"/i.test(learningProfileMarkup), "Learning Profile must never accept a report upload");
+  assert(appJs.includes("parent-manual-entry") && appJs.includes("storieslens_learning_profile"), "Learning Profile should save only structured manual fields on the device");
+  assert(appJs.includes("nextThreeGoals") && appJs.includes("fourWeeks") && appJs.includes("storieslens_learning_progress"), "Learning Profile should create a four-week plan scaffold and privacy-minimized progress records");
+  assert(appJs.includes("validateLearningProfile") && appJs.includes("low RIT cannot be higher"), "Learning Profile should reject incomplete or invalid RIT ranges");
+  assert(read("visual-write.html").includes("getMapLearningContext") && read("visual-write.html").includes("mapInstructionalArea"), "Yu should receive the optional Learning Profile during coaching");
   assert(appJs.includes("coach_question_answered") && appJs.includes("first_story_page_created"), "formal H5 should measure its activation moment");
   assert(app.includes('src="artwork-upload-safety.js?') && appJs.includes("StoriesLensArtworkSafety.processArtwork"), "formal H5 should privacy-review artwork before it can be stored");
   assert(api.includes("reviewArtworkSafety(body.dataUrl)") && api.includes("Real-person photos are not stored"), "private media API should reject real-person photos server-side");

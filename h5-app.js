@@ -4,9 +4,10 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const params = new URLSearchParams(location.search);
   const requestedLocale = params.get("locale");
-  let locale = requestedLocale === "zh" || requestedLocale === "en"
+  const forcedLocale = document.body.dataset.studioLanguage;
+  let locale = forcedLocale === "zh" ? "zh" : (requestedLocale === "zh" || requestedLocale === "en"
     ? requestedLocale
-    : (localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en");
+    : (localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en"));
   let selectedArtwork = null;
   let selectedArtworkData = "";
   let recognition = null;
@@ -24,6 +25,8 @@
       "start-title-one": "Your first story page",
       "start-title-two": "starts with you.",
       "start-intro": "Upload something you made—or begin with words or voice. Yu asks three questions. You answer and remain the author.",
+      "yu-profile-cta": "Meet Yu",
+      "yu-profile-sub": "See how your bilingual mentor is trained",
       "step-one": "STEP 1",
       "bring-one": "Bring one piece of your world.",
       "free": "FREE",
@@ -41,6 +44,40 @@
       "creator-account": "Who is creating?",
       "adult": "An adult or parent",
       "young": "A young creator with adult support",
+      "learning-profile-title": "Learning Profile｜学习档案",
+      "learning-profile-summary": "Optional · Add MAP Language Usage results to personalize Yu’s guidance.",
+      "optional": "OPTIONAL",
+      "map-informed-title": "MAP-informed guidance",
+      "map-informed-copy": "Yu uses only the results you enter to adjust question difficulty and plan the next three learning goals. This is not an official MAP service or score prediction.",
+      "map-privacy": "Enter numbers only. Do not enter a learner’s name, school, student ID, birthday, or upload a report.",
+      "map-grade": "Grade at the time of the test",
+      "choose-grade": "Choose grade",
+      "map-term": "Test season",
+      "choose-season": "Choose season",
+      "fall": "Fall",
+      "winter": "Winter",
+      "spring": "Spring",
+      "map-subject": "Subject",
+      "map-overall": "Overall RIT (optional)",
+      "map-domains-title": "Instructional area RIT ranges",
+      "map-domains-help": "Enter the low and high number shown for any available area.",
+      "map-area": "Area",
+      "map-low": "Low",
+      "map-high": "High",
+      "domain-genre": "Writing genres",
+      "domain-craft": "Structure, development, cohesion & style",
+      "domain-process": "Writing process, purpose & audience",
+      "domain-grammar": "Grammar & usage",
+      "domain-mechanics": "Capitalization, punctuation & spelling",
+      "map-priority": "Area to prioritize",
+      "let-yu-choose": "Let Yu choose from the results",
+      "parent-goal": "What would you like the learner to improve?",
+      "choose-goal": "Choose a goal",
+      "goal-organize": "Organize ideas clearly",
+      "goal-details": "Develop stories with vivid details",
+      "goal-grammar": "Strengthen sentence structure and grammar",
+      "goal-edit": "Edit conventions independently",
+      "goal-revise": "Revise independently for purpose and audience",
       "adult-confirm": "I am the adult supporting this young creator.",
       "meet-questions": "Meet Yu’s three questions",
       "trust-line": "Private by default · AI asks · You create · Every word remains yours",
@@ -79,6 +116,8 @@
       "start-title-one": "你的第一张故事页，",
       "start-title-two": "从你开始。",
       "start-intro": "上传你的作品，也可以从文字或口述开始。羽导师只问三个问题，由你回答并始终保留作者身份。",
+      "yu-profile-cta": "认识羽大师",
+      "yu-profile-sub": "看看中英文语言导师是怎样训练出来的",
       "step-one": "第一步",
       "bring-one": "带来一份属于你的创作。",
       "free": "免费体验",
@@ -96,6 +135,40 @@
       "creator-account": "谁在创作？",
       "adult": "成年人或家长",
       "young": "由成年人支持的年轻创作者",
+      "learning-profile-title": "Learning Profile｜学习档案",
+      "learning-profile-summary": "可选 · 添加 MAP Language Usage 结果，让羽导师调整指导方式。",
+      "optional": "选填",
+      "map-informed-title": "参考 MAP 的个性化指导",
+      "map-informed-copy": "羽导师只使用你填写的结果调整问题难度，并规划接下来的三个学习目标；这不是 MAP 官方服务，也不会预测分数。",
+      "map-privacy": "只填写数字。请勿填写学习者姓名、学校、学号、生日，也不要上传完整成绩单。",
+      "map-grade": "测试时年级",
+      "choose-grade": "选择年级",
+      "map-term": "测试时间",
+      "choose-season": "选择测试季",
+      "fall": "秋季 Fall",
+      "winter": "冬季 Winter",
+      "spring": "春季 Spring",
+      "map-subject": "科目",
+      "map-overall": "Overall RIT（选填）",
+      "map-domains-title": "各能力领域 RIT 区间",
+      "map-domains-help": "成绩单上出现哪个领域，就填写该领域的最低与最高数字。",
+      "map-area": "能力领域",
+      "map-low": "最低",
+      "map-high": "最高",
+      "domain-genre": "写作文体",
+      "domain-craft": "结构、发展、衔接与风格",
+      "domain-process": "写作过程、目的与读者",
+      "domain-grammar": "语法与用法",
+      "domain-mechanics": "大小写、标点与拼写",
+      "map-priority": "优先提升方向",
+      "let-yu-choose": "由羽导师根据结果判断",
+      "parent-goal": "家长希望学习者提升什么？",
+      "choose-goal": "选择一个方向",
+      "goal-organize": "清楚地组织想法",
+      "goal-details": "用生动细节发展故事",
+      "goal-grammar": "加强句子结构与语法",
+      "goal-edit": "独立检查大小写、标点与拼写",
+      "goal-revise": "根据目的与读者独立修改",
       "adult-confirm": "我是支持这位年轻创作者的成年人。",
       "meet-questions": "回答羽导师的三个问题",
       "trust-line": "默认私密 · AI 提问 · 由你创作 · 每一个字都属于你",
@@ -145,13 +218,13 @@
   }
 
   function applyLocale(next) {
-    locale = next === "zh" ? "zh" : "en";
+    locale = forcedLocale === "zh" ? "zh" : (next === "zh" ? "zh" : "en");
     localStorage.setItem("storieslens_locale", locale);
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
     $$('[data-locale]').forEach((button) => button.classList.toggle("active", button.dataset.locale === locale));
     $$('[data-t]').forEach((element) => { element.textContent = t(element.dataset.t); });
     $$('[data-placeholder-t]').forEach((element) => { element.placeholder = t(element.dataset.placeholderT); });
-    if (!languageTouched) $("[data-language]").value = locale;
+    if (forcedLocale === "zh") $("[data-language]").value = "zh";
     if (!$("[data-stage='coach']").hidden) renderQuestion();
     document.title = locale === "zh" ? "开始创作 · 语镜故事" : "Create a Story · StoriesLens";
   }
@@ -164,6 +237,135 @@
     return $("[data-creator-name]").value.trim() || (locale === "zh" ? "故事创作者" : "Story Creator");
   }
 
+  function collectChineseCreativeProfile() {
+    if ($("[data-language]")?.value !== "zh") return null;
+    const format = $("[name='chinese-format']:checked")?.value || "ink-story";
+    const background = $("[data-chinese-background]")?.value || "";
+    const level = $("[data-chinese-level]")?.value || "";
+    const goal = $("[data-chinese-goal]")?.value || "";
+    return { format, background, level, goal, source: "creator-choice" };
+  }
+
+  const mapDomainKeys = ["genre", "craft", "process", "grammar", "mechanics"];
+  const mapAreaGoals = {
+    genre: "Choose and develop the form of writing that fits the task.",
+    craft: "Organize and develop ideas with logical connections and deliberate style.",
+    process: "Plan, revise, and make choices for a clear purpose and audience.",
+    grammar: "Use sentence structures and grammatical forms that make meaning clear.",
+    mechanics: "Edit capitalization, punctuation, and spelling so readers can follow easily."
+  };
+
+  function optionalRit(input) {
+    const raw = String(input?.value || "").trim();
+    return raw === "" ? null : Number(raw);
+  }
+
+  function collectLearningProfile() {
+    if ($("[data-language]")?.value === "zh" || !$("[data-map-grade]")) return null;
+    const grade = $("[data-map-grade]").value;
+    const term = $("[data-map-term]").value;
+    const overallRit = optionalRit($("[data-map-overall-rit]"));
+    const requestedPriority = $("[data-map-priority]").value;
+    const parentGoal = $("[data-map-goal]").value.trim().slice(0, 120);
+    const areaRanges = {};
+    mapDomainKeys.forEach((key) => {
+      const low = optionalRit($(`[data-map-low="${key}"]`));
+      const high = optionalRit($(`[data-map-high="${key}"]`));
+      if (low !== null || high !== null) areaRanges[key] = { low, high };
+    });
+    const hasResult = overallRit !== null || Object.keys(areaRanges).length > 0;
+    if (!grade && !term && !hasResult && !requestedPriority && !parentGoal) return null;
+    const scoredAreas = Object.entries(areaRanges)
+      .filter(([, range]) => range.low !== null && range.high !== null)
+      .sort(([, first], [, second]) => ((first.low + first.high) / 2) - ((second.low + second.high) / 2));
+    const priorityArea = requestedPriority || scoredAreas[0]?.[0] || "";
+    const relativeStrengthArea = scoredAreas.length > 1 ? scoredAreas[scoredAreas.length - 1][0] : "";
+    const nextAreas = [priorityArea, "process", "craft"].filter((key, index, list) => key && list.indexOf(key) === index).slice(0, 3);
+    return {
+      source: "parent-manual-entry",
+      assessment: "MAP Growth",
+      subject: "Language Usage",
+      status: "MAP-informed; not an NWEA score estimate, certification, or endorsement",
+      grade,
+      term,
+      overallRit,
+      areaRanges,
+      priorityArea,
+      parentGoal,
+      learningPlan: {
+        evidenceNote: "Strength and focus are relative only to the instructional-area ranges entered by the family.",
+        relativeStrengthArea,
+        focusArea: priorityArea,
+        nextThreeGoals: nextAreas.map((key) => ({ area: key, goal: mapAreaGoals[key] })),
+        questionDifficulty: "Use the reported result as one readiness signal; adapt one step easier or harder from each response.",
+        fourWeeks: [
+          { week: 1, goal: "Create a baseline piece and notice one strength and one focus area." },
+          { week: 2, goal: priorityArea ? mapAreaGoals[priorityArea] : "Practice one high-value writing skill in a short passage." },
+          { week: 3, goal: "Revise one passage and explain why the revision improves clarity or effect." },
+          { week: 4, goal: "Apply the skill independently in a new piece and reflect on the change." }
+        ]
+      },
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  function recordLearningProgress(draft) {
+    const profile = collectLearningProfile();
+    if (!profile) return;
+    let records = [];
+    try { records = JSON.parse(localStorage.getItem("storieslens_learning_progress") || "[]"); }
+    catch { records = []; }
+    if (!Array.isArray(records)) records = [];
+    records.push({
+      recordedAt: new Date().toISOString(),
+      event: "first-story-scene",
+      grade: profile.grade,
+      term: profile.term,
+      focusArea: profile.priorityArea || "draft-evidence",
+      answerCount: answers.filter(Boolean).length,
+      characterCount: String(draft || "").length
+    });
+    localStorage.setItem("storieslens_learning_progress", JSON.stringify(records.slice(-50)));
+  }
+
+  function validateLearningProfile(profile) {
+    if (!profile) return "";
+    if (!profile.grade || !profile.term) {
+      return locale === "zh" ? "使用学习档案时，请选择测试时年级和测试时间。" : "Choose the grade and test season to use the Learning Profile.";
+    }
+    const values = [profile.overallRit, ...Object.values(profile.areaRanges).flatMap((range) => [range.low, range.high])].filter((value) => value !== null);
+    if (!values.length) {
+      return locale === "zh" ? "请填写 Overall RIT，或至少一个能力领域的完整 RIT 区间。" : "Enter an Overall RIT or one complete instructional-area RIT range.";
+    }
+    if (values.some((value) => !Number.isInteger(value) || value < 100 || value > 350)) {
+      return locale === "zh" ? "RIT 请输入 100–350 之间的整数。" : "Enter each RIT as a whole number from 100 to 350.";
+    }
+    for (const range of Object.values(profile.areaRanges)) {
+      if (range.low === null || range.high === null) return locale === "zh" ? "每个能力领域需要同时填写最低和最高 RIT。" : "Enter both the low and high RIT for each instructional area you use.";
+      if (range.low > range.high) return locale === "zh" ? "能力领域的最低 RIT 不能高于最高 RIT。" : "An instructional area’s low RIT cannot be higher than its high RIT.";
+    }
+    return "";
+  }
+
+  function restoreLearningProfile() {
+    if ($("[data-language]")?.value === "zh" || !$("[data-map-grade]")) return;
+    let profile = null;
+    try { profile = JSON.parse(localStorage.getItem("storieslens_learning_profile") || "null"); }
+    catch { localStorage.removeItem("storieslens_learning_profile"); }
+    if (!profile || profile.source !== "parent-manual-entry") return;
+    $("[data-map-grade]").value = String(profile.grade || "");
+    $("[data-map-term]").value = String(profile.term || "");
+    $("[data-map-overall-rit]").value = profile.overallRit ?? "";
+    $("[data-map-priority]").value = mapDomainKeys.includes(profile.priorityArea) ? profile.priorityArea : "";
+    $("[data-map-goal]").value = Array.from($("[data-map-goal]").options).some((option) => option.value === profile.parentGoal) ? profile.parentGoal : "";
+    mapDomainKeys.forEach((key) => {
+      const range = profile.areaRanges?.[key];
+      $(`[data-map-low="${key}"]`).value = range?.low ?? "";
+      $(`[data-map-high="${key}"]`).value = range?.high ?? "";
+    });
+    $("[data-learning-profile-status]").textContent = locale === "zh" ? "已载入本设备上的学习档案。" : "Learning Profile restored from this device.";
+  }
+
   function deriveTitle(text) {
     const fallback = locale === "zh" ? "我的新故事" : "My New Story";
     return String(text || fallback).split(/[.!?。！？\n]/)[0].trim().slice(0, 64) || fallback;
@@ -171,7 +373,14 @@
 
   function renderQuestion() {
     $("[data-question-number]").textContent = String(questionIndex + 1);
-    $("[data-question]").textContent = copy[locale].questions[questionIndex];
+    const chineseQuestions = {
+      "ink-story": ["画面中最重要的人是谁？他此刻最想做什么？", "什么阻碍正在逼他作出选择？", "请写下故事真正发生变化的第一个瞬间。"],
+      comic: ["如果这是连环画第一格，我们最先看见谁在做什么？", "第二格出现了什么意外或阻碍？", "下一格里，人物会作出什么行动？"],
+      picturebook: ["翻开第一页，读者最先看见谁和什么地方？", "这个人物心里藏着怎样的愿望？", "第一页结束前，发生了哪件让人想继续翻页的事？"],
+      film: ["电影的第一个镜头里，观众看见什么？", "这个场景里最重要的动作或声音是什么？", "镜头结束时，什么已经和开始时不同？"]
+    };
+    const profile = collectChineseCreativeProfile();
+    $("[data-question]").textContent = profile ? chineseQuestions[profile.format][questionIndex] : copy[locale].questions[questionIndex];
     $("[data-next-question] span").textContent = questionIndex === 2 ? t("see-page") : t("next-question");
     $("[data-answer]").value = answers[questionIndex] || "";
     $("[data-question-error]").textContent = "";
@@ -191,6 +400,11 @@
       languageTouched = true;
     }
     if (spark.seed) $(`[data-seed]`).value = String(spark.seed).slice(0, 1800);
+    if (spark.creatorName) $(`[data-creator-name]`).value = String(spark.creatorName).slice(0, 40);
+    if (["adult", "under18"].includes(spark.ageGroup)) {
+      $(`[data-age]`).value = spark.ageGroup;
+      $(`[data-guardian-check]`).hidden = spark.ageGroup !== "under18";
+    }
     if (spark.dataUrl && /^data:image\/(?:webp|png|jpeg);base64,/.test(spark.dataUrl)) {
       selectedArtworkData = spark.dataUrl;
       selectedArtwork = {
@@ -211,6 +425,8 @@
     const language = $("[data-language]").value;
     const ageGroup = $("[data-age]").value;
     const seed = storySeed();
+    const learningProfile = collectLearningProfile();
+    const chineseCreativeProfile = collectChineseCreativeProfile();
     const dna = {
       source: selectedArtwork ? "work" : "tell",
       inspiration: seed || (locale === "zh" ? "我上传的作品" : "My uploaded creation"),
@@ -220,6 +436,8 @@
       shift: "rule",
       answers: answers.slice(),
       seed: answers.join(" "),
+      learningProfile,
+      chineseCreativeProfile,
       createdAt: new Date().toISOString()
     };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify({
@@ -230,8 +448,13 @@
       storyLanguage: language,
       displayName: creatorName(),
       seed,
+      learningProfile,
+      chineseCreativeProfile,
       createdAt: new Date().toISOString()
     }));
+    if (learningProfile) localStorage.setItem("storieslens_learning_profile", JSON.stringify(learningProfile));
+    else localStorage.removeItem("storieslens_learning_profile");
+    if (chineseCreativeProfile) localStorage.setItem("storieslens_chinese_creative_profile", JSON.stringify(chineseCreativeProfile));
     localStorage.setItem("storieslens_story_dna", JSON.stringify(dna));
     localStorage.setItem("storieslens_student_visual_write", JSON.stringify({
       mode: "free",
@@ -249,6 +472,8 @@
     const dna = saveLocalDraft(draft);
     const language = $("[data-language]").value;
     const ageGroup = $("[data-age]").value;
+    const learningProfile = collectLearningProfile();
+    const chineseCreativeProfile = collectChineseCreativeProfile();
     const title = $("[data-story-title]").value.trim();
     try {
       const result = await platform.api("/api/projects", {
@@ -264,7 +489,7 @@
           draft,
           storyDna: dna,
           scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), duration: 6 }],
-          clientSnapshot: { from: "h5", firstPageCreated: true }
+          clientSnapshot: { from: "h5", firstPageCreated: true, learningProfile, chineseCreativeProfile }
         })
       });
       savedProjectId = result.project.id;
@@ -313,6 +538,7 @@
       hasArtwork: Boolean(selectedArtwork),
       answerCount: answers.length
     });
+    recordLearningProgress(draft);
     saveProject(draft);
   }
 
@@ -355,6 +581,9 @@
     const message = $("[data-form-message]");
     const seed = storySeed();
     const ageGroup = $("[data-age]").value;
+    const learningProfile = collectLearningProfile();
+    const chineseCreativeProfile = collectChineseCreativeProfile();
+    const learningProfileError = validateLearningProfile(learningProfile);
     if (!selectedArtwork && !seed) {
       message.textContent = locale === "zh" ? "请上传一份作品，或者先写下一句话。" : "Upload one creation or begin with one sentence.";
       return;
@@ -368,11 +597,25 @@
       message.textContent = locale === "zh" ? "需要成年人确认支持后才能继续。" : "An adult must confirm support before continuing.";
       return;
     }
+    if (learningProfileError) {
+      if ($("[data-learning-profile]")) $("[data-learning-profile]").open = true;
+      if ($("[data-learning-profile-status]")) $("[data-learning-profile-status]").textContent = learningProfileError;
+      message.textContent = learningProfileError;
+      return;
+    }
     if (window.StoriesLensSafety && seed && !window.StoriesLensSafety.check(seed).safe) {
       message.textContent = window.StoriesLensSafety.message;
       return;
     }
     message.textContent = "";
+    if (learningProfile) localStorage.setItem("storieslens_learning_profile", JSON.stringify(learningProfile));
+    else localStorage.removeItem("storieslens_learning_profile");
+    if (chineseCreativeProfile) localStorage.setItem("storieslens_chinese_creative_profile", JSON.stringify(chineseCreativeProfile));
+    if ($("[data-learning-profile-status]")) {
+      $("[data-learning-profile-status]").textContent = learningProfile
+        ? (locale === "zh" ? "学习档案已准备好，将用于调整羽导师的指导。" : "Learning Profile ready. Yu will adapt the guidance.")
+        : "";
+    }
     answers = [];
     questionIndex = 0;
     $("[data-coach-seed]").textContent = seed || (locale === "zh" ? "我上传的这份作品" : "My uploaded creation");
@@ -426,7 +669,46 @@
     $("[data-guardian-check]").hidden = event.currentTarget.value !== "under18";
   });
 
-  $("[data-language]").addEventListener("change", () => { languageTouched = true; });
+  $("[data-language]").addEventListener("change", () => {
+    languageTouched = true;
+    if (forcedLocale !== "zh" && $("[data-language]").value === "zh") {
+      try {
+        sessionStorage.setItem("storieslens_home_spark", JSON.stringify({
+          dataUrl: selectedArtworkData,
+          name: selectedArtwork?.name || "",
+          privateOnly: Boolean(selectedArtwork?.privateOnly),
+          personalPhoto: Boolean(selectedArtwork?.personalPhoto),
+          seed: storySeed(),
+          creatorName: $("[data-creator-name]").value.trim(),
+          ageGroup: $("[data-age]").value,
+          storyLanguage: "zh",
+          createdAt: new Date().toISOString()
+        }));
+      } catch (_error) {
+        // The Chinese studio still opens even when a large local image cannot be carried forward.
+      }
+      location.href = "chinese-studio.html?from=language-switch";
+    }
+  });
+  $("[data-chinese-studio-switch]")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    try {
+      sessionStorage.setItem("storieslens_home_spark", JSON.stringify({
+        dataUrl: selectedArtworkData,
+        name: selectedArtwork?.name || "",
+        privateOnly: Boolean(selectedArtwork?.privateOnly),
+        personalPhoto: Boolean(selectedArtwork?.personalPhoto),
+        seed: storySeed(),
+        creatorName: $("[data-creator-name]").value.trim(),
+        ageGroup: $("[data-age]").value,
+        storyLanguage: "zh",
+        createdAt: new Date().toISOString()
+      }));
+    } catch (_error) {
+      // The destination remains available even if a large local image cannot be carried forward.
+    }
+    location.href = event.currentTarget.href;
+  });
   $$('[data-locale]').forEach((button) => button.addEventListener("click", () => applyLocale(button.dataset.locale)));
   $("[data-artwork]").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
@@ -434,9 +716,12 @@
     if (file) await processArtwork(file);
   });
 
-  $("[data-speech]").addEventListener("click", () => {
+  const speechButton = $("[data-speech]");
+  const chineseVoiceEntry = $("[data-chinese-voice-entry]");
+  const handleSpeechInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
+      $("[data-seed]")?.focus();
       toast(locale === "zh" ? "当前浏览器不支持语音输入，可以直接打字。" : "Voice input is unavailable in this browser. You can type instead.", true);
       return;
     }
@@ -449,18 +734,31 @@
     recognition = new SpeechRecognition();
     recognition.lang = locale === "zh" ? "zh-CN" : "en-US";
     recognition.interimResults = true;
-    $("[data-speech]").classList.add("listening");
+    speechButton.classList.add("listening");
+    chineseVoiceEntry?.classList.add("is-listening");
+    chineseVoiceEntry?.setAttribute("aria-pressed", "true");
     recognition.onresult = (event) => {
       const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
       field.value = `${original}${original ? " " : ""}${spoken}`;
     };
     recognition.onerror = () => toast(locale === "zh" ? "没有听清，请再试一次。" : "I could not hear that. Please try again.", true);
-    recognition.onend = () => { recognition = null; $("[data-speech]").classList.remove("listening"); };
+    recognition.onend = () => {
+      recognition = null;
+      speechButton.classList.remove("listening");
+      chineseVoiceEntry?.classList.remove("is-listening");
+      chineseVoiceEntry?.setAttribute("aria-pressed", "false");
+    };
     recognition.start();
+  };
+  speechButton.addEventListener("click", handleSpeechInput);
+  chineseVoiceEntry?.addEventListener("click", () => {
+    $(".words-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    handleSpeechInput();
   });
 
   applyLocale(locale);
   showStage("start");
+  restoreLearningProfile();
   restoreHomepageSpark();
   if (params.get("focus") === "words") $(`[data-seed]`).focus();
   window.StoriesLensAnalytics?.track("family_flow_viewed", { locale });

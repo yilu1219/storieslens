@@ -31,6 +31,18 @@ const SOURCE_CATALOG = Object.freeze({
   thinking: {
     title: "《写作与思维》",
     contribution: "观察、联想、想象、抽象思维与发散收束"
+  },
+  iesElementary: {
+    title: "IES/WWC《Teaching Elementary School Students to Be Effective Writers》",
+    contribution: "公共领域：写作过程、目的、句子流畅度、写作者共同体与反馈"
+  },
+  iesSecondary: {
+    title: "IES/WWC《Teaching Secondary Students to Write Effectively》",
+    contribution: "公共领域：Model–Practice–Reflect、读写整合与形成性评价"
+  },
+  wenxinDiaolong: {
+    title: "刘勰《文心雕龙》创作论选章",
+    contribution: "公共领域：构思、情理与文采、篇章剪裁与读者意识"
   }
 });
 
@@ -159,6 +171,40 @@ const WRITING_METHODS = Object.freeze({
       "这一段是在推动故事，还是重复已经知道的信息？",
       "修改以后，是否仍然保留了创作者自己的声音？"
     ]
+  },
+  evidenceCycle: {
+    id: "evidence-cycle",
+    name: "循证写作训练循环",
+    sources: ["iesElementary", "iesSecondary"],
+    principles: [
+      "先说明一个策略适合解决什么问题，再用与当前作品无关的微型例子示范思考过程。",
+      "让创作者立即在自己的一小处文字中练习，并说出修改前后发生了什么变化。",
+      "把目的与受众作为策略选择的依据，不把计划、起草、评价、修改和编辑变成僵硬直线。",
+      "依据创作者这一次的真实作答选择下一步，只反馈一个最有杠杆的能力。"
+    ],
+    questions: [
+      "What should the reader understand, feel, or do after this part?",
+      "Which move would help most now: plan, add, reorder, cut, or edit—and why?",
+      "After your change, what became clearer to a reader?",
+      "What evidence in this draft should guide our next practice step?"
+    ]
+  },
+  classicalCraft: {
+    id: "classical-craft",
+    name: "古典文论中的构思与剪裁",
+    sources: ["wenxinDiaolong"],
+    principles: [
+      "先辨认这一段最想保留的情意，再判断材料、结构和措辞是否为它服务。",
+      "修改可分为纲领、次序、重复和字句四层；一次只处理一层，避免把作者声音一起削掉。",
+      "删去重复后复述原意：意思仍完整才是真正的精简，意义缺失则说明删得过度。",
+      "从读者位置检查文体、人物意图和情绪变化是否能够被看见。"
+    ],
+    questions: [
+      "这一段最不能丢失的情意是什么？",
+      "哪一个细节真正承载意思，哪些只是重复装饰？",
+      "如果删去这句话，意思仍完整吗？",
+      "读者会在哪一步看不清你的用意？"
+    ]
   }
 });
 
@@ -169,6 +215,7 @@ function unique(values) {
 function selectWritingMethods(input = {}) {
   const action = String(input.action || "").trim();
   const genre = String(input.genre || "story").trim();
+  const language = String(input.language || "").trim();
   const selected = [];
 
   if (action === "begin") selected.push("ideation", "character");
@@ -177,10 +224,17 @@ function selectWritingMethods(input = {}) {
   if (action === "check") selected.push("prose", "revision");
   if (action === "hint") selected.push("character", "structure");
 
+  // Preserve specialist genre methods before adding a language tradition.
+  // This keeps science-fiction and screenplay safeguards from being displaced
+  // by a general-purpose curriculum module when the list is capped below.
   if (genre === "screenplay") selected.push("scene", "microfilm");
   else if (genre === "scifi") selected.push("scienceFiction", "structure");
-  else if (["essay", "memoir"].includes(genre)) selected.push("prose", "revision");
-  else selected.push("character", "structure");
+
+  if (language === "en") selected.push("evidenceCycle");
+  if (language === "zh") selected.push("classicalCraft");
+
+  if (["essay", "memoir"].includes(genre)) selected.push("prose", "revision");
+  else if (!["screenplay", "scifi"].includes(genre)) selected.push("character", "structure");
 
   return unique(selected).slice(0, 3).map((id) => WRITING_METHODS[id]);
 }
