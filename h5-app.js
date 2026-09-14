@@ -231,7 +231,15 @@
   }
 
   function storySeed() {
-    return $("[data-seed]").value.trim();
+    return $("[data-seed]")?.value.trim() || "";
+  }
+
+  function revealChineseVoiceTranscript({ focus = false } = {}) {
+    const transcript = $("[data-chinese-voice-transcript]");
+    const field = $("[data-seed]");
+    if (!transcript || !field) return;
+    transcript.hidden = false;
+    if (focus) field.focus();
   }
 
   function creatorName() {
@@ -432,7 +440,10 @@
       $(`[data-language]`).value = spark.storyLanguage;
       languageTouched = true;
     }
-    if (spark.seed) $(`[data-seed]`).value = String(spark.seed).slice(0, 1800);
+    if (spark.seed) {
+      $(`[data-seed]`).value = String(spark.seed).slice(0, 1800);
+      revealChineseVoiceTranscript();
+    }
     if (spark.creatorName) $(`[data-creator-name]`).value = String(spark.creatorName).slice(0, 40);
     if (["adult", "under18"].includes(spark.ageGroup)) {
       $(`[data-age]`).value = spark.ageGroup;
@@ -779,7 +790,7 @@
   const handleSpeechInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      $("[data-seed]")?.focus();
+      revealChineseVoiceTranscript({ focus: true });
       toast(locale === "zh" ? "当前浏览器不支持语音输入，可以直接打字。" : "Voice input is unavailable in this browser. You can type instead.", true);
       return;
     }
@@ -788,36 +799,36 @@
       return;
     }
     const field = $("[data-seed]");
+    if (!field) return;
+    revealChineseVoiceTranscript();
     const original = field.value.trim();
     recognition = new SpeechRecognition();
     recognition.lang = locale === "zh" ? "zh-CN" : "en-US";
     recognition.interimResults = true;
-    speechButton.classList.add("listening");
+    speechButton?.classList.add("listening");
     chineseVoiceEntry?.classList.add("is-listening");
     chineseVoiceEntry?.setAttribute("aria-pressed", "true");
     recognition.onresult = (event) => {
       const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
       field.value = `${original}${original ? " " : ""}${spoken}`;
+      revealChineseVoiceTranscript();
     };
     recognition.onerror = () => toast(locale === "zh" ? "没有听清，请再试一次。" : "I could not hear that. Please try again.", true);
     recognition.onend = () => {
       recognition = null;
-      speechButton.classList.remove("listening");
+      speechButton?.classList.remove("listening");
       chineseVoiceEntry?.classList.remove("is-listening");
       chineseVoiceEntry?.setAttribute("aria-pressed", "false");
     };
     recognition.start();
   };
-  speechButton.addEventListener("click", handleSpeechInput);
-  chineseVoiceEntry?.addEventListener("click", () => {
-    $(".words-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    handleSpeechInput();
-  });
+  speechButton?.addEventListener("click", handleSpeechInput);
+  chineseVoiceEntry?.addEventListener("click", handleSpeechInput);
 
   applyLocale(locale);
   showStage("start");
   restoreLearningProfile();
   restoreHomepageSpark();
-  if (params.get("focus") === "words") $(`[data-seed]`).focus();
+  if (params.get("focus") === "words") revealChineseVoiceTranscript({ focus: true });
   window.StoriesLensAnalytics?.track("family_flow_viewed", { locale });
 })();

@@ -39,6 +39,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");
   assert(chineseStoryLanguage.includes('value="zh"') && !chineseStoryLanguage.includes('value="en"'), "Chinese studio should keep its creation language fixed to Chinese");
   assert(chineseStudio.includes("data-chinese-voice-entry") && appJs.includes("chineseVoiceEntry") && appJs.includes("handleSpeechInput"), "Chinese studio should expose a first-class voice entry wired to editable speech input");
+  assert(chineseStudio.includes("data-chinese-voice-transcript") && !chineseStudio.includes("也可以从自己的话开始"), "Chinese studio should reveal one compact editable transcript instead of a duplicate words section");
   ["经典小人书", "四格故事", "电影分镜", "data-stage=\"comic-template\""].forEach((token) => assert(chineseStudio.includes(token), `Chinese studio should expose comic template: ${token}`));
   assert(appJs.includes("showComicTemplateStage") && appJs.includes("comicTemplate"), "Comic selection should happen after Yu's three questions and persist into the story profile");
   assert(app.includes("data-chinese-studio-switch"), "English studio should provide one explicit route to the Chinese studio");
