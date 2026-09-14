@@ -48,6 +48,7 @@ const teacherHtml = htmlByFile["teacher-dashboard.html"];
 const classroomArchiveHtml = htmlByFile["classroom-archive.html"];
 const classroomArchiveJs = read("classroom-archive.js");
 const portalHomeJs = read("portal-home.js");
+const sparkHandoffJs = read("spark-handoff.js");
 const h5AppJs = read("h5-app.js");
 const chineseStudioHtml = read("chinese-studio.html");
 const teacherProjectHtml = htmlByFile["teacher-project.html"];
@@ -307,6 +308,8 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "Upload artwork or a photo",
   'data-home-speech',
   "Speak one idea",
+  'data-home-type',
+  "Type one idea",
   'data-home-story-language',
   'data-story-language="en"',
   'data-story-language="zh"',
@@ -347,6 +350,7 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "data-audience=\"teacher\"",
   'href="portal-home.css?',
   'src="artwork-upload-safety.js?',
+  'src="spark-handoff.js?',
   'src="portal-home.js?'
 ].forEach((token) => {
   assert(indexHtml.includes(token), `Homepage should include: ${token}`);
@@ -363,6 +367,11 @@ assert(indexHtml.includes('class="lightyear-card-art"'), "Lightyear Story should
 assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-v5.jpg"), "Lightyear Story should load its latest three-generation watercolor image");
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
+assert(portalHomeJs.includes("StoriesLensSparkHandoff.save(payload)"), "Homepage should save one complete creative spark before routing");
+assert(sparkHandoffJs.includes('indexedDB.open(DB_NAME, 1)'), "Large mobile artwork handoff should use device-local IndexedDB instead of relying on sessionStorage quota");
+assert(sparkHandoffJs.includes("24 * 60 * 60 * 1000"), "A homepage creative spark should expire instead of becoming permanent device data");
+assert(h5AppJs.includes("StoriesLensSparkHandoff.load()"), "Both language studios should restore the same homepage creative spark");
+assert(h5AppJs.includes("Your image is already here"), "The destination studio should visibly confirm that the homepage image arrived");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
 assert(portalHomeJs.includes('chinese-studio.html?from=homepage-magic'), "Chinese creation should route into its own studio rather than a translated English flow");
 assert.match(

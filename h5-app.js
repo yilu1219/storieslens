@@ -421,13 +421,15 @@
     $("[data-question-error]").textContent = "";
   }
 
-  function restoreHomepageSpark() {
+  async function restoreHomepageSpark() {
+    if (!["homepage-magic", "language-switch", "english-studio"].includes(params.get("from"))) return;
     let spark = null;
     try {
-      spark = JSON.parse(sessionStorage.getItem("storieslens_home_spark") || "null");
-      sessionStorage.removeItem("storieslens_home_spark");
+      spark = window.StoriesLensSparkHandoff
+        ? await window.StoriesLensSparkHandoff.load()
+        : JSON.parse(sessionStorage.getItem("storieslens_home_spark") || "null");
     } catch (_error) {
-      sessionStorage.removeItem("storieslens_home_spark");
+      spark = null;
     }
     if (!spark) return;
     if (["en", "zh"].includes(spark.storyLanguage)) {
@@ -451,6 +453,11 @@
       preview.src = selectedArtworkData;
       preview.hidden = false;
       $(`[data-upload-label]`).classList.add("has-image");
+      $(`[data-upload-label]`).classList.add("is-carried-in");
+      const uploadTitle = $(`[data-upload-label] strong`);
+      const uploadHelp = $(`[data-upload-label] small`);
+      if (uploadTitle) uploadTitle.textContent = locale === "zh" ? "已从首页带入这张图片" : "Your image is already here";
+      if (uploadHelp) uploadHelp.textContent = locale === "zh" ? "轻点图片可以更换，不需要重新上传" : "Tap the image only if you want to replace it";
       $(`[data-coach-image]`).src = selectedArtworkData;
       $(`[data-coach-image]`).hidden = false;
     }
@@ -898,7 +905,7 @@
   }
   showStage("start");
   restoreLearningProfile();
-  restoreHomepageSpark();
+  void restoreHomepageSpark();
   if (params.get("focus") === "words") $(`[data-seed]`).focus();
   window.StoriesLensAnalytics?.track("family_flow_viewed", { locale });
 })();

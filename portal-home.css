@@ -78,16 +78,18 @@ button, textarea { color: inherit; font: inherit; }
 .launcher-heading b { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .16em; }
 .launcher-heading span { color: var(--leaf-deep); }
 .launcher-heading b { padding: 9px 12px; color: #176648; border-radius: 999px; background: #e6f3ea; letter-spacing: .08em; }
-.magic-actions { display: grid; grid-template-columns: 1.25fr .75fr; gap: 14px; }
+.magic-actions { display: grid; grid-template-columns: 1.18fr .91fr .91fr; gap: 14px; }
 .magic-action { display: grid; align-content: center; min-height: 225px; padding: 25px; border: 1px solid rgba(16,24,23,.16); border-radius: 21px; background: #fbf8f1; text-align: left; cursor: pointer; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .magic-action:hover { border-color: rgba(22,132,91,.66); box-shadow: 0 14px 30px rgba(24,74,55,.11); transform: translateY(-3px); }
 .magic-action:focus-visible { outline: 4px solid var(--gold); outline-offset: 4px; }
 .magic-action-upload { background: linear-gradient(rgba(251,248,241,.83),rgba(251,248,241,.91)),url("assets/hero-en-art-to-story-triptych-mobile-v1.jpg") center / cover; }
 .magic-action-voice { color: var(--leaf-deep); border-color: rgba(22,132,91,.22); background: radial-gradient(circle at 84% 16%, rgba(255,255,255,.74), transparent 34%), linear-gradient(145deg, #edf7ef, #cfe8d8); box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); }
+.magic-action-type { color: #173a4b; border-color: rgba(34,94,120,.2); background: radial-gradient(circle at 84% 16%, rgba(255,255,255,.76), transparent 35%), linear-gradient(145deg, #f2f8fa, #d8e9ef); box-shadow: inset 0 0 0 1px rgba(255,255,255,.62); }
 .magic-action-icon { display: grid; width: 54px; height: 54px; margin-bottom: 28px; place-items: center; color: #fff; border-radius: 50%; background: var(--leaf); font-family: var(--sans); font-size: 31px; font-weight: 300; line-height: 1; }
 .magic-action-icon svg { width: 30px; height: 30px; overflow: visible; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
 .magic-mouth-icon svg { width: 32px; height: 28px; stroke-width: 1.7; }
 .magic-action-voice .magic-action-icon { color: var(--leaf-deep); background: #f5cd72; box-shadow: 0 8px 20px rgba(126,96,27,.14); font-size: 18px; }
+.magic-action-type .magic-action-icon { color: #fff; background: #2f718b; box-shadow: 0 8px 20px rgba(47,113,139,.16); }
 .magic-action strong { max-width: 330px; font-size: clamp(24px, 2.3vw, 34px); line-height: 1.03; }
 .magic-action small { margin-top: 8px; color: var(--muted); font-family: var(--sans); font-size: 14px; }
 .magic-action small:empty { display: none; }
@@ -217,6 +219,11 @@ button, textarea { color: inherit; font: inherit; }
   .launcher-heading { align-items: flex-start; }
   .launcher-heading b { max-width: 130px; text-align: center; }
   .magic-actions { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .magic-action-type { grid-column: 1 / -1; min-height: 128px; grid-template-columns: auto 1fr; align-items: center; column-gap: 16px; }
+  .magic-action-type .magic-action-icon { grid-row: 1 / 3; margin: 0; }
+  .magic-action-type strong,
+  .magic-action-type small { grid-column: 2; }
+  .magic-action-type small { margin-top: -20px; }
   .magic-action { min-height: 174px; padding: 17px; }
   .magic-action-icon { width: 47px; height: 47px; margin-bottom: 17px; font-size: 27px; }
   .magic-action strong { font-size: clamp(21px, 6vw, 27px); }

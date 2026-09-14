@@ -15,7 +15,7 @@
     <title>StoriesLens | Start with your creation</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="portal-home.css?v=20260914-1" />
+    <link rel="stylesheet" href="portal-home.css?v=20260914-2" />
     <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
@@ -43,7 +43,7 @@
             <b><strong>YU</strong><i aria-hidden="true">·</i><span data-home-t="hero-kicker">YOUR PERSONAL AI STORY MENTOR</span></b>
           </p>
           <h1 id="portal-title"><span data-home-t="hero-title-one">Your next storybook or short film starts with</span> <em data-home-t="hero-title-two">something you made.</em></h1>
-          <p class="magic-lede" data-home-t="hero-lede">Upload your artwork or photo—or speak one idea. Yu asks three questions and guides you toward a first scene written in your voice.</p>
+          <p class="magic-lede" data-home-t="hero-lede">Upload your artwork or photo—or speak or type one idea. Yu asks three questions and guides you toward a first scene written in your voice.</p>
           <button class="yu-profile-trigger" type="button" data-yu-profile-open><img src="assets/yu-feather-mark.svg" alt="" /><span><strong data-home-t="yu-profile-cta">Meet Yu</strong><small data-home-t="yu-profile-sub">See how your bilingual mentor is trained</small></span></button>
           <div class="hero-authorship" aria-label="StoriesLens authorship promise">
             <span data-home-t="promise-one">YU ASKS</span><i aria-hidden="true">→</i><span data-home-t="promise-two">YOU ANSWER</span><i aria-hidden="true">→</i><strong data-home-t="promise-three">YOU REMAIN THE AUTHOR</strong>
@@ -81,6 +81,16 @@
               <strong data-home-t="voice-primary">Speak one idea</strong>
               <small data-home-t="voice-secondary">口述一个想法</small>
             </button>
+            <button class="magic-action magic-action-type" type="button" data-home-type>
+              <span class="magic-action-icon magic-type-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" focusable="false">
+                  <path d="M7 24.5 8.7 18 21.8 4.9a2.8 2.8 0 0 1 4 4L12.6 22Z" />
+                  <path d="m18.9 7.8 5.3 5.3M7 24.5l5.6-2.5" />
+                </svg>
+              </span>
+              <strong data-home-t="type-primary">Type one idea</strong>
+              <small data-home-t="type-secondary">写下一个想法</small>
+            </button>
           </div>
 
           <div class="spark-preview" data-home-image-preview-wrap hidden>
@@ -108,7 +118,6 @@
           <div class="launcher-trust">
             <span data-home-t="metadata-removed">Location and camera details removed</span>
             <span data-home-t="private-default">Private by default</span>
-            <a href="app.html?from=home&amp;focus=words" data-home-t="type-link">Prefer to type? Start with words →</a>
           </div>
         </div>
       </section>
@@ -209,6 +218,7 @@
     <script src="pwa.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260914-2"></script>
-    <script src="portal-home.js?v=20260914-37"></script>
+    <script src="spark-handoff.js?v=20260914-1"></script>
+    <script src="portal-home.js?v=20260914-38"></script>
   </body>
 </html>

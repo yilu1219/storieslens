@@ -2,6 +2,7 @@
   const uploadInput = document.querySelector("[data-home-upload]");
   const uploadLabel = document.querySelector("[data-home-upload-label]");
   const speechButton = document.querySelector("[data-home-speech]");
+  const typeButton = document.querySelector("[data-home-type]");
   const voiceWrap = document.querySelector("[data-home-voice-wrap]");
   const voiceText = document.querySelector("[data-home-voice-text]");
   const imageWrap = document.querySelector("[data-home-image-preview-wrap]");
@@ -23,7 +24,7 @@
       "hero-kicker": "YOUR PERSONAL AI STORY MENTOR",
       "hero-title-one": "Your next storybook or short film starts with",
       "hero-title-two": "something you made.",
-      "hero-lede": "Upload your artwork or photo—or speak one idea. Yu asks three questions and guides you toward a first scene written in your voice.",
+      "hero-lede": "Upload your artwork or photo—or speak or type one idea. Yu asks three questions and guides you toward a first scene written in your voice.",
       "yu-profile-cta": "Meet Yu",
       "yu-profile-sub": "See how your bilingual mentor is trained",
       "promise-one": "YU ASKS",
@@ -35,6 +36,8 @@
       "upload-secondary": "",
       "voice-primary": "Speak one idea",
       "voice-secondary": "",
+      "type-primary": "Type one idea",
+      "type-secondary": "",
       "spark-label": "YOUR STARTING SPARK",
       "spark-ready": "Ready for Yu’s three questions.",
       "idea-label": "Your idea",
@@ -107,7 +110,7 @@
       "hero-kicker": "你的专属 AI 故事与写作导师",
       "hero-title-one": "让你的作品，成为",
       "hero-title-two": "一本书或一部短片。",
-      "hero-lede": "上传一幅画、一张照片，或说出一个想法。你的 AI 故事导师 Yu 会先提出三个问题，再陪你写出属于自己的故事第一幕。",
+      "hero-lede": "上传一幅画、一张照片，或说出、写下一个想法。你的 AI 故事导师 Yu 会先提出三个问题，再陪你写出属于自己的故事第一幕。",
       "yu-profile-cta": "认识羽大师",
       "yu-profile-sub": "看看中英文语言导师是怎样训练出来的",
       "promise-one": "YU 提问",
@@ -119,6 +122,8 @@
       "upload-secondary": "",
       "voice-primary": "口述一个想法",
       "voice-secondary": "",
+      "type-primary": "写下一个想法",
+      "type-secondary": "",
       "spark-label": "你的创作起点",
       "spark-ready": "已经可以回答 Yu 导师的三个问题。",
       "idea-label": "你的想法",
@@ -189,7 +194,9 @@
     }
   };
 
-  const t = (key) => homeCopy[homeLocale][key] || key;
+  const t = (key) => Object.prototype.hasOwnProperty.call(homeCopy[homeLocale], key)
+    ? homeCopy[homeLocale][key]
+    : key;
 
   const applyHomeLocale = (nextLocale) => {
     homeLocale = nextLocale === "zh" ? "zh" : "en";
@@ -224,7 +231,7 @@
     continueButton.hidden = !(hasSpark && preparedStoryLanguage);
   };
 
-  const storeAndContinue = () => {
+  const storeAndContinue = async () => {
     const payload = {
       ...(preparedImage || {}),
       seed: voiceText.value.trim(),
@@ -232,7 +239,11 @@
       createdAt: new Date().toISOString()
     };
     try {
-      sessionStorage.setItem("storieslens_home_spark", JSON.stringify(payload));
+      if (window.StoriesLensSparkHandoff) {
+        await window.StoriesLensSparkHandoff.save(payload);
+      } else {
+        sessionStorage.setItem("storieslens_home_spark", JSON.stringify(payload));
+      }
     } catch (_error) {
       setStatus(t("image-large"), true);
       return;
@@ -323,6 +334,14 @@
     recognition.start();
   });
 
+  typeButton?.addEventListener("click", () => {
+    voiceWrap.hidden = false;
+    showLanguageChoice();
+    voiceText.focus();
+    setStatus(homeLocale === "zh" ? "写下一句话，就可以选择创作语言。" : "Write one sentence, then choose your story language.");
+    window.StoriesLensAnalytics?.track("homepage_text_entry_opened");
+  });
+
   voiceText?.addEventListener("input", showContinue);
   storyLanguageButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -334,15 +353,15 @@
       });
       showContinue();
       window.StoriesLensAnalytics?.track("homepage_story_language_selected", { language: preparedStoryLanguage });
-      storeAndContinue();
+      void storeAndContinue();
     });
   });
-  continueButton?.addEventListener("click", storeAndContinue);
+  continueButton?.addEventListener("click", () => void storeAndContinue());
   document.querySelectorAll("[data-home-locale]").forEach((button) => {
     button.addEventListener("click", () => {
       if (button.dataset.homeLocale === "zh") {
         preparedStoryLanguage = "zh";
-        storeAndContinue();
+        void storeAndContinue();
         return;
       }
       applyHomeLocale("en");
