@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v63-20260914";
+const VERSION = "storieslens-h5-v64-20260914";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [

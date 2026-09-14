@@ -16,6 +16,7 @@
   let languageTouched = false;
   let savedProjectId = "";
   let saveTimer = 0;
+  let selectedComicTemplate = "";
 
   const copy = {
     en: {
@@ -243,7 +244,39 @@
     const background = $("[data-chinese-background]")?.value || "";
     const level = $("[data-chinese-level]")?.value || "";
     const goal = $("[data-chinese-goal]")?.value || "";
-    return { format, background, level, goal, source: "creator-choice" };
+    const comicTemplate = format === "comic"
+      ? (selectedComicTemplate || $("[name='comic-template']:checked")?.value || "")
+      : "";
+    return { format, background, level, goal, comicTemplate, source: "creator-choice" };
+  }
+
+  const comicTemplates = {
+    "classic-8": { name: "经典小人书", description: "一页一画＋页底文字", reason: "你的回答适合用完整画面慢慢展开。" },
+    "four-4": { name: "四格故事", description: "开始／发展／转折／结尾", reason: "你的故事核心很集中，四格可以让转折一眼看懂。" },
+    "cinematic-6": { name: "电影分镜", description: "6个镜头推进动作", reason: "你的回答里有明显动作和变化，适合用镜头推进。" }
+  };
+
+  function recommendComicTemplate() {
+    const creatorText = [storySeed(), ...answers].join(" ");
+    const actionSignals = /(突然|追|跑|飞|跳|冲|打|打开|发现|变成|消失|出现|声音|镜头|电影)/;
+    if (actionSignals.test(creatorText)) return "cinematic-6";
+    if (creatorText.replace(/\s/g, "").length <= 90) return "four-4";
+    return "classic-8";
+  }
+
+  function showComicTemplateStage() {
+    const recommendation = recommendComicTemplate();
+    selectedComicTemplate = recommendation;
+    $$('[data-comic-template-card]').forEach((card) => {
+      const isRecommended = card.dataset.comicTemplateCard === recommendation;
+      card.classList.toggle("is-recommended", isRecommended);
+      $("[data-template-badge]", card).textContent = isRecommended ? "羽大师推荐" : "";
+      $("input", card).checked = isRecommended;
+    });
+    const template = comicTemplates[recommendation];
+    $("[data-comic-recommendation]").textContent = `羽大师推荐「${template.name}」：${template.reason}`;
+    showStage("comic-template");
+    window.StoriesLensAnalytics?.track("comic_template_recommended", { template: recommendation });
   }
 
   const mapDomainKeys = ["genre", "craft", "process", "grammar", "mechanics"];
@@ -531,7 +564,16 @@
     image.hidden = !selectedArtworkData;
     if (selectedArtworkData) image.src = selectedArtworkData;
     $("[data-story-page]").classList.toggle("no-artwork", !selectedArtworkData);
-    $("[data-continue]").href = `visual-write.html?${new URLSearchParams({ mode: "free", from: "h5", storyLang: $("[data-language]").value })}`;
+    const profile = collectChineseCreativeProfile();
+    const continueParams = { mode: "free", from: "h5", storyLang: $("[data-language]").value };
+    if (profile?.comicTemplate) continueParams.comicTemplate = profile.comicTemplate;
+    $("[data-continue]").href = `visual-write.html?${new URLSearchParams(continueParams)}`;
+    const formatNote = $("[data-result-format-note]");
+    if (formatNote) {
+      const template = comicTemplates[profile?.comicTemplate];
+      formatNote.hidden = !template;
+      if (template) formatNote.textContent = `已选择：${template.name} · ${template.description}。继续创作后可以逐页确认画面、旁白与对白。`;
+    }
     showStage("result");
     window.StoriesLensAnalytics?.track("first_story_page_created", {
       language: $("[data-language]").value,
@@ -641,11 +683,27 @@
     answers[questionIndex] = answer;
     window.StoriesLensAnalytics?.track("coach_question_answered", { question: questionIndex + 1, language: $("[data-language]").value });
     if (questionIndex === 2) {
-      buildFirstPage();
+      if (collectChineseCreativeProfile()?.format === "comic" && $("[data-stage='comic-template']")) showComicTemplateStage();
+      else buildFirstPage();
       return;
     }
     questionIndex += 1;
     renderQuestion();
+    $("[data-answer]").focus();
+  });
+
+  $$('[name="comic-template"]').forEach((input) => input.addEventListener("change", (event) => {
+    selectedComicTemplate = event.currentTarget.value;
+    window.StoriesLensAnalytics?.track("comic_template_selected", { template: selectedComicTemplate });
+  }));
+  $("[data-confirm-comic-template]")?.addEventListener("click", () => {
+    selectedComicTemplate = $("[name='comic-template']:checked")?.value || recommendComicTemplate();
+    buildFirstPage();
+  });
+  $("[data-comic-template-back]")?.addEventListener("click", () => {
+    questionIndex = 2;
+    renderQuestion();
+    showStage("coach");
     $("[data-answer]").focus();
   });
 

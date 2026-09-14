@@ -224,6 +224,17 @@
         border-right: 1px solid rgba(143, 171, 255, 0.15);
       }
 
+      .comic-plan-card { display:grid; grid-column:1/-1; grid-template-columns:minmax(0,1fr) minmax(300px,.7fr); gap:24px; align-items:center; padding:24px; border:1px solid rgba(121,231,193,.34); border-radius:16px; background:linear-gradient(135deg,rgba(18,63,58,.82),rgba(9,25,44,.9)); }
+      .comic-plan-card[hidden] { display:none !important; }
+      .comic-plan-copy > span { color:#79e7bd; font-size:12px; font-weight:900; letter-spacing:.16em; }
+      .comic-plan-copy h2 { margin:8px 0 6px; color:#fff; font-size:30px; }
+      .comic-plan-copy p { margin:0; color:#c0cde0; line-height:1.55; }
+      .comic-plan-slots { display:grid; gap:7px; min-height:116px; padding:13px; border-radius:12px; background:rgba(246,241,226,.1); }
+      .comic-plan-slots i { min-height:34px; border:1px solid rgba(255,255,255,.24); border-radius:4px; background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(121,231,189,.08)); }
+      .comic-plan-slots[data-template="classic-8"] { grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); }
+      .comic-plan-slots[data-template="four-4"] { grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(2,1fr); }
+      .comic-plan-slots[data-template="cinematic-6"] { grid-template-columns:1.25fr .75fr; grid-template-rows:repeat(3,1fr); }
+
       .creator-journey div:last-child { border-right: 0; }
       .creator-journey span { grid-row: 1 / 3; display: grid; width: 28px; height: 28px; place-items: center; color: #9cadd1; border: 1px solid rgba(143, 171, 255, 0.25); border-radius: 50%; font-size: 13px; font-weight: 900; }
       .creator-journey strong { color: #e8edfb; font-size: 15px; }
@@ -742,6 +753,7 @@
       }
 
       @media (max-width: 980px) {
+        .comic-plan-card { grid-template-columns:1fr; }
         .student-write-hero,
         .writing-choice-grid,
         .student-writing-workspace,
@@ -879,6 +891,10 @@
           <div data-creator-step="coach"><span>3</span><strong>Coach</strong><small>Strengthen one moment</small></div>
           <div data-creator-step="premiere"><span>4</span><strong>Premiere</strong><small>Book or film</small></div>
         </nav>
+        <section class="comic-plan-card" data-comic-plan hidden aria-label="连环画创作计划">
+          <div class="comic-plan-copy"><span>你的连环画模板</span><h2 data-comic-plan-title>经典小人书 · 8页</h2><p data-comic-plan-description>一页一画，页底配文字。先完成第一页，再逐页确认画面、旁白与对白。</p></div>
+          <div class="comic-plan-slots" data-comic-plan-slots aria-label="页面结构预览"></div>
+        </section>
         <section class="student-writing-panel">
           <header>
             <div>
@@ -1235,6 +1251,7 @@
         try {
           storyDna = JSON.parse(localStorage.getItem("storieslens_story_dna") || "null");
         } catch {}
+        const comicTemplate = pageParams.get("comicTemplate") || creatorSetup?.chineseCreativeProfile?.comicTemplate || storyDna?.chineseCreativeProfile?.comicTemplate || "";
         const liveStoryLanguage = document.querySelector("[data-live-story-language]");
         const soloWordCount = document.querySelector("[data-word-count]");
         const autosaveStatus = document.querySelector("[data-autosave-status]");
@@ -1250,6 +1267,23 @@
         const CHINESE_COACH_PREFERENCES_KEY = "storieslens_chinese_coach_preferences";
         const COACH_SNAPSHOT_KEY = "storieslens_last_coach_snapshot";
         const MAP_DOMAIN_KEYS = ["genre", "craft", "process", "grammar", "mechanics"];
+
+        function applyComicPlan() {
+          const plans = {
+            "classic-8": { title: "经典小人书 · 8页", description: "一页一画，页底配文字。先完成第一页，再逐页确认画面、旁白与对白。", pages: 8 },
+            "four-4": { title: "四格故事 · 4格", description: "用开始、发展、转折和结尾完成一个清楚的故事瞬间。", pages: 4 },
+            "cinematic-6": { title: "电影分镜 · 6镜头", description: "用景别、动作和转场推进故事，完成后可以继续制作短片。", pages: 6 }
+          };
+          const plan = plans[comicTemplate];
+          const card = document.querySelector("[data-comic-plan]");
+          if (!card || !plan || activeStoryLanguage !== "zh") return;
+          card.hidden = false;
+          document.querySelector("[data-comic-plan-title]").textContent = plan.title;
+          document.querySelector("[data-comic-plan-description]").textContent = plan.description;
+          const slots = document.querySelector("[data-comic-plan-slots]");
+          slots.dataset.template = comicTemplate;
+          slots.replaceChildren(...Array.from({ length: plan.pages }, () => document.createElement("i")));
+        }
 
         function getMapLearningContext() {
           if (!learningProfile || learningProfile.source !== "parent-manual-entry") return {};
@@ -2179,7 +2213,7 @@
         const requestedMode = pageParams.get("mode");
         const classCode = pageParams.get("code");
         const applyCreatorSetup = () => {
-          if (!creatorSetup || pageParams.get("from") !== "start") return;
+          if (!creatorSetup || !["start", "h5"].includes(pageParams.get("from"))) return;
           document.body.classList.add("focused-studio");
           window.StoriesLensAnalytics?.track("studio_entered", { mode: "solo", fromStoryDna: Boolean(storyDna), storyLanguage: activeStoryLanguage });
           const ideaInput = document.querySelector('[data-writing-field="free-idea"]');
@@ -2188,7 +2222,10 @@
           if (draftInput) {
             let savedWork = null;
             try { savedWork = JSON.parse(localStorage.getItem("storieslens_student_visual_write") || "null"); } catch {}
-            draftInput.value = savedWork?.setupId === creatorSetup.createdAt ? savedWork.draft || "" : "";
+            const belongsToSetup = savedWork?.setupId
+              ? savedWork.setupId === creatorSetup.createdAt
+              : pageParams.get("from") === "h5";
+            draftInput.value = belongsToSetup ? savedWork?.draft || "" : "";
           }
           if (freeGradeSelect) {
             const levelToGrade = { starter: "3", growing: "6", independent: "10", family: "5" };
@@ -2196,6 +2233,7 @@
             freeGradeSelect.dispatchEvent(new Event("change"));
           }
           renderStoryDna();
+          applyComicPlan();
           updateVisualBrief("free");
           updateSoloJourney();
         };

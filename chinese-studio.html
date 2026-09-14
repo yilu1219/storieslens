@@ -138,8 +138,41 @@
         </div>
       </section>
 
+      <section class="flow-stage comic-template-stage" data-stage="comic-template" aria-labelledby="comic-template-title" hidden>
+        <div class="comic-template-intro">
+          <p class="flow-kicker">连环画版式 · 故事内容仍由你决定</p>
+          <h1 id="comic-template-title">选择故事展开的方式。</h1>
+          <p data-comic-recommendation>羽大师会根据你的三个回答，推荐最合适的版式。</p>
+        </div>
+        <fieldset class="comic-template-picker">
+          <legend>选择一个模板，之后仍可随时更换</legend>
+          <div class="comic-template-grid">
+            <label class="comic-template-card" data-comic-template-card="classic-8">
+              <input type="radio" name="comic-template" value="classic-8" />
+              <span class="comic-template-preview preview-classic" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="comic-template-copy"><small data-template-badge></small><b>经典小人书</b><em>8页 · 一页一画＋页底文字</em><span>最有中国特色，适合完整叙事与印刷收藏。</span></span>
+            </label>
+            <label class="comic-template-card" data-comic-template-card="four-4">
+              <input type="radio" name="comic-template" value="four-4" />
+              <span class="comic-template-preview preview-four" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span class="comic-template-copy"><small data-template-badge></small><b>四格故事</b><em>4格 · 开始／发展／转折／结尾</em><span>节奏清楚，适合第一次创作和一个鲜明瞬间。</span></span>
+            </label>
+            <label class="comic-template-card" data-comic-template-card="cinematic-6">
+              <input type="radio" name="comic-template" value="cinematic-6" />
+              <span class="comic-template-preview preview-cinematic" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              <span class="comic-template-copy"><small data-template-badge></small><b>电影分镜</b><em>6镜头 · 景别、动作与转场</em><span>适合动作丰富的故事，之后可以继续生成短片。</span></span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="comic-template-actions">
+          <button class="text-action" type="button" data-comic-template-back>← 修改第三个回答</button>
+          <button class="primary-action" type="button" data-confirm-comic-template><span>用这个模板开始连环画</span><b aria-hidden="true">→</b></button>
+        </div>
+        <p class="comic-template-promise">模板只安排页面与镜头，不会替你决定人物、对白或结局。</p>
+      </section>
+
       <section class="flow-stage result-stage" data-stage="result" aria-labelledby="result-title" hidden>
-        <div class="result-intro"><p class="flow-kicker">你的第一张故事页完成了</p><h1 id="result-title">来自你的回答，<br />也由你亲自写成。</h1><p>读一读，修改任何你想改变的地方，确定它真正属于你之后再保存。</p></div>
+        <div class="result-intro"><p class="flow-kicker">你的第一张故事页完成了</p><h1 id="result-title">来自你的回答，<br />也由你亲自写成。</h1><p>读一读，修改任何你想改变的地方，确定它真正属于你之后再保存。</p><p class="result-format-note" data-result-format-note hidden></p></div>
         <div class="result-layout">
           <article class="story-page" data-story-page><div class="story-page-art"><img data-result-image alt="故事画面" hidden /><span data-result-monogram aria-hidden="true">语</span></div><div class="story-page-words"><input data-story-title aria-label="故事标题" /><textarea data-story-draft aria-label="你的故事第一页"></textarea><p>作者 <strong data-result-author></strong></p></div></article>
           <aside class="result-actions"><div class="authorship-card"><span aria-hidden="true">✓</span><div><strong>创作者亲自完成</strong><p>羽大师负责提问，页面只使用你的回答，并且可以继续修改。</p></div></div><p class="save-status" data-save-status aria-live="polite"></p><a class="primary-action" href="visual-write.html?mode=free&amp;from=h5&amp;storyLang=zh" data-continue><span>继续创作</span><b aria-hidden="true">→</b></a><a class="secondary-action" href="checkout.html?offer=story-pass" data-checkout><span>完成整本故事 · $19</span><b aria-hidden="true">→</b></a><button class="text-action" type="button" data-start-over>再创作一个故事</button></aside>
@@ -154,6 +187,6 @@
     <script src="safety-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260914-2"></script>
-    <script src="h5-app.js?v=20260914-12"></script>
+    <script src="h5-app.js?v=20260914-13"></script>
   </body>
 </html>

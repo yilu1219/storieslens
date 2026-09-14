@@ -39,6 +39,8 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");
   assert(chineseStoryLanguage.includes('value="zh"') && !chineseStoryLanguage.includes('value="en"'), "Chinese studio should keep its creation language fixed to Chinese");
   assert(chineseStudio.includes("data-chinese-voice-entry") && appJs.includes("chineseVoiceEntry") && appJs.includes("handleSpeechInput"), "Chinese studio should expose a first-class voice entry wired to editable speech input");
+  ["经典小人书", "四格故事", "电影分镜", "data-stage=\"comic-template\""].forEach((token) => assert(chineseStudio.includes(token), `Chinese studio should expose comic template: ${token}`));
+  assert(appJs.includes("showComicTemplateStage") && appJs.includes("comicTemplate"), "Comic selection should happen after Yu's three questions and persist into the story profile");
   assert(app.includes("data-chinese-studio-switch"), "English studio should provide one explicit route to the Chinese studio");
   assert(app.includes("Learning Profile｜学习档案") && app.includes("data-map-overall-rit"), "parent flow should offer an optional manual MAP Learning Profile");
   assert(["genre", "craft", "process", "grammar", "mechanics"].every((area) => app.includes(`data-map-low="${area}"`) && app.includes(`data-map-high="${area}"`)), "Learning Profile should accept all five Language Usage area ranges");

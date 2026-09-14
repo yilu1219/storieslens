@@ -494,6 +494,8 @@ assert(read("start.js").includes("storieslens_imported_work"), "Creator setup sh
 
 assert(visualWriteHtml.includes('src="i18n.js"'), "Story Studio should load the bilingual interface controller");
 assert(visualWriteHtml.includes("storyLanguage: activeStoryLanguage"), "Story Studio should send the selected story language to AI coaching");
+assert(visualWriteHtml.includes("data-comic-plan") && visualWriteHtml.includes("comicTemplate"), "Story Studio should carry the selected Chinese comic template into the writing workspace");
+assert(visualWriteHtml.includes('["start", "h5"].includes(pageParams.get("from"))'), "The first scene created in H5 should reopen inside the full writing studio");
 assert(visualWriteHtml.includes("data-live-story-language"), "Story Studio should let the creator change writing language without changing interface language");
 assert(visualWriteHtml.includes("let activeStoryLanguage"), "Story Studio language should be changeable during creation");
 assert(storyDnaHtml.includes("data-dna-story-language"), "Story DNA should keep writing-language choice visible");
