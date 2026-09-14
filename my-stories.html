@@ -52,6 +52,26 @@
               <label>Six-digit code<input data-auth-code inputmode="numeric" autocomplete="one-time-code" maxlength="6" required /></label>
               <label>Display name<input data-display-name autocomplete="nickname" maxlength="40" placeholder="Creator" /></label>
               <label>Account type<select data-account-age><option value="adult">18 or older</option><option value="under18">Under 18 · adult-supported</option></select></label>
+              <label>
+                Primary region
+                <select data-primary-region required>
+                  <option value="">Choose your region</option>
+                  <option value="cn">1. China Mainland · 中国大陆</option>
+                  <option value="us">2. United States · 美国</option>
+                  <option value="intl">3. Other countries or regions · 其他国家或地区</option>
+                </select>
+                <small data-region-note>This determines where projects may be stored and which AI services may process them. We never change it from your IP alone.</small>
+              </label>
+              <label data-country-field hidden>
+                Country or region
+                <select data-country-code disabled required></select>
+                <small>The first international beta opens only in countries whose privacy and provider routes have been checked.</small>
+              </label>
+              <label data-beta-invite hidden>
+                Founding beta invitation code
+                <input data-beta-invite-code autocomplete="one-time-code" maxlength="120" placeholder="STORIESLENS-…" />
+                <small>Invitation codes are region-specific and have a limited number of places.</small>
+              </label>
               <button class="app-primary" type="submit">Open my library</button>
             </form>
             <button class="app-secondary" type="button" data-wechat>Continue with WeChat</button>
@@ -68,6 +88,16 @@
             </div>
           </article>
 
+          <article class="app-card app-card-pad" data-storage-card>
+            <p class="app-kicker">PRIVATE STORAGE · 私密存储</p>
+            <h3>Your storage allowance</h3>
+            <p class="muted" data-storage-summary>Calculating your private storage…</p>
+            <div class="storage-meter" role="progressbar" aria-label="Private storage used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-storage-meter>
+              <span data-storage-bar></span>
+            </div>
+            <p class="helper" data-storage-region>Your chosen region controls where account media is stored.</p>
+          </article>
+
           <article class="app-card app-card-pad" data-guardian-card>
             <p class="app-kicker">GUARDIAN APPROVAL</p>
             <h3>Approve a young creator’s project</h3>
@@ -81,6 +111,13 @@
               <button class="app-primary wide" type="submit">Record approval</button>
               <button class="app-secondary wide" type="button" data-revoke-consent>Revoke approval & invitations</button>
             </form>
+          </article>
+
+          <article class="app-card app-card-pad" data-delete-card hidden>
+            <p class="app-kicker">ACCOUNT CONTROL</p>
+            <h3>Delete my account and private media</h3>
+            <p class="muted">This permanently removes the account, stories, private uploads, invitations and consent records. This cannot be undone.</p>
+            <button class="app-secondary app-danger" type="button" data-delete-account>Delete account…</button>
           </article>
         </aside>
 

@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
     <link rel="stylesheet" href="family-flow.css?v=20260913-5" />
-    <link rel="stylesheet" href="chinese-studio.css?v=20260914-4" />
+    <link rel="stylesheet" href="chinese-studio.css?v=20260914-3" />
     <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
     <link rel="stylesheet" href="pwa.css" />
     <title>中文创作馆 · 语镜故事</title>
@@ -52,19 +52,13 @@
               <small>支持 JPG、PNG、WEBP、HEIC · 图片先在本机安全处理</small>
               <img data-artwork-preview alt="已选择的作品" hidden />
             </label>
-            <div class="chinese-voice-option">
-              <button class="chinese-voice-entry" type="button" data-chinese-voice-entry aria-pressed="false">
-                <span class="chinese-voice-icon" aria-hidden="true">
-                  <svg viewBox="0 0 38 32" focusable="false"><path d="M3.5 16c4.6-1.5 7.7-4.7 11.1-8.4 3.3 3.5 6.3 6.7 10.8 8.4-4.3 5.2-7.4 7.4-10.8 7.4S8 21.2 3.5 16Z"/><path d="M7.2 16h14.7"/><path d="M28 11.5c2.1 2.2 2.1 6.8 0 9"/><path d="M32 8.3c4.2 4.1 4.2 11.3 0 15.4"/></svg>
-                </span>
-                <strong>口述一个想法</strong>
-                <small>不用先画，也可以从一句话开始</small>
-              </button>
-              <label class="chinese-voice-transcript" data-chinese-voice-transcript hidden>
-                <span>已记录，可继续修改</span>
-                <textarea data-seed maxlength="1800" rows="2" placeholder="你的口述会在这里变成文字。"></textarea>
-              </label>
-            </div>
+            <button class="chinese-voice-entry" type="button" data-chinese-voice-entry aria-pressed="false">
+              <span class="chinese-voice-icon" aria-hidden="true">
+                <svg viewBox="0 0 38 32" focusable="false"><path d="M3.5 16c4.6-1.5 7.7-4.7 11.1-8.4 3.3 3.5 6.3 6.7 10.8 8.4-4.3 5.2-7.4 7.4-10.8 7.4S8 21.2 3.5 16Z"/><path d="M7.2 16h14.7"/><path d="M28 11.5c2.1 2.2 2.1 6.8 0 9"/><path d="M32 8.3c4.2 4.1 4.2 11.3 0 15.4"/></svg>
+              </span>
+              <strong>口述一个想法</strong>
+              <small>不用先画，也可以从一句话开始</small>
+            </button>
           </div>
           <p class="privacy-note">图片使用前会删除位置与拍摄设备信息；默认私密。</p>
 
@@ -89,6 +83,13 @@
               </label>
             </div>
           </fieldset>
+
+          <div class="words-heading"><strong>也可以从自己的话开始</strong><span>写下 · 口述</span></div>
+          <div class="voice-field">
+            <textarea data-seed maxlength="1800" rows="4" placeholder="告诉羽大师画面里正在发生什么，或者先说出一个想法。"></textarea>
+            <button type="button" data-speech aria-label="开始语音输入"><span aria-hidden="true">●</span><b>口述</b></button>
+          </div>
+          <small class="speech-note">口述会转成可修改的文字，不保存现场录音。</small>
 
           <div class="creator-fields chinese-creator-fields">
             <label><span>创作者姓名或昵称</span><input data-creator-name maxlength="40" autocomplete="nickname" placeholder="将印在故事上的名字" /></label>

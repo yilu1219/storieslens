@@ -42,6 +42,26 @@ The current server persists local development data under `.data/`, which is inte
 
 Minimum production tables/collections: users, sessions, auth challenges, projects, scenes, media, guardian consents, shares, orders, render jobs and notification subscriptions. Store only hashes for email/phone identity, encrypt media at rest, use signed media URLs, and run deletion/purge jobs from a durable queue.
 
+### Regional private-media routing
+
+The media API now uses `regional-object-storage.js`. It preserves the existing authenticated `/api/media/:id` contract while routing signed-in accounts by the region they explicitly confirmed:
+
+- `cn`: a private Volcano Engine TOS bucket in China.
+- `us`: a private Cloudflare R2 bucket created with the US jurisdiction.
+- `intl`: a separate private Cloudflare R2 bucket for the initial international launch region.
+
+Until all credentials for a route are configured, that route deliberately falls back to `.data/media` so local development remains usable. `/api/platform/status` reports `cloud-private` or `local-fallback` for each route without exposing bucket names, endpoints, or credentials. A public pilot must not begin while any intended launch route reports `local-fallback`.
+
+Set `MEDIA_REQUIRED_REGIONS` in production to the comma-separated routes actually open for registration, for example `us` for the first US pilot or `cn,us,intl` after all three stacks are ready. When this setting is present, the server refuses to start if a required route is not fully configured. This prevents a deployment mistake from placing customer media on temporary server storage.
+
+Set `ALLOWED_ACCOUNT_REGIONS` to the same currently launched subset. The account page disables unopened choices, and the server independently rejects them. In production, every allowed region is checked against live private storage at startup. This lets StoriesLens launch the US pilot first without accidentally accepting China or international media before those stacks are ready.
+
+Storage cost is also bounded per owner before an upload reaches any bucket. The beta defaults are 20 MB for a guest session and 250 MB for a verified account; override them with `MEDIA_GUEST_QUOTA_BYTES` and `MEDIA_ACCOUNT_QUOTA_BYTES`. The account page shows used and remaining storage. Paid-plan entitlement should raise this limit from the server after payment verification; never trust a quota value sent by the browser.
+
+Create storage credentials with object read/write access only. Do not give the runtime bucket-administration permission, do not make any media bucket public, and do not expose presigned storage URLs to pages. All reads continue through the owner-authenticated StoriesLens endpoint. Existing guest media ownership is transferred with the guest project when an account is created.
+
+For `Other countries or regions`, retain the user's country code in the managed account database before expanding beyond the first launch countries. One international bucket is an operational starting point, not a claim that every country's data-residency requirements are identical.
+
 ## Launch sequence
 
 1. Run the H5/PWA pilot with 20 families and one teacher.

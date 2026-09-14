@@ -3,6 +3,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const params = new URLSearchParams(location.search);
+  const workshopMode = params.get("workshop") === "cn";
   const requestedLocale = params.get("locale");
   const forcedLocale = document.body.dataset.studioLanguage;
   let locale = forcedLocale === "zh" ? "zh" : (requestedLocale === "zh" || requestedLocale === "en"
@@ -15,6 +16,7 @@
   let answers = [];
   let languageTouched = false;
   let savedProjectId = "";
+  let artworkPersistencePromise = null;
   let saveTimer = 0;
   let selectedComicTemplate = "";
 
@@ -231,15 +233,7 @@
   }
 
   function storySeed() {
-    return $("[data-seed]")?.value.trim() || "";
-  }
-
-  function revealChineseVoiceTranscript({ focus = false } = {}) {
-    const transcript = $("[data-chinese-voice-transcript]");
-    const field = $("[data-seed]");
-    if (!transcript || !field) return;
-    transcript.hidden = false;
-    if (focus) field.focus();
+    return $("[data-seed]").value.trim();
   }
 
   function creatorName() {
@@ -440,10 +434,7 @@
       $(`[data-language]`).value = spark.storyLanguage;
       languageTouched = true;
     }
-    if (spark.seed) {
-      $(`[data-seed]`).value = String(spark.seed).slice(0, 1800);
-      revealChineseVoiceTranscript();
-    }
+    if (spark.seed) $(`[data-seed]`).value = String(spark.seed).slice(0, 1800);
     if (spark.creatorName) $(`[data-creator-name]`).value = String(spark.creatorName).slice(0, 40);
     if (["adult", "under18"].includes(spark.ageGroup)) {
       $(`[data-age]`).value = spark.ageGroup;
@@ -510,6 +501,55 @@
     return dna;
   }
 
+  async function persistApprovedArtwork() {
+    if (workshopMode || !selectedArtworkData || selectedArtwork?.privateOnly || selectedArtwork?.mediaUrl) return null;
+    if (artworkPersistencePromise) return artworkPersistencePromise;
+
+    artworkPersistencePromise = (async () => {
+      if (!savedProjectId) {
+        const language = $(`[data-language]`).value;
+        const result = await platform.api("/api/projects", {
+          method: "POST",
+          body: JSON.stringify({
+            title: locale === "zh" ? "未命名故事" : "Untitled story",
+            language,
+            ageGroup: $(`[data-age]`).value,
+            mode: "solo",
+            visibility: "private",
+            sourceType: "artwork",
+            sourceText: "",
+            draft: "",
+            storyDna: { source: "work", createdAt: new Date().toISOString() },
+            scenes: [],
+            clientSnapshot: { from: "h5", privateArtworkDraft: true }
+          })
+        });
+        savedProjectId = result.project.id;
+        localStorage.setItem("storieslens_cloud_project_id", savedProjectId);
+      }
+
+      const mediaResult = await platform.api("/api/media", {
+        method: "POST",
+        body: JSON.stringify({ projectId: savedProjectId, dataUrl: selectedArtworkData, metadataRemoved: true, purpose: "artwork" })
+      });
+      selectedArtwork.mediaUrl = mediaResult.media.url;
+      await platform.api(`/api/projects/${savedProjectId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          coverImageUrl: selectedArtwork.mediaUrl,
+          clientSnapshot: { from: "h5", privateArtworkDraft: true, artworkStored: true }
+        })
+      });
+      return mediaResult.media;
+    })();
+
+    try {
+      return await artworkPersistencePromise;
+    } finally {
+      artworkPersistencePromise = null;
+    }
+  }
+
   async function saveProject(draft) {
     const status = $("[data-save-status]");
     status.textContent = t("saving");
@@ -519,10 +559,14 @@
     const learningProfile = collectLearningProfile();
     const chineseCreativeProfile = collectChineseCreativeProfile();
     const title = $("[data-story-title]").value.trim();
+    if (workshopMode) {
+      status.textContent = "工作坊模式：作品只保存在这台设备，不上传云端。";
+      window.StoriesLensAnalytics?.track("first_story_page_saved", { language, hasArtwork: Boolean(selectedArtwork), cloud: false, workshop: "cn" });
+      return;
+    }
     try {
-      const result = await platform.api("/api/projects", {
-        method: "POST",
-        body: JSON.stringify({
+      if (artworkPersistencePromise) await artworkPersistencePromise;
+      const projectBody = {
           title,
           language,
           ageGroup,
@@ -532,30 +576,29 @@
           sourceText: storySeed(),
           draft,
           storyDna: dna,
-          scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), duration: 6 }],
+          scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), imageUrl: selectedArtwork?.mediaUrl || "", duration: 6 }],
+          coverImageUrl: selectedArtwork?.mediaUrl || "",
           clientSnapshot: { from: "h5", firstPageCreated: true, learningProfile, chineseCreativeProfile }
-        })
+      };
+      const result = await platform.api(savedProjectId ? `/api/projects/${savedProjectId}` : "/api/projects", {
+        method: savedProjectId ? "PATCH" : "POST",
+        body: JSON.stringify(projectBody)
       });
       savedProjectId = result.project.id;
       localStorage.setItem("storieslens_cloud_project_id", savedProjectId);
-      if (selectedArtworkData) {
-        try {
-          const mediaResult = await platform.api("/api/media", {
-            method: "POST",
-            body: JSON.stringify({ projectId: savedProjectId, dataUrl: selectedArtworkData, metadataRemoved: true, purpose: "artwork" })
-          });
-          await platform.api(`/api/projects/${savedProjectId}`, {
-            method: "PATCH",
-            body: JSON.stringify({
-              coverImageUrl: mediaResult.media.url,
-              scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), imageUrl: mediaResult.media.url, duration: 6 }]
-            })
-          });
-        } catch (_mediaError) {
-          // Private photo or an unreviewed image intentionally remains on this device only.
-        }
+      if (selectedArtworkData && !selectedArtwork?.privateOnly && !selectedArtwork?.mediaUrl) {
+        await persistApprovedArtwork();
+        await platform.api(`/api/projects/${savedProjectId}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            coverImageUrl: selectedArtwork.mediaUrl,
+            scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), imageUrl: selectedArtwork.mediaUrl, duration: 6 }]
+          })
+        });
       }
-      status.textContent = t("saved-cloud");
+      status.textContent = selectedArtwork?.privateOnly
+        ? (locale === "zh" ? "故事已保存；这张图片按安全规则只留在本机。" : "Story saved; this image remains on this device under the safety policy.")
+        : t("saved-cloud");
       window.StoriesLensAnalytics?.track("first_story_page_saved", { language, hasArtwork: Boolean(selectedArtwork), cloud: true });
     } catch (_error) {
       status.textContent = t("saved-device");
@@ -607,6 +650,12 @@
       selectedArtwork = { name: file.name, privateOnly: false, convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
     } catch (error) {
       const reasonCode = error.reasonCode || error.message;
+      if (workshopMode && reasonCode === "real_person") {
+        selectedArtworkData = "";
+        selectedArtwork = null;
+        toast("工作坊仅接收画作，不接收真人照片。请选择孩子创作的画。", true);
+        return;
+      }
       if (["review_unavailable", "real_person", "not_artwork"].includes(reasonCode) && window.StoriesLensArtworkSafety?.removeMetadata) {
         const localArtwork = await window.StoriesLensArtworkSafety.removeMetadata(file);
         selectedArtworkData = localArtwork.dataUrl;
@@ -626,6 +675,15 @@
     $("[data-coach-image]").src = selectedArtworkData;
     $("[data-coach-image]").hidden = false;
     if (selectedArtwork.convertedFromHeic) toast(locale === "zh" ? "HEIC 已在本机安全转换，原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.");
+    if (!selectedArtwork.privateOnly && !workshopMode) {
+      try {
+        toast(locale === "zh" ? "安全检查通过，正在保存到你的私密作品库……" : "Safety check passed. Saving to your private library…");
+        await persistApprovedArtwork();
+        toast(locale === "zh" ? "已私密保存，可以继续回答羽导师的问题。" : "Saved privately. Continue with Yu’s questions.");
+      } catch (error) {
+        toast(locale === "zh" ? "图片已在本机准备好，但云端保存暂时失败，请稍后重试。" : "The image is ready on this device, but private cloud saving is temporarily unavailable. Try again shortly.", true);
+      }
+    }
     window.StoriesLensAnalytics?.track("family_artwork_ready", { privateOnly: Boolean(selectedArtwork.privateOnly), convertedFromHeic: Boolean(selectedArtwork.convertedFromHeic) });
   }
 
@@ -790,7 +848,7 @@
   const handleSpeechInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      revealChineseVoiceTranscript({ focus: true });
+      $("[data-seed]")?.focus();
       toast(locale === "zh" ? "当前浏览器不支持语音输入，可以直接打字。" : "Voice input is unavailable in this browser. You can type instead.", true);
       return;
     }
@@ -799,36 +857,48 @@
       return;
     }
     const field = $("[data-seed]");
-    if (!field) return;
-    revealChineseVoiceTranscript();
     const original = field.value.trim();
     recognition = new SpeechRecognition();
     recognition.lang = locale === "zh" ? "zh-CN" : "en-US";
     recognition.interimResults = true;
-    speechButton?.classList.add("listening");
+    speechButton.classList.add("listening");
     chineseVoiceEntry?.classList.add("is-listening");
     chineseVoiceEntry?.setAttribute("aria-pressed", "true");
     recognition.onresult = (event) => {
       const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
       field.value = `${original}${original ? " " : ""}${spoken}`;
-      revealChineseVoiceTranscript();
     };
     recognition.onerror = () => toast(locale === "zh" ? "没有听清，请再试一次。" : "I could not hear that. Please try again.", true);
     recognition.onend = () => {
       recognition = null;
-      speechButton?.classList.remove("listening");
+      speechButton.classList.remove("listening");
       chineseVoiceEntry?.classList.remove("is-listening");
       chineseVoiceEntry?.setAttribute("aria-pressed", "false");
     };
     recognition.start();
   };
-  speechButton?.addEventListener("click", handleSpeechInput);
-  chineseVoiceEntry?.addEventListener("click", handleSpeechInput);
+  speechButton.addEventListener("click", handleSpeechInput);
+  chineseVoiceEntry?.addEventListener("click", () => {
+    $(".words-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    handleSpeechInput();
+  });
 
   applyLocale(locale);
+  if (workshopMode) {
+    document.body.classList.add("cn-workshop-mode");
+    const banner = document.createElement("aside");
+    banner.className = "cn-workshop-banner";
+    banner.innerHTML = '<strong>中国线下工作坊 · 本机私密模式</strong><span>无需注册；作品只保存在本设备。请使用昵称，不上传真人照片、姓名、学校或联系方式。</span><a href="china-workshop.html">返回教师工作台</a>';
+    document.body.prepend(banner);
+    const uploadTitle = $("[data-upload-label] strong");
+    if (uploadTitle) uploadTitle.textContent = "上传你的画作";
+    const uploadHelp = $("[data-upload-label] small");
+    if (uploadHelp) uploadHelp.textContent = "仅限绘画、手工作品或作品页 · 不接收真人照片";
+    $("[data-checkout]")?.setAttribute("hidden", "");
+  }
   showStage("start");
   restoreLearningProfile();
   restoreHomepageSpark();
-  if (params.get("focus") === "words") revealChineseVoiceTranscript({ focus: true });
+  if (params.get("focus") === "words") $(`[data-seed]`).focus();
   window.StoriesLensAnalytics?.track("family_flow_viewed", { locale });
 })();

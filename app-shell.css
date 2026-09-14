@@ -150,6 +150,8 @@ label small, .helper, .muted { color: var(--muted); font-weight: 400; line-heigh
 .privacy-list > div, .order-item { padding: 14px 0; border-top: 1px solid var(--line); }
 .privacy-list strong, .privacy-list span { display: block; }
 .privacy-list span { margin-top: 5px; color: var(--muted); line-height: 1.45; }
+.storage-meter { height: 12px; margin: 16px 0 12px; overflow: hidden; border: 1px solid #bfd6ca; border-radius: 999px; background: #e8f1ec; }
+.storage-meter span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #137451, #60a77d); transition: width .35s ease; }
 
 .scene-list { display: grid; gap: 14px; }
 .scene-card { padding: 18px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.67); }

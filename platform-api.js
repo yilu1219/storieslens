@@ -2,6 +2,9 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const { queueHyperframesRender, resolveBinary } = require("./hyperframes-renderer");
+const { createRegionalObjectStorage } = require("./regional-object-storage");
+const { assertLaunchReady, evaluateLaunchReadiness } = require("./launch-readiness");
+const { createRequestRateLimiter } = require("./request-rate-limit");
 
 const SESSION_DAYS = 30;
 const CHALLENGE_MINUTES = 10;
@@ -9,6 +12,9 @@ const MAX_PROJECTS_PER_USER = 100;
 const MAX_SCENES = 24;
 const MAX_AUDIO_BYTES = 12 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const DEFAULT_GUEST_MEDIA_QUOTA_BYTES = 20 * 1024 * 1024;
+const DEFAULT_ACCOUNT_MEDIA_QUOTA_BYTES = 250 * 1024 * 1024;
+const REGION_CONSENT_VERSION = "2026-09-14";
 
 const offerCatalog = {
   "story-pass": { name: "Story Pass", price: "$19", envKey: "STRIPE_STORY_PASS_URL", fallbackUrl: "/beta-interest.html?offer=story-pass" },
@@ -102,6 +108,65 @@ function hashValue(value) {
   return crypto.createHash("sha256").update(String(value)).digest("hex");
 }
 
+function positiveIntegerEnvironment(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isSafeInteger(value) && value > 0 ? value : fallback;
+}
+
+function mediaQuotaFor(user) {
+  return user?.kind === "account"
+    ? positiveIntegerEnvironment("MEDIA_ACCOUNT_QUOTA_BYTES", DEFAULT_ACCOUNT_MEDIA_QUOTA_BYTES)
+    : positiveIntegerEnvironment("MEDIA_GUEST_QUOTA_BYTES", DEFAULT_GUEST_MEDIA_QUOTA_BYTES);
+}
+
+function mediaUsageFor(database, user) {
+  const bytesUsed = database.media.filter((item) => item.ownerId === user.id).reduce((total, item) => total + Math.max(0, Number(item.bytes) || 0), 0);
+  const bytesLimit = mediaQuotaFor(user);
+  return {
+    bytesUsed,
+    bytesLimit,
+    bytesRemaining: Math.max(0, bytesLimit - bytesUsed),
+    percentUsed: Math.min(100, Math.round((bytesUsed / bytesLimit) * 100)),
+    plan: user.kind === "account" ? "private-beta" : "private-guest"
+  };
+}
+
+function regionProfile(value) {
+  const primaryRegion = ["cn", "us", "intl"].includes(value) ? value : "";
+  if (!primaryRegion) return null;
+  if (primaryRegion === "cn") return { primaryRegion, dataRegion: "cn", aiProviderRoute: "china" };
+  if (primaryRegion === "us") return { primaryRegion, dataRegion: "us", aiProviderRoute: "us" };
+  return { primaryRegion, dataRegion: "intl", aiProviderRoute: "international" };
+}
+
+function configuredRegistrationRegions() {
+  const configured = String(process.env.ALLOWED_ACCOUNT_REGIONS || "").split(",").map((region) => region.trim().toLowerCase()).filter(Boolean);
+  return configured.length ? configured.filter((region) => ["cn", "us", "intl"].includes(region)) : ["cn", "us", "intl"];
+}
+
+function normalizeInviteCode(value) {
+  return cleanText(value, 120).replace(/\s+/g, "").toUpperCase();
+}
+
+function configuredBetaInvites() {
+  return String(process.env.BETA_INVITE_CODE_HASHES || "").split(";").map((raw) => {
+    const parts = raw.trim().split(":");
+    if (parts.length === 2) return { region: parts[0].toLowerCase(), cohort: "founding-beta", fingerprint: parts[1].toLowerCase() };
+    return { region: parts[0]?.toLowerCase(), cohort: cleanId(parts[1]) || "founding-beta", fingerprint: parts[2]?.toLowerCase() };
+  }).filter((entry) => ["cn", "us", "intl"].includes(entry.region) && /^[a-f0-9]{64}$/.test(entry.fingerprint || ""));
+}
+
+function allowedInternationalCountries() {
+  return [...new Set(String(process.env.ALLOWED_INTL_COUNTRY_CODES || "").split(",").map((country) => country.trim().toUpperCase()).filter((country) => /^[A-Z]{2}$/.test(country) && !["CN", "US"].includes(country)))];
+}
+
+function countryForRegion(region, value) {
+  if (region === "cn") return "CN";
+  if (region === "us") return "US";
+  const country = cleanText(value, 2).toUpperCase();
+  return /^[A-Z]{2}$/.test(country) && !["CN", "US"].includes(country) ? country : "";
+}
+
 function createStore(root) {
   const dataDirectory = path.join(root, ".data");
   const mediaDirectory = path.join(dataDirectory, "media");
@@ -120,7 +185,8 @@ function createStore(root) {
     orders: [],
     renderJobs: [],
     notificationSubscriptions: [],
-    productEvents: []
+    productEvents: [],
+    betaInviteRedemptions: []
   });
 
   function read() {
@@ -158,6 +224,10 @@ function publicUser(user) {
     displayName: user.displayName || "Creator",
     ageGroup: user.ageGroup || "unknown",
     locale: user.locale || "en",
+    primaryRegion: user.primaryRegion || "",
+    countryCode: user.countryCode || "",
+    betaCohort: user.betaAccess?.cohort || "",
+    dataRegion: user.dataRegion || "unassigned",
     signInMethod: user.signInMethod || "guest",
     maskedDestination: user.maskedDestination || "",
     createdAt: user.createdAt
@@ -206,6 +276,32 @@ function normalizeProject(input, existing = {}) {
 
 function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, enforceImageSafety, reviewArtworkSafety }) {
   const store = createStore(root);
+  const mediaStorage = createRegionalObjectStorage({ mediaDirectory: store.mediaDirectory });
+  const rateLimiter = createRequestRateLimiter();
+  if (process.env.NODE_ENV === "production" && process.env.MEDIA_REQUIRED_REGIONS) {
+    mediaStorage.assertReady(process.env.MEDIA_REQUIRED_REGIONS);
+  }
+  if (process.env.NODE_ENV === "production" && process.env.ALLOWED_ACCOUNT_REGIONS) {
+    mediaStorage.assertReady(process.env.ALLOWED_ACCOUNT_REGIONS);
+  }
+  if (process.env.NODE_ENV === "production" && process.env.ENFORCE_LAUNCH_GATES === "true") {
+    assertLaunchReady({ root, mediaStorageStatus: mediaStorage.status() });
+  }
+
+  function publicMedia(media) {
+    return {
+      id: media.id,
+      projectId: media.projectId,
+      kind: media.kind,
+      mimeType: media.mimeType,
+      bytes: media.bytes,
+      private: true,
+      metadataRemoved: media.metadataRemoved,
+      storageRegion: media.storageRegion || "local",
+      createdAt: media.createdAt,
+      url: `/api/media/${media.id}`
+    };
+  }
 
   function sessionFor(request, response, { create = true } = {}) {
     const cookieId = cleanId(parseCookies(request).storieslens_session);
@@ -252,6 +348,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     }
 
     if (requestUrl.pathname === "/api/auth/start" && request.method === "POST") {
+      if (!rateLimiter.consume(request, response, { bucket: "auth-start", limit: 5, windowMs: 15 * 60 * 1000, sendJson })) return true;
       const body = await readJsonBody(request);
       const method = body.method === "phone" ? "phone" : "email";
       const destination = validateDestination(method, body.destination);
@@ -296,10 +393,33 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     }
 
     if (requestUrl.pathname === "/api/auth/verify" && request.method === "POST") {
+      if (!rateLimiter.consume(request, response, { bucket: "auth-verify", limit: 10, windowMs: 15 * 60 * 1000, sendJson })) return true;
       const body = await readJsonBody(request);
       const challengeId = cleanId(body.challengeId);
       const code = cleanText(body.code, 12);
       const destination = validateDestination(body.method === "phone" ? "phone" : "email", body.destination);
+      const requestedRegion = regionProfile(body.primaryRegion);
+      if (!requestedRegion) {
+        sendJson(response, 400, { error: "Choose China Mainland, United States, or Other countries and regions." });
+        return true;
+      }
+      if (!configuredRegistrationRegions().includes(requestedRegion.primaryRegion)) {
+        sendJson(response, 403, { error: "StoriesLens private accounts are not open in this region during the current pilot." });
+        return true;
+      }
+      const countryCode = countryForRegion(requestedRegion.primaryRegion, body.countryCode);
+      if (!countryCode) {
+        sendJson(response, 400, { error: "Choose the country where the account will be used." });
+        return true;
+      }
+      if (requestedRegion.primaryRegion === "intl" && !allowedInternationalCountries().includes(countryCode)) {
+        sendJson(response, 403, { error: "This country is not open in the current invitation-only beta." });
+        return true;
+      }
+      if (process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" && body.ageGroup !== "adult") {
+        sendJson(response, 403, { error: "During the founding beta, a parent or guardian must own the account. Young creators can create inside that adult-owned account." });
+        return true;
+      }
       const current = sessionFor(request, response);
       const result = store.mutate((database) => {
         const challenge = database.authChallenges.find((item) => item.id === challengeId);
@@ -307,8 +427,20 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         challenge.attempts += 1;
         if (challenge.attempts > 5) return { error: "Too many attempts. Request a new code." };
         if (!destination || hashValue(`${code}:${destination}`) !== challenge.codeHash) return { error: "The sign-in code is incorrect." };
-        challenge.usedAt = nowIso();
         let account = database.users.find((item) => item.kind === "account" && item.destinationHash === challenge.destinationHash);
+        if (account?.primaryRegion && account.primaryRegion !== requestedRegion.primaryRegion) return { error: "This account already belongs to a different data region. Contact support to request a controlled migration." };
+        if (account?.countryCode && account.countryCode !== countryCode) return { error: "This account already belongs to a different country route. Contact support to update it." };
+        let inviteAccess = account?.betaAccess || null;
+        if (process.env.BETA_INVITE_ONLY === "true" && !inviteAccess) {
+          const inviteFingerprint = hashValue(normalizeInviteCode(body.betaInviteCode));
+          const invite = configuredBetaInvites().find((item) => item.region === requestedRegion.primaryRegion && item.fingerprint === inviteFingerprint);
+          if (!invite) return { error: "Enter a valid invitation code for this region." };
+          const useLimit = positiveIntegerEnvironment("BETA_MAX_ACCOUNTS_PER_CODE", 10);
+          const uses = database.betaInviteRedemptions.filter((item) => item.inviteFingerprint === invite.fingerprint).length;
+          if (uses >= useLimit) return { error: "This invitation code has reached its founding-beta limit." };
+          inviteAccess = { cohort: invite.cohort, inviteFingerprint: invite.fingerprint, grantedAt: nowIso() };
+        }
+        challenge.usedAt = nowIso();
         if (!account) {
           account = {
             id: crypto.randomUUID(),
@@ -316,6 +448,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             displayName: cleanText(body.displayName, 80) || "Creator",
             ageGroup: ["under18", "adult"].includes(body.ageGroup) ? body.ageGroup : "unknown",
             locale: body.locale === "zh" ? "zh" : "en",
+            ...requestedRegion,
+            countryCode,
+            betaAccess: inviteAccess,
+            regionConsentVersion: REGION_CONSENT_VERSION,
+            regionConfirmedAt: nowIso(),
             signInMethod: challenge.method,
             destinationHash: challenge.destinationHash,
             maskedDestination: challenge.maskedDestination,
@@ -323,9 +460,28 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             updatedAt: nowIso()
           };
           database.users.push(account);
+          if (inviteAccess) database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
+        } else if (!account.primaryRegion) {
+          Object.assign(account, requestedRegion, {
+            countryCode,
+            betaAccess: inviteAccess,
+            regionConsentVersion: REGION_CONSENT_VERSION,
+            regionConfirmedAt: nowIso(),
+            updatedAt: nowIso()
+          });
+          if (inviteAccess && !database.betaInviteRedemptions.some((item) => item.accountId === account.id)) database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
+        } else if (!account.betaAccess && inviteAccess) {
+          account.betaAccess = inviteAccess;
+          account.countryCode = account.countryCode || countryCode;
+          account.updatedAt = nowIso();
+          database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
         }
+        account.countryCode = account.countryCode || countryCode;
         database.projects.forEach((project) => {
           if (project.ownerId === current.user.id) project.ownerId = account.id;
+        });
+        database.media.forEach((media) => {
+          if (media.ownerId === current.user.id) media.ownerId = account.id;
         });
         const session = database.sessions.find((item) => item.id === current.session.id);
         session.userId = account.id;
@@ -357,6 +513,42 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       });
       clearSessionCookie(request, response);
       sendJson(response, 200, { success: true });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/account" && request.method === "DELETE") {
+      if (process.env.ACCOUNT_DELETION_ENABLED !== "true") {
+        sendJson(response, 503, { error: "Account deletion is not enabled on this environment." });
+        return true;
+      }
+      const current = sessionFor(request, response, { create: false });
+      if (!current.user || current.user.kind !== "account") {
+        sendJson(response, 401, { error: "Sign in before deleting an account." });
+        return true;
+      }
+      const body = await readJsonBody(request);
+      if (body.confirmation !== "DELETE MY ACCOUNT") {
+        sendJson(response, 400, { error: "Type DELETE MY ACCOUNT to confirm permanent deletion." });
+        return true;
+      }
+      const ownedMedia = current.database.media.filter((item) => item.ownerId === current.user.id);
+      for (const media of ownedMedia) await mediaStorage.remove(media);
+      store.mutate((database) => {
+        const projectIds = new Set(database.projects.filter((item) => item.ownerId === current.user.id).map((item) => item.id));
+        database.users = database.users.filter((item) => item.id !== current.user.id);
+        database.sessions = database.sessions.filter((item) => item.userId !== current.user.id);
+        database.projects = database.projects.filter((item) => item.ownerId !== current.user.id);
+        database.media = database.media.filter((item) => item.ownerId !== current.user.id);
+        database.guardianConsents = database.guardianConsents.filter((item) => !projectIds.has(item.projectId));
+        database.shares = database.shares.filter((item) => item.ownerId !== current.user.id && !projectIds.has(item.projectId));
+        database.orders = database.orders.filter((item) => item.ownerId !== current.user.id);
+        database.renderJobs = database.renderJobs.filter((item) => item.ownerId !== current.user.id);
+        database.notificationSubscriptions = database.notificationSubscriptions.filter((item) => item.ownerId !== current.user.id);
+        database.productEvents = database.productEvents.filter((item) => item.userId !== current.user.id && item.ownerId !== current.user.id);
+        database.betaInviteRedemptions = database.betaInviteRedemptions.filter((item) => item.accountId !== current.user.id);
+      });
+      clearSessionCookie(request, response);
+      sendJson(response, 200, { deleted: true });
       return true;
     }
 
@@ -432,7 +624,14 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   }
 
   async function handleMedia(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/media-usage" && request.method === "GET") {
+      const { database, user } = sessionFor(request, response);
+      sendJson(response, 200, { usage: mediaUsageFor(database, user), region: user.primaryRegion || "local" });
+      return true;
+    }
+
     if (requestUrl.pathname === "/api/media" && request.method === "POST") {
+      if (!rateLimiter.consume(request, response, { bucket: "media-upload", limit: 20, windowMs: 60 * 60 * 1000, sendJson })) return true;
       const body = await readJsonBody(request, 18_000_000);
       const { database, user } = sessionFor(request, response);
       const project = requireProject(database, user, cleanId(body.projectId));
@@ -459,6 +658,14 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         sendJson(response, 413, { error: `Keep this ${kind} smaller than ${Math.round(limit / 1024 / 1024)} MB.` });
         return true;
       }
+      const usage = mediaUsageFor(database, user);
+      if (usage.bytesUsed + buffer.length > usage.bytesLimit) {
+        sendJson(response, 413, {
+          error: "This private library has reached its storage allowance. Remove unused media or upgrade before uploading more.",
+          usage
+        });
+        return true;
+      }
       if (kind === "image") {
         if (body.metadataRemoved !== true) {
           sendJson(response, 400, { error: "Image metadata must be removed on the device before upload." });
@@ -477,10 +684,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       }
       const mediaId = crypto.randomUUID();
       const extension = imageExtensions[mimeType] || audioExtensions[mimeType];
-      const ownerDirectory = path.join(store.mediaDirectory, user.id);
-      fs.mkdirSync(ownerDirectory, { recursive: true, mode: 0o700 });
-      const filePath = path.join(ownerDirectory, `${mediaId}.${extension}`);
-      fs.writeFileSync(filePath, buffer, { mode: 0o600 });
+      const storageRecord = await mediaStorage.put({
+        user,
+        key: `${user.id}/${project.id}/${mediaId}.${extension}`,
+        buffer,
+        contentType: mimeType
+      });
       const media = {
         id: mediaId,
         ownerId: user.id,
@@ -488,13 +697,13 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         kind,
         mimeType,
         bytes: buffer.length,
-        filePath,
+        ...storageRecord,
         private: true,
         metadataRemoved: kind === "image",
         createdAt: nowIso()
       };
       store.mutate((nextDatabase) => nextDatabase.media.push(media));
-      sendJson(response, 201, { media: { ...media, filePath: undefined, url: `/api/media/${media.id}` } });
+      sendJson(response, 201, { media: publicMedia(media) });
       return true;
     }
 
@@ -503,18 +712,19 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     const mediaId = cleanId(decodeURIComponent(mediaMatch[1]));
     const { database, user } = sessionFor(request, response);
     const media = database.media.find((item) => item.id === mediaId && item.ownerId === user.id);
-    if (!media || !fs.existsSync(media.filePath)) {
+    const storedObject = media ? await mediaStorage.get(media) : null;
+    if (!media || !storedObject) {
       sendJson(response, 404, { error: "Private media not found." });
       return true;
     }
     response.writeHead(200, {
-      "Content-Type": media.mimeType,
-      "Content-Length": fs.statSync(media.filePath).size,
+      "Content-Type": storedObject.contentType || media.mimeType,
+      "Content-Length": storedObject.bytes,
       "Cache-Control": "private, max-age=300",
       "Content-Disposition": "inline",
       "X-Robots-Tag": "noindex, noarchive"
     });
-    fs.createReadStream(media.filePath).pipe(response);
+    response.end(storedObject.body);
     return true;
   }
 
@@ -805,11 +1015,20 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           stripeCheckout: Object.values(offerCatalog).some((offer) => Boolean(process.env[offer.envKey])),
           hyperframesWorker: Boolean(resolveBinary(root)),
           mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY),
-          safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY)
+          safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
         },
+        mediaStorage: mediaStorage.status(),
+        registrationRegions: configuredRegistrationRegions(),
+        allowedInternationalCountries: allowedInternationalCountries(),
+        beta: { inviteOnly: process.env.BETA_INVITE_ONLY === "true", adultAccountOwnerOnly: process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" },
         region: process.env.STORIESLENS_REGION || "local",
         dataMode: process.env.NODE_ENV === "production" ? "production" : "local-development"
       });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/launch-readiness" && request.method === "GET") {
+      sendJson(response, 200, evaluateLaunchReadiness({ root, mediaStorageStatus: mediaStorage.status() }));
       return true;
     }
 

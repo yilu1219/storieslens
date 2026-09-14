@@ -141,7 +141,9 @@ const pageAliases = Object.freeze({
   "/create": "/app.html",
   "/stories": "/my-stories.html",
   "/studio": "/movie-studio.html",
-  "/classroom": "/classroom-archive.html"
+  "/classroom": "/classroom-archive.html",
+  "/launch-gate": "/launch-readiness.html",
+  "/cn-workshop": "/china-workshop.html"
 });
 
 function sendFile(response, filePath) {

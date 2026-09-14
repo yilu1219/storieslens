@@ -3,7 +3,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
-    "extract:ccss": "node scripts/extract-ccss.js"
+    "extract:ccss": "node scripts/extract-ccss.js",
+    "beta:codes": "node scripts/generate-beta-invites.js"
   },
   "dependencies": {
     "docx": "^9.5.1"

@@ -7,6 +7,13 @@
   let authMethod = "email";
   let challenge = null;
   let projects = [];
+  let platformStatus = null;
+
+  const regionCopy = {
+    cn: "China region · China storage and eligible China AI services · CNY/WeChat payment when enabled.",
+    us: "United States region · US storage and US-available AI services · USD payment.",
+    intl: "International region · An eligible international storage and AI-service region · USD payment."
+  };
 
   function toast(message, error = false) {
     toastNode.textContent = message;
@@ -18,6 +25,12 @@
   function formatDate(value) {
     try { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(value)); }
     catch { return "Recently"; }
+  }
+
+  function formatBytes(value) {
+    const bytes = Math.max(0, Number(value) || 0);
+    if (bytes < 1024 * 1024) return `${Math.max(0.1, bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
   }
 
   function node(tag, className, text) {
@@ -89,6 +102,50 @@
     });
   }
 
+  async function loadStorageUsage() {
+    const result = await platform.api("/api/media-usage");
+    const usage = result.usage;
+    const regionName = result.region === "cn" ? "China Mainland" : result.region === "us" ? "United States" : result.region === "intl" ? "International" : "this device/server during preview";
+    $(`[data-storage-summary]`).textContent = `${formatBytes(usage.bytesUsed)} used · ${formatBytes(usage.bytesRemaining)} remaining`;
+    $(`[data-storage-region]`).textContent = `Private media route: ${regionName}. Your original uploads are never placed in a public bucket.`;
+    const meter = $(`[data-storage-meter]`);
+    meter.setAttribute("aria-valuenow", String(usage.percentUsed));
+    $(`[data-storage-bar]`).style.width = `${usage.percentUsed}%`;
+  }
+
+  async function loadAvailableRegions() {
+    const result = await platform.api("/api/platform/status");
+    platformStatus = result;
+    const allowed = Array.isArray(result.registrationRegions) ? result.registrationRegions : ["cn", "us", "intl"];
+    document.querySelectorAll("[data-primary-region] option[value]").forEach((option) => {
+      if (!option.value) return;
+      const available = allowed.includes(option.value);
+      option.disabled = !available;
+      if (!available && !option.textContent.includes("coming soon")) option.textContent += " · coming soon";
+    });
+    const inviteField = $("[data-beta-invite]");
+    const inviteInput = $("[data-beta-invite-code]");
+    inviteField.hidden = !result.beta?.inviteOnly;
+    inviteInput.required = Boolean(result.beta?.inviteOnly);
+    const ageSelect = $("[data-account-age]");
+    const minorOption = ageSelect.querySelector('option[value="under18"]');
+    if (result.beta?.adultAccountOwnerOnly && minorOption) {
+      minorOption.disabled = true;
+      minorOption.textContent = "Young creator · use a parent/guardian-owned account";
+    }
+    const countrySelect = $("[data-country-code]");
+    const countryNames = typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames([navigator.language || "en"], { type: "region" }) : null;
+    countrySelect.replaceChildren();
+    (result.allowedInternationalCountries || []).forEach((code) => {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = `${countryNames?.of(code) || code} · ${code}`;
+      countrySelect.append(option);
+    });
+    $("[data-primary-region]").dispatchEvent(new Event("change"));
+    return result;
+  }
+
   async function shareProject(project) {
     try {
       const result = await platform.api(`/api/projects/${project.id}/share`, { method: "POST", body: "{}" });
@@ -115,9 +172,36 @@
   function updateSession(result) {
     const user = result.user;
     $("[data-session-title]").textContent = result.authenticated ? `Welcome back, ${user.displayName}.` : "Private guest library";
-    $("[data-session-detail]").textContent = result.authenticated ? `Signed in by ${user.signInMethod} · ${user.maskedDestination}` : "This device has a private session. Sign in to continue elsewhere.";
+    const region = user.primaryRegion === "cn" ? "China Mainland" : user.primaryRegion === "us" ? "United States" : user.primaryRegion === "intl" ? "International" : "Region not confirmed";
+    $("[data-session-detail]").textContent = result.authenticated ? `Signed in by ${user.signInMethod} · ${user.maskedDestination} · ${region}` : "This device has a private session. Sign in to continue elsewhere.";
     $("[data-signin-card]").hidden = result.authenticated;
+    $("[data-delete-card]").hidden = !result.authenticated;
   }
+
+  function suggestRegionFromPhone() {
+    if (authMethod !== "phone") return;
+    const phone = $("[data-auth-destination]").value.replace(/[\s()-]/g, "");
+    const select = $("[data-primary-region]");
+    if (!select || select.value) return;
+    if (phone.startsWith("+86") || phone.startsWith("86")) select.value = "cn";
+    else if (phone.startsWith("+1") || phone.startsWith("1")) select.value = "us";
+    if (select.value) select.dispatchEvent(new Event("change"));
+  }
+
+  $("[data-primary-region]").addEventListener("change", (event) => {
+    $("[data-region-note]").textContent = regionCopy[event.target.value] || "This determines where projects may be stored and which AI services may process them. We never change it from your IP alone.";
+    const international = event.target.value === "intl";
+    const countryField = $("[data-country-field]");
+    const countrySelect = $("[data-country-code]");
+    countryField.hidden = !international;
+    countrySelect.disabled = !international;
+    countrySelect.required = international;
+    if (international && !countrySelect.options.length && platformStatus) {
+      event.target.setCustomValidity("The international beta has no open countries yet.");
+    } else {
+      event.target.setCustomValidity("");
+    }
+  });
 
   document.querySelectorAll("[data-auth-method]").forEach((button) => button.addEventListener("click", () => {
     authMethod = button.dataset.authMethod;
@@ -132,6 +216,7 @@
   $("[data-auth-start]").addEventListener("submit", async (event) => {
     event.preventDefault();
     const destination = $("[data-auth-destination]").value.trim();
+    suggestRegionFromPhone();
     const notice = $("[data-auth-notice]");
     try {
       challenge = await platform.api("/api/auth/start", { method: "POST", body: JSON.stringify({ method: authMethod, destination }) });
@@ -152,6 +237,9 @@
         destination: $("[data-auth-destination]").value.trim(),
         displayName: $("[data-display-name]").value.trim(),
         ageGroup: $("[data-account-age]").value,
+        primaryRegion: $("[data-primary-region]").value,
+        countryCode: $("[data-primary-region]").value === "intl" ? $("[data-country-code]").value : $("[data-primary-region]").value === "cn" ? "CN" : "US",
+        betaInviteCode: $("[data-beta-invite-code]").value.trim(),
         locale: localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en"
       }) });
       updateSession(result);
@@ -203,5 +291,15 @@
     } catch (error) { toast(error.message, true); }
   });
 
-  Promise.all([platform.getSession(), loadProjects(), loadOrders()]).then(([session]) => updateSession(session)).catch((error) => toast(error.message, true));
+  $("[data-delete-account]").addEventListener("click", async () => {
+    const confirmation = window.prompt("Permanent deletion cannot be undone. Type DELETE MY ACCOUNT to remove the account, stories and private media.");
+    if (confirmation !== "DELETE MY ACCOUNT") return toast("Account deletion cancelled.");
+    if (!window.confirm("Final confirmation: permanently delete this StoriesLens account and all private media?")) return;
+    try {
+      await platform.api("/api/account", { method: "DELETE", body: JSON.stringify({ confirmation }) });
+      location.href = "index.html?account=deleted";
+    } catch (error) { toast(error.message, true); }
+  });
+
+  Promise.all([platform.getSession(), loadProjects(), loadOrders(), loadStorageUsage(), loadAvailableRegions()]).then(([session]) => updateSession(session)).catch((error) => toast(error.message, true));
 }());

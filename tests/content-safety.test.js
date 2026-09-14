@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, extractOpenRouterJson, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -26,4 +26,32 @@ test("does not block ordinary safe story ideas", () => {
     "一位奶奶和孙女共同寻找遗失的家书。",
     "A dragon learns to solve disagreements with words."
   ].forEach((sample) => assert.strictEqual(localSafetyCheck(sample).safe, true, sample));
+});
+
+test("parses a JSON safety verdict from OpenRouter-compatible output", () => {
+  assert.deepStrictEqual(extractOpenRouterJson({ choices: [{ message: { content: "```json\n{\"safe\":true}\n```" } }] }), { safe: true });
+  assert.strictEqual(extractOpenRouterJson({ choices: [{ message: { content: "uncertain" } }] }), null);
+});
+
+test("uses the configured OpenRouter vision model when OpenAI moderation is unavailable", async (context) => {
+  const originalFetch = global.fetch;
+  const originalKey = process.env.OPENROUTER_API_KEY;
+  const originalOpenAiKey = process.env.OPENAI_API_KEY;
+  const originalModerationKey = process.env.OPENAI_MODERATION_API_KEY;
+  context.after(() => {
+    global.fetch = originalFetch;
+    if (originalKey === undefined) delete process.env.OPENROUTER_API_KEY; else process.env.OPENROUTER_API_KEY = originalKey;
+    if (originalOpenAiKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = originalOpenAiKey;
+    if (originalModerationKey === undefined) delete process.env.OPENAI_MODERATION_API_KEY; else process.env.OPENAI_MODERATION_API_KEY = originalModerationKey;
+  });
+  delete process.env.OPENAI_API_KEY;
+  delete process.env.OPENAI_MODERATION_API_KEY;
+  process.env.OPENROUTER_API_KEY = "test-key";
+  global.fetch = async (url, options) => {
+    assert.match(String(url), /openrouter\.ai\/api\/v1\/chat\/completions$/);
+    assert.match(String(options.headers.Authorization), /^Bearer test-key$/);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: '{"safe":true}' } }] }) };
+  };
+  const result = await checkImageSafety("data:image/webp;base64,AAAA", { requireExternal: true });
+  assert.deepStrictEqual(result, { available: true, safe: true, source: "openrouter-safety" });
 });
