@@ -141,7 +141,7 @@ button, textarea { color: inherit; font: inherit; }
 .portal-card-solo { background-image: url("assets/portal-solo-family-watercolor-v5.jpg"); }
 .portal-card-group { background-image: url("assets/portal-cocreate-family-watercolor-v5.jpg"); }
 .portal-card-teacher { background-image: url("assets/portal-teacher-bulletin-watercolor-v4.jpg"); }
-.portal-card-teacher { min-height: 720px; }
+.portal-card.portal-card-teacher { min-height: 720px; }
 .portal-card-teacher .portal-card-main { min-height: 645px; }
 .portal-card-number { position: absolute; top: 25px; left: 28px; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .18em; opacity: .54; }
 .portal-card-copy { align-self: end; padding: clamp(29px, 3.4vw, 43px); }
@@ -195,7 +195,7 @@ button, textarea { color: inherit; font: inherit; }
   .magic-copy { max-width: 800px; }
   .magic-copy h1 { max-width: 850px; }
   .portal-choices { grid-template-columns: 1fr 1fr; }
-  .portal-card-teacher { grid-column: 1 / -1; min-height: 650px; background-position: right top; background-size: 58% auto; }
+  .portal-card.portal-card-teacher { grid-column: 1 / -1; min-height: 650px; background-position: right top; background-size: 58% auto; }
   .portal-card-teacher .portal-card-main { min-height: 575px; }
 }
 
@@ -227,7 +227,7 @@ button, textarea { color: inherit; font: inherit; }
   .spaces-heading { align-items: flex-start; flex-direction: column; margin-bottom: 28px; }
   .spaces-heading h2 { font-size: 52px; }
   .portal-choices { grid-template-columns: 1fr; }
-  .portal-card-teacher { grid-column: auto; min-height: 800px; background-position: center top; background-size: 100% auto; }
+  .portal-card.portal-card-teacher { grid-column: auto; min-height: 800px; background-position: center top; background-size: 100% auto; }
   .portal-card-teacher .portal-card-main { min-height: 725px; }
   .portal-card { min-height: 620px; border-radius: 22px; }
   .portal-card-main { min-height: 545px; }
