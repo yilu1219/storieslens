@@ -38,7 +38,7 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, env = process.
   const hasLegalFiles = Boolean(root) && legalFiles.every((file) => fs.existsSync(path.join(root, file)));
   const hasSafetyKey = Boolean(env.OPENAI_MODERATION_API_KEY || env.OPENAI_API_KEY || env.OPENROUTER_API_KEY);
   const hasArtworkReviewKey = Boolean(env.OPENAI_API_KEY || env.OPENROUTER_API_KEY);
-  const storageReady = allowedRegions.length > 0 && allowedRegions.every((region) => mediaStorageStatus[region] === "cloud-private");
+  const storageReady = allowedRegions.length > 0 && allowedRegions.every((region) => ["cloud-private", "persistent-private"].includes(mediaStorageStatus[region]));
   const requiredMatchesAllowed = allowedRegions.length > 0 && allowedRegions.every((region) => requiredRegions.includes(region));
   const invitesReady = allowedRegions.length > 0 && allowedRegions.every((region) => configuredInviteRegions.includes(region));
 
@@ -46,7 +46,7 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, env = process.
     gate("production-runtime", "Production runtime", env.NODE_ENV === "production", "Set NODE_ENV=production on the production host."),
     gate("https-origin", "HTTPS public origin", isHttpsOrigin(publicOrigin), "Set PUBLIC_BASE_URL to the live https:// domain."),
     gate("regional-storage", "Private storage in every open region", storageReady && requiredMatchesAllowed, "Configure private CN, US and selected international buckets; open only passing regions."),
-    gate("otp-delivery", "Private sign-in code delivery", Boolean(env.AUTH_DELIVERY_WEBHOOK_URL && env.AUTH_DELIVERY_WEBHOOK_SECRET), "Connect a production email/SMS delivery webhook and secret."),
+    gate("otp-delivery", "Private account access", Boolean((env.AUTH_DELIVERY_WEBHOOK_URL && env.AUTH_DELIVERY_WEBHOOK_SECRET) || enabled(env.INVITE_CODE_AUTH_ENABLED)), "Connect email/SMS code delivery or enable high-entropy invitation-code access for the private beta."),
     gate("invite-only", "Invitation-only beta", enabled(env.BETA_INVITE_ONLY) && invitesReady, "Enable BETA_INVITE_ONLY and add a hashed invite code for every open region."),
     gate("country-allowlist", "International country allowlist", !allowedRegions.includes("intl") || intlCountries.length > 0, "List the exact non-US/non-China countries allowed in the first international cohort."),
     gate("minor-account-owner", "Adult-owned accounts for young creators", enabled(env.BETA_ADULT_ACCOUNT_OWNER_ONLY), "For the first beta, require the parent/guardian to own the account."),
@@ -61,7 +61,7 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, env = process.
   ];
 
   const advisory = [
-    gate("payments", "Paid checkout", ["STRIPE_STORY_PASS_URL", "STRIPE_GUIDED_SQUAD_URL", "STRIPE_MOVIE_30_URL", "STRIPE_MOVIE_60_URL"].some((key) => Boolean(env[key])), "Optional for a free beta. Connect verified checkout links before charging.", "advisory"),
+    gate("payments", "Paid checkout", ["STRIPE_STORY_PASS_URL", "STRIPE_COCREATE_PACK_URL", "STRIPE_TEACHER_CLASSROOM_URL", "STRIPE_GUIDED_SQUAD_URL", "STRIPE_MOVIE_30_URL", "STRIPE_MOVIE_60_URL"].some((key) => Boolean(env[key])), "Optional for a free beta. Connect verified checkout links before charging.", "advisory"),
     gate("wechat", "WeChat account connection", Boolean(env.WECHAT_APP_ID && env.WECHAT_APP_SECRET), "Optional for web beta; required for a later Mini Program.", "advisory"),
     gate("monitoring", "Production error alerting", Boolean(env.ERROR_REPORTING_WEBHOOK_URL), "Strongly recommended: send server failures to a private founder alert channel.", "advisory"),
     gate("render-worker", "Private movie render worker", Boolean(env.HYPERFRAMES_BIN), "Optional at sign-up; required before promising downloadable films.", "advisory")

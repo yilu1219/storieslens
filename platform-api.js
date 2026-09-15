@@ -5,6 +5,20 @@ const { queueHyperframesRender, resolveBinary } = require("./hyperframes-rendere
 const { createRegionalObjectStorage } = require("./regional-object-storage");
 const { assertLaunchReady, evaluateLaunchReadiness } = require("./launch-readiness");
 const { createRequestRateLimiter } = require("./request-rate-limit");
+const {
+  ensureCreditCollections,
+  publicPackageCatalog,
+  walletFor,
+  grantPackage,
+  ensureFreePreview,
+  reserveCredits,
+  settleReservation,
+  releaseReservation,
+  createInviteBatch,
+  findInvite,
+  validateInvite,
+  redeemInvite
+} = require("./credit-system");
 
 const SESSION_DAYS = 30;
 const CHALLENGE_MINUTES = 10;
@@ -15,12 +29,15 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const DEFAULT_GUEST_MEDIA_QUOTA_BYTES = 20 * 1024 * 1024;
 const DEFAULT_ACCOUNT_MEDIA_QUOTA_BYTES = 250 * 1024 * 1024;
 const REGION_CONSENT_VERSION = "2026-09-14";
+const ADMIN_SESSION_HOURS = 12;
 
 const offerCatalog = {
-  "story-pass": { name: "Story Pass", price: "$19", envKey: "STRIPE_STORY_PASS_URL", fallbackUrl: "/beta-interest.html?offer=story-pass" },
+  "story-pass": { name: "Story Pass", price: "$19", packageId: "creator-story", envKey: "STRIPE_STORY_PASS_URL", fallbackUrl: "/beta-interest.html?offer=story-pass" },
+  "cocreate-pack": { name: "Invited Co-creation Pack", price: "$39", packageId: "invite-cocreate", envKey: "STRIPE_COCREATE_PACK_URL", fallbackUrl: "/beta-interest.html?offer=cocreate-pack" },
+  "teacher-classroom": { name: "Teacher Classroom Project", price: "$79", packageId: "teacher-classroom", envKey: "STRIPE_TEACHER_CLASSROOM_URL", fallbackUrl: "/beta-interest.html?offer=teacher-classroom" },
   "guided-squad": { name: "Guided Story Squad", price: "$49", envKey: "STRIPE_GUIDED_SQUAD_URL", fallbackUrl: "/beta-interest.html?offer=guided-squad" },
-  "movie-30": { name: "30-second Movie Pack", price: "$39", envKey: "STRIPE_MOVIE_30_URL", fallbackUrl: "/beta-interest.html?offer=movie-30" },
-  "movie-60": { name: "60-second Movie Pack", price: "$49", envKey: "STRIPE_MOVIE_60_URL", fallbackUrl: "/beta-interest.html?offer=movie-60" }
+  "movie-30": { name: "30-second Movie Pack", price: "$39", packageId: "movie-30", envKey: "STRIPE_MOVIE_30_URL", fallbackUrl: "/beta-interest.html?offer=movie-30" },
+  "movie-60": { name: "60-second Movie Pack", price: "$69", packageId: "movie-60", envKey: "STRIPE_MOVIE_60_URL", fallbackUrl: "/beta-interest.html?offer=movie-60" }
 };
 
 function nowIso() {
@@ -87,6 +104,16 @@ function setSessionCookie(request, response, sessionId, expiresAt) {
 function clearSessionCookie(request, response) {
   const secure = isSecureRequest(request) ? "; Secure" : "";
   response.setHeader("Set-Cookie", `storieslens_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`);
+}
+
+function setAdminCookie(request, response, token, expiresAt) {
+  const secure = isSecureRequest(request) ? "; Secure" : "";
+  response.setHeader("Set-Cookie", `storieslens_admin=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Expires=${new Date(expiresAt).toUTCString()}${secure}`);
+}
+
+function clearAdminCookie(request, response) {
+  const secure = isSecureRequest(request) ? "; Secure" : "";
+  response.setHeader("Set-Cookie", `storieslens_admin=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`);
 }
 
 function maskDestination(method, destination) {
@@ -168,7 +195,7 @@ function countryForRegion(region, value) {
 }
 
 function createStore(root) {
-  const dataDirectory = path.join(root, ".data");
+  const dataDirectory = process.env.PLATFORM_DATA_DIR ? path.resolve(process.env.PLATFORM_DATA_DIR) : path.join(root, ".data");
   const mediaDirectory = path.join(dataDirectory, "media");
   const databasePath = path.join(dataDirectory, "platform.json");
   fs.mkdirSync(mediaDirectory, { recursive: true, mode: 0o700 });
@@ -186,7 +213,12 @@ function createStore(root) {
     renderJobs: [],
     notificationSubscriptions: [],
     productEvents: [],
-    betaInviteRedemptions: []
+    betaInviteRedemptions: [],
+    creditTransactions: [],
+    creditReservations: [],
+    inviteBatches: [],
+    inviteCodes: [],
+    adminSessions: []
   });
 
   function read() {
@@ -308,14 +340,26 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     const database = store.read();
     let session = database.sessions.find((item) => item.id === cookieId && new Date(item.expiresAt) > new Date());
     let user = session ? database.users.find((item) => item.id === session.userId) : null;
-    if ((session && user) || !create) return { database, session, user };
+    if (session && user) {
+      if (create && !database.creditTransactions?.some((entry) => entry.userId === user.id && entry.packageId === "free-preview")) {
+        return store.mutate((nextDatabase) => {
+          ensureCreditCollections(nextDatabase);
+          ensureFreePreview(nextDatabase, user.id);
+          return { database: nextDatabase, session, user };
+        });
+      }
+      return { database, session, user };
+    }
+    if (!create) return { database, session, user };
 
     return store.mutate((nextDatabase) => {
+      ensureCreditCollections(nextDatabase);
       const createdAt = nowIso();
       user = { id: crypto.randomUUID(), kind: "guest", displayName: "Creator", ageGroup: "unknown", locale: "en", signInMethod: "guest", createdAt, updatedAt: createdAt };
       session = { id: crypto.randomBytes(24).toString("hex"), userId: user.id, createdAt, expiresAt: addDays(new Date(), SESSION_DAYS) };
       nextDatabase.users.push(user);
       nextDatabase.sessions.push(session);
+      ensureFreePreview(nextDatabase, user.id);
       setSessionCookie(request, response, session.id, session.expiresAt);
       return { database: nextDatabase, session, user };
     });
@@ -323,6 +367,237 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
 
   function requireProject(database, user, projectId) {
     return database.projects.find((project) => project.id === projectId && project.ownerId === user.id && !project.deletedAt);
+  }
+
+  function configuredAdminKeyHash() {
+    const configuredHash = cleanText(process.env.ADMIN_ACCESS_KEY_SHA256, 64).toLowerCase();
+    if (/^[a-f0-9]{64}$/.test(configuredHash)) return configuredHash;
+    const localKey = String(process.env.ADMIN_ACCESS_KEY || "");
+    return localKey.length >= 16 ? hashValue(localKey) : "";
+  }
+
+  function matchesAdminKey(value) {
+    const expected = configuredAdminKeyHash();
+    const actual = hashValue(String(value || ""));
+    if (!expected || expected.length !== actual.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(actual, "hex"));
+  }
+
+  function adminSessionFor(request) {
+    const rawToken = String(parseCookies(request).storieslens_admin || "");
+    const tokenHash = rawToken ? hashValue(rawToken) : "";
+    const database = store.read();
+    const adminSession = database.adminSessions?.find((item) => item.tokenHash === tokenHash && new Date(item.expiresAt) > new Date()) || null;
+    return { database, adminSession };
+  }
+
+  function requireAdmin(request, response) {
+    const current = adminSessionFor(request);
+    if (!current.adminSession) {
+      sendJson(response, 401, { error: "Administrator sign-in is required." });
+      return null;
+    }
+    return current;
+  }
+
+  function assertSameOrigin(request) {
+    const origin = String(request.headers.origin || "");
+    if (!origin) return;
+    const expected = `${isSecureRequest(request) ? "https" : "http"}://${request.headers.host}`;
+    if (origin !== expected) throw Object.assign(new Error("Cross-site administrator actions are not allowed."), { statusCode: 403, code: "ADMIN_ORIGIN_MISMATCH" });
+  }
+
+  function publicInviteBatch(database, batch) {
+    const codes = database.inviteCodes.filter((item) => item.batchId === batch.id);
+    return {
+      ...batch,
+      generatedCodes: codes.length,
+      totalRedemptions: codes.reduce((total, item) => total + Number(item.redemptionCount || 0), 0),
+      availableRedemptions: codes.reduce((total, item) => total + Math.max(0, Number(item.maxRedemptions || 0) - Number(item.redemptionCount || 0)), 0)
+    };
+  }
+
+  async function handleCredits(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/credit-packages" && request.method === "GET") {
+      sendJson(response, 200, { packages: publicPackageCatalog() });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/credits" && request.method === "GET") {
+      const { user } = sessionFor(request, response);
+      const result = store.mutate((database) => {
+        ensureCreditCollections(database);
+        ensureFreePreview(database, user.id);
+        return {
+          wallet: walletFor(database, user.id),
+          recentActivity: database.creditTransactions.filter((entry) => entry.userId === user.id).slice(-20).reverse()
+        };
+      });
+      sendJson(response, 200, result);
+      return true;
+    }
+    if (requestUrl.pathname === "/api/credits/redeem" && request.method === "POST") {
+      if (!rateLimiter.consume(request, response, { bucket: "invite-redeem", limit: 10, windowMs: 60 * 60 * 1000, sendJson })) return true;
+      const { user } = sessionFor(request, response, { create: false });
+      if (!user || user.kind !== "account") {
+        sendJson(response, 401, { error: "Sign in before redeeming an invitation code." });
+        return true;
+      }
+      const body = await readJsonBody(request);
+      const result = store.mutate((database) => redeemInvite(database, {
+        rawCode: body.code,
+        userId: user.id,
+        userRegion: user.primaryRegion
+      }));
+      sendJson(response, 200, { redeemed: !result.duplicate, packageId: result.invite.packageId, wallet: result.wallet });
+      return true;
+    }
+    return false;
+  }
+
+  async function handleAdmin(request, response, requestUrl) {
+    if (!requestUrl.pathname.startsWith("/api/admin/")) return false;
+
+    if (requestUrl.pathname === "/api/admin/session" && request.method === "GET") {
+      const current = adminSessionFor(request);
+      sendJson(response, 200, { authenticated: Boolean(current.adminSession), configured: Boolean(configuredAdminKeyHash()) });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/session" && request.method === "POST") {
+      assertSameOrigin(request);
+      if (!rateLimiter.consume(request, response, { bucket: "admin-login", limit: 5, windowMs: 30 * 60 * 1000, sendJson })) return true;
+      if (!configuredAdminKeyHash()) {
+        sendJson(response, 503, { error: "Set ADMIN_ACCESS_KEY_SHA256 before opening the allowance console." });
+        return true;
+      }
+      const body = await readJsonBody(request, 4_000);
+      if (!matchesAdminKey(body.accessKey)) {
+        sendJson(response, 401, { error: "The administrator access key is incorrect." });
+        return true;
+      }
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + ADMIN_SESSION_HOURS * 60 * 60 * 1000).toISOString();
+      store.mutate((database) => {
+        ensureCreditCollections(database);
+        database.adminSessions = database.adminSessions.filter((item) => new Date(item.expiresAt) > new Date()).slice(-20);
+        database.adminSessions.push({ id: crypto.randomUUID(), tokenHash: hashValue(token), createdAt: nowIso(), expiresAt });
+      });
+      setAdminCookie(request, response, token, expiresAt);
+      sendJson(response, 200, { authenticated: true, expiresAt });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/session" && request.method === "DELETE") {
+      assertSameOrigin(request);
+      const rawToken = String(parseCookies(request).storieslens_admin || "");
+      store.mutate((database) => {
+        database.adminSessions = (database.adminSessions || []).filter((item) => item.tokenHash !== hashValue(rawToken));
+      });
+      clearAdminCookie(request, response);
+      sendJson(response, 200, { authenticated: false });
+      return true;
+    }
+
+    const admin = requireAdmin(request, response);
+    if (!admin) return true;
+
+    if (requestUrl.pathname === "/api/admin/summary" && request.method === "GET") {
+      const database = store.read();
+      ensureCreditCollections(database);
+      const consumption = database.creditTransactions.filter((item) => item.type === "consumption");
+      const recordedModelCostUsd = consumption.reduce((total, item) => {
+        const cost = Number(item.costUsd);
+        return total + (Number.isFinite(cost) && cost > 0 ? cost : 0);
+      }, 0);
+      sendJson(response, 200, {
+        accounts: database.users.filter((item) => item.kind === "account").length,
+        activeCodes: database.inviteCodes.filter((item) => !item.disabledAt && new Date(item.expiresAt) > new Date() && item.redemptionCount < item.maxRedemptions).length,
+        grants: database.creditTransactions.filter((item) => item.type === "grant").length,
+        consumed: consumption.length,
+        activeReservations: database.creditReservations.filter((item) => item.status === "reserved").length,
+        recordedModelCostUsd,
+        packages: publicPackageCatalog()
+      });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/users" && request.method === "GET") {
+      const query = cleanText(requestUrl.searchParams.get("query"), 100).toLowerCase();
+      const database = store.read();
+      ensureCreditCollections(database);
+      const users = database.users.filter((item) => item.kind === "account").filter((item) => !query || [item.id, item.displayName, item.maskedDestination].some((value) => String(value || "").toLowerCase().includes(query))).slice(0, 100).map((user) => ({
+        ...publicUser(user),
+        wallet: walletFor(database, user.id)
+      }));
+      sendJson(response, 200, { users });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/invites" && request.method === "GET") {
+      const database = store.read();
+      ensureCreditCollections(database);
+      sendJson(response, 200, { batches: database.inviteBatches.slice(-100).reverse().map((batch) => publicInviteBatch(database, batch)) });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/invites" && request.method === "POST") {
+      assertSameOrigin(request);
+      const body = await readJsonBody(request, 20_000);
+      const expiresInDays = Math.max(1, Math.min(365, Number(body.expiresInDays) || 30));
+      const result = store.mutate((database) => createInviteBatch(database, {
+        region: body.region,
+        packageId: body.packageId,
+        count: Number(body.count),
+        maxRedemptions: Number(body.maxRedemptions || 1),
+        expiresAt: addDays(new Date(), expiresInDays),
+        label: cleanText(body.label, 100),
+        createdBy: admin.adminSession.id
+      }));
+      sendJson(response, 201, { batch: publicInviteBatch(store.read(), result.batch), codes: result.rawCodes, warning: "These codes are shown once. Save them before leaving this page." });
+      return true;
+    }
+    const disableBatchMatch = requestUrl.pathname.match(/^\/api\/admin\/invites\/([^/]+)$/);
+    if (disableBatchMatch && request.method === "DELETE") {
+      assertSameOrigin(request);
+      const batchId = cleanId(decodeURIComponent(disableBatchMatch[1]));
+      const result = store.mutate((database) => {
+        const batch = database.inviteBatches.find((item) => item.id === batchId);
+        if (!batch) return null;
+        batch.disabledAt = nowIso();
+        database.inviteCodes.forEach((item) => { if (item.batchId === batchId) item.disabledAt = batch.disabledAt; });
+        return publicInviteBatch(database, batch);
+      });
+      if (!result) sendJson(response, 404, { error: "Invitation batch not found." });
+      else sendJson(response, 200, { batch: result });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/grants" && request.method === "POST") {
+      assertSameOrigin(request);
+      const body = await readJsonBody(request, 12_000);
+      const userId = cleanId(body.userId);
+      const packageId = cleanId(body.packageId);
+      const result = store.mutate((database) => {
+        const user = database.users.find((item) => item.id === userId && item.kind === "account");
+        if (!user) throw Object.assign(new Error("Account not found."), { statusCode: 404, code: "ACCOUNT_NOT_FOUND" });
+        return grantPackage(database, {
+          userId,
+          packageId,
+          source: "admin-manual",
+          note: cleanText(body.note, 240),
+          idempotencyKey: cleanText(body.idempotencyKey, 200) || crypto.randomUUID(),
+          createdBy: admin.adminSession.id
+        });
+      });
+      sendJson(response, result.duplicate ? 200 : 201, { granted: !result.duplicate, packageId, wallet: result.wallet });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/ledger" && request.method === "GET") {
+      const database = store.read();
+      ensureCreditCollections(database);
+      sendJson(response, 200, {
+        transactions: database.creditTransactions.slice(-200).reverse(),
+        reservations: database.creditReservations.slice(-200).reverse()
+      });
+      return true;
+    }
+
+    sendJson(response, 404, { error: "Administrator endpoint not found." });
+    return true;
   }
 
   async function deliverAuthCode(method, destination, code, challengeId) {
@@ -341,6 +616,82 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   }
 
   async function handleAuth(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/auth/invite" && request.method === "POST") {
+      if (process.env.INVITE_CODE_AUTH_ENABLED !== "true") {
+        sendJson(response, 503, { error: "Invitation-code access is not enabled on this environment." });
+        return true;
+      }
+      if (!rateLimiter.consume(request, response, { bucket: "invite-auth", limit: 10, windowMs: 60 * 60 * 1000, sendJson })) return true;
+      const body = await readJsonBody(request, 12_000);
+      const rawInviteCode = normalizeInviteCode(body.betaInviteCode);
+      const requestedRegion = regionProfile(body.primaryRegion);
+      if (!requestedRegion || !configuredRegistrationRegions().includes(requestedRegion.primaryRegion)) {
+        sendJson(response, 403, { error: "This region is not open in the current invitation-only beta." });
+        return true;
+      }
+      const countryCode = countryForRegion(requestedRegion.primaryRegion, body.countryCode);
+      if (!countryCode) {
+        sendJson(response, 400, { error: "Choose the country where the account will be used." });
+        return true;
+      }
+      if (requestedRegion.primaryRegion === "intl" && !allowedInternationalCountries().includes(countryCode)) {
+        sendJson(response, 403, { error: "This country is not open in the current invitation-only beta." });
+        return true;
+      }
+      if (process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" && body.ageGroup !== "adult") {
+        sendJson(response, 403, { error: "During the founding beta, a parent or guardian must own the account." });
+        return true;
+      }
+      const current = sessionFor(request, response);
+      const result = store.mutate((database) => {
+        ensureCreditCollections(database);
+        const invite = findInvite(database, rawInviteCode);
+        validateInvite(database, invite, requestedRegion.primaryRegion);
+        const account = database.users.find((item) => item.id === current.user.id);
+        if (!account) throw Object.assign(new Error("Private session not found."), { statusCode: 401, code: "SESSION_NOT_FOUND" });
+        if (account.primaryRegion && account.primaryRegion !== requestedRegion.primaryRegion) {
+          throw Object.assign(new Error("This private account already belongs to a different data region."), { statusCode: 409, code: "REGION_MISMATCH" });
+        }
+        const batch = database.inviteBatches.find((item) => item.id === invite.batchId);
+        Object.assign(account, {
+          kind: "account",
+          displayName: cleanText(body.displayName, 80) || account.displayName || "Creator",
+          ageGroup: body.ageGroup === "adult" ? "adult" : "under18",
+          locale: body.locale === "zh" ? "zh" : "en",
+          ...requestedRegion,
+          countryCode,
+          betaAccess: account.betaAccess || {
+            cohort: batch?.label || "invited-beta",
+            inviteFingerprint: invite.fingerprint,
+            inviteCodeId: invite.id,
+            packageId: invite.packageId,
+            grantedAt: nowIso()
+          },
+          regionConsentVersion: REGION_CONSENT_VERSION,
+          regionConfirmedAt: account.regionConfirmedAt || nowIso(),
+          signInMethod: "invite-code",
+          maskedDestination: "Private invitation",
+          updatedAt: nowIso()
+        });
+        const redemption = redeemInvite(database, {
+          rawCode: rawInviteCode,
+          userId: account.id,
+          userRegion: requestedRegion.primaryRegion
+        });
+        const session = database.sessions.find((item) => item.id === current.session.id);
+        session.expiresAt = addDays(new Date(), SESSION_DAYS);
+        return { account, session, redemption };
+      });
+      setSessionCookie(request, response, result.session.id, result.session.expiresAt);
+      sendJson(response, 200, {
+        authenticated: true,
+        user: publicUser(result.account),
+        packageId: result.redemption.invite.packageId,
+        wallet: result.redemption.wallet
+      });
+      return true;
+    }
+
     if (requestUrl.pathname === "/api/auth/session" && request.method === "GET") {
       const { user } = sessionFor(request, response);
       sendJson(response, 200, { authenticated: user.kind === "account", user: publicUser(user) });
@@ -430,15 +781,29 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         let account = database.users.find((item) => item.kind === "account" && item.destinationHash === challenge.destinationHash);
         if (account?.primaryRegion && account.primaryRegion !== requestedRegion.primaryRegion) return { error: "This account already belongs to a different data region. Contact support to request a controlled migration." };
         if (account?.countryCode && account.countryCode !== countryCode) return { error: "This account already belongs to a different country route. Contact support to update it." };
+        ensureCreditCollections(database);
+        const rawInviteCode = normalizeInviteCode(body.betaInviteCode);
+        const databaseInvite = rawInviteCode ? findInvite(database, rawInviteCode) : null;
         let inviteAccess = account?.betaAccess || null;
         if (process.env.BETA_INVITE_ONLY === "true" && !inviteAccess) {
-          const inviteFingerprint = hashValue(normalizeInviteCode(body.betaInviteCode));
-          const invite = configuredBetaInvites().find((item) => item.region === requestedRegion.primaryRegion && item.fingerprint === inviteFingerprint);
-          if (!invite) return { error: "Enter a valid invitation code for this region." };
-          const useLimit = positiveIntegerEnvironment("BETA_MAX_ACCOUNTS_PER_CODE", 10);
-          const uses = database.betaInviteRedemptions.filter((item) => item.inviteFingerprint === invite.fingerprint).length;
-          if (uses >= useLimit) return { error: "This invitation code has reached its founding-beta limit." };
-          inviteAccess = { cohort: invite.cohort, inviteFingerprint: invite.fingerprint, grantedAt: nowIso() };
+          if (databaseInvite) {
+            const batch = database.inviteBatches.find((item) => item.id === databaseInvite.batchId);
+            inviteAccess = {
+              cohort: batch?.label || "invited-beta",
+              inviteFingerprint: databaseInvite.fingerprint,
+              inviteCodeId: databaseInvite.id,
+              packageId: databaseInvite.packageId,
+              grantedAt: nowIso()
+            };
+          } else {
+            const inviteFingerprint = hashValue(rawInviteCode);
+            const invite = configuredBetaInvites().find((item) => item.region === requestedRegion.primaryRegion && item.fingerprint === inviteFingerprint);
+            if (!invite) return { error: "Enter a valid invitation code for this region." };
+            const useLimit = positiveIntegerEnvironment("BETA_MAX_ACCOUNTS_PER_CODE", 10);
+            const uses = database.betaInviteRedemptions.filter((item) => item.inviteFingerprint === invite.fingerprint).length;
+            if (uses >= useLimit) return { error: "This invitation code has reached its founding-beta limit." };
+            inviteAccess = { cohort: invite.cohort, inviteFingerprint: invite.fingerprint, grantedAt: nowIso() };
+          }
         }
         challenge.usedAt = nowIso();
         if (!account) {
@@ -460,7 +825,6 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             updatedAt: nowIso()
           };
           database.users.push(account);
-          if (inviteAccess) database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
         } else if (!account.primaryRegion) {
           Object.assign(account, requestedRegion, {
             countryCode,
@@ -469,12 +833,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             regionConfirmedAt: nowIso(),
             updatedAt: nowIso()
           });
-          if (inviteAccess && !database.betaInviteRedemptions.some((item) => item.accountId === account.id)) database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
         } else if (!account.betaAccess && inviteAccess) {
           account.betaAccess = inviteAccess;
           account.countryCode = account.countryCode || countryCode;
           account.updatedAt = nowIso();
-          database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
         }
         account.countryCode = account.countryCode || countryCode;
         database.projects.forEach((project) => {
@@ -483,6 +845,18 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         database.media.forEach((media) => {
           if (media.ownerId === current.user.id) media.ownerId = account.id;
         });
+        database.creditTransactions.forEach((entry) => {
+          if (entry.userId === current.user.id) entry.userId = account.id;
+        });
+        database.creditReservations.forEach((entry) => {
+          if (entry.userId === current.user.id) entry.userId = account.id;
+        });
+        if (databaseInvite) {
+          redeemInvite(database, { rawCode: rawInviteCode, userId: account.id, userRegion: requestedRegion.primaryRegion });
+        } else if (inviteAccess && !database.betaInviteRedemptions.some((item) => item.accountId === account.id && item.inviteFingerprint === inviteAccess.inviteFingerprint)) {
+          database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
+        }
+        ensureFreePreview(database, account.id);
         const session = database.sessions.find((item) => item.id === current.session.id);
         session.userId = account.id;
         session.expiresAt = addDays(new Date(), SESSION_DAYS);
@@ -546,6 +920,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         database.notificationSubscriptions = database.notificationSubscriptions.filter((item) => item.ownerId !== current.user.id);
         database.productEvents = database.productEvents.filter((item) => item.userId !== current.user.id && item.ownerId !== current.user.id);
         database.betaInviteRedemptions = database.betaInviteRedemptions.filter((item) => item.accountId !== current.user.id);
+        database.creditTransactions = database.creditTransactions.filter((item) => item.userId !== current.user.id);
+        database.creditReservations = database.creditReservations.filter((item) => item.userId !== current.user.id);
       });
       clearSessionCookie(request, response);
       sendJson(response, 200, { deleted: true });
@@ -570,12 +946,36 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         sendJson(response, 409, { error: "This account has reached its project limit." });
         return true;
       }
-      await enforceTextSafety([body.title, body.sourceText, body.draft].filter(Boolean).join("\n"));
-      const createdAt = nowIso();
-      const project = normalizeProject(body);
-      Object.assign(project, { id: crypto.randomUUID(), ownerId: user.id, createdAt, updatedAt: createdAt, version: 1, deletedAt: "" });
-      store.mutate((nextDatabase) => nextDatabase.projects.push(project));
-      sendJson(response, 201, { project });
+      const requestKey = cleanText(request.headers["idempotency-key"] || body.idempotencyKey || crypto.randomUUID(), 200);
+      const reserved = store.mutate((nextDatabase) => reserveCredits(nextDatabase, {
+        userId: user.id,
+        resource: "storyProjects",
+        units: 1,
+        idempotencyKey: `project:${requestKey}`,
+        referenceType: "story-project",
+        metadata: { mode: body.mode || "solo" }
+      }));
+      if (reserved.duplicate && reserved.reservation.status === "settled") {
+        const existingProject = store.read().projects.find((item) => item.creationReservationId === reserved.reservation.id && item.ownerId === user.id);
+        if (existingProject) {
+          sendJson(response, 200, { project: existingProject, wallet: reserved.wallet, duplicate: true });
+          return true;
+        }
+      }
+      try {
+        await enforceTextSafety([body.title, body.sourceText, body.draft].filter(Boolean).join("\n"));
+        const createdAt = nowIso();
+        const project = normalizeProject(body);
+        Object.assign(project, { id: crypto.randomUUID(), ownerId: user.id, createdAt, updatedAt: createdAt, version: 1, deletedAt: "", creationReservationId: reserved.reservation.id });
+        store.mutate((nextDatabase) => {
+          nextDatabase.projects.push(project);
+          settleReservation(nextDatabase, { reservationId: reserved.reservation.id });
+        });
+        sendJson(response, 201, { project, wallet: walletFor(store.read(), user.id) });
+      } catch (error) {
+        store.mutate((nextDatabase) => releaseReservation(nextDatabase, { reservationId: reserved.reservation.id, reason: "project-create-failed" }));
+        throw error;
+      }
       return true;
     }
 
@@ -1010,6 +1410,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         features: {
           localCloudSave: true,
           emailPhoneAuth: process.env.NODE_ENV !== "production" || Boolean(process.env.AUTH_DELIVERY_WEBHOOK_URL),
+          inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true",
           wechatAuth: Boolean(process.env.WECHAT_APP_ID && process.env.WECHAT_APP_SECRET),
           pushDelivery: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
           stripeCheckout: Object.values(offerCatalog).some((offer) => Boolean(process.env[offer.envKey])),
@@ -1020,7 +1421,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         mediaStorage: mediaStorage.status(),
         registrationRegions: configuredRegistrationRegions(),
         allowedInternationalCountries: allowedInternationalCountries(),
-        beta: { inviteOnly: process.env.BETA_INVITE_ONLY === "true", adultAccountOwnerOnly: process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" },
+        beta: { inviteOnly: process.env.BETA_INVITE_ONLY === "true", inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true", adultAccountOwnerOnly: process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" },
         region: process.env.STORIESLENS_REGION || "local",
         dataMode: process.env.NODE_ENV === "production" ? "production" : "local-development"
       });
@@ -1050,8 +1451,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     return false;
   }
 
-  return async function handlePlatformApi(request, response, requestUrl) {
+  const handlePlatformApi = async function handlePlatformApi(request, response, requestUrl) {
     try {
+      if (await handleAdmin(request, response, requestUrl)) return true;
+      if (await handleCredits(request, response, requestUrl)) return true;
       if (await handleAuth(request, response, requestUrl)) return true;
       if (await handleProjects(request, response, requestUrl)) return true;
       if (await handleMedia(request, response, requestUrl)) return true;
@@ -1064,6 +1467,32 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       return true;
     }
   };
+
+  handlePlatformApi.creditManager = {
+    ownerId(request, response) {
+      return sessionFor(request, response).user.id;
+    },
+    reserve(request, response, { resource, units = 1, idempotencyKey, referenceType, referenceId, metadata }) {
+      const { user } = sessionFor(request, response);
+      return store.mutate((database) => reserveCredits(database, {
+        userId: user.id,
+        resource,
+        units,
+        idempotencyKey: cleanText(idempotencyKey || request.headers["idempotency-key"] || crypto.randomUUID(), 200),
+        referenceType,
+        referenceId,
+        metadata
+      }));
+    },
+    settle(reservationId, details = {}) {
+      return store.mutate((database) => settleReservation(database, { reservationId, ...details }));
+    },
+    release(reservationId, reason) {
+      return store.mutate((database) => releaseReservation(database, { reservationId, reason }));
+    }
+  };
+
+  return handlePlatformApi;
 }
 
 module.exports = { createPlatformApi };

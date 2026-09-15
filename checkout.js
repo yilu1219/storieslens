@@ -7,9 +7,33 @@
       description: "Turn one finished story into a book or comic your family can keep.",
       features: [
         "Full Story Coach for one project",
-        "Invite up to 5 collaborators",
         "12 visual scene generations",
-        "Illustrated layout and downloadable edition"
+        "Illustrated layout and downloadable edition",
+        "Private project library"
+      ]
+    },
+    "cocreate-pack": {
+      name: "Invited Co-creation Pack",
+      price: "$39",
+      total: "$39 USD",
+      description: "Create one private story world with family or friends.",
+      features: [
+        "One shared story project",
+        "Invite up to 5 approved collaborators",
+        "18 visual scene generations",
+        "Private credits and revision history"
+      ]
+    },
+    "teacher-classroom": {
+      name: "Teacher Classroom Project",
+      price: "$79",
+      total: "$79 USD",
+      description: "Turn one bulletin board or class collection into a private digital book.",
+      features: [
+        "One classroom publishing project",
+        "Up to 30 student works",
+        "Dated cover and digital book layout",
+        "Teacher-controlled review and sharing"
       ]
     },
     "guided-squad": {
@@ -33,8 +57,8 @@
     },
     "movie-60": {
       name: "60-second Movie Pack",
-      price: "$49",
-      total: "$49 USD",
+      price: "$69",
+      total: "$69 USD",
       description: "Turn a finished storyboard into a 60-second family premiere.",
       features: ["Finished 60-second film", "Creator credits", "Private download", "One production revision"]
     }

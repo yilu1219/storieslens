@@ -39,15 +39,25 @@
           <article class="app-card app-card-pad" id="account" data-signin-card>
             <p class="app-kicker">ACCOUNT</p>
             <h3>Save across devices</h3>
-            <p class="muted">Continue as a private guest, or use a one-time code. Your current stories move with you when you sign in.</p>
-            <div class="auth-methods" role="group" aria-label="Sign-in method">
-              <button class="active" type="button" data-auth-method="email">Email</button>
-              <button type="button" data-auth-method="phone">Mobile</button>
-            </div>
-            <form data-auth-start>
-              <label><span data-destination-label>Email address</span><input data-auth-destination type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-              <button class="app-primary" type="submit">Send one-time code</button>
+            <p class="muted">Founding beta members can open a private account with the invitation code supplied by StoriesLens. No email or phone number is required.</p>
+            <form class="field-grid" data-invite-access>
+              <label class="wide">Creator or parent name<input data-invite-display-name autocomplete="nickname" maxlength="40" placeholder="Name or nickname" required /></label>
+              <label>Account region<select data-invite-region required><option value="">Choose region</option><option value="cn">China Mainland · 中国大陆</option><option value="us">United States · 美国</option><option value="intl">Other region · 其他地区</option></select></label>
+              <label>Account owner<select data-invite-age><option value="adult">Adult / parent / guardian</option><option value="under18">Young creator with adult support</option></select></label>
+              <label class="wide">Invitation code<input data-invite-code autocomplete="one-time-code" maxlength="120" placeholder="SL-US-CS-…" required /></label>
+              <button class="app-primary wide" type="submit">Open my private library</button>
             </form>
+            <div data-email-auth>
+              <p class="muted"><strong>Already registered by email or mobile?</strong></p>
+              <div class="auth-methods" role="group" aria-label="Sign-in method">
+                <button class="active" type="button" data-auth-method="email">Email</button>
+                <button type="button" data-auth-method="phone">Mobile</button>
+              </div>
+              <form data-auth-start>
+                <label><span data-destination-label>Email address</span><input data-auth-destination type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+                <button class="app-primary" type="submit">Send one-time code</button>
+              </form>
+            </div>
             <form data-auth-verify hidden>
               <label>Six-digit code<input data-auth-code inputmode="numeric" autocomplete="one-time-code" maxlength="6" required /></label>
               <label>Display name<input data-display-name autocomplete="nickname" maxlength="40" placeholder="Creator" /></label>
@@ -96,6 +106,20 @@
               <span data-storage-bar></span>
             </div>
             <p class="helper" data-storage-region>Your chosen region controls where account media is stored.</p>
+          </article>
+
+          <article class="app-card app-card-pad" data-allowance-card>
+            <p class="app-kicker">CREATION ALLOWANCE · 创作额度</p>
+            <h3>What you can create</h3>
+            <p class="muted">Yu’s questions, typing, voice input and your own uploads do not use illustration or film allowances.</p>
+            <div class="privacy-list" data-allowance-list>
+              <div><strong>Loading your allowance…</strong><span>Your balance is calculated from an auditable private ledger.</span></div>
+            </div>
+            <form class="field-grid" data-redeem-form hidden>
+              <label class="wide">Invitation or package code<input data-redeem-code autocomplete="one-time-code" maxlength="120" placeholder="SL-US-CS-…" required /></label>
+              <button class="app-primary wide" type="submit">Redeem allowance</button>
+            </form>
+            <p class="notice" data-allowance-notice hidden></p>
           </article>
 
           <article class="app-card app-card-pad" data-guardian-card>
@@ -162,6 +186,6 @@
     <div class="app-toast" data-toast role="status" aria-live="polite"></div>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
-    <script src="my-stories.js"></script>
+  <script src="my-stories.js"></script>
   </body>
 </html>

@@ -113,6 +113,31 @@
     $(`[data-storage-bar]`).style.width = `${usage.percentUsed}%`;
   }
 
+  async function loadCredits() {
+    const result = await platform.api("/api/credits");
+    const labels = {
+      storyProjects: ["Story projects", "故事项目"],
+      imageGenerations: ["AI illustrations", "AI 插图"],
+      videoClips: ["5-second film clips", "5秒电影镜头"],
+      collaboratorSeats: ["Invited collaborators", "受邀共创者"],
+      classroomProjects: ["Classroom projects", "班级项目"],
+      studentWorks: ["Student works", "学生作品"]
+    };
+    const list = $("[data-allowance-list]");
+    list.replaceChildren();
+    Object.entries(result.wallet.resources).filter(([, allowance]) => allowance.granted > 0 || allowance.reserved > 0).forEach(([resource, allowance]) => {
+      const row = node("div");
+      const title = labels[resource] || [allowance.label, allowance.labelZh];
+      row.append(
+        node("strong", "", `${title[0]} · ${title[1]}`),
+        node("span", "", `${allowance.remaining} remaining of ${allowance.granted}${allowance.reserved ? ` · ${allowance.reserved} processing` : ""}`)
+      );
+      list.append(row);
+    });
+    if (!list.children.length) list.append(node("div", "", "No creation allowance has been granted yet."));
+    return result;
+  }
+
   async function loadAvailableRegions() {
     const result = await platform.api("/api/platform/status");
     platformStatus = result;
@@ -123,6 +148,14 @@
       option.disabled = !available;
       if (!available && !option.textContent.includes("coming soon")) option.textContent += " · coming soon";
     });
+    document.querySelectorAll("[data-invite-region] option[value]").forEach((option) => {
+      if (!option.value) return;
+      const available = allowed.includes(option.value);
+      option.disabled = !available;
+      if (!available && !option.textContent.includes("coming soon")) option.textContent += " · coming soon";
+    });
+    $("[data-invite-access]").hidden = !result.features?.inviteCodeAuth;
+    $("[data-email-auth]").hidden = !result.features?.emailPhoneAuth;
     const inviteField = $("[data-beta-invite]");
     const inviteInput = $("[data-beta-invite-code]");
     inviteField.hidden = !result.beta?.inviteOnly;
@@ -176,6 +209,7 @@
     $("[data-session-detail]").textContent = result.authenticated ? `Signed in by ${user.signInMethod} · ${user.maskedDestination} · ${region}` : "This device has a private session. Sign in to continue elsewhere.";
     $("[data-signin-card]").hidden = result.authenticated;
     $("[data-delete-card]").hidden = !result.authenticated;
+    $("[data-redeem-form]").hidden = !result.authenticated;
   }
 
   function suggestRegionFromPhone() {
@@ -213,6 +247,29 @@
     $("[data-destination-label]").textContent = authMethod === "email" ? "Email address" : "Mobile number with country code";
   }));
 
+  $("[data-invite-access]").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const notice = $("[data-auth-notice]");
+    const primaryRegion = $("[data-invite-region]").value;
+    try {
+      const result = await platform.api("/api/auth/invite", { method: "POST", body: JSON.stringify({
+        betaInviteCode: $("[data-invite-code]").value.trim(),
+        displayName: $("[data-invite-display-name]").value.trim(),
+        ageGroup: $("[data-invite-age]").value,
+        primaryRegion,
+        countryCode: primaryRegion === "cn" ? "CN" : primaryRegion === "us" ? "US" : "",
+        locale: localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en"
+      }) });
+      updateSession(result);
+      await Promise.all([loadProjects(), loadCredits(), loadStorageUsage()]);
+      toast("Invitation accepted. Your allowance is ready. · 邀请码已生效，额度已到账。");
+    } catch (error) {
+      notice.hidden = false;
+      notice.className = "notice error";
+      notice.textContent = error.message;
+    }
+  });
+
   $("[data-auth-start]").addEventListener("submit", async (event) => {
     event.preventDefault();
     const destination = $("[data-auth-destination]").value.trim();
@@ -244,6 +301,7 @@
       }) });
       updateSession(result);
       await loadProjects();
+      await loadCredits();
       toast("Signed in. Your stories moved with you.");
     } catch (error) { toast(error.message, true); }
   });
@@ -251,6 +309,23 @@
   $("[data-wechat]").addEventListener("click", async () => {
     try { await platform.api("/api/auth/wechat", { method: "POST", body: "{}" }); }
     catch (error) { toast(error.message, true); }
+  });
+
+  $("[data-redeem-form]").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const notice = $("[data-allowance-notice]");
+    try {
+      const result = await platform.api("/api/credits/redeem", { method: "POST", body: JSON.stringify({ code: $("[data-redeem-code]").value.trim() }) });
+      $("[data-redeem-code]").value = "";
+      notice.hidden = false;
+      notice.className = "notice";
+      notice.textContent = result.redeemed ? "Allowance added successfully. · 额度已到账。" : "This code was already added to your account.";
+      await loadCredits();
+    } catch (error) {
+      notice.hidden = false;
+      notice.className = "notice error";
+      notice.textContent = error.message;
+    }
   });
 
   $("[data-new-story]").addEventListener("click", () => { $("[data-new-story-form]").hidden = false; $("[data-new-title]").focus(); });
@@ -301,5 +376,5 @@
     } catch (error) { toast(error.message, true); }
   });
 
-  Promise.all([platform.getSession(), loadProjects(), loadOrders(), loadStorageUsage(), loadAvailableRegions()]).then(([session]) => updateSession(session)).catch((error) => toast(error.message, true));
+  Promise.all([platform.getSession(), loadProjects(), loadOrders(), loadStorageUsage(), loadAvailableRegions(), loadCredits()]).then(([session]) => updateSession(session)).catch((error) => toast(error.message, true));
 }());

@@ -4,10 +4,12 @@
 
 首发采用 Stripe Payment Links，不在 StoriesLens 页面里处理银行卡信息。网站已经具备安全的跳转接口；在环境变量为空时，系统会明确提示“结账尚未接通”，不会假装成交或误收款。
 
-首发只卖两个核心商品：
+首发将自助产品保持为按项目付费，不做无限量订阅：
 
 1. **Story Pass — $19，一次性**：孩子先免费写，家长看到成品预览后购买一个项目的完整制作与下载。
-2. **Guided Story Squad — $49 席位订金**：订金抵扣 $129 总价。确定开班日期和最低人数后，再收剩余 $80。
+2. **Invited Co-creation Pack — $39，一次性**：一本私密共创故事、最多5位受邀家人或朋友、18次插图生成。
+3. **Teacher Classroom Project — $79，一次性**：一个班级出版项目，最多收录30份学生作品。
+4. **Guided Story Squad — $49 席位订金**：订金抵扣 $129 总价。确定开班日期和最低人数后，再收剩余 $80。
 
 Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决策里。
 
@@ -25,7 +27,7 @@ Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决
 - 商品名：`StoriesLens Story Pass`
 - 类型：一次性付款
 - 价格：`USD 19`
-- 描述：`One finished story project: full Story Coach, up to 5 invited collaborators, 12 visual scene generations, illustrated layout, and downloadable edition.`
+- 描述：`One finished story project: full Story Coach, 12 visual scene generations, illustrated layout, private library, and downloadable edition.`
 - 收集：家长姓名、家长邮箱
 - 不要收集：孩子真实姓名、生日、学校或其他不必要的儿童个人信息
 - 成功页：正式域名上线后指向 `https://storieslens.com/payment-success.html?offer=story-pass`
@@ -40,12 +42,30 @@ Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决
 - 成功页：`https://storieslens.com/payment-success.html?offer=guided-squad`
 - 在实际启用前，把延期、最低开班人数及退款规则写进购买条款，并与页面承诺保持一致
 
+### 3. Invited Co-creation Pack
+
+- 商品名：`StoriesLens Invited Co-creation Pack`
+- 类型：一次性付款
+- 价格：`USD 39`
+- 描述：`One private shared story project, up to 5 approved collaborators, 18 visual scene generations, creator credits, and revision history.`
+- 成功页：`https://storieslens.com/payment-success.html?offer=cocreate-pack`
+
+### 4. Teacher Classroom Project
+
+- 商品名：`StoriesLens Teacher Classroom Project`
+- 类型：一次性付款
+- 价格：`USD 79`
+- 描述：`One teacher-controlled publishing project for up to 30 student works, with a dated cover and digital class-book layout.`
+- 成功页：`https://storieslens.com/payment-success.html?offer=teacher-classroom`
+
 ## 把链接接入网站
 
 将 Stripe 生成的 `https://buy.stripe.com/...` 链接写入部署环境变量：
 
 ```text
 STRIPE_STORY_PASS_URL=https://buy.stripe.com/...
+STRIPE_COCREATE_PACK_URL=https://buy.stripe.com/...
+STRIPE_TEACHER_CLASSROOM_URL=https://buy.stripe.com/...
 STRIPE_GUIDED_SQUAD_URL=https://buy.stripe.com/...
 STRIPE_MOVIE_30_URL=https://buy.stripe.com/...
 STRIPE_MOVIE_60_URL=https://buy.stripe.com/...

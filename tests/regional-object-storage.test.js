@@ -80,3 +80,27 @@ test("regional storage reads the documented MEDIA_US environment names", (contex
   context.after(() => fs.rmSync(mediaDirectory, { recursive: true, force: true }));
   assert.strictEqual(createRegionalObjectStorage({ mediaDirectory }).status().us, "cloud-private");
 });
+
+test("a Railway persistent volume can hold a private US beta", async (context) => {
+  const previous = process.env.MEDIA_VOLUME_REGIONS;
+  process.env.MEDIA_VOLUME_REGIONS = "us";
+  context.after(() => {
+    if (previous === undefined) delete process.env.MEDIA_VOLUME_REGIONS;
+    else process.env.MEDIA_VOLUME_REGIONS = previous;
+  });
+  const mediaDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "storieslens-volume-"));
+  context.after(() => fs.rmSync(mediaDirectory, { recursive: true, force: true }));
+  const storage = createRegionalObjectStorage({ mediaDirectory });
+  const stored = await storage.put({
+    user: { id: "creator-volume", primaryRegion: "us" },
+    key: "creator-volume/story/artwork.webp",
+    buffer: Buffer.from("private volume artwork"),
+    contentType: "image/webp"
+  });
+  assert.strictEqual(stored.storageProvider, "volume");
+  assert.strictEqual(stored.storageRegion, "us");
+  assert.strictEqual(storage.status().us, "persistent-private");
+  assert.doesNotThrow(() => storage.assertReady("us"));
+  const loaded = await storage.get({ ...stored, mimeType: "image/webp" });
+  assert.strictEqual(loaded.body.toString(), "private volume artwork");
+});

@@ -47,6 +47,10 @@ function completeConfig(config) {
   return Boolean(config.endpoint && config.bucket && config.accessKeyId && config.secretAccessKey);
 }
 
+function volumeRegions() {
+  return [...new Set(String(process.env.MEDIA_VOLUME_REGIONS || "").split(",").map((item) => item.trim().toLowerCase()).filter((item) => REGION_NAMES.includes(item)))];
+}
+
 function createSignedRequest(config, method, key, body, contentType) {
   const endpoint = new URL(config.endpoint);
   const objectKey = cleanKey(key);
@@ -95,6 +99,12 @@ function createRegionalObjectStorage({ mediaDirectory }) {
     const storageRegion = resolveRegion(user);
     const storageKey = cleanKey(key);
     const config = storageRegion === "local" ? null : configForRegion(storageRegion);
+    if (volumeRegions().includes(storageRegion)) {
+      const filePath = path.join(mediaDirectory, ...storageKey.split("/"));
+      fs.mkdirSync(path.dirname(filePath), { recursive: true, mode: 0o700 });
+      fs.writeFileSync(filePath, buffer, { mode: 0o600 });
+      return { storageProvider: "volume", storageRegion, storageKey, filePath, storageEtag: sha256(buffer) };
+    }
     if (!config || !completeConfig(config)) {
       const filePath = path.join(mediaDirectory, ...storageKey.split("/"));
       fs.mkdirSync(path.dirname(filePath), { recursive: true, mode: 0o700 });
@@ -114,7 +124,7 @@ function createRegionalObjectStorage({ mediaDirectory }) {
   }
 
   async function get(media) {
-    if (media.storageProvider === "local" || (!media.storageProvider && media.filePath)) {
+    if (["local", "volume"].includes(media.storageProvider) || (!media.storageProvider && media.filePath)) {
       const filePath = path.resolve(media.filePath || path.join(mediaDirectory, ...cleanKey(media.storageKey).split("/")));
       const relativePath = path.relative(path.resolve(mediaDirectory), filePath);
       if (relativePath.startsWith("..") || path.isAbsolute(relativePath) || !fs.existsSync(filePath)) return null;
@@ -132,7 +142,7 @@ function createRegionalObjectStorage({ mediaDirectory }) {
   }
 
   async function remove(media) {
-    if (media.storageProvider === "local" || (!media.storageProvider && media.filePath)) {
+    if (["local", "volume"].includes(media.storageProvider) || (!media.storageProvider && media.filePath)) {
       const filePath = path.resolve(media.filePath || path.join(mediaDirectory, ...cleanKey(media.storageKey).split("/")));
       const relativePath = path.relative(path.resolve(mediaDirectory), filePath);
       if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) throw new Error("Invalid private-media deletion path.");
@@ -149,7 +159,8 @@ function createRegionalObjectStorage({ mediaDirectory }) {
   }
 
   function status() {
-    return Object.fromEntries(REGION_NAMES.map((region) => [region, completeConfig(configForRegion(region)) ? "cloud-private" : "local-fallback"]));
+    const persistentRegions = volumeRegions();
+    return Object.fromEntries(REGION_NAMES.map((region) => [region, persistentRegions.includes(region) ? "persistent-private" : completeConfig(configForRegion(region)) ? "cloud-private" : "local-fallback"]));
   }
 
   function assertReady(requiredRegions) {
@@ -157,7 +168,7 @@ function createRegionalObjectStorage({ mediaDirectory }) {
     const invalid = requested.filter((region) => !REGION_NAMES.includes(region));
     if (invalid.length) throw new Error(`Unknown MEDIA_REQUIRED_REGIONS value: ${invalid.join(", ")}.`);
     const storageStatus = status();
-    const unavailable = requested.filter((region) => storageStatus[region] !== "cloud-private");
+    const unavailable = requested.filter((region) => !["cloud-private", "persistent-private"].includes(storageStatus[region]));
     if (unavailable.length) throw new Error(`Private media storage is not configured for required regions: ${unavailable.join(", ")}.`);
     return storageStatus;
   }

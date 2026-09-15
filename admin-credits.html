@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <meta name="theme-color" content="#0f513d" />
+    <link rel="stylesheet" href="admin-credits.css" />
+    <title>Allowance Console · StoriesLens</title>
+  </head>
+  <body>
+    <header class="admin-header">
+      <a href="index.html" class="admin-brand">STORIESLENS</a>
+      <span>Private operations console · 私密运营后台</span>
+      <button type="button" data-admin-logout hidden>退出后台</button>
+    </header>
+
+    <main>
+      <section class="login-panel" data-login-panel>
+        <p class="eyebrow">FOUNDER ACCESS · 创始人专用</p>
+        <h1>额度管理后台</h1>
+        <p>生成邀请码、给用户发放额度，并审计每一次产生真实成本的创作操作。后台密钥不会保存在浏览器中。</p>
+        <form data-admin-login>
+          <label>后台访问密钥<input type="password" data-admin-key autocomplete="current-password" minlength="16" required /></label>
+          <button type="submit">进入额度后台</button>
+        </form>
+        <p class="notice" data-login-notice hidden></p>
+      </section>
+
+      <div data-admin-app hidden>
+        <section class="hero-row">
+          <div>
+            <p class="eyebrow">CONTROL COST · PROTECT CREATORS</p>
+            <h1>创作额度</h1>
+            <p>用户看到的是成果；后台记录的是每一次真实成本。</p>
+          </div>
+          <button class="secondary" type="button" data-refresh>刷新数据</button>
+        </section>
+
+        <section class="summary-grid" aria-label="Allowance summary">
+          <article><span>认证账户</span><strong data-summary-accounts>—</strong></article>
+          <article><span>有效邀请码</span><strong data-summary-codes>—</strong></article>
+          <article><span>发放记录</span><strong data-summary-grants>—</strong></article>
+          <article><span>扣减记录</span><strong data-summary-consumed>—</strong></article>
+          <article><span>处理中预占</span><strong data-summary-reserved>—</strong></article>
+          <article><span>已记录模型成本</span><strong data-summary-cost>—</strong></article>
+        </section>
+
+        <section class="panel package-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">FOUNDING BETA PRICE CARD</p><h2>卖什么、发多少额度</h2></div>
+            <span class="privacy-chip">一次性项目制 · 不做无限量</span>
+          </div>
+          <p class="package-intro">美元用于美国与其他开放地区；人民币用于中国内测人工收款。成本护栏是保守预算，不是用户可见价格，也不代表收入保证。</p>
+          <div class="package-list" data-package-list></div>
+        </section>
+
+        <section class="admin-grid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">INVITATION BATCH</p><h2>批量生成邀请码</h2></div>
+              <span class="privacy-chip">明文仅显示一次 · Codes shown once</span>
+            </div>
+            <form class="form-grid" data-invite-form>
+              <label>附带额度包<select data-invite-package required></select></label>
+              <label>使用地区<select data-invite-region required><option value="cn">中国大陆</option><option value="us">美国</option><option value="intl">其他国家或地区</option></select></label>
+              <label>生成数量<input data-invite-count type="number" min="1" max="100" value="20" required /></label>
+              <label>每码可用人数<input data-invite-uses type="number" min="1" max="50" value="1" required /></label>
+              <label>有效天数<input data-invite-days type="number" min="1" max="365" value="30" required /></label>
+              <label>批次名称<input data-invite-label maxlength="100" value="创始内测" required /></label>
+              <button class="primary wide" type="submit">生成邀请码</button>
+            </form>
+            <p class="notice" data-invite-notice hidden></p>
+          </article>
+
+          <article class="panel generated-panel" data-generated-panel hidden>
+            <div class="panel-heading"><div><p class="eyebrow">SAVE NOW · 立即保存</p><h2>新邀请码</h2></div></div>
+            <p>服务器只保存不可逆指纹。关闭本页后无法找回这些明文邀请码，请立即复制或下载。</p>
+            <textarea data-generated-codes readonly aria-label="新生成的邀请码"></textarea>
+            <div class="button-row">
+              <button class="primary" type="button" data-copy-codes>复制全部</button>
+              <button class="secondary" type="button" data-download-codes>下载 CSV · Download CSV</button>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">ACCOUNTS · 用户</p><h2>查找用户并补发额度</h2></div>
+            <form class="search-form" data-user-search><input data-user-query maxlength="100" placeholder="姓名、脱敏邮箱/手机号或账户 ID" /><button type="submit">查找</button></form>
+          </div>
+          <div class="user-list" data-user-list><p class="empty">暂无认证账户。</p></div>
+        </section>
+
+        <section class="admin-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">BATCH CONTROL</p><h2>邀请码批次</h2></div></div>
+            <div class="batch-list" data-batch-list><p class="empty">暂无邀请码批次。</p></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">AUDIT TRAIL</p><h2>最近额度流水</h2></div></div>
+            <div class="ledger-list" data-ledger-list><p class="empty">暂无额度流水。</p></div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast" data-toast role="status" aria-live="polite"></div>
+    <script src="admin-credits.js"></script>
+  </body>
+</html>

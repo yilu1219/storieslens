@@ -1,4 +1,5 @@
 const http = require("http");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } = require("docx");
@@ -95,6 +96,18 @@ const checkoutOffers = {
     envKey: "STRIPE_STORY_PASS_URL",
     fallbackUrl: "/beta-interest.html?offer=story-pass"
   },
+  "cocreate-pack": {
+    name: "Invited Co-creation Pack",
+    price: "$39",
+    envKey: "STRIPE_COCREATE_PACK_URL",
+    fallbackUrl: "/beta-interest.html?offer=cocreate-pack"
+  },
+  "teacher-classroom": {
+    name: "Teacher Classroom Project",
+    price: "$79",
+    envKey: "STRIPE_TEACHER_CLASSROOM_URL",
+    fallbackUrl: "/beta-interest.html?offer=teacher-classroom"
+  },
   "guided-squad": {
     name: "Guided Story Squad seat deposit",
     price: "$49",
@@ -109,7 +122,7 @@ const checkoutOffers = {
   },
   "movie-60": {
     name: "60-second Movie Pack",
-    price: "$49",
+    price: "$69",
     envKey: "STRIPE_MOVIE_60_URL",
     fallbackUrl: "/beta-interest.html?offer=movie-60"
   }
@@ -140,6 +153,7 @@ const pageAliases = Object.freeze({
   "/app": "/app.html",
   "/create": "/app.html",
   "/stories": "/my-stories.html",
+  "/admin-allowances": "/admin-credits.html",
   "/studio": "/movie-studio.html",
   "/classroom": "/classroom-archive.html",
   "/launch-gate": "/launch-readiness.html",
@@ -430,6 +444,13 @@ function normalizeVideoStatus(status) {
   return "pending";
 }
 
+function costUsdFromUsage(usage) {
+  if (!usage || typeof usage !== "object") return null;
+  const candidates = [usage.cost, usage.cost_usd, usage.total_cost, usage.total_cost_usd];
+  const value = candidates.map(Number).find((candidate) => Number.isFinite(candidate) && candidate >= 0);
+  return value === undefined ? null : value;
+}
+
 function saveVideoBuffer(jobId, buffer) {
   const safeJobId = sanitizePathPart(jobId, `video-${Date.now()}`);
   const videoDirectory = path.join(root, "public", "generated", "videos");
@@ -445,6 +466,7 @@ async function handleGenerateVideo(request, response) {
     return;
   }
 
+  let creditReservation = null;
   try {
     const body = await readJsonBody(request);
     if (process.env.SAFE_VIDEO_GENERATION_ENABLED !== "true") {
@@ -460,10 +482,20 @@ async function handleGenerateVideo(request, response) {
 
     const sourceImage = resolveLocalImageDataUrl(body.imageUrl);
     await enforceImageSafety(sourceImage);
+    const requestedDuration = Math.max(1, Math.min(60, Number(body.duration || config.duration) || 5));
+    const clipUnits = Math.ceil(requestedDuration / 5);
+    creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
+      resource: "videoClips",
+      units: clipUnits,
+      idempotencyKey: `video:${request.headers["idempotency-key"] || crypto.randomUUID()}`,
+      referenceType: "video-generation",
+      referenceId: body.projectId,
+      metadata: { model: body.model || config.model, duration: requestedDuration, resolution: body.resolution || config.resolution }
+    }).reservation;
     const payload = {
       model: body.model || config.model,
       prompt: buildVideoPrompt(body),
-      duration: Number(body.duration || config.duration),
+      duration: requestedDuration,
       aspect_ratio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
       resolution: body.resolution || config.resolution,
       frame_images: [{
@@ -481,6 +513,8 @@ async function handleGenerateVideo(request, response) {
     const upstreamData = await upstreamResponse.json().catch(() => ({}));
     if (!upstreamResponse.ok || !upstreamData.id) {
       console.error("OpenRouter video submission failed", upstreamResponse.status, upstreamData?.error || "Unknown provider error");
+      handlePlatformApi.creditManager.release(creditReservation.id, "video-submission-failed");
+      creditReservation = null;
       sendJson(response, upstreamResponse.status || 502, {
         error: upstreamData?.error?.message || upstreamData?.error || "The video request could not be started. Please try again."
       });
@@ -489,9 +523,12 @@ async function handleGenerateVideo(request, response) {
 
     const job = {
       jobId: String(upstreamData.id),
+      ownerId: creditReservation.userId,
       status: normalizeVideoStatus(upstreamData.status),
       pollingUrl: upstreamData.polling_url || `${config.openRouterVideoApiUrl}/${encodeURIComponent(upstreamData.id)}`,
       sourceImageUrl: body.imageUrl,
+      creditReservationId: creditReservation.id,
+      clipUnits,
       createdAt: new Date().toISOString(),
       localVideoUrl: ""
     };
@@ -502,9 +539,10 @@ async function handleGenerateVideo(request, response) {
       pollUrl: `/api/video-jobs/${encodeURIComponent(job.jobId)}`
     });
   } catch (error) {
+    if (creditReservation) handlePlatformApi.creditManager.release(creditReservation.id, "video-generation-failed");
     const message = error.message || "The video request could not be started.";
     const statusCode = error.statusCode || (message.includes("Generate an image") || message.includes("source image") ? 400 : 500);
-    sendJson(response, statusCode, { code: error.code || "VIDEO_GENERATION_FAILED", error: message });
+    sendJson(response, statusCode, { code: error.code || "VIDEO_GENERATION_FAILED", error: message, remaining: error.remaining, required: error.required });
   }
 }
 
@@ -539,6 +577,10 @@ async function handleGetVideoJob(request, response, jobId) {
     sendJson(response, 404, { error: "Video job not found. Please start it again." });
     return;
   }
+  if (job.ownerId !== handlePlatformApi.creditManager.ownerId(request, response)) {
+    sendJson(response, 404, { error: "Video job not found. Please start it again." });
+    return;
+  }
 
   try {
     const config = getVideoConfig();
@@ -556,21 +598,28 @@ async function handleGetVideoJob(request, response, jobId) {
     videoJobs.set(job.jobId, job);
     if (job.status === "completed") {
       const videoUrl = await downloadCompletedVideo(job, config);
+      const settled = handlePlatformApi.creditManager.settle(job.creditReservationId, {
+        costUsd: costUsdFromUsage(upstreamData.usage),
+        providerUsage: upstreamData.usage || null
+      });
       sendJson(response, 200, {
         jobId: job.jobId,
         status: "completed",
         videoUrl,
         downloadUrl: videoUrl,
-        usage: upstreamData.usage || null
+        usage: upstreamData.usage || null,
+        wallet: settled.wallet
       });
       return;
     }
     if (["failed", "cancelled", "expired"].includes(job.status)) {
       console.error("OpenRouter video job failed", job.jobId, upstreamData.error || job.status);
+      const released = handlePlatformApi.creditManager.release(job.creditReservationId, `video-${job.status}`);
       sendJson(response, 200, {
         jobId: job.jobId,
         status: "failed",
-        error: "The video could not be generated. Your source image is safe, so you can try again."
+        error: "The video could not be generated. Your source image is safe, so you can try again.",
+        wallet: released.wallet || null
       });
       return;
     }
@@ -797,10 +846,12 @@ async function runImageTask(task) {
     task.providerTaskId = result.taskId;
     task.costUsd = result.costUsd || null;
     task.updateTime = new Date().toISOString();
+    task.wallet = handlePlatformApi.creditManager.settle(task.creditReservationId, { costUsd: task.costUsd }).wallet;
   } catch (error) {
     task.status = "FAILED";
     task.errorMessage = error.message || "Image generation failed. Your credit has been refunded.";
     task.updateTime = new Date().toISOString();
+    task.wallet = handlePlatformApi.creditManager.release(task.creditReservationId, "image-generation-failed").wallet || null;
   }
 
   imageTasks.set(String(task.taskId), task);
@@ -812,11 +863,20 @@ async function handleGenerateImage(request, response) {
     return;
   }
 
+  let creditReservation = null;
   try {
     const body = await readJsonBody(request);
     const provider = createImageProvider();
     const imageRequest = createImageGenerationRequest(body);
     await enforceTextSafety(imageRequest.prompt, { media: true });
+    creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
+      resource: "imageGenerations",
+      units: 1,
+      idempotencyKey: `image:${request.headers["idempotency-key"] || crypto.randomUUID()}`,
+      referenceType: "image-generation",
+      referenceId: imageRequest.projectId,
+      metadata: { model: imageRequest.model, partId: imageRequest.partId }
+    }).reservation;
     const result = await provider.generate(imageRequest);
     try {
       await enforceImageSafety(result.imageUrl);
@@ -825,15 +885,18 @@ async function handleGenerateImage(request, response) {
       throw error;
     }
 
+    const settled = handlePlatformApi.creditManager.settle(creditReservation.id, { costUsd: result.costUsd });
     sendJson(response, 200, {
       imageUrl: result.imageUrl,
       downloadUrl: result.downloadUrl || result.imageUrl,
       taskId: result.taskId || null,
-      status: "COMPLETED"
+      status: "COMPLETED",
+      wallet: settled.wallet
     });
   } catch (error) {
+    if (creditReservation) handlePlatformApi.creditManager.release(creditReservation.id, "image-generation-failed");
     const statusCode = error.statusCode || (String(error.message || "").includes("OPENROUTER_API_KEY") ? 501 : 500);
-    sendJson(response, statusCode, { error: error.message || "Image generation failed" });
+    sendJson(response, statusCode, { code: error.code || "IMAGE_GENERATION_FAILED", error: error.message || "Image generation failed", remaining: error.remaining, required: error.required });
   }
 }
 
@@ -843,6 +906,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
     return;
   }
 
+  let creditReservation = null;
   try {
     const body = await readJsonBody(request);
     const taskId = Date.now();
@@ -853,11 +917,21 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
       assetId: `task-${taskId}`
     });
     await enforceTextSafety(imageRequest.prompt, { media: true });
+    creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
+      resource: "imageGenerations",
+      units: 1,
+      idempotencyKey: `image-task:${request.headers["idempotency-key"] || taskId}`,
+      referenceType: "image-generation",
+      referenceId: imageRequest.projectId,
+      metadata: { model: imageRequest.model, partId }
+    }).reservation;
     const task = {
       taskId,
+      ownerId: creditReservation.userId,
       status: "PENDING",
       partId,
       imageRequest,
+      creditReservationId: creditReservation.id,
       imageUrl: "",
       errorMessage: "",
       createTime: new Date().toISOString(),
@@ -871,6 +945,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
 
     sendJson(response, 202, { taskId, status: "PENDING" });
   } catch (error) {
+    if (creditReservation) handlePlatformApi.creditManager.release(creditReservation.id, "image-task-create-failed");
     sendJson(response, error.statusCode || 400, { code: error.code || "IMAGE_TASK_FAILED", error: error.message || "Image task could not be created" });
   }
 }
@@ -884,6 +959,10 @@ function handleGetImageTask(request, response, taskId) {
   const task = imageTasks.get(String(taskId));
   if (!task) {
     sendJson(response, 404, { error: "Image task not found" });
+    return;
+  }
+  if (task.ownerId !== handlePlatformApi.creditManager.ownerId(request, response)) {
+    sendJson(response, 404, { error: "Image task not found. Please start it again." });
     return;
   }
 

@@ -15,6 +15,8 @@
       <section class="card" data-intent-form>
         <div class="offers">
           <button class="offer" type="button" data-offer="story-pass"><span>SELF-GUIDED</span><strong>$19</strong><p>Finish one story, create up to 12 visuals, and download an illustrated book.</p><small>one story · one-time</small></button>
+          <button class="offer" type="button" data-offer="cocreate-pack"><span>PRIVATE CO-CREATION</span><strong>$39</strong><p>Create one private story with up to five invited family members or friends.</p><small>one shared project · one-time</small></button>
+          <button class="offer" type="button" data-offer="teacher-classroom"><span>TEACHER PUBLISHER</span><strong>$79</strong><p>Turn up to 30 student works into one reviewed, dated digital class book.</p><small>one classroom project · one-time</small></button>
           <button class="offer" type="button" data-offer="guided-squad"><span>GUIDED COHORT</span><strong>$129</strong><p>Three live creation sessions, a 5–6 creator squad, digital book, and short trailer.</p><small>per creator · beta</small></button>
           <button class="offer" type="button" data-offer="not-yet"><span>NOT YET</span><strong>Keep testing</strong><p>I like the idea, but I would not pay either price today.</p><small>honest feedback helps</small></button>
         </div>
@@ -25,7 +27,7 @@
     </main>
     <script src="analytics.js"></script>
     <script>
-      (()=>{const params=new URLSearchParams(location.search);const offers=[...document.querySelectorAll("[data-offer]")];const commit=document.querySelector("[data-commit]");let selected=params.get("offer");const render=()=>{offers.forEach(button=>button.classList.toggle("is-selected",button.dataset.offer===selected));commit.disabled=!offers.some(button=>button.dataset.offer===selected)};offers.forEach(button=>button.addEventListener("click",()=>{selected=button.dataset.offer;render()}));commit.addEventListener("click",()=>{window.StoriesLensAnalytics?.track("pricing_intent_recorded",{offer:selected,price:selected==="story-pass"?19:selected==="guided-squad"?129:0});document.querySelector("[data-intent-form]").hidden=true;document.querySelector("[data-intent-result]").hidden=false});render()})();
+      (()=>{const params=new URLSearchParams(location.search);const offers=[...document.querySelectorAll("[data-offer]")];const commit=document.querySelector("[data-commit]");const prices={"story-pass":19,"cocreate-pack":39,"teacher-classroom":79,"guided-squad":129};let selected=params.get("offer");const render=()=>{offers.forEach(button=>button.classList.toggle("is-selected",button.dataset.offer===selected));commit.disabled=!offers.some(button=>button.dataset.offer===selected)};offers.forEach(button=>button.addEventListener("click",()=>{selected=button.dataset.offer;render()}));commit.addEventListener("click",()=>{window.StoriesLensAnalytics?.track("pricing_intent_recorded",{offer:selected,price:prices[selected]||0});document.querySelector("[data-intent-form]").hidden=true;document.querySelector("[data-intent-result]").hidden=false});render()})();
     </script>
   </body>
 </html>
