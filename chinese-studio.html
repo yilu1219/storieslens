@@ -7,7 +7,7 @@
     <meta name="description" content="从一幅画、一段话或一个声音开始，在羽大师的引导下创作水墨故事、连环画、绘本或故事电影。" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260915-2" />
+    <link rel="stylesheet" href="family-flow.css?v=20260915-5" />
     <link rel="stylesheet" href="chinese-studio.css?v=20260915-3" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
@@ -68,28 +68,7 @@
             </button>
           </div>
           <p class="privacy-note">图片使用前会删除位置与拍摄设备信息；默认私密。</p>
-
-          <fieldset class="chinese-format-picker">
-            <legend><span>你想让它长成什么？</span><small>羽大师会根据选择调整三个问题</small></legend>
-            <div class="chinese-format-grid">
-              <label class="format-card format-ink">
-                <input type="radio" name="chinese-format" value="ink-story" checked />
-                <span><b>水墨故事</b><small>从意境与人物开始</small></span>
-              </label>
-              <label class="format-card format-comic">
-                <input type="radio" name="chinese-format" value="comic" />
-                <span><b>连环画</b><small>一格一格推进情节</small></span>
-              </label>
-              <label class="format-card format-picturebook">
-                <input type="radio" name="chinese-format" value="picturebook" />
-                <span><b>绘本</b><small>让文字与画面一起讲述</small></span>
-              </label>
-              <label class="format-card format-film">
-                <input type="radio" name="chinese-format" value="film" />
-                <span><b>故事电影</b><small>把故事写成可见的场景</small></span>
-              </label>
-            </div>
-          </fieldset>
+          <p class="beta-photo-note">内测说明 · 可以使用本人或家人的真人照片进行私密创作，请先取得本人或监护人同意。</p>
 
           <div class="words-heading"><strong>也可以从自己的话开始</strong><span>写下 · 口述</span></div>
           <div class="voice-field">
@@ -145,16 +124,84 @@
             <p>请用自己的话回答。一句话就足够。</p>
             <div class="coach-answer-field">
               <textarea data-answer rows="5" maxlength="1000" placeholder="在我的故事里……"></textarea>
-              <button class="answer-speech-button" type="button" data-answer-speech aria-pressed="false">
+              <button class="answer-speech-button" type="button" data-answer-speech aria-pressed="false" aria-describedby="answer-speech-note">
                 <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg>
-                <span data-t="answer-by-voice">语音回答</span>
+                <span data-t="answer-by-voice">按住回答</span>
+                <b class="answer-speech-time" data-answer-speech-time hidden>00:00</b>
               </button>
             </div>
-            <small class="answer-speech-note" data-t="answer-speech-note">口述会转成可修改的文字，不保存现场录音。</small>
+            <small class="answer-speech-note" id="answer-speech-note" data-t="answer-speech-note">按住按钮口述（最长 90 秒），说完松开。口述会转成可修改的文字，不保存现场录音。</small>
             <p class="form-message" data-question-error role="alert"></p>
             <button class="primary-action" type="button" data-next-question><span>下一个问题</span><b aria-hidden="true">→</b></button>
           </div>
         </div>
+      </section>
+
+      <section class="flow-stage mentor-revision-stage" data-stage="mentor-review" aria-labelledby="mentor-review-title" hidden>
+        <ol class="creation-journey" aria-label="创作进度">
+          <li class="is-complete"><b>1</b><span>故事想法</span></li>
+          <li class="is-active"><b>2</b><span>写出场景</span></li>
+          <li><b>3</b><span>与羽大师修改</span></li>
+          <li><b>4</b><span>选择作品形式</span></li>
+        </ol>
+        <div class="mentor-arrival" data-mentor-arrival>
+          <div class="mentor-turn mentor-turn-sage" aria-hidden="true"><span></span><img src="assets/yu-sage-v1.png" alt="" /></div>
+          <div><p class="flow-kicker" data-t="mentor-arrives">羽大师转身来到你的故事前</p><h1 id="mentor-review-title" data-t="mentor-review-title">想法已经出现，现在让文字真正长大。</h1><p data-t="mentor-review-intro">我们一次只看一句。羽大师讲清一个方法，每一处修改仍由你决定。</p></div>
+        </div>
+        <div class="mentor-workbench">
+          <div class="mentor-review-progress"><span data-t="sentence-review">逐句修改</span><strong>第 <b data-revision-number>1</b> / <span data-revision-total>1</span> 句</strong></div>
+          <article class="mentor-original-card"><small data-t="your-words">你的原句</small><p data-revision-original></p></article>
+          <div class="mentor-thinking" data-revision-loading role="status"><i aria-hidden="true"></i><span data-t="yu-is-thinking">羽大师正在仔细读这一句……</span></div>
+          <div class="mentor-feedback" data-revision-feedback hidden><div><small data-t="one-strength">写得好的地方</small><p data-revision-strength></p></div><div><small data-t="one-focus">这次只改一件事</small><p data-revision-priority></p></div><div><small data-t="mini-lesson">一个写作小技巧</small><p data-revision-lesson></p></div></div>
+          <label class="mentor-suggestion"><span data-t="yu-suggestion">羽大师的最小修改</span><textarea rows="3" maxlength="500" data-revision-suggestion></textarea></label>
+          <p class="mentor-meaning-question" data-revision-question>这是你原来想表达的意思吗？</p>
+          <div class="mentor-confirm-actions" data-revision-actions><button class="primary-action" type="button" data-revision-confirm><span data-t="yes-my-meaning">是，这就是我的意思</span><b aria-hidden="true">✓</b></button><button class="secondary-action" type="button" data-revision-edit data-t="change-my-words">不完全是，我自己改一改</button></div>
+          <div class="mentor-rehearsal" data-revision-rehearsal hidden><div><small data-t="read-it-aloud">现在跟着读一遍</small><p data-revision-approved></p></div><button class="read-question-button" type="button" data-revision-read><span aria-hidden="true">▶</span><b data-t="hear-and-follow">先听，再自己朗读</b></button><button class="primary-action" type="button" data-revision-next><span data-t="i-read-it">我已经读过了</span><b aria-hidden="true">→</b></button></div>
+          <p class="form-message" data-revision-error role="alert"></p>
+          <p class="mentor-authorship-note" data-t="mentor-authorship-note">羽大师只负责教学和建议；没有你的确认，一个字也不会替换。</p>
+        </div>
+        <aside class="setting-build-card">
+          <div><small>故事开篇 · 场景设定</small><strong>你的第一段正在一句句长出来。</strong></div>
+          <p data-setting-preview>你确认的句子会依次出现在这里。</p>
+        </aside>
+      </section>
+
+      <section class="flow-stage story-path-stage chinese-story-path" data-stage="story-path" aria-labelledby="story-path-title" hidden>
+        <ol class="creation-journey" aria-label="创作进度">
+          <li class="is-complete"><b>1</b><span>故事想法</span></li>
+          <li class="is-complete"><b>2</b><span>写出场景</span></li>
+          <li class="is-complete"><b>3</b><span>与羽大师修改</span></li>
+          <li class="is-active"><b>4</b><span>选择作品形式</span></li>
+        </ol>
+        <div class="story-path-intro">
+          <p class="flow-kicker">第一段完成 · 场景已经建立</p>
+          <h1 id="story-path-title">同一个故事，<br />你想让它成为一本书，还是一部电影？</h1>
+          <p>你的文字不会改变。这个选择只决定下一步打开哪一套创作工具，以后仍可更换。</p>
+        </div>
+        <article class="finished-setting"><small>你完成的第一段</small><p data-path-setting></p></article>
+        <fieldset class="story-output-picker">
+          <legend>选择接下来要创作的形式</legend>
+          <div class="story-output-grid">
+            <label class="story-output-card output-book">
+              <input type="radio" name="story-output" value="book" />
+              <span class="output-card-icon" aria-hidden="true"><i></i><i></i></span>
+              <span><small>阅读 · 珍藏 · 印刷</small><strong>插画故事书</strong><em>让文字和画面一页一页共同讲述。</em></span>
+            </label>
+            <label class="story-output-card output-film">
+              <input type="radio" name="story-output" value="film" />
+              <span class="output-card-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span><small>场景 · 动作 · 声音</small><strong>故事电影</strong><em>让同一人物与世界走进镜头。</em></span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="chinese-book-style" data-chinese-book-style hidden>
+          <legend>这本书可以怎样展开？</legend>
+          <label><input type="radio" name="chinese-book-style" value="picturebook" checked /><span><b>绘本／水墨故事书</b><small>一页一幅主要画面</small></span></label>
+          <label><input type="radio" name="chinese-book-style" value="comic" /><span><b>连环画</b><small>用连续画格推进故事</small></span></label>
+        </fieldset>
+        <p class="form-message" data-story-path-error role="alert"></p>
+        <button class="primary-action story-path-continue" type="button" data-confirm-story-path disabled><span>按这个方向继续</span><b aria-hidden="true">→</b></button>
+        <p class="story-path-promise">羽大师只调整接下来的提问和工具，不会替你改写故事。</p>
       </section>
 
       <section class="flow-stage comic-template-stage" data-stage="comic-template" aria-labelledby="comic-template-title" hidden>
@@ -207,6 +254,7 @@
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
-    <script src="h5-app.js?v=20260915-3"></script>
+    <script src="mentor-revision.js?v=20260915-1"></script>
+    <script src="h5-app.js?v=20260915-6"></script>
   </body>
 </html>

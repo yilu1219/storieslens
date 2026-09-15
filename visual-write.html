@@ -1252,6 +1252,7 @@
           storyDna = JSON.parse(localStorage.getItem("storieslens_story_dna") || "null");
         } catch {}
         const comicTemplate = pageParams.get("comicTemplate") || creatorSetup?.chineseCreativeProfile?.comicTemplate || storyDna?.chineseCreativeProfile?.comicTemplate || "";
+        const storyOutput = pageParams.get("output") || creatorSetup?.outputFormat || storyDna?.outputFormat || "book";
         const liveStoryLanguage = document.querySelector("[data-live-story-language]");
         const soloWordCount = document.querySelector("[data-word-count]");
         const autosaveStatus = document.querySelector("[data-autosave-status]");
@@ -1283,6 +1284,20 @@
           const slots = document.querySelector("[data-comic-plan-slots]");
           slots.dataset.template = comicTemplate;
           slots.replaceChildren(...Array.from({ length: plan.pages }, () => document.createElement("i")));
+        }
+
+        function applySelectedOutput() {
+          const filmSelected = storyOutput === "film";
+          document.body.dataset.storyOutput = filmSelected ? "film" : "book";
+          const premiereButton = document.querySelector('[data-student-action="premiere"][data-mode-target="free"]');
+          const illustrationButton = document.querySelector('[data-student-action="image"][data-mode-target="free"]');
+          const videoButton = document.querySelector('[data-student-action="video"][data-mode-target="free"]');
+          if (premiereButton) premiereButton.firstChild.textContent = filmSelected ? "Preview my story film " : "Preview my illustrated book ";
+          if (illustrationButton) {
+            illustrationButton.querySelector("span").textContent = filmSelected ? "Create first film frame" : "Create one illustration";
+            illustrationButton.querySelector("small").textContent = filmSelected ? "Build the visual before animating it" : "From my finished scene";
+          }
+          if (videoButton) videoButton.hidden = !filmSelected;
         }
 
         function getMapLearningContext() {
@@ -2234,6 +2249,7 @@
           }
           renderStoryDna();
           applyComicPlan();
+          applySelectedOutput();
           updateVisualBrief("free");
           updateSoloJourney();
         };

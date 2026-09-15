@@ -1152,7 +1152,7 @@ async function handleWritingAssistant(request, response) {
     const actionInstructions = {
       begin: "Ask exactly one vivid question that helps the creator imagine and write their own first sentence from the Story DNA. Do not provide a sentence, sample prose, or plot answer. For an expression-stage creator only, you may offer two short direction words, never two finished sentences. Set suggestion, strength, priority, and microLesson to empty strings.",
       hint: "Ask one useful question or give one short hint. Do not write the answer for the student.",
-      check: "Check grammar and clarity. Name one strength and at most one correction.",
+      check: "Review only the current sentence. Name one specific strength. Teach at most one grammar, usage, punctuation, sentence-clarity, or high-leverage craft move. Put a minimally corrected version of that same sentence in suggestion; preserve every story fact, image, relationship, tone, and intended meaning. If no correction is needed, copy the current sentence exactly into suggestion. Ask whether this is what the creator meant. Do not expand the sentence or add new story prose.",
       details: "Name two categories of sensory or setting detail the creator may explore, then ask the creator to supply the actual detail. Do not invent story facts.",
       dialogue: "Diagnose the purpose or naturalness of the dialogue. Offer a fill-in-the-blank pattern or an unrelated neutral micro-example only; never write dialogue for the creator's characters.",
       continuity: "Check whether this chapter connects logically to the surrounding chapters. Identify one strong connection and one specific continuity fix without rewriting the chapter.",
@@ -1169,7 +1169,7 @@ async function handleWritingAssistant(request, response) {
       "Respect the teacher task, skill focus, approved characters, and source text context.",
       actionInstructions[action] || actionInstructions.hint,
       "Return strict JSON with keys reply, strength, priority, microLesson, question, task, suggestion, readyForVisual, visualBrief, authorshipCheck.",
-      "authorshipCheck must be 'pass' only when the response teaches or asks without supplying finished story prose."
+      "authorshipCheck must be 'pass' only when the response teaches or asks without supplying finished story prose, or when suggestion is solely a minimal correction of the creator's current sentence that preserves all meaning and story decisions."
     ].join(" ");
     const userPrompt = [
       `Mode: ${body.mode || "free"}`,

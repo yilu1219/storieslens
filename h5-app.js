@@ -13,7 +13,19 @@
   let selectedArtworkData = "";
   let recognition = null;
   let answerRecognition = null;
+  let answerSpeechHolding = false;
+  let answerSpeechStartedAt = 0;
+  let answerSpeechTimer = 0;
+  let answerSpeechRestartTimer = 0;
+  let answerSpeechMaxTimer = 0;
+  let answerSpeechOriginal = "";
+  let answerSpeechCommitted = "";
+  let answerSpeechPointerId = null;
   let questionUtterance = null;
+  let mentorUtterance = null;
+  let mentorRevisionItems = [];
+  let mentorRevisionIndex = 0;
+  let mentorReviewedDraft = "";
   let questionIndex = 0;
   let answers = [];
   let languageTouched = false;
@@ -21,6 +33,8 @@
   let artworkPersistencePromise = null;
   let saveTimer = 0;
   let selectedComicTemplate = "";
+  let selectedOutputFormat = "";
+  const answerSpeechMaxSeconds = 90;
 
   const copy = {
     en: {
@@ -39,6 +53,7 @@
       "upload-title": "Upload your artwork or photo",
       "upload-help": "JPG, PNG, WEBP or HEIC · converted privately on this device",
       "privacy-note": "Location and camera information are removed before the image is used.",
+      "beta-photo-note": "PRIVATE BETA · Personal photos are welcome for private creation. Use only photos you have permission to use.",
       "or-words": "Or begin with your own words",
       "write-speak": "WRITE · SPEAK",
       "seed-placeholder": "Tell Yu what is happening in the artwork—or begin with one idea.",
@@ -99,10 +114,47 @@
       "bard-yu-badge": "BARD YU",
       "stop-reading": "Stop reading",
       "auto-read-questions": "Read every question aloud",
-      "answer-by-voice": "Answer by voice",
-      "stop-answer-voice": "Stop listening",
+      "answer-by-voice": "Hold to answer",
+      "stop-answer-voice": "Release to finish",
       "listening": "Listening…",
-      "answer-speech-note": "Speech becomes editable text. Live audio is not stored.",
+      "answer-speech-note": "Press and hold while you speak (up to 90 seconds), then release. Speech becomes editable text; live audio is not stored.",
+      "mentor-arrives": "BARD YU TURNS TOWARD YOUR STORY",
+      "mentor-review-title": "Your idea is here. Now let’s help your writing grow.",
+      "mentor-review-intro": "We’ll look at one sentence at a time. Yu explains one useful move; you decide every change.",
+      "mentor-spoken-intro": "Wonderful. Your story idea is here. Now let us make each sentence clearer while keeping it completely yours.",
+      "sentence-review": "SENTENCE REVIEW",
+      "your-words": "YOUR WORDS",
+      "yu-is-thinking": "Bard Yu is looking closely at your sentence…",
+      "one-strength": "WHAT WORKS",
+      "one-focus": "ONE FOCUS",
+      "mini-lesson": "MINI LESSON",
+      "yu-suggestion": "YU’S MINIMAL REVISION",
+      "yes-my-meaning": "Yes—this is what I mean",
+      "change-my-words": "Not quite—I’ll change the words",
+      "read-it-aloud": "NOW READ IT ALOUD",
+      "hear-and-follow": "Hear it, then read it",
+      "i-read-it": "I read it aloud",
+      "mentor-authorship-note": "Yu teaches and suggests. Nothing changes until you approve it.",
+      "journey-idea": "STORY IDEA",
+      "journey-setting": "BUILD THE SETTING",
+      "journey-revise": "REVISE WITH YU",
+      "journey-format": "CHOOSE THE FORM",
+      "setting-being-built": "YOUR OPENING · SETTING",
+      "setting-build-title": "Your first paragraph is taking shape.",
+      "setting-build-empty": "Each sentence you approve will appear here.",
+      "setting-complete": "YOUR FIRST PARAGRAPH · SETTING",
+      "story-path-title": "Your story has a place to begin. Where should it go next?",
+      "story-path-copy": "The same writing can grow into an illustrated book or a film. Choose now—you can change it later.",
+      "your-finished-setting": "YOUR FINISHED SETTING",
+      "choose-story-form": "Choose what you want to make",
+      "illustrated-book-label": "READ · KEEP · PRINT",
+      "illustrated-book": "Illustrated Book",
+      "illustrated-book-copy": "Shape each page with words and artwork.",
+      "story-film-label": "SEE · HEAR · WATCH",
+      "story-film": "Story Film",
+      "story-film-copy": "Turn the same world into scenes, action, and voice.",
+      "continue-with-form": "Continue with this form",
+      "form-not-final": "This choice shapes the next tools. Your story and words stay the same.",
       "next-question": "Next question",
       "see-page": "See my story page",
       "magic-ready": "YOUR FIRST STORY PAGE IS READY",
@@ -139,6 +191,7 @@
       "upload-title": "上传你的画作或照片",
       "upload-help": "支持 JPG、PNG、WEBP、HEIC · 在本机私密转换",
       "privacy-note": "图片使用前会先删除位置与拍摄设备信息。",
+      "beta-photo-note": "内测说明 · 可以使用本人或家人的真人照片进行私密创作，请先取得本人或监护人同意。",
       "or-words": "也可以从自己的话开始",
       "write-speak": "写下 · 口述",
       "seed-placeholder": "告诉羽导师画面里正在发生什么，或者先说出一个想法。",
@@ -199,10 +252,47 @@
       "bard-yu-badge": "BARD YU",
       "stop-reading": "停止朗读",
       "auto-read-questions": "自动朗读每个问题",
-      "answer-by-voice": "语音回答",
-      "stop-answer-voice": "停止收听",
+      "answer-by-voice": "按住回答",
+      "stop-answer-voice": "松开完成",
       "listening": "正在听……",
-      "answer-speech-note": "口述会转成可修改的文字，不保存现场录音。",
+      "answer-speech-note": "按住按钮口述（最长 90 秒），说完松开。口述会转成可修改的文字，不保存现场录音。",
+      "mentor-arrives": "羽大师转身来到你的故事前",
+      "mentor-review-title": "想法已经出现，现在让文字真正长大。",
+      "mentor-review-intro": "我们一次只看一句。羽大师讲清一个方法，每一处修改仍由你决定。",
+      "mentor-spoken-intro": "太好了，你的故事想法已经出现。现在，我们一起把每一句说得更清楚，同时保留你自己的声音。",
+      "sentence-review": "逐句修改",
+      "your-words": "你的原句",
+      "yu-is-thinking": "羽大师正在仔细读这一句……",
+      "one-strength": "写得好的地方",
+      "one-focus": "这次只改一件事",
+      "mini-lesson": "一个写作小技巧",
+      "yu-suggestion": "羽大师的最小修改",
+      "yes-my-meaning": "是，这就是我的意思",
+      "change-my-words": "不完全是，我自己改一改",
+      "read-it-aloud": "现在跟着读一遍",
+      "hear-and-follow": "先听，再自己朗读",
+      "i-read-it": "我已经读过了",
+      "mentor-authorship-note": "羽大师只负责教学和建议；没有你的确认，一个字也不会替换。",
+      "journey-idea": "故事想法",
+      "journey-setting": "写出场景",
+      "journey-revise": "与羽大师修改",
+      "journey-format": "选择作品形式",
+      "setting-being-built": "故事开篇 · 场景设定",
+      "setting-build-title": "你的第一段正在一句句长出来。",
+      "setting-build-empty": "你确认的句子会依次出现在这里。",
+      "setting-complete": "第一段完成 · 场景已经建立",
+      "story-path-title": "故事已经有了起点，接下来想让它成为一本书，还是一部电影？",
+      "story-path-copy": "你的文字不会改变；这个选择只决定下一步打开哪一套创作工具，以后仍可更换。",
+      "your-finished-setting": "你完成的第一段",
+      "choose-story-form": "选择接下来要创作的形式",
+      "illustrated-book-label": "阅读 · 珍藏 · 印刷",
+      "illustrated-book": "插画故事书",
+      "illustrated-book-copy": "让文字和画面一页一页共同讲述。",
+      "story-film-label": "场景 · 动作 · 声音",
+      "story-film": "故事电影",
+      "story-film-copy": "让同一人物与世界走进镜头。",
+      "continue-with-form": "按这个方向继续",
+      "form-not-final": "羽大师只调整接下来的提问和工具，不会替你改写故事。",
       "next-question": "下一个问题",
       "see-page": "看看我的故事页",
       "magic-ready": "你的第一张故事页完成了",
@@ -240,6 +330,7 @@
       stopQuestionSpeech();
       stopAnswerSpeech();
     }
+    if (name !== "mentor-review") stopMentorSpeech();
     $$('[data-stage]').forEach((stage) => { stage.hidden = stage.dataset.stage !== name; });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -266,7 +357,9 @@
 
   function collectChineseCreativeProfile() {
     if ($("[data-language]")?.value !== "zh") return null;
-    const format = $("[name='chinese-format']:checked")?.value || "ink-story";
+    const chosenOutput = selectedOutputFormat || $("[name='story-output']:checked")?.value || "";
+    const bookStyle = $("[name='chinese-book-style']:checked")?.value || "picturebook";
+    const format = chosenOutput === "film" ? "film" : chosenOutput === "book" ? bookStyle : "ink-story";
     const background = $("[data-chinese-background]")?.value || "";
     const level = $("[data-chinese-level]")?.value || "";
     const goal = $("[data-chinese-goal]")?.value || "";
@@ -489,56 +582,144 @@
     window.speechSynthesis.speak(questionUtterance);
   }
 
-  function updateAnswerSpeechButton(isListening = false) {
+  function formatAnswerSpeechTime(seconds) {
+    const safeSeconds = Math.max(0, Math.min(answerSpeechMaxSeconds, Math.floor(seconds)));
+    return `${String(Math.floor(safeSeconds / 60)).padStart(2, "0")}:${String(safeSeconds % 60).padStart(2, "0")}`;
+  }
+
+  function updateAnswerSpeechButton(isListening = false, elapsedSeconds = 0) {
     const button = $("[data-answer-speech]");
     if (!button) return;
     button.classList.toggle("is-listening", isListening);
     button.setAttribute("aria-pressed", String(isListening));
     const label = $("span", button);
     if (label) label.textContent = t(isListening ? "stop-answer-voice" : "answer-by-voice");
+    const timer = $("[data-answer-speech-time]", button);
+    if (timer) {
+      timer.hidden = !isListening;
+      timer.textContent = formatAnswerSpeechTime(elapsedSeconds);
+    }
+    button.setAttribute("aria-label", isListening
+      ? `${t("listening")} ${formatAnswerSpeechTime(elapsedSeconds)}. ${t("stop-answer-voice")}`
+      : t("answer-by-voice"));
   }
 
-  function stopAnswerSpeech() {
+  function clearAnswerSpeechTimers() {
+    window.clearInterval(answerSpeechTimer);
+    window.clearTimeout(answerSpeechRestartTimer);
+    window.clearTimeout(answerSpeechMaxTimer);
+    answerSpeechTimer = 0;
+    answerSpeechRestartTimer = 0;
+    answerSpeechMaxTimer = 0;
+  }
+
+  function joinAnswerSpeech(...parts) {
+    const separator = locale === "zh" ? "" : " ";
+    return parts.map((part) => String(part || "").trim()).filter(Boolean).join(separator);
+  }
+
+  function stopAnswerSpeech(reason = "cancel") {
+    const wasHolding = answerSpeechHolding;
+    const duration = answerSpeechStartedAt ? Math.round((performance.now() - answerSpeechStartedAt) / 1000) : 0;
+    answerSpeechHolding = false;
+    answerSpeechPointerId = null;
+    clearAnswerSpeechTimers();
     if (answerRecognition) {
       const activeRecognition = answerRecognition;
       answerRecognition = null;
       try { activeRecognition.stop(); } catch (_error) { /* Already stopped by the browser. */ }
     }
     updateAnswerSpeechButton(false);
+    if (wasHolding && reason === "release") {
+      window.StoriesLensAnalytics?.track("coach_voice_answer_completed", {
+        question: questionIndex + 1,
+        language: locale,
+        durationSeconds: duration
+      });
+      if (!$('[data-answer]')?.value.trim()) {
+        toast(locale === "zh" ? "还没有听到文字，请按住按钮再说一次。" : "I did not catch any words. Hold the button and try again.", true);
+      }
+    }
+    if (reason === "limit") {
+      toast(locale === "zh" ? "已到 90 秒，回答已保留，可以继续打字修改。" : "You reached 90 seconds. Your answer is saved here and can still be edited.");
+    }
   }
 
-  function handleAnswerSpeechInput() {
+  function startAnswerRecognitionCycle() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const field = $("[data-answer]");
+    if (!SpeechRecognition || !field || !answerSpeechHolding) return;
+    const activeRecognition = new SpeechRecognition();
+    let cycleText = "";
+    let canRestart = true;
+    answerRecognition = activeRecognition;
+    activeRecognition.lang = locale === "zh" ? "zh-CN" : "en-US";
+    activeRecognition.interimResults = true;
+    activeRecognition.continuous = true;
+    activeRecognition.maxAlternatives = 1;
+    activeRecognition.onresult = (event) => {
+      const finalParts = [];
+      const interimParts = [];
+      Array.from(event.results).forEach((result) => {
+        const transcript = result[0]?.transcript || "";
+        if (result.isFinal) finalParts.push(transcript);
+        else interimParts.push(transcript);
+      });
+      cycleText = joinAnswerSpeech(finalParts.join(""), interimParts.join(""));
+      field.value = joinAnswerSpeech(answerSpeechOriginal, answerSpeechCommitted, cycleText);
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    activeRecognition.onerror = (event) => {
+      if (["not-allowed", "service-not-allowed", "audio-capture", "network"].includes(event.error)) {
+        canRestart = false;
+        answerSpeechHolding = false;
+        clearAnswerSpeechTimers();
+        updateAnswerSpeechButton(false);
+        const message = event.error === "not-allowed" || event.error === "service-not-allowed"
+          ? (locale === "zh" ? "请允许麦克风权限，或直接打字回答。" : "Please allow microphone access, or type your answer instead.")
+          : (locale === "zh" ? "麦克风暂时无法使用，可以直接打字回答。" : "The microphone is unavailable right now. You can type instead.");
+        toast(message, true);
+      }
+    };
+    activeRecognition.onend = () => {
+      if (cycleText) {
+        answerSpeechCommitted = joinAnswerSpeech(answerSpeechCommitted, cycleText);
+        field.value = joinAnswerSpeech(answerSpeechOriginal, answerSpeechCommitted);
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      if (answerRecognition === activeRecognition) answerRecognition = null;
+      if (answerSpeechHolding && canRestart) {
+        answerSpeechRestartTimer = window.setTimeout(startAnswerRecognitionCycle, 160);
+      } else if (!answerSpeechHolding) {
+        updateAnswerSpeechButton(false);
+      }
+    };
+    try { activeRecognition.start(); }
+    catch (_error) {
+      answerRecognition = null;
+      if (answerSpeechHolding) answerSpeechRestartTimer = window.setTimeout(startAnswerRecognitionCycle, 220);
+    }
+  }
+
+  function beginAnswerSpeech() {
+    if (answerSpeechHolding) return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       $("[data-answer]")?.focus();
       toast(locale === "zh" ? "当前浏览器不支持语音回答，可以直接打字。" : "Voice answers are unavailable in this browser. You can type instead.", true);
       return;
     }
-    if (answerRecognition) {
-      stopAnswerSpeech();
-      return;
-    }
     stopQuestionSpeech();
-    const field = $("[data-answer]");
-    const original = field.value.trim();
-    answerRecognition = new SpeechRecognition();
-    answerRecognition.lang = locale === "zh" ? "zh-CN" : "en-US";
-    answerRecognition.interimResults = true;
-    answerRecognition.continuous = false;
-    updateAnswerSpeechButton(true);
-    answerRecognition.onresult = (event) => {
-      const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
-      field.value = `${original}${original ? " " : ""}${spoken}`;
-      field.dispatchEvent(new Event("input", { bubbles: true }));
-    };
-    answerRecognition.onerror = (event) => {
-      if (event.error !== "aborted") toast(locale === "zh" ? "没有听清，请再试一次。" : "I could not hear that. Please try again.", true);
-    };
-    answerRecognition.onend = () => {
-      answerRecognition = null;
-      updateAnswerSpeechButton(false);
-    };
-    answerRecognition.start();
+    answerSpeechHolding = true;
+    answerSpeechStartedAt = performance.now();
+    answerSpeechOriginal = $("[data-answer]")?.value.trim() || "";
+    answerSpeechCommitted = "";
+    updateAnswerSpeechButton(true, 0);
+    answerSpeechTimer = window.setInterval(() => {
+      updateAnswerSpeechButton(true, (performance.now() - answerSpeechStartedAt) / 1000);
+    }, 250);
+    answerSpeechMaxTimer = window.setTimeout(() => stopAnswerSpeech("limit"), answerSpeechMaxSeconds * 1000);
+    startAnswerRecognitionCycle();
   }
 
   function renderQuestion() {
@@ -620,6 +801,7 @@
       seed: answers.join(" "),
       learningProfile,
       chineseCreativeProfile,
+      outputFormat: selectedOutputFormat || "book",
       createdAt: new Date().toISOString()
     };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify({
@@ -632,6 +814,7 @@
       seed,
       learningProfile,
       chineseCreativeProfile,
+      outputFormat: selectedOutputFormat || "book",
       createdAt: new Date().toISOString()
     }));
     if (learningProfile) localStorage.setItem("storieslens_learning_profile", JSON.stringify(learningProfile));
@@ -643,7 +826,8 @@
       savedAt: new Date().toISOString(),
       draft,
       storyTitle: $("[data-story-title]").value.trim(),
-      creatorName: creatorName()
+      creatorName: creatorName(),
+      outputFormat: selectedOutputFormat || "book"
     }));
     return dna;
   }
@@ -725,7 +909,7 @@
           storyDna: dna,
           scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), imageUrl: selectedArtwork?.mediaUrl || "", duration: 6 }],
           coverImageUrl: selectedArtwork?.mediaUrl || "",
-          clientSnapshot: { from: "h5", firstPageCreated: true, learningProfile, chineseCreativeProfile }
+          clientSnapshot: { from: "h5", firstPageCreated: true, learningProfile, chineseCreativeProfile, outputFormat: selectedOutputFormat || "book" }
       };
       const result = await platform.api(savedProjectId ? `/api/projects/${savedProjectId}` : "/api/projects", {
         method: savedProjectId ? "PATCH" : "POST",
@@ -753,10 +937,140 @@
     }
   }
 
-  function buildFirstPage() {
+  function stopMentorSpeech() {
+    if (mentorUtterance && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    mentorUtterance = null;
+    $("[data-mentor-arrival]")?.classList.remove("is-speaking");
+    $("[data-revision-read]")?.classList.remove("is-reading");
+  }
+
+  function speakMentorText(text, source = "mentor") {
+    if (!text || !("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") return;
+    stopMentorSpeech();
+    const lang = locale === "zh" ? "zh-CN" : "en-US";
+    mentorUtterance = new window.SpeechSynthesisUtterance(text);
+    mentorUtterance.lang = lang;
+    mentorUtterance.rate = locale === "zh" ? 0.88 : 0.9;
+    mentorUtterance.pitch = locale === "zh" ? 0.94 : 1.02;
+    mentorUtterance.volume = 1;
+    const voice = preferredVoice(lang);
+    if (voice) mentorUtterance.voice = voice;
+    mentorUtterance.onstart = () => {
+      if (source === "arrival") $("[data-mentor-arrival]")?.classList.add("is-speaking");
+      if (source === "rehearsal") $("[data-revision-read]")?.classList.add("is-reading");
+    };
+    mentorUtterance.onend = mentorUtterance.onerror = () => stopMentorSpeech();
+    window.speechSynthesis.speak(mentorUtterance);
+  }
+
+  function fallbackMentorResult(item) {
+    const checked = window.StoriesLensMentorRevision.basicCheck(item.original, locale);
+    if (locale === "zh") return { suggestion: checked.suggestion, strength: "你已经写出了一个完整、可以继续发展的想法。", priority: checked.changed ? "先让开头、空格和句末标点更清楚。" : "这一句的基本书写已经清楚，先保留你的原意。", microLesson: "标点像朗读时的呼吸。先把一句话读完，再决定在哪里停下来。", question: "这是你原来想表达的意思吗？", source: "on-device" };
+    return { suggestion: checked.suggestion, strength: "You have expressed one complete idea that the story can build on.", priority: checked.changed ? "Start with a capital letter and give the sentence a clear ending." : "The sentence is already clear, so keep your meaning and voice.", microLesson: "Punctuation shows a reader where your voice begins, pauses, and finishes.", question: "Is this what you mean?", source: "on-device" };
+  }
+
+  function renderMentorResult(item, result) {
+    item.suggestion = String(result.suggestion || item.original).trim() || item.original;
+    item.strength = String(result.strength || fallbackMentorResult(item).strength).trim();
+    item.priority = String(result.priority || fallbackMentorResult(item).priority).trim();
+    item.microLesson = String(result.microLesson || result.reply || fallbackMentorResult(item).microLesson).trim();
+    item.question = String(result.question || fallbackMentorResult(item).question).trim();
+    item.source = result.source || "yu-live";
+    $("[data-revision-strength]").textContent = item.strength;
+    $("[data-revision-priority]").textContent = item.priority;
+    $("[data-revision-lesson]").textContent = item.microLesson;
+    $("[data-revision-suggestion]").value = item.suggestion;
+    $("[data-revision-suggestion]").disabled = false;
+    $("[data-revision-question]").textContent = item.question;
+    $("[data-revision-loading]").hidden = true;
+    $("[data-revision-feedback]").hidden = false;
+    $("[data-revision-actions]").hidden = false;
+  }
+
+  async function loadMentorRevisionItem() {
+    const item = mentorRevisionItems[mentorRevisionIndex];
+    if (!item) return;
+    const requestedIndex = mentorRevisionIndex;
+    $("[data-revision-number]").textContent = String(mentorRevisionIndex + 1);
+    $("[data-revision-total]").textContent = String(mentorRevisionItems.length);
+    $("[data-revision-original]").textContent = item.original;
+    $("[data-revision-suggestion]").value = item.original;
+    $("[data-revision-suggestion]").disabled = true;
+    $("[data-revision-loading]").hidden = false;
+    $("[data-revision-feedback]").hidden = true;
+    $("[data-revision-actions]").hidden = true;
+    $("[data-revision-rehearsal]").hidden = true;
+    $("[data-revision-error]").textContent = "";
+    const learningProfile = collectLearningProfile();
+    const chineseProfile = collectChineseCreativeProfile();
+    const priorityArea = learningProfile?.priorityArea || "";
+    const priorityRange = learningProfile?.areaRanges?.[priorityArea] || {};
+    const numericGrade = Number(learningProfile?.grade);
+    const creatorLevel = $(`[data-age]`).value === "under18" && (!Number.isFinite(numericGrade) || numericGrade <= 2) ? "expression" : "developing";
+    try {
+      const response = await platform.api("/api/writing-assistant", { method: "POST", body: JSON.stringify({ mode: "solo", action: "check", storyLanguage: $(`[data-language]`).value, studentDraft: mentorRevisionItems.map((entry) => entry.original).join("\n"), selectedText: item.original, revisionHistory: mentorRevisionItems.slice(0, mentorRevisionIndex).map((entry) => entry.accepted).filter(Boolean).join("\n"), inspiration: storySeed(), grade: learningProfile?.grade || ($(`[data-age]`).value === "under18" ? "3" : undefined), skillFocus: priorityArea || "grammar and narrative revision", learningGoal: learningProfile?.parentGoal || "", mapRitScore: learningProfile?.overallRit, mapRitLow: priorityRange.low, mapRitHigh: priorityRange.high, mapInstructionalArea: priorityArea, creatorLevel, coachLens: chineseProfile?.coachLens || "foundation", genre: chineseProfile?.format === "film" ? "screenplay" : "story" }) });
+      if (requestedIndex !== mentorRevisionIndex) return;
+      const result = response.result || {};
+      if (result.authorshipCheck !== "pass") result.suggestion = item.original;
+      renderMentorResult(item, { ...result, source: "yu-live" });
+    } catch (_error) {
+      if (requestedIndex !== mentorRevisionIndex) return;
+      renderMentorResult(item, fallbackMentorResult(item));
+      $("[data-revision-error]").textContent = locale === "zh" ? "当前使用本机基础检查；联网后羽大师会加入更完整的语法与写作指导。" : "Using the basic on-device check. Yu’s fuller grammar and writing guidance returns when the live coach is available.";
+    }
+  }
+
+  function beginMentorReview() {
+    const revision = window.StoriesLensMentorRevision;
+    if (!revision) { buildFirstPage(); return; }
+    mentorRevisionItems = revision.buildItems([storySeed(), ...answers], locale);
+    if (!mentorRevisionItems.length) { buildFirstPage(); return; }
+    mentorRevisionIndex = 0;
+    mentorReviewedDraft = "";
+    if ($("[data-setting-preview]")) $("[data-setting-preview]").textContent = t("setting-build-empty");
+    showStage("mentor-review");
+    const arrival = $("[data-mentor-arrival]");
+    arrival?.classList.remove("is-arriving");
+    window.requestAnimationFrame(() => arrival?.classList.add("is-arriving"));
+    window.setTimeout(() => speakMentorText(t("mentor-spoken-intro"), "arrival"), 520);
+    window.StoriesLensAnalytics?.track("mentor_revision_started", { language: locale, sentenceCount: mentorRevisionItems.length, mode: "solo" });
+    void loadMentorRevisionItem();
+  }
+
+  function assembleMentorDraft() {
+    const sentenceJoiner = locale === "zh" ? "" : " ";
+    return mentorRevisionItems.map((item) => item.accepted || item.suggestion || item.original).filter(Boolean).join(sentenceJoiner);
+  }
+
+  function updateSettingPreview() {
+    const accepted = mentorRevisionItems.filter((item) => item.accepted).map((item) => item.accepted);
+    const preview = $("[data-setting-preview]");
+    if (preview) preview.textContent = accepted.length ? accepted.join(locale === "zh" ? "" : " ") : t("setting-build-empty");
+  }
+
+  function showStoryPathStage() {
+    const setting = mentorReviewedDraft || assembleMentorDraft();
+    $("[data-path-setting]").textContent = setting;
+    selectedOutputFormat = "";
+    $$('[name="story-output"]').forEach((input) => { input.checked = false; });
+    const confirm = $("[data-confirm-story-path]");
+    if (confirm) confirm.disabled = true;
+    $("[data-chinese-book-style]")?.setAttribute("hidden", "");
+    showStage("story-path");
+    window.StoriesLensAnalytics?.track("story_form_choice_shown", { language: locale, mode: "solo" });
+  }
+
+  function finishMentorReview() {
+    mentorReviewedDraft = assembleMentorDraft();
+    stopMentorSpeech();
+    window.StoriesLensAnalytics?.track("mentor_revision_completed", { language: locale, sentenceCount: mentorRevisionItems.length, mode: "solo" });
+    showStoryPathStage();
+  }
+
+  function buildFirstPage(reviewedDraft = "") {
     const seed = storySeed();
     const creatorWords = [seed, ...answers].map((item) => String(item || "").trim()).filter(Boolean);
-    const draft = creatorWords.join("\n\n");
+    const draft = String(reviewedDraft || "").trim() || creatorWords.join("\n\n");
     const title = deriveTitle(seed || answers[0]);
     $("[data-story-title]").value = title;
     $("[data-story-draft]").value = draft;
@@ -766,7 +1080,7 @@
     if (selectedArtworkData) image.src = selectedArtworkData;
     $("[data-story-page]").classList.toggle("no-artwork", !selectedArtworkData);
     const profile = collectChineseCreativeProfile();
-    const continueParams = { mode: "free", from: "h5", storyLang: $("[data-language]").value };
+    const continueParams = { mode: "free", from: "h5", storyLang: $("[data-language]").value, output: selectedOutputFormat || "book" };
     if (profile?.comicTemplate) continueParams.comicTemplate = profile.comicTemplate;
     $("[data-continue]").href = `visual-write.html?${new URLSearchParams(continueParams)}`;
     const formatNote = $("[data-result-format-note]");
@@ -797,17 +1111,13 @@
       selectedArtwork = { name: file.name, privateOnly: false, convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
     } catch (error) {
       const reasonCode = error.reasonCode || error.message;
-      if (workshopMode && reasonCode === "real_person") {
-        selectedArtworkData = "";
-        selectedArtwork = null;
-        toast("工作坊仅接收画作，不接收真人照片。请选择孩子创作的画。", true);
-        return;
-      }
       if (["review_unavailable", "real_person", "not_artwork"].includes(reasonCode) && window.StoriesLensArtworkSafety?.removeMetadata) {
         const localArtwork = await window.StoriesLensArtworkSafety.removeMetadata(file);
         selectedArtworkData = localArtwork.dataUrl;
-        selectedArtwork = { name: file.name, privateOnly: true, personalPhoto: reasonCode !== "review_unavailable", convertedFromHeic: Boolean(localArtwork.convertedFromHeic) };
-        toast(locale === "zh" ? "已进入仅本机私密模式；图片不会公开。" : "Device-only private mode is on. This image will not be public.");
+        selectedArtwork = { name: file.name, privateOnly: true, personalPhoto: reasonCode === "real_person", convertedFromHeic: Boolean(localArtwork.convertedFromHeic) };
+        toast(reasonCode === "real_person"
+          ? (locale === "zh" ? "真人照片已接受：已删除拍摄信息，并以本机私密模式继续创作。" : "Personal photo accepted: camera details were removed and private on-device creation is on.")
+          : (locale === "zh" ? "已进入仅本机私密模式；图片不会公开。" : "Device-only private mode is on. This image will not be public."));
       } else {
         selectedArtworkData = "";
         selectedArtwork = null;
@@ -899,8 +1209,7 @@
     answers[questionIndex] = answer;
     window.StoriesLensAnalytics?.track("coach_question_answered", { question: questionIndex + 1, language: $("[data-language]").value });
     if (questionIndex === 2) {
-      if (collectChineseCreativeProfile()?.format === "comic" && $("[data-stage='comic-template']")) showComicTemplateStage();
-      else buildFirstPage();
+      beginMentorReview();
       return;
     }
     questionIndex += 1;
@@ -919,7 +1228,106 @@
     else stopQuestionSpeech();
     window.StoriesLensAnalytics?.track("coach_question_auto_read_changed", { enabled, language: locale });
   });
-  $("[data-answer-speech]")?.addEventListener("click", handleAnswerSpeechInput);
+  const answerSpeechButton = $("[data-answer-speech]");
+  answerSpeechButton?.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    answerSpeechPointerId = event.pointerId;
+    try { answerSpeechButton.setPointerCapture(event.pointerId); } catch (_error) { /* Pointer capture is optional. */ }
+    beginAnswerSpeech();
+  });
+  answerSpeechButton?.addEventListener("pointerup", (event) => {
+    if (answerSpeechPointerId !== null && event.pointerId !== answerSpeechPointerId) return;
+    event.preventDefault();
+    stopAnswerSpeech("release");
+  });
+  answerSpeechButton?.addEventListener("pointercancel", () => stopAnswerSpeech("release"));
+  answerSpeechButton?.addEventListener("keydown", (event) => {
+    if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+      event.preventDefault();
+      beginAnswerSpeech();
+    }
+  });
+  answerSpeechButton?.addEventListener("keyup", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      stopAnswerSpeech("release");
+    }
+  });
+  answerSpeechButton?.addEventListener("contextmenu", (event) => event.preventDefault());
+  answerSpeechButton?.addEventListener("click", (event) => event.preventDefault());
+
+  $("[data-revision-edit]")?.addEventListener("click", () => {
+    const field = $("[data-revision-suggestion]");
+    field.disabled = false;
+    field.focus();
+    field.setSelectionRange(field.value.length, field.value.length);
+    $("[data-revision-error]").textContent = locale === "zh"
+      ? "请改成你真正想说的话，再点击确认。"
+      : "Change it into the words you really mean, then confirm.";
+  });
+  $("[data-revision-confirm]")?.addEventListener("click", () => {
+    const item = mentorRevisionItems[mentorRevisionIndex];
+    const accepted = $("[data-revision-suggestion]").value.trim();
+    if (!item || !accepted) {
+      $("[data-revision-error]").textContent = locale === "zh" ? "先保留或写下一句话。" : "Keep or write one sentence first.";
+      return;
+    }
+    if (window.StoriesLensSafety && !window.StoriesLensSafety.check(accepted).safe) {
+      $("[data-revision-error]").textContent = window.StoriesLensSafety.message;
+      return;
+    }
+    item.accepted = accepted;
+    updateSettingPreview();
+    $("[data-revision-suggestion]").disabled = true;
+    $("[data-revision-actions]").hidden = true;
+    $("[data-revision-approved]").textContent = accepted;
+    $("[data-revision-rehearsal]").hidden = false;
+    $("[data-revision-error]").textContent = "";
+    speakMentorText(accepted, "rehearsal");
+    window.StoriesLensAnalytics?.track("mentor_sentence_confirmed", {
+      language: locale,
+      sentence: mentorRevisionIndex + 1,
+      changed: accepted !== item.original,
+      source: item.source
+    });
+  });
+  $("[data-revision-read]")?.addEventListener("click", () => {
+    const text = mentorRevisionItems[mentorRevisionIndex]?.accepted || $("[data-revision-suggestion]").value.trim();
+    if (mentorUtterance || ("speechSynthesis" in window && window.speechSynthesis.speaking)) stopMentorSpeech();
+    else speakMentorText(text, "rehearsal");
+  });
+  $("[data-revision-next]")?.addEventListener("click", () => {
+    const item = mentorRevisionItems[mentorRevisionIndex];
+    if (!item?.accepted) return;
+    stopMentorSpeech();
+    if (mentorRevisionIndex >= mentorRevisionItems.length - 1) {
+      finishMentorReview();
+      return;
+    }
+    mentorRevisionIndex += 1;
+    void loadMentorRevisionItem();
+  });
+
+  $$('[name="story-output"]').forEach((input) => input.addEventListener("change", (event) => {
+    selectedOutputFormat = event.currentTarget.value;
+    const bookStyle = $("[data-chinese-book-style]");
+    if (bookStyle) bookStyle.hidden = selectedOutputFormat !== "book";
+    const confirm = $("[data-confirm-story-path]");
+    if (confirm) confirm.disabled = false;
+    $("[data-story-path-error]").textContent = "";
+    window.StoriesLensAnalytics?.track("story_form_selected", { language: locale, output: selectedOutputFormat, mode: "solo" });
+  }));
+  $("[data-confirm-story-path]")?.addEventListener("click", () => {
+    if (!selectedOutputFormat) {
+      $("[data-story-path-error]").textContent = locale === "zh" ? "先选择插画故事书或故事电影。" : "Choose an illustrated book or story film first.";
+      return;
+    }
+    localStorage.setItem("storieslens_story_output", selectedOutputFormat);
+    const chineseProfile = collectChineseCreativeProfile();
+    if (chineseProfile?.format === "comic" && $("[data-stage='comic-template']")) showComicTemplateStage();
+    else buildFirstPage(mentorReviewedDraft);
+  });
 
   $$('[name="comic-template"]').forEach((input) => input.addEventListener("change", (event) => {
     selectedComicTemplate = event.currentTarget.value;
@@ -927,7 +1335,7 @@
   }));
   $("[data-confirm-comic-template]")?.addEventListener("click", () => {
     selectedComicTemplate = $("[name='comic-template']:checked")?.value || recommendComicTemplate();
-    buildFirstPage();
+    buildFirstPage(mentorReviewedDraft);
   });
   $("[data-comic-template-back]")?.addEventListener("click", () => {
     questionIndex = 2;
@@ -1057,12 +1465,12 @@
     document.body.classList.add("cn-workshop-mode");
     const banner = document.createElement("aside");
     banner.className = "cn-workshop-banner";
-    banner.innerHTML = '<strong>中国线下工作坊 · 本机私密模式</strong><span>无需注册；作品只保存在本设备。请使用昵称，不上传真人照片、姓名、学校或联系方式。</span><a href="china-workshop.html">返回教师工作台</a>';
+    banner.innerHTML = '<strong>中国线下工作坊 · 本机私密模式</strong><span>无需注册；作品只保存在本设备。真人照片可以试创，但须获得本人或监护人同意；请勿填写姓名、学校或联系方式。</span><a href="china-workshop.html">返回教师工作台</a>';
     document.body.prepend(banner);
     const uploadTitle = $("[data-upload-label] strong");
     if (uploadTitle) uploadTitle.textContent = "上传你的画作";
     const uploadHelp = $("[data-upload-label] small");
-    if (uploadHelp) uploadHelp.textContent = "仅限绘画、手工作品或作品页 · 不接收真人照片";
+    if (uploadHelp) uploadHelp.textContent = "支持画作、手工作品与已获同意的真人照片 · 仅在本机私密处理";
     $("[data-checkout]")?.setAttribute("hidden", "");
   }
   showStage("start");

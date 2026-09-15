@@ -53,6 +53,15 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(studioJs.includes("/api/export-book-docx"), "book export should remain in-product");
   assert(app.includes("data-create-form") && app.includes("data-artwork") && app.includes("data-seed") && app.includes("data-speech"), "formal H5 should begin with artwork, words, or voice");
   assert(app.includes('data-stage="coach"') && app.includes('data-stage="result"'), "formal H5 should keep the three questions and first story page in one flow");
+  assert(app.includes('data-stage="mentor-review"') && chineseStudio.includes('data-stage="mentor-review"'), "both solo flows should reveal a visible mentor revision stage after the three questions");
+  assert(app.includes("data-revision-confirm") && app.includes("data-revision-read") && appJs.includes("beginMentorReview"), "Yu should require creator confirmation and read-aloud rehearsal for every reviewed sentence");
+  assert(appJs.includes('/api/writing-assistant') && appJs.includes('action: "check"'), "the Solo mentor stage should use Yu's trained writing assistant instead of decorative feedback");
+  assert(server.includes("minimally corrected version") && server.includes("preserve every story fact"), "sentence review should correct language without ghostwriting the child's story");
+  assert(app.includes('data-stage="story-path"') && chineseStudio.includes('data-stage="story-path"'), "both Solo flows should ask for the final form only after the opening setting is complete");
+  assert(app.includes('name="story-output" value="book"') && app.includes('name="story-output" value="film"'), "the post-setting decision should offer an illustrated book or story film");
+  assert(!chineseStudio.includes('class="chinese-format-picker"') && appJs.includes("showStoryPathStage"), "Chinese creators should not choose an output before Yu helps them finish the first paragraph");
+  assert(appJs.includes("outputFormat: selectedOutputFormat") && appJs.includes("updateSettingPreview"), "the selected output and growing setting should persist through the creation flow");
+  assert(read("visual-write.html").includes('pageParams.get("output")') && read("visual-write.html").includes("applySelectedOutput"), "the book or film decision should configure the next creation studio instead of being decorative");
   [app, chineseStudio].forEach((studioPage) => {
     assert(studioPage.includes("data-answer-speech"), "every three-question coach should keep voice answering available across the shared question card");
     assert(studioPage.includes("data-read-question") && studioPage.includes("data-auto-read-question"), "every three-question coach should offer manual and automatic question read-aloud");
@@ -60,7 +69,11 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(app.includes("assets/yu-mascot-logo-v2.png"), "English coaching should show the brand-colored Yu mascot");
   assert(chineseStudio.includes("assets/yu-sage-v1.png"), "Chinese coaching should show its original white-haired Yu story master");
   assert(chineseStudio.includes("data-chinese-type-entry") && appJs.includes("chineseTypeEntry"), "Chinese creation should expose a first-class typing entry beside upload and voice");
-  assert(appJs.includes("handleAnswerSpeechInput") && appJs.includes("answerRecognition"), "voice answering should be wired to the reusable question card for questions one through three");
+  assert(app.includes("data-answer-speech-time") && chineseStudio.includes("data-answer-speech-time"), "voice answers should show a visible recording timer in both studios");
+  assert(appJs.includes('activeRecognition.continuous = true'), "voice answers should continue through longer child responses");
+  assert(appJs.includes('addEventListener("pointerdown"') && appJs.includes('addEventListener("pointerup"'), "voice answers should use press-and-hold interaction");
+  assert(appJs.includes('answerSpeechMaxSeconds = 90'), "voice answers should allow up to 90 seconds while remaining bounded");
+  assert(appJs.includes("beginAnswerSpeech") && appJs.includes("startAnswerRecognitionCycle") && appJs.includes("answerRecognition"), "press-and-hold voice answering should be wired to the reusable question card for questions one through three");
   assert(appJs.includes("SpeechSynthesisUtterance") && appJs.includes("storieslens_auto_read_questions"), "question read-aloud should use device speech and remember the family's opt-in preference");
   assert(appJs.includes("sageVoiceNames") && appJs.includes('pitch = locale === "zh" ? 0.84'), "Chinese read-aloud should prefer a calm lower-pitched available Mandarin voice");
   const englishStoryLanguage = app.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
@@ -82,6 +95,9 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(appJs.includes("coach_question_answered") && appJs.includes("first_story_page_created"), "formal H5 should measure its activation moment");
   assert(app.includes('src="artwork-upload-safety.js?') && appJs.includes("StoriesLensArtworkSafety.processArtwork"), "formal H5 should privacy-review artwork before it can be stored");
   assert(api.includes("reviewArtworkSafety(body.dataUrl)") && api.includes("Real-person photos are not stored"), "private media API should reject real-person photos server-side");
+  assert(app.includes("Personal photos are welcome for private creation") && chineseStudio.includes("真人照片进行私密创作"), "private beta studios should clearly accept consented personal photos");
+  assert(!appJs.includes("工作坊仅接收画作，不接收真人照片") && appJs.includes("真人照片已接受"), "a detected real-person photo should continue in device-only beta mode instead of blocking creation");
+  assert(appJs.includes('personalPhoto: reasonCode === "real_person"') && appJs.includes("privateOnly: true"), "personal photos should be classified explicitly and remain private on the device");
   assert(appJs.includes('platform.api("/api/projects"') && appJs.includes('platform.api("/api/media"'), "formal H5 should save real private projects and artwork");
   assert(appJs.includes("persistApprovedArtwork") && appJs.includes("Safety check passed. Saving to your private library"), "approved mobile artwork should be persisted immediately instead of waiting for the three-question flow");
   assert(appJs.includes('from: "h5"'), "formal H5 should continue directly into the guided creation path");

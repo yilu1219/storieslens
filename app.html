@@ -10,7 +10,7 @@
     <meta name="description" content="Upload one creation, answer three questions, and see your first signed story page." />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260915-2" />
+    <link rel="stylesheet" href="family-flow.css?v=20260915-5" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>Create a Story · StoriesLens</title>
@@ -53,6 +53,7 @@
             <img data-artwork-preview alt="Selected artwork preview" hidden />
           </label>
           <p class="privacy-note" data-t="privacy-note">Location and camera information are removed before the image is used.</p>
+          <p class="beta-photo-note" data-t="beta-photo-note">PRIVATE BETA · Personal photos are welcome for private creation. Use only photos you have permission to use.</p>
 
           <div class="words-heading"><strong data-t="or-words">Or begin with your own words</strong><span data-t="write-speak">WRITE · SPEAK</span></div>
           <div class="voice-field">
@@ -146,16 +147,83 @@
             <p data-t="answer-own-words">Answer in your own words. A short sentence is enough.</p>
             <div class="coach-answer-field">
               <textarea data-answer rows="5" maxlength="1000" data-placeholder-t="answer-placeholder" placeholder="In my story..."></textarea>
-              <button class="answer-speech-button" type="button" data-answer-speech aria-pressed="false">
+              <button class="answer-speech-button" type="button" data-answer-speech aria-pressed="false" aria-describedby="answer-speech-note">
                 <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg>
-                <span data-t="answer-by-voice">Answer by voice</span>
+                <span data-t="answer-by-voice">Hold to answer</span>
+                <b class="answer-speech-time" data-answer-speech-time hidden>00:00</b>
               </button>
             </div>
-            <small class="answer-speech-note" data-t="answer-speech-note">Speech becomes editable text. Live audio is not stored.</small>
+            <small class="answer-speech-note" id="answer-speech-note" data-t="answer-speech-note">Press and hold while you speak (up to 90 seconds), then release. Speech becomes editable text; live audio is not stored.</small>
             <p class="form-message" data-question-error role="alert"></p>
             <button class="primary-action" type="button" data-next-question><span data-t="next-question">Next question</span><b aria-hidden="true">→</b></button>
           </div>
         </div>
+      </section>
+
+      <section class="flow-stage mentor-revision-stage" data-stage="mentor-review" aria-labelledby="mentor-review-title" hidden>
+        <ol class="creation-journey" aria-label="Creation progress">
+          <li class="is-complete"><b>1</b><span data-t="journey-idea">STORY IDEA</span></li>
+          <li class="is-active"><b>2</b><span data-t="journey-setting">BUILD THE SETTING</span></li>
+          <li><b>3</b><span data-t="journey-revise">REVISE WITH YU</span></li>
+          <li><b>4</b><span data-t="journey-format">CHOOSE THE FORM</span></li>
+        </ol>
+        <div class="mentor-arrival" data-mentor-arrival>
+          <div class="mentor-turn" aria-hidden="true"><span></span><img src="assets/yu-mascot-logo-v2.png" alt="" /></div>
+          <div>
+            <p class="flow-kicker" data-t="mentor-arrives">BARD YU TURNS TOWARD YOUR STORY</p>
+            <h1 id="mentor-review-title" data-t="mentor-review-title">Your idea is here. Now let’s help your writing grow.</h1>
+            <p data-t="mentor-review-intro">We’ll look at one sentence at a time. Yu explains one useful move; you decide every change.</p>
+          </div>
+        </div>
+        <div class="mentor-workbench">
+          <div class="mentor-review-progress"><span data-t="sentence-review">SENTENCE REVIEW</span><strong><b data-revision-number>1</b> / <span data-revision-total>1</span></strong></div>
+          <article class="mentor-original-card"><small data-t="your-words">YOUR WORDS</small><p data-revision-original></p></article>
+          <div class="mentor-thinking" data-revision-loading role="status"><i aria-hidden="true"></i><span data-t="yu-is-thinking">Bard Yu is looking closely at your sentence…</span></div>
+          <div class="mentor-feedback" data-revision-feedback hidden><div><small data-t="one-strength">WHAT WORKS</small><p data-revision-strength></p></div><div><small data-t="one-focus">ONE FOCUS</small><p data-revision-priority></p></div><div><small data-t="mini-lesson">MINI LESSON</small><p data-revision-lesson></p></div></div>
+          <label class="mentor-suggestion"><span data-t="yu-suggestion">YU’S MINIMAL REVISION</span><textarea rows="3" maxlength="500" data-revision-suggestion></textarea></label>
+          <p class="mentor-meaning-question" data-revision-question>Is this what you mean?</p>
+          <div class="mentor-confirm-actions" data-revision-actions><button class="primary-action" type="button" data-revision-confirm><span data-t="yes-my-meaning">Yes—this is what I mean</span><b aria-hidden="true">✓</b></button><button class="secondary-action" type="button" data-revision-edit data-t="change-my-words">Not quite—I’ll change the words</button></div>
+          <div class="mentor-rehearsal" data-revision-rehearsal hidden><div><small data-t="read-it-aloud">NOW READ IT ALOUD</small><p data-revision-approved></p></div><button class="read-question-button" type="button" data-revision-read><span aria-hidden="true">▶</span><b data-t="hear-and-follow">Hear it, then read it</b></button><button class="primary-action" type="button" data-revision-next><span data-t="i-read-it">I read it aloud</span><b aria-hidden="true">→</b></button></div>
+          <p class="form-message" data-revision-error role="alert"></p>
+          <p class="mentor-authorship-note" data-t="mentor-authorship-note">Yu teaches and suggests. Nothing changes until you approve it.</p>
+        </div>
+        <aside class="setting-build-card">
+          <div><small data-t="setting-being-built">YOUR OPENING · SETTING</small><strong data-t="setting-build-title">Your first paragraph is taking shape.</strong></div>
+          <p data-setting-preview data-t="setting-build-empty">Each sentence you approve will appear here.</p>
+        </aside>
+      </section>
+
+      <section class="flow-stage story-path-stage" data-stage="story-path" aria-labelledby="story-path-title" hidden>
+        <ol class="creation-journey" aria-label="Creation progress">
+          <li class="is-complete"><b>1</b><span data-t="journey-idea">STORY IDEA</span></li>
+          <li class="is-complete"><b>2</b><span data-t="journey-setting">BUILD THE SETTING</span></li>
+          <li class="is-complete"><b>3</b><span data-t="journey-revise">REVISE WITH YU</span></li>
+          <li class="is-active"><b>4</b><span data-t="journey-format">CHOOSE THE FORM</span></li>
+        </ol>
+        <div class="story-path-intro">
+          <p class="flow-kicker" data-t="setting-complete">YOUR FIRST PARAGRAPH · SETTING</p>
+          <h1 id="story-path-title" data-t="story-path-title">Your story has a place to begin. Where should it go next?</h1>
+          <p data-t="story-path-copy">The same writing can grow into an illustrated book or a film. Choose now—you can change it later.</p>
+        </div>
+        <article class="finished-setting"><small data-t="your-finished-setting">YOUR FINISHED SETTING</small><p data-path-setting></p></article>
+        <fieldset class="story-output-picker">
+          <legend data-t="choose-story-form">Choose what you want to make</legend>
+          <div class="story-output-grid">
+            <label class="story-output-card output-book">
+              <input type="radio" name="story-output" value="book" />
+              <span class="output-card-icon" aria-hidden="true"><i></i><i></i></span>
+              <span><small data-t="illustrated-book-label">READ · KEEP · PRINT</small><strong data-t="illustrated-book">Illustrated Book</strong><em data-t="illustrated-book-copy">Shape each page with words and artwork.</em></span>
+            </label>
+            <label class="story-output-card output-film">
+              <input type="radio" name="story-output" value="film" />
+              <span class="output-card-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span><small data-t="story-film-label">SEE · HEAR · WATCH</small><strong data-t="story-film">Story Film</strong><em data-t="story-film-copy">Turn the same world into scenes, action, and voice.</em></span>
+            </label>
+          </div>
+        </fieldset>
+        <p class="form-message" data-story-path-error role="alert"></p>
+        <button class="primary-action story-path-continue" type="button" data-confirm-story-path disabled><span data-t="continue-with-form">Continue with this form</span><b aria-hidden="true">→</b></button>
+        <p class="story-path-promise" data-t="form-not-final">This choice shapes the next tools. Your story and words stay the same.</p>
       </section>
 
       <section class="flow-stage result-stage" data-stage="result" aria-labelledby="result-title" hidden>
@@ -194,6 +262,7 @@
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
-    <script src="h5-app.js?v=20260915-3"></script>
+    <script src="mentor-revision.js?v=20260915-1"></script>
+    <script src="h5-app.js?v=20260915-6"></script>
   </body>
 </html>
