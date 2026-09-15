@@ -6,9 +6,15 @@
     en: {
       close: "Close Yu introduction",
       eyebrow: "HOW YOUR MENTOR IS TRAINED",
-      title: "Meet Yu.",
-      subtitle: "Your bilingual language & story mentor",
-      lede: "Yu is not trained to replace the writer. Yu combines transparent teaching frameworks with evidence from each creator’s own words—then asks the next question that helps the creator think, write, and revise independently.",
+      title: "Meet Bard Yu.",
+      subtitle: "Yu’s English storytelling persona",
+      lede: "The owl is Yu’s shared story spirit. In the English Studio, Yu becomes Bard Yu—a warm, theatrical guide for character, dialogue, conflict, description, and revision. Yu asks the next useful question; the creator remains the author.",
+      personaEyebrow: "ONE YU · TWO CREATIVE PERSONAS",
+      personaTitle: "A familiar guide in two writing worlds.",
+      personas: [
+        ["assets/yu-mascot-logo-v2.png", "ENGLISH STUDIO", "Bard Yu", "Dialogue · conflict · description · revision"],
+        ["assets/yu-sage-v1.png", "中文创作馆", "羽大师", "意境 · 叙事 · 修辞 · 结构"]
+      ],
       cards: [
         ["01 · ENGLISH", "CCSS writing foundations", "Writing and Language anchor skills guide age-adaptive work in narrative, informational, argument, revision, vocabulary, grammar, and conventions."],
         ["02 · 中文", "Chinese writing craft", "Yu learns from curated Chinese narrative craft, observation, rhetoric, modern prose, and screenwriting. Yu studies ideas and techniques—never copies or imitates an author’s text."],
@@ -30,7 +36,13 @@
       eyebrow: "羽大师是怎样训练出来的",
       title: "认识羽大师",
       subtitle: "你的中英文语言与故事导师",
-      lede: "羽大师不是为了替创作者写作而训练。它把清晰可解释的教学框架，与创作者自己的表达证据结合起来，再提出恰到好处的下一个问题，帮助创作者独立思考、写作与修改。",
+      lede: "猫头鹰是 Yu 共同的故事本体。进入英文馆，它会化身为吟游诗人 Bard Yu；进入中文馆，它会化为白发而幽默的羽大师。形态不同，但都只负责提出恰到好处的问题，帮助创作者独立思考、写作与修改。",
+      personaEyebrow: "一个羽大师 · 两种创作智慧化身",
+      personaTitle: "在不同语言世界里，始终是熟悉的引路人。",
+      personas: [
+        ["assets/yu-mascot-logo-v2.png", "英文创作馆", "Bard Yu", "人物 · 对话 · 冲突 · 修改"],
+        ["assets/yu-sage-v1.png", "中文创作馆", "羽大师", "意境 · 叙事 · 修辞 · 结构"]
+      ],
       cards: [
         ["01 · 英文", "CCSS 写作与语言基础", "以 Writing 与 Language 核心能力为训练骨架，覆盖叙事、说明、议论、修改、词汇、语法与写作规范，并根据年龄调整指导方式。"],
         ["02 · 中文", "中国写作与叙事体系", "吸收经过筛选的中国叙事、观察、修辞、现代散文与剧本写作方法。学习作家的思想与技法，但不复制原文，也不模仿特定作家的文字。"],
@@ -59,13 +71,17 @@
   }
 
   function render() {
-    const content = copy[locale()];
+    const activeLocale = locale();
+    const content = copy[activeLocale];
+    const mentorImage = activeLocale === "zh" ? "assets/yu-sage-v1.png" : "assets/yu-mascot-logo-v2.png";
     const cards = content.cards.map((card) => '<article class="yu-training-card"><span>' + card[0] + '</span><h3>' + card[1] + '</h3><p>' + card[2] + '</p></article>').join("");
+    const personas = content.personas.map((persona, index) => '<article class="yu-persona-card yu-persona-' + (index === 0 ? 'bard' : 'sage') + '"><span class="yu-persona-art"><img src="' + persona[0] + '" alt="" /></span><div><small>' + persona[1] + '</small><h3>' + persona[2] + '</h3><p>' + persona[3] + '</p></div></article>').join("");
     const dailySteps = content.dailySteps.map((step, index) => '<li><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + step + '</strong></li>').join("");
     dialog.innerHTML = '<div class="yu-profile-dialog-shell">' +
       '<button class="yu-profile-close" type="button" data-yu-profile-close aria-label="' + content.close + '">×</button>' +
-      '<header class="yu-profile-hero"><span class="yu-profile-logo"><img src="assets/yu-feather-mark.svg" alt="" /></span><div><p class="yu-profile-eyebrow">' + content.eyebrow + '</p><h2>' + content.title + '<em>' + content.subtitle + '</em></h2></div></header>' +
+      '<header class="yu-profile-hero"><span class="yu-profile-logo ' + (activeLocale === "zh" ? 'yu-profile-logo-sage' : 'yu-profile-logo-bard') + '"><img src="' + mentorImage + '" alt="" /></span><div><p class="yu-profile-eyebrow">' + content.eyebrow + '</p><h2>' + content.title + '<em>' + content.subtitle + '</em></h2></div></header>' +
       '<p class="yu-profile-lede">' + content.lede + '</p>' +
+      '<section class="yu-personas" aria-label="Yu creative personas"><header><p>' + content.personaEyebrow + '</p><h3>' + content.personaTitle + '</h3></header><div>' + personas + '</div></section>' +
       '<section class="yu-profile-grid" aria-label="Yu mentor training framework">' + cards + '</section>' +
       '<section class="yu-daily-cycle" aria-label="' + content.dailyAria + '"><header><span class="yu-daily-pulse" aria-hidden="true"></span><div><p>' + content.dailyEyebrow + '</p><h3>' + content.dailyTitle + '</h3></div></header><p class="yu-daily-copy">' + content.dailyText + '</p><ol>' + dailySteps + '</ol><small>' + content.dailyFoot + '</small></section>' +
       '<div class="yu-profile-proof"><img src="assets/yu-feather-mark.svg" alt="" /><div><strong>' + content.proofTitle + '</strong><p>' + content.proof + '</p></div></div>' +

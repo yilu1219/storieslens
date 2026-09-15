@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v64-20260914";
+const VERSION = "storieslens-h5-v67-product-film-20260915";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "/app.html",
   "/chinese-studio.html",
   "/index.html",
+  "/product-video.html",
   "/classroom-archive.html",
   "/manifest.webmanifest",
   "/styles.css",
@@ -16,11 +17,11 @@ const APP_SHELL = [
   "/i18n.js?v=20260908-1",
   "/portal-home.css?v=20260913-35",
   "/portal-home.js?v=20260914-37",
-  "/family-flow.css?v=20260913-5",
+  "/family-flow.css?v=20260915-2",
   "/chinese-studio.css?v=20260914-3",
-  "/h5-app.js?v=20260914-12",
-  "/yu-profile.css?v=20260914-2",
-  "/yu-profile.js?v=20260914-2",
+  "/h5-app.js?v=20260915-3",
+  "/yu-profile.css?v=20260915-3",
+  "/yu-profile.js?v=20260915-3",
   "/showcase.html",
   "/showcase.css?v=20260909-1",
   "/showcase.js",
@@ -33,6 +34,7 @@ const APP_SHELL = [
   "/pwa.js",
   "/offline.js",
   "/assets/storieslens-logo.png",
+  "/assets/yu-mascot-logo-v2.png",
   "/assets/yu-feather-mark.svg",
   "/assets/storieslens-zh-seal-v2.png",
   "/assets/hero-zh-wuxia-ink-v1.png",
@@ -44,7 +46,8 @@ const APP_SHELL = [
   "/assets/portal-solo-family-watercolor-v5.jpg",
   "/assets/portal-cocreate-family-watercolor-v5.jpg",
   "/assets/portal-teacher-bulletin-watercolor-v4.jpg",
-  "/assets/lightyear-three-generations-family-watercolor-v3.jpg"
+  "/assets/lightyear-three-generations-family-watercolor-v3.jpg",
+  "/assets/storieslens-product-film-poster.jpg"
 ];
 
 self.addEventListener("install", (event) => {

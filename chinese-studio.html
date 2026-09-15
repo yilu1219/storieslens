@@ -7,9 +7,9 @@
     <meta name="description" content="从一幅画、一段话或一个声音开始，在羽大师的引导下创作水墨故事、连环画、绘本或故事电影。" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260913-5" />
-    <link rel="stylesheet" href="chinese-studio.css?v=20260914-3" />
-    <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
+    <link rel="stylesheet" href="family-flow.css?v=20260915-2" />
+    <link rel="stylesheet" href="chinese-studio.css?v=20260915-3" />
+    <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>中文创作馆 · 语镜故事</title>
   </head>
@@ -30,9 +30,9 @@
         <div class="chinese-hero">
           <div class="chinese-hero-copy">
             <p class="chinese-eyebrow">语镜中文创作馆</p>
-            <h1 id="start-title">一笔入境，<br /><em>万象成篇。</em></h1>
+            <h1 id="start-title"><span>一笔入境，</span><br /><em><span>万象成篇。</span></em></h1>
             <p>上传一幅画或照片，也可以写下、说出一个念头。羽大师先问三个问题，再陪你把自己的想法写成故事。</p>
-            <button class="yu-profile-trigger chinese-yu-trigger" type="button" data-yu-profile-open><img src="assets/yu-feather-mark.svg" alt="" /><span><strong>认识羽大师</strong><small>中英文创作导师如何训练而成</small></span></button>
+            <button class="yu-profile-trigger chinese-yu-trigger" type="button" data-yu-profile-open><img src="assets/yu-sage-v1.png" alt="" /><span><strong>认识羽大师</strong><small>会提问、会朗读，也会陪你把想法说清楚</small></span></button>
             <div class="chinese-promise"><span>羽大师提问</span><i>→</i><span>你亲自回答</span><i>→</i><strong>作品始终属于你</strong></div>
           </div>
           <div class="chinese-hero-art" role="img" aria-label="水墨山水中的创作者、书页与电影画格"></div>
@@ -58,6 +58,13 @@
               </span>
               <strong>口述一个想法</strong>
               <small>不用先画，也可以从一句话开始</small>
+            </button>
+            <button class="chinese-type-entry" type="button" data-chinese-type-entry>
+              <span class="chinese-type-icon" aria-hidden="true">
+                <svg viewBox="0 0 38 32" focusable="false"><rect x="3" y="6" width="32" height="21" rx="4"/><path d="M8 12h3M14 12h3M20 12h3M26 12h3M8 17h3M14 17h3M20 17h3M26 17h3M11 22h16"/></svg>
+              </span>
+              <strong>写下一个想法</strong>
+              <small>打字写一句，羽大师接着问你三个问题</small>
             </button>
           </div>
           <p class="privacy-note">图片使用前会删除位置与拍摄设备信息；默认私密。</p>
@@ -112,14 +119,6 @@
           <p class="trust-line">默认私密 · AI 负责引导 · 由你亲自创作 · 每一个字都属于你</p>
         </form>
 
-        <section class="chinese-outcomes" aria-labelledby="chinese-outcomes-title">
-          <div><p>从同一份原创出发</p><h2 id="chinese-outcomes-title">你的故事，可以有不同的生命。</h2></div>
-          <div class="chinese-outcome-grid">
-            <article><img src="assets/outcome-zh-ink-book-v1.png" alt="水墨故事书示例" /><span><b>水墨故事书</b><small>可阅读、珍藏与印刷</small></span></article>
-            <article><img src="assets/outcome-zh-lianhuanhua-v1.png" alt="中国风连环画示例" /><span><b>连环画</b><small>让动作与情节一格格展开</small></span></article>
-            <article><img src="assets/outcome-zh-cinematic-trailer-v1.png" alt="故事电影示例" /><span><b>故事电影</b><small>让同一人物与世界走上银幕</small></span></article>
-          </div>
-        </section>
       </section>
 
       <section class="flow-stage coach-stage" data-stage="coach" aria-labelledby="coach-title" hidden>
@@ -127,11 +126,31 @@
         <div class="coach-layout">
           <div class="coach-context"><img data-coach-image alt="你的起点作品" hidden /><span>你的创作起点</span><p data-coach-seed></p></div>
           <div class="coach-question-card">
-            <div class="yu-mark" aria-hidden="true"><img src="assets/yu-feather-mark.svg" alt="" /></div>
+            <div class="coach-mentor-head">
+              <div class="yu-mark chinese-yu-sage" aria-hidden="true"><img src="assets/yu-sage-v1.png" alt="" /></div>
+              <div class="question-audio-tools">
+                <button class="read-question-button" type="button" data-read-question aria-pressed="false">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path d="M16 9c1 .8 1.5 1.8 1.5 3S17 14.2 16 15M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+                  <span data-t="read-question">朗读羽大师的问题</span>
+                </button>
+                <label class="auto-read-toggle">
+                  <input type="checkbox" data-auto-read-question />
+                  <span aria-hidden="true"><i></i></span>
+                  <b data-t="auto-read-questions">自动朗读每个问题</b>
+                </label>
+              </div>
+            </div>
             <p class="flow-kicker">你的专属中文创作导师</p>
             <h1 id="coach-title" data-question>画面中最重要的人是谁？</h1>
             <p>请用自己的话回答。一句话就足够。</p>
-            <textarea data-answer rows="5" maxlength="1000" placeholder="在我的故事里……"></textarea>
+            <div class="coach-answer-field">
+              <textarea data-answer rows="5" maxlength="1000" placeholder="在我的故事里……"></textarea>
+              <button class="answer-speech-button" type="button" data-answer-speech aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg>
+                <span data-t="answer-by-voice">语音回答</span>
+              </button>
+            </div>
+            <small class="answer-speech-note" data-t="answer-speech-note">口述会转成可修改的文字，不保存现场录音。</small>
             <p class="form-message" data-question-error role="alert"></p>
             <button class="primary-action" type="button" data-next-question><span>下一个问题</span><b aria-hidden="true">→</b></button>
           </div>
@@ -186,8 +205,8 @@
     <script src="platform-client.js"></script>
     <script src="safety-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
-    <script src="yu-profile.js?v=20260914-2"></script>
+    <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
-    <script src="h5-app.js?v=20260914-14"></script>
+    <script src="h5-app.js?v=20260915-3"></script>
   </body>
 </html>

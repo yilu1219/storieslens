@@ -27,7 +27,8 @@ function buildEnglishCoachCurriculum(input = {}) {
     action: input.action,
     genre,
     language: "en",
-    grade: input.grade
+    grade: input.grade,
+    creatorLevel
   });
   const ccss = selectCCSSAlignment({
     grade: input.grade,

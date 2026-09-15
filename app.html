@@ -10,8 +10,8 @@
     <meta name="description" content="Upload one creation, answer three questions, and see your first signed story page." />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260913-5" />
-    <link rel="stylesheet" href="yu-profile.css?v=20260914-2" />
+    <link rel="stylesheet" href="family-flow.css?v=20260915-2" />
+    <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>Create a Story · StoriesLens</title>
   </head>
@@ -36,7 +36,7 @@
           <p class="flow-kicker" data-t="start-kicker">ONE CREATION · THREE QUESTIONS · YOUR STORY</p>
           <h1 id="start-title"><span data-t="start-title-one">Your first story page</span><em data-t="start-title-two">starts with you.</em></h1>
           <p data-t="start-intro">Upload something you made—or begin with words or voice. Yu asks three questions. You answer and remain the author.</p>
-          <button class="yu-profile-trigger" type="button" data-yu-profile-open><img src="assets/yu-feather-mark.svg" alt="" /><span><strong data-t="yu-profile-cta">Meet Yu</strong><small data-t="yu-profile-sub">See how your bilingual mentor is trained</small></span></button>
+          <button class="yu-profile-trigger bard-yu-trigger" type="button" data-yu-profile-open><img src="assets/yu-mascot-logo-v2.png" alt="" /><span><strong data-t="yu-profile-cta">Meet Bard Yu</strong><small data-t="yu-profile-sub">Yu’s English storytelling persona</small></span><b class="persona-chip" data-t="english-form">ENGLISH FORM</b></button>
         </div>
 
         <form class="spark-form" data-create-form novalidate>
@@ -107,7 +107,7 @@
 
           <label class="guardian-check" data-guardian-check hidden><input type="checkbox" data-adult-support /><span data-t="adult-confirm">I am the adult supporting this young creator.</span></label>
           <p class="form-message" data-form-message role="alert"></p>
-          <button class="primary-action" type="submit"><span data-t="meet-questions">Meet Yu’s three questions</span><b aria-hidden="true">→</b></button>
+          <button class="primary-action" type="submit"><span data-t="meet-questions">Begin with Bard Yu’s three questions</span><b aria-hidden="true">→</b></button>
           <p class="trust-line" data-t="trust-line">Private by default · AI asks · You create · Every word remains yours</p>
         </form>
 
@@ -119,7 +119,7 @@
       </section>
 
       <section class="flow-stage coach-stage" data-stage="coach" aria-labelledby="coach-title" hidden>
-        <div class="coach-progress"><span data-t="yu-asks">YU ASKS · YOU ANSWER</span><strong><b data-question-number>1</b> / 3</strong></div>
+        <div class="coach-progress"><span data-t="yu-asks">BARD YU ASKS · YOU ANSWER</span><strong><b data-question-number>1</b> / 3</strong></div>
         <div class="coach-layout">
           <div class="coach-context">
             <img data-coach-image alt="Your selected creation" hidden />
@@ -127,11 +127,31 @@
             <p data-coach-seed></p>
           </div>
           <div class="coach-question-card">
-            <div class="yu-mark" aria-hidden="true"><img src="assets/yu-feather-mark.svg" alt="" /></div>
-            <p class="flow-kicker" data-t="personal-mentor">YOUR PERSONAL STORY MENTOR</p>
+            <div class="coach-mentor-head">
+              <div class="yu-mark bard-yu-mark" aria-hidden="true"><img src="assets/yu-mascot-logo-v2.png" alt="" /><span data-t="bard-yu-badge">BARD YU</span></div>
+              <div class="question-audio-tools">
+                <button class="read-question-button" type="button" data-read-question aria-pressed="false">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path d="M16 9c1 .8 1.5 1.8 1.5 3S17 14.2 16 15M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+                  <span data-t="read-question">Hear Bard Yu’s question</span>
+                </button>
+                <label class="auto-read-toggle">
+                  <input type="checkbox" data-auto-read-question />
+                  <span aria-hidden="true"><i></i></span>
+                  <b data-t="auto-read-questions">Read every question aloud</b>
+                </label>
+              </div>
+            </div>
+            <p class="flow-kicker" data-t="personal-mentor">BARD YU · YOUR ENGLISH STORY MENTOR</p>
             <h1 id="coach-title" data-question>Who is in this story, and what do they want?</h1>
             <p data-t="answer-own-words">Answer in your own words. A short sentence is enough.</p>
-            <textarea data-answer rows="5" maxlength="1000" data-placeholder-t="answer-placeholder" placeholder="In my story..."></textarea>
+            <div class="coach-answer-field">
+              <textarea data-answer rows="5" maxlength="1000" data-placeholder-t="answer-placeholder" placeholder="In my story..."></textarea>
+              <button class="answer-speech-button" type="button" data-answer-speech aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg>
+                <span data-t="answer-by-voice">Answer by voice</span>
+              </button>
+            </div>
+            <small class="answer-speech-note" data-t="answer-speech-note">Speech becomes editable text. Live audio is not stored.</small>
             <p class="form-message" data-question-error role="alert"></p>
             <button class="primary-action" type="button" data-next-question><span data-t="next-question">Next question</span><b aria-hidden="true">→</b></button>
           </div>
@@ -172,8 +192,8 @@
     <script src="platform-client.js"></script>
     <script src="safety-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
-    <script src="yu-profile.js?v=20260914-2"></script>
+    <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
-    <script src="h5-app.js?v=20260914-14"></script>
+    <script src="h5-app.js?v=20260915-3"></script>
   </body>
 </html>

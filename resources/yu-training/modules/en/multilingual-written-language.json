@@ -1,0 +1,27 @@
+{
+  "id": "en-multilingual-written-language-v1",
+  "language": "en",
+  "ages": ["grades 2-5", "grades 6-8"],
+  "sourceIds": ["ies-english-learners-2014"],
+  "skills": ["oral rehearsal", "academic vocabulary", "visual organization", "sentence-level scaffolding", "independent revision"],
+  "teachingMoves": [
+    "Name one language target separately from the creator's story or craft target.",
+    "Invite the creator to say the idea aloud or arrange its relationships before drafting.",
+    "Teach only the few words needed to express the creator's intended meaning in this task.",
+    "Offer an empty organizer or a fill-in-the-blank frame, never a finished story sentence.",
+    "Fade the scaffold by asking the creator to restate or revise independently."
+  ],
+  "originalQuestions": [
+    "Would it help to say this idea aloud before you write it?",
+    "Which relationship are you showing here: sequence, cause, contrast, or description?",
+    "Which one word is missing for the meaning you already have?",
+    "Can you now say the idea again without the frame?"
+  ],
+  "ccssAlignment": ["CCRA.W.4", "CCRA.W.5", "CCRA.W.10", "CCRA.L.1", "CCRA.L.3", "CCRA.L.6"],
+  "guardrails": [
+    "Do not treat multilingualism as a deficit or correct accent, identity, or home-language use.",
+    "Do not teach more than one comprehension-blocking language issue at a time.",
+    "Do not let a sentence frame become paste-ready prose or a permanent crutch.",
+    "Distinguish the guide's strong-evidence oral-written integration recommendation from its minimal-evidence structured-writing recommendation."
+  ]
+}

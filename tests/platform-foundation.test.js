@@ -53,6 +53,16 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(studioJs.includes("/api/export-book-docx"), "book export should remain in-product");
   assert(app.includes("data-create-form") && app.includes("data-artwork") && app.includes("data-seed") && app.includes("data-speech"), "formal H5 should begin with artwork, words, or voice");
   assert(app.includes('data-stage="coach"') && app.includes('data-stage="result"'), "formal H5 should keep the three questions and first story page in one flow");
+  [app, chineseStudio].forEach((studioPage) => {
+    assert(studioPage.includes("data-answer-speech"), "every three-question coach should keep voice answering available across the shared question card");
+    assert(studioPage.includes("data-read-question") && studioPage.includes("data-auto-read-question"), "every three-question coach should offer manual and automatic question read-aloud");
+  });
+  assert(app.includes("assets/yu-mascot-logo-v2.png"), "English coaching should show the brand-colored Yu mascot");
+  assert(chineseStudio.includes("assets/yu-sage-v1.png"), "Chinese coaching should show its original white-haired Yu story master");
+  assert(chineseStudio.includes("data-chinese-type-entry") && appJs.includes("chineseTypeEntry"), "Chinese creation should expose a first-class typing entry beside upload and voice");
+  assert(appJs.includes("handleAnswerSpeechInput") && appJs.includes("answerRecognition"), "voice answering should be wired to the reusable question card for questions one through three");
+  assert(appJs.includes("SpeechSynthesisUtterance") && appJs.includes("storieslens_auto_read_questions"), "question read-aloud should use device speech and remember the family's opt-in preference");
+  assert(appJs.includes("sageVoiceNames") && appJs.includes('pitch = locale === "zh" ? 0.84'), "Chinese read-aloud should prefer a calm lower-pitched available Mandarin voice");
   const englishStoryLanguage = app.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   const chineseStoryLanguage = chineseStudio.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");

@@ -40,9 +40,17 @@ const SOURCE_CATALOG = Object.freeze({
     title: "IES/WWC《Teaching Secondary Students to Write Effectively》",
     contribution: "公共领域：Model–Practice–Reflect、读写整合与形成性评价"
   },
+  iesEnglishLearners: {
+    title: "IES/WWC《Teaching Academic Content and Literacy to English Learners》",
+    contribution: "公共领域：口述到书面表达、学术词汇、视觉组织与逐步撤除支架"
+  },
   wenxinDiaolong: {
     title: "刘勰《文心雕龙》创作论选章",
     contribution: "公共领域：构思、情理与文采、篇章剪裁与读者意识"
+  },
+  renjianCihua: {
+    title: "王国维《人间词话》（1926年版）",
+    contribution: "公共领域：观察距离、境界、真切、虚构逻辑与词语选择"
   }
 });
 
@@ -189,21 +197,43 @@ const WRITING_METHODS = Object.freeze({
       "What evidence in this draft should guide our next practice step?"
     ]
   },
+  multilingualBridge: {
+    id: "multilingual-bridge",
+    name: "Multilingual oral-to-written bridge",
+    sources: ["iesEnglishLearners"],
+    principles: [
+      "Name one language target separately from the creator's story or craft target so language support does not erase meaning.",
+      "Use oral rehearsal, a visual relationship, or an empty organizer to help the creator arrange an idea before drafting.",
+      "Teach only the few words needed for the creator's intended meaning in this task, then ask the creator to use them independently.",
+      "A sentence frame may contain blanks and relationship words, but it must never become finished prose for the creator's story.",
+      "Fade support after use by asking the creator to restate, expand, or revise without the frame."
+    ],
+    questions: [
+      "Would it help to say this idea aloud before you write it?",
+      "Which relationship are you showing: sequence, cause, contrast, or description?",
+      "Which one word is missing for the meaning you already have?",
+      "Can you now say the idea again without the frame?"
+    ]
+  },
   classicalCraft: {
     id: "classical-craft",
     name: "古典文论中的构思与剪裁",
-    sources: ["wenxinDiaolong"],
+    sources: ["wenxinDiaolong", "renjianCihua"],
     principles: [
       "先辨认这一段最想保留的情意，再判断材料、结构和措辞是否为它服务。",
       "修改可分为纲领、次序、重复和字句四层；一次只处理一层，避免把作者声音一起削掉。",
       "删去重复后复述原意：意思仍完整才是真正的精简，意义缺失则说明删得过度。",
-      "从读者位置检查文体、人物意图和情绪变化是否能够被看见。"
+      "从读者位置检查文体、人物意图和情绪变化是否能够被看见。",
+      "同一场景可以带着人物感受观察，也可以退后让行动与景物自行呈现；由创作者选择合适距离。",
+      "虚构场景仍需保有现实观察的触点与故事内部的自然逻辑；一个准确动作词应服务意义而非华丽。"
     ],
     questions: [
       "这一段最不能丢失的情意是什么？",
       "哪一个细节真正承载意思，哪些只是重复装饰？",
       "如果删去这句话，意思仍完整吗？",
-      "读者会在哪一步看不清你的用意？"
+      "读者会在哪一步看不清你的用意？",
+      "这一刻更适合带着人物的感受看，还是让事物自己说话？",
+      "这个虚构场景里，哪个细节让它仍然可信？"
     ]
   }
 });
@@ -230,7 +260,7 @@ function selectWritingMethods(input = {}) {
   if (genre === "screenplay") selected.push("scene", "microfilm");
   else if (genre === "scifi") selected.push("scienceFiction", "structure");
 
-  if (language === "en") selected.push("evidenceCycle");
+  if (language === "en") selected.push(input.creatorLevel === "multilingual" ? "multilingualBridge" : "evidenceCycle");
   if (language === "zh") selected.push("classicalCraft");
 
   if (["essay", "memoir"].includes(genre)) selected.push("prose", "revision");

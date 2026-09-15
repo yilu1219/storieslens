@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-09-13",
+  "lastReviewed": "2026-09-15",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -46,6 +46,60 @@
       "skills": ["构思", "情理与文采", "篇章剪裁", "读者视角", "修改"],
       "credibility": "high for classical Chinese literary thought; modern teaching translation requires human review",
       "localRecord": "sources/zh/wenxin-diaolong-craft.md"
+    },
+    {
+      "id": "ies-english-learners-2014",
+      "status": "adopted",
+      "language": "en",
+      "title": "Teaching Academic Content and Literacy to English Learners in Elementary and Middle School",
+      "authorOrInstitution": "What Works Clearinghouse, Institute of Education Sciences, U.S. Department of Education",
+      "published": "2014-04",
+      "retrieved": "2026-09-15",
+      "url": "https://ies.ed.gov/ncee/wwc/Docs/practiceguide/english_learners_pg_040114.pdf",
+      "rights": "Public domain; the PDF states this explicitly on page 3 and requests citation.",
+      "ages": ["elementary", "middle school", "multilingual English learners"],
+      "skills": ["oral-to-written language", "academic vocabulary", "visual organization", "structured writing support", "scaffold fading"],
+      "credibility": "high; U.S. federal evidence practice guide with expert panel and evidence ratings",
+      "localRecord": "sources/en/ies-english-learners-writing.md"
+    },
+    {
+      "id": "renjian-cihua-1926",
+      "status": "adopted",
+      "language": "zh",
+      "title": "《人间词话》（1926年版）：境界、视角与真切",
+      "authorOrInstitution": "王国维（1877—1927）；核查版本为中文维基文库",
+      "published": "1926",
+      "retrieved": "2026-09-15",
+      "url": "https://zh.wikisource.org/zh-hant/人間詞話_(1926)",
+      "rights": "Public domain in the United States and jurisdictions with copyright terms of life plus 80 years or less; Wikisource explicitly marks this edition public domain. Only original pedagogical abstractions and a link are stored.",
+      "ages": ["secondary", "adult"],
+      "skills": ["viewpoint", "scene and feeling", "fictional logic", "concrete detail", "word choice"],
+      "credibility": "high for modern Chinese literary thought; contemporary story-writing transfer requires human review",
+      "localRecord": "sources/zh/renjian-cihua-realm.md"
+    },
+    {
+      "id": "naep-writing-framework-2017",
+      "status": "quarantined",
+      "language": "en",
+      "title": "Writing Framework for the 2017 National Assessment of Educational Progress",
+      "authorOrInstitution": "National Assessment Governing Board",
+      "published": "2017",
+      "retrieved": "2026-09-15",
+      "url": "https://www.nagb.gov/content/dam/nagb/en/documents/publications/frameworks/writing/2017-writing-framework.pdf",
+      "rights": "The official PDF is publicly accessible, but this review did not find an explicit public-domain or reuse statement inside the document.",
+      "rejectionReason": "Authoritative but rights basis is not explicit enough for ingestion under the Yu training policy. No text or framework content was added."
+    },
+    {
+      "id": "wen-fu-lu-ji",
+      "status": "deferred",
+      "language": "zh",
+      "title": "《文赋》",
+      "authorOrInstitution": "陆机（西晋）；核查版本为中文维基文库",
+      "published": "西晋；网页版本持续维护",
+      "retrieved": "2026-09-15",
+      "url": "https://zh.wikisource.org/zh-hant/文賦",
+      "rights": "Underlying work is public domain worldwide; Wikisource explicitly marks it public domain, with site text under CC BY-SA.",
+      "rejectionReason": "Rights are acceptable, but the current extract substantially overlaps the existing 文心雕龙 craft-and-revision module. Deferred to avoid redundant training."
     },
     {
       "id": "openstax-writing-guide-2021",

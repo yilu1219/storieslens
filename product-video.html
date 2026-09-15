@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta name="description" content="Watch the StoriesLens product film: one creation, three questions, and a story world authored by you." />
+    <meta property="og:title" content="StoriesLens Product Film" />
+    <meta property="og:description" content="A storybook or film starts with something you made." />
+    <meta property="og:image" content="https://www.storieslens.com/assets/storieslens-product-film-poster.jpg" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:video" content="https://www.storieslens.com/assets/videos/storieslens-product-film-720p.mp4" />
+    <meta property="og:video:type" content="video/mp4" />
+    <meta property="og:video:width" content="1280" />
+    <meta property="og:video:height" content="720" />
+    <title>StoriesLens Product Film</title>
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <style>
+      :root { color-scheme:light; --paper:#f4efe6; --ink:#11211d; --green:#146b4a; --line:rgba(17,33,29,.17); }
+      * { box-sizing:border-box; }
+      html { background:var(--paper); }
+      body { margin:0; color:var(--ink); background:radial-gradient(circle at 82% 12%, rgba(20,107,74,.13), transparent 30rem), var(--paper); font-family:Arial, Helvetica, sans-serif; }
+      a { color:inherit; }
+      .film-header { width:min(1180px, calc(100% - 40px)); margin:0 auto; padding:24px 0; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+      .film-brand { display:flex; align-items:center; gap:12px; text-decoration:none; font-family:Georgia, "Times New Roman", serif; font-size:clamp(1.25rem, 3vw, 1.75rem); font-weight:700; }
+      .film-brand img { width:44px; height:44px; border-radius:50%; }
+      .back-home { text-decoration:none; font-weight:700; color:var(--green); }
+      main { width:min(1180px, calc(100% - 40px)); margin:0 auto; padding:clamp(52px, 8vw, 100px) 0 72px; }
+      .eyebrow { margin:0 0 18px; color:var(--green); font-size:.8rem; font-weight:800; letter-spacing:.2em; }
+      h1 { max-width:900px; margin:0; font:700 clamp(2.8rem, 7vw, 6.2rem)/.94 Georgia, "Times New Roman", serif; letter-spacing:-.045em; }
+      h1 em { color:var(--green); font-weight:500; }
+      .lede { max-width:760px; margin:26px 0 42px; color:#59635f; font:400 clamp(1.12rem, 2.2vw, 1.55rem)/1.5 Georgia, "Times New Roman", serif; }
+      .player-shell { padding:clamp(10px, 1.7vw, 20px); border:1px solid var(--line); border-radius:clamp(20px, 3vw, 36px); background:#fff; box-shadow:0 24px 80px rgba(17,33,29,.12); }
+      video { display:block; width:100%; aspect-ratio:16/9; border-radius:clamp(12px, 2vw, 24px); background:#07110e; object-fit:cover; }
+      .film-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin-top:24px; }
+      .film-actions p { margin:0; color:#66706c; line-height:1.45; }
+      .film-actions strong { display:block; color:var(--ink); }
+      .film-actions a { min-height:48px; padding:14px 22px; border-radius:999px; background:var(--green); color:white; text-decoration:none; font-weight:800; }
+      .film-actions a:hover { background:#0f573d; }
+      .film-note { margin:48px 0 0; padding-top:28px; border-top:1px solid var(--line); display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
+      .film-note span { color:#69716e; line-height:1.45; }
+      .film-note b { display:block; margin-bottom:7px; color:var(--green); font-size:.75rem; letter-spacing:.12em; }
+      footer { width:min(1180px, calc(100% - 40px)); margin:0 auto; padding:24px 0 40px; border-top:1px solid var(--line); color:#6b726f; }
+      @media (max-width:700px) { .film-header, main, footer { width:min(100% - 28px, 1180px); } .film-note { grid-template-columns:1fr; } h1 { font-size:clamp(2.65rem, 14vw, 4.2rem); } }
+    </style>
+  </head>
+  <body>
+    <header class="film-header">
+      <a class="film-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" /> <span>StoriesLens</span></a>
+      <a class="back-home" href="index.html">Back to creation →</a>
+    </header>
+
+    <main>
+      <p class="eyebrow">STORIESLENS · PRODUCT FILM</p>
+      <h1>A storybook or film starts with <em>something you made.</em></h1>
+      <p class="lede">See how one drawing, photo, spoken thought, or typed idea grows through Yu’s three questions into a story world—written by its creator.</p>
+
+      <section class="player-shell" aria-label="StoriesLens product film">
+        <video controls playsinline preload="metadata" poster="assets/storieslens-product-film-poster.jpg">
+          <source src="assets/videos/storieslens-product-film-720p.mp4" type="video/mp4" />
+          Your browser does not support MP4 video playback.
+        </video>
+        <div class="film-actions">
+          <p><strong>StoriesLens Product Film · 01:27</strong>720p · English narration · Open captions</p>
+          <a href="assets/videos/storieslens-product-film-720p.mp4" download>Download MP4</a>
+        </div>
+      </section>
+
+      <div class="film-note" aria-label="Product principles">
+        <span><b>ONE CREATION</b>Begin with artwork, a photo, voice, or words.</span>
+        <span><b>THREE QUESTIONS</b>Yu guides the thinking without replacing the writer.</span>
+        <span><b>ONE STORY WORLD</b>Create a book, film, or invited collaboration.</span>
+      </div>
+    </main>
+
+    <footer>© 2026 StoriesLens · AI guides, people create.</footer>
+  </body>
+</html>
