@@ -53,7 +53,7 @@
       "upload-title": "Upload your artwork or photo",
       "upload-help": "JPG, PNG, WEBP or HEIC · converted privately on this device",
       "privacy-note": "Location and camera information are removed before the image is used.",
-      "beta-photo-note": "PRIVATE BETA · Personal photos are welcome for private creation. Use only photos you have permission to use.",
+      "beta-photo-note": "PRIVATE BETA · Personal photos may become a private book or video. Use only photos you have permission to use.",
       "or-words": "Or begin with your own words",
       "write-speak": "WRITE · SPEAK",
       "seed-placeholder": "Tell Yu what is happening in the artwork—or begin with one idea.",
@@ -191,7 +191,7 @@
       "upload-title": "上传你的画作或照片",
       "upload-help": "支持 JPG、PNG、WEBP、HEIC · 在本机私密转换",
       "privacy-note": "图片使用前会先删除位置与拍摄设备信息。",
-      "beta-photo-note": "内测说明 · 可以使用本人或家人的真人照片进行私密创作，请先取得本人或监护人同意。",
+      "beta-photo-note": "内测说明 · 本人或家人的真人照片可以用于制作私密故事书或视频，请先取得本人或监护人同意。",
       "or-words": "也可以从自己的话开始",
       "write-speak": "写下 · 口述",
       "seed-placeholder": "告诉羽导师画面里正在发生什么，或者先说出一个想法。",
@@ -1108,16 +1108,14 @@
       toast(locale === "zh" ? "正在删除位置与设备信息并进行安全检查……" : "Removing location and device information, then checking safety…");
       const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
       selectedArtworkData = safeArtwork.dataUrl;
-      selectedArtwork = { name: file.name, privateOnly: false, convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
+      selectedArtwork = { name: file.name, privateOnly: false, personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson), convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
     } catch (error) {
       const reasonCode = error.reasonCode || error.message;
-      if (["review_unavailable", "real_person", "not_artwork"].includes(reasonCode) && window.StoriesLensArtworkSafety?.removeMetadata) {
+      if (reasonCode === "review_unavailable" && window.StoriesLensArtworkSafety?.removeMetadata) {
         const localArtwork = await window.StoriesLensArtworkSafety.removeMetadata(file);
         selectedArtworkData = localArtwork.dataUrl;
-        selectedArtwork = { name: file.name, privateOnly: true, personalPhoto: reasonCode === "real_person", convertedFromHeic: Boolean(localArtwork.convertedFromHeic) };
-        toast(reasonCode === "real_person"
-          ? (locale === "zh" ? "真人照片已接受：已删除拍摄信息，并以本机私密模式继续创作。" : "Personal photo accepted: camera details were removed and private on-device creation is on.")
-          : (locale === "zh" ? "已进入仅本机私密模式；图片不会公开。" : "Device-only private mode is on. This image will not be public."));
+        selectedArtwork = { name: file.name, privateOnly: true, personalPhoto: false, convertedFromHeic: Boolean(localArtwork.convertedFromHeic) };
+        toast(locale === "zh" ? "安全检查暂时不可用，已进入仅本机私密模式；图片不会公开。" : "Safety review is temporarily unavailable. Device-only private mode is on.");
       } else {
         selectedArtworkData = "";
         selectedArtwork = null;
@@ -1134,7 +1132,9 @@
     if (selectedArtwork.convertedFromHeic) toast(locale === "zh" ? "HEIC 已在本机安全转换，原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.");
     if (!selectedArtwork.privateOnly && !workshopMode) {
       try {
-        toast(locale === "zh" ? "安全检查通过，正在保存到你的私密作品库……" : "Safety check passed. Saving to your private library…");
+        toast(selectedArtwork.personalPhoto
+          ? (locale === "zh" ? "真人照片安全检查通过，正在保存到你的私密作品库……" : "Personal photo safety check passed. Saving to your private library…")
+          : (locale === "zh" ? "安全检查通过，正在保存到你的私密作品库……" : "Safety check passed. Saving to your private library…"));
         await persistApprovedArtwork();
         toast(locale === "zh" ? "已私密保存，可以继续回答羽导师的问题。" : "Saved privately. Continue with Yu’s questions.");
       } catch (error) {

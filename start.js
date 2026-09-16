@@ -48,7 +48,7 @@
   let origin = sourceToOrigin[requestedSource] || "imagination";
   let squadAction = "create";
   let importedWork = null;
-  let storyLanguageTouched = ["en", "zh", "bilingual"].includes(requestedStoryLanguage);
+  let storyLanguageTouched = ["en", "zh"].includes(requestedStoryLanguage);
 
   if (storyLanguage) storyLanguage.value = storyLanguageTouched ? requestedStoryLanguage : window.StoriesLensI18n?.locale === "zh" ? "zh" : "en";
   if (storySeed && requestedDna) storySeed.value = requestedDna;
@@ -167,12 +167,12 @@
         if (!window.StoriesLensArtworkSafety) throw Object.assign(new Error("review_unavailable"), { reasonCode: "review_unavailable" });
         const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
         content = safeArtwork.dataUrl;
-        storedName = "artwork.webp";
+        storedName = safeArtwork.review?.checks?.realPerson ? "personal-photo.webp" : "artwork.webp";
         storedType = safeArtwork.type;
-        artworkReview = { safetyReviewed: true, metadataRemoved: true, convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
+        artworkReview = { safetyReviewed: true, metadataRemoved: true, personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson), convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
       } catch (uploadError) {
         workFile.value = "";
-        const message = uploadError.reasonCode === "real_person" ? "This upload appears to show a real person. Please upload artwork without identifiable people." : uploadError.reasonCode === "personal_name" ? "A visible personal name was detected. Please cover or remove it and try again." : uploadError.reasonCode === "school_information" ? "School information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "contact_information" ? "Contact information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "identity_document" ? "Identity documents cannot be uploaded." : uploadError.reasonCode === "not_artwork" ? "Please upload artwork rather than a personal photograph." : uploadError.reasonCode === "unsafe_content" ? "This artwork did not pass the safe-content review." : "Artwork upload is paused because the safety review is unavailable. You can still write or speak.";
+        const message = uploadError.reasonCode === "personal_name" ? "A visible personal name was detected. Please cover or remove it and try again." : uploadError.reasonCode === "school_information" ? "School information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "contact_information" ? "Contact information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "identity_document" ? "Identity documents cannot be uploaded." : uploadError.reasonCode === "unsafe_content" ? "This image did not pass the safe-content review." : "Image upload is paused because the safety review is unavailable. You can still write or speak.";
         error.textContent = t(message);
         if (workFileStatus) workFileStatus.textContent = t("Artwork was not added.");
         return;
@@ -248,11 +248,11 @@
     }
 
     if (squadAction === "join") {
-      window.location.href = `visual-write.html?mode=group&code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&${languageQuery}`;
+      window.location.href = `squad-board.html?code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&${languageQuery}`;
       return;
     }
 
-    window.location.href = `visual-write.html?mode=group-start&from=start&${languageQuery}`;
+    window.location.href = `squad-board.html?action=create&name=${encodeURIComponent(name)}&${languageQuery}`;
   });
 
   renderAgeGate();

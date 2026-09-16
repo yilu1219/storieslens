@@ -471,7 +471,6 @@ assert(!chineseStudioHtml.includes("MAP"), "Chinese studio should not expose the
   "I am under 18 · creating with adult support",
   "Display name",
   "Story language",
-  "Bilingual · English + 中文",
   "Your story spark",
   "data-step-current",
   "data-step-next",
@@ -509,7 +508,7 @@ assert(visualWriteHtml.includes("data-live-story-language"), "Story Studio shoul
 assert(visualWriteHtml.includes("let activeStoryLanguage"), "Story Studio language should be changeable during creation");
 assert(storyDnaHtml.includes("data-dna-story-language"), "Story DNA should keep writing-language choice visible");
 assert(startHtml.includes('option value="zh">中文</option>'), "Creator setup should support Chinese story writing");
-assert(startHtml.includes('option value="bilingual">Bilingual · English + 中文</option>'), "Creator setup should support bilingual story writing");
+assert(!startHtml.includes('option value="bilingual"'), "Creator setup should keep English and Chinese as distinct creative routes");
 
 [
   "Your Story DNA",

@@ -139,7 +139,8 @@
       try {
         if (!window.StoriesLensArtworkSafety) throw Object.assign(new Error("review_unavailable"), { reasonCode: "review_unavailable" });
         const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
-        importedWork = { name: "artwork.webp", type: safeArtwork.type, kind: "image", content: safeArtwork.dataUrl, safetyReviewed: true, metadataRemoved: true };
+        const isPersonalPhoto = Boolean(safeArtwork.review?.checks?.realPerson);
+        importedWork = { name: isPersonalPhoto ? "personal-photo.webp" : "artwork.webp", type: safeArtwork.type, kind: isPersonalPhoto ? "photo" : "image", content: safeArtwork.dataUrl, safetyReviewed: true, metadataRemoved: true, personalPhoto: isPersonalPhoto };
         sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork));
         if (workPreview) {
           workPreview.src = safeArtwork.dataUrl;
@@ -148,18 +149,17 @@
       } catch (uploadError) {
         importedWork = null;
         const reasonCode = uploadError.reasonCode || uploadError.message;
-        const privateLocalMode = ["review_unavailable", "real_person", "not_artwork"].includes(reasonCode);
+        const privateLocalMode = reasonCode === "review_unavailable";
         if (privateLocalMode && window.StoriesLensArtworkSafety?.removeMetadata) {
           try {
             const localArtwork = await window.StoriesLensArtworkSafety.removeMetadata(file);
-            const isPersonalPhoto = reasonCode === "real_person" || reasonCode === "not_artwork";
-            importedWork = { name: isPersonalPhoto ? "private-photo.webp" : "artwork.webp", type: localArtwork.type, kind: isPersonalPhoto ? "photo" : "image", content: localArtwork.dataUrl, safetyReviewed: false, reviewPending: true, metadataRemoved: true, privateOnly: true };
+            importedWork = { name: "private-image.webp", type: localArtwork.type, kind: "image", content: localArtwork.dataUrl, safetyReviewed: false, reviewPending: true, metadataRemoved: true, privateOnly: true };
             sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork));
             if (workPreview) {
               workPreview.src = localArtwork.dataUrl;
               workPreview.hidden = false;
             }
-            if (workFileStatus) workFileStatus.textContent = t(isPersonalPhoto ? "Private photo mode · metadata removed · never public by default" : "Private draft ready · metadata removed · safety review required before sharing");
+            if (workFileStatus) workFileStatus.textContent = t("Private draft ready · metadata removed · safety review required before sharing");
             if (submitButton) submitButton.disabled = false;
             error.textContent = "";
             return;
@@ -169,8 +169,6 @@
         }
         workFile.value = "";
         const reasonMessages = {
-          not_artwork: "Please upload artwork rather than a personal photograph.",
-          real_person: "This upload appears to show a real person. Please upload artwork without identifiable people.",
           identity_document: "Identity documents cannot be uploaded.",
           personal_name: "A visible personal name was detected. Please cover or remove it and try again.",
           school_information: "School information was detected. Please cover or remove it and try again.",

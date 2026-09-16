@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#f1f5ed" />
+    <title>Private Story Squad · StoriesLens</title>
+    <link rel="stylesheet" href="squad-board.css?v=20260916-1" />
+    <link rel="stylesheet" href="squad-board-visuals.css?v=20260916-2" />
+  </head>
+  <body>
+    <header class="squad-header">
+      <a class="brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" /><span>StoriesLens</span></a>
+      <nav><a href="my-stories.html">My Stories · 我的作品</a><a href="index.html">Home · 首页</a></nav>
+    </header>
+
+    <main class="squad-shell">
+      <section class="squad-intro">
+        <p class="eyebrow">PRIVATE STORY SQUAD · 私密共创墙</p>
+        <h1>Every voice becomes<br /><em>one story world.</em></h1>
+        <p>Like a private visual Padlet for stories: invited creators can write, record, illustrate or animate their own part, see approved contributions, and build one credited book or film together.</p>
+        <div class="trust-row"><span>2–6 trusted creators</span><span>Each creator uses their own allowance</span><span>Owner approval</span><span>Every contribution credited</span></div>
+      </section>
+
+      <section class="gate-card" data-auth-gate hidden>
+        <p class="eyebrow">ADULT-OWNED PRIVATE ACCOUNT</p>
+        <h2>Sign in before entering a Story Squad.</h2>
+        <p>For the founding beta, a parent or adult owns the account and approves participation for young creators.</p>
+        <a class="primary-link" data-login-link href="login.html">Email sign in · 邮箱登录</a>
+      </section>
+
+      <section class="setup-grid" data-setup hidden>
+        <article class="setup-card">
+          <span class="step">01</span><h2>Create a private squad</h2><p>Start one shared wall and choose whether the final outcome is a book or a film.</p>
+          <form data-create-form>
+            <label>Project title · 项目名称<input data-create-title maxlength="120" placeholder="Our Moonlight Adventure" required /></label>
+            <label>Creator name · 创作者署名<input data-create-name maxlength="60" placeholder="Name or nickname" required /></label>
+            <div class="two-fields"><label>Language · 语言<select data-create-language><option value="en">English</option><option value="zh">中文</option></select></label><label>Final outcome · 最终成果<select data-create-output><option value="book">Illustrated book · 绘本</option><option value="film">Story film · 故事电影</option></select></label></div>
+            <label>Locked visual style · 统一视觉风格<select data-create-style><option value="storybook-watercolor">Storybook watercolor · 绘本水彩</option><option value="ink-watercolor">Chinese ink watercolor · 水墨水彩</option><option value="cinematic">Cinematic animation · 电影动画</option><option value="comic">Graphic novel · 连环画</option><option value="block-world">Block World · 方块世界</option></select></label>
+            <div class="character-lock-setup">
+              <label>Character &amp; world lock · 人物与世界设定<textarea data-create-character-rules maxlength="1200" rows="4" placeholder="Optional: Maya is 8, short black hair, yellow raincoat; the moon fox has silver wings… · 可选：人物年龄、发型、服装和标志性物件"></textarea><small>Describe the recurring characters, signature clothing, important objects and world. These rules will be locked for the whole squad.</small></label>
+              <aside class="anchor-launch-card">
+                <span>VISUAL ANCHOR · 首张视觉设定</span>
+                <strong>See your shared world before inviting everyone.</strong>
+                <p>Create the private squad and generate its first reference image in one step. Each attempt uses one image allowance from the project owner.</p>
+                <button class="secondary" type="submit" data-create-and-generate>Create squad &amp; generate anchor · 创建并生成设定图</button>
+              </aside>
+            </div>
+            <label class="check"><input data-create-young type="checkbox" /><span>Young creators will participate · 有未成年人参与</span></label>
+            <label class="check" data-create-guardian-row hidden><input data-create-guardian type="checkbox" /><span>I am the parent/guardian and approve this private project. · 我是监护人并同意本次私密共创。</span></label>
+            <button class="primary" type="submit">Create Story Squad · 创建共创小组</button>
+          </form>
+        </article>
+        <article class="setup-card accent">
+          <span class="step">02</span><h2>Join with a Story Code</h2><p>Enter the private code sent by the project owner. Your request is visible only after sign-in.</p>
+          <form data-join-form>
+            <label>Story Code · 故事码<input data-join-code maxlength="32" autocomplete="one-time-code" placeholder="SQ…" required /></label>
+            <label>Name shown on your work · 作品署名<input data-join-name maxlength="60" placeholder="Name or nickname" required /></label>
+            <label class="check"><input data-join-young type="checkbox" /><span>This contribution is from a young creator · 由未成年人创作</span></label>
+            <label class="check" data-join-guardian-row hidden><input data-join-guardian type="checkbox" /><span>A parent/guardian approves participation. · 监护人同意参与。</span></label>
+            <button class="primary" type="submit">Request to join · 申请加入</button>
+          </form>
+        </article>
+        <article class="setup-card wide" data-existing-card hidden><span class="step">03</span><h2>Your private squads</h2><div class="existing-list" data-existing-list></div></article>
+      </section>
+
+      <section class="board-app" data-board hidden>
+        <header class="board-head">
+          <div><p class="eyebrow">PRIVATE · INVITE ONLY</p><h2 data-squad-title>Story Squad</h2><p data-squad-meta></p></div>
+          <div class="owner-actions" data-owner-actions hidden><button class="secondary" data-copy-invite type="button">Copy invite link · 复制邀请</button><button class="primary" data-assemble type="button">Assemble book/film · 汇编成作品</button></div>
+        </header>
+
+        <div class="code-banner" data-code-banner hidden><span>Story Code · 故事码</span><strong data-story-code></strong><small>Send only to family, friends, classmates or invited workshop members.</small></div>
+        <p class="status-banner" data-pending-banner hidden>Your request is waiting for the project owner. You cannot see or add contributions yet. · 正在等待发起人批准。</p>
+        <p class="notice" data-notice hidden></p>
+
+        <section class="anchor-studio" data-anchor-studio hidden>
+          <div class="anchor-studio-copy">
+            <span class="eyebrow">CHARACTER &amp; WORLD LOCK · 人物与世界设定</span>
+            <h3>Create the visual reference everyone will follow.</h3>
+            <p data-anchor-rules></p>
+            <div class="anchor-facts"><span data-anchor-style></span><span>Only the owner’s allowance is used</span><span>Save only when satisfied</span></div>
+            <button class="primary" type="button" data-generate-anchor>Generate first visual anchor · 生成首张设定图</button>
+          </div>
+          <div class="anchor-frame" data-anchor-frame>
+            <img data-anchor-image alt="Approved character and world visual anchor" hidden />
+            <div data-anchor-empty><strong>No visual anchor yet.</strong><span>Generate, compare and approve one image before contributors illustrate their scenes.</span></div>
+            <b data-anchor-approved hidden>APPROVED VISUAL BIBLE · 已锁定</b>
+          </div>
+        </section>
+
+        <div class="board-layout">
+          <aside class="member-panel">
+            <h3>Creators · 共创者</h3><div data-members></div>
+            <p class="privacy-note">No public discovery. No stranger messages. The owner approves members and contributions.</p>
+          </aside>
+          <div class="wall-column">
+            <form class="composer" data-composer hidden>
+              <div><span class="eyebrow">ADD YOUR PART · 写下或说出你的部分</span><h3>What happens next?</h3></div>
+              <section class="squad-yu" data-squad-yu>
+                <div class="squad-yu-head">
+                  <img src="assets/yu-mascot-logo-v2.png" alt="" />
+                  <div><strong>Yu is creating with us · 羽大师也在共创</strong><small>Yu remembers the approved story, asks—not writes—and helps each creator strengthen their own part.</small></div>
+                </div>
+                <div class="squad-yu-actions">
+                  <button class="secondary" type="button" data-yu-question>Ask Yu what could come next · 请羽大师提问</button>
+                  <button class="secondary" type="button" data-yu-review>Review my words · 请羽大师点评</button>
+                </div>
+                <div class="squad-yu-response" data-yu-response hidden>
+                  <div class="squad-yu-response-head"><span>YU’S GUIDANCE · 羽大师引导</span><button type="button" data-yu-read aria-label="Read Yu's guidance aloud">▶ Read aloud · 朗读</button></div>
+                  <p data-yu-message></p>
+                  <div class="squad-yu-feedback" data-yu-feedback hidden>
+                    <div><small>WHAT WORKS · 写得好的地方</small><p data-yu-strength></p></div>
+                    <div><small>ONE FOCUS · 这次只改一点</small><p data-yu-priority></p></div>
+                    <div><small>MINI LESSON · 小技巧</small><p data-yu-lesson></p></div>
+                    <label><span>YU’S MINIMAL REVISION · 羽大师的最小修改</span><textarea rows="3" maxlength="500" data-yu-suggestion></textarea></label>
+                    <div class="squad-yu-confirm"><button class="primary" type="button" data-yu-accept>Yes—this is what I mean · 采用修改</button><button class="secondary" type="button" data-yu-keep>Keep my words · 保留原文</button></div>
+                  </div>
+                </div>
+              </section>
+              <textarea data-card-text maxlength="6000" placeholder="Write a scene, a line of dialogue, a memory, or the next event…"></textarea>
+              <div class="record-row">
+                <button class="record" data-record type="button">● Record voice · 录音</button>
+                <button class="secondary" data-stop type="button" disabled>Stop · 停止</button>
+                <span data-record-status>Optional: add your own narration.</span>
+              </div>
+              <audio data-record-preview controls hidden></audio>
+              <button class="primary" type="submit">Post to our story wall · 发布到共创墙</button>
+              <small>Yu teaches and suggests; you decide every word. Contributors’ posts wait for owner approval, and the author name remains attached.</small>
+            </form>
+            <div class="story-wall" data-story-wall></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section class="visual-candidate" data-visual-candidate hidden aria-modal="true" role="dialog" aria-labelledby="visual-candidate-title">
+      <div class="visual-candidate-card">
+        <button class="visual-candidate-close" type="button" data-candidate-close aria-label="Close preview">×</button>
+        <div class="visual-candidate-copy">
+          <span class="eyebrow">PRIVATE PREVIEW · 仅自己可见</span>
+          <h2 id="visual-candidate-title" data-candidate-title>Your image is ready to review.</h2>
+          <p data-candidate-note>This candidate is not on the squad wall yet.</p>
+        </div>
+        <div class="visual-candidate-media"><div class="candidate-loading" data-candidate-loading><span></span><strong>Yu is creating your image…</strong><small>One image allowance is used for each attempt.</small></div><img data-candidate-image alt="Generated visual candidate" hidden /></div>
+        <div class="visual-candidate-actions">
+          <button class="secondary" type="button" data-candidate-regenerate disabled>Not yet—regenerate · 不满意，重新生成</button>
+          <button class="primary" type="button" data-candidate-accept disabled>I’m happy—save to squad · 满意，保存到小组</button>
+        </div>
+        <small class="candidate-cost-note">Regenerating creates a new image and uses another allowance. Nothing is shared until you choose “save to squad.”</small>
+      </div>
+    </section>
+
+    <div class="toast" data-toast role="status" aria-live="polite"></div>
+    <script src="platform-client.js"></script>
+    <script src="mentor-revision.js"></script>
+    <script src="squad-board.js?v=20260916-2"></script>
+  </body>
+</html>

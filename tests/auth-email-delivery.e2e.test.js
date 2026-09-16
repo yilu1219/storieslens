@@ -54,6 +54,7 @@ test("production email authentication sends and verifies a real provider code", 
       RESEND_API_KEY: "re_test_key",
       RESEND_API_URL: `http://127.0.0.1:${providerPort}/emails`,
       AUTH_EMAIL_FROM: "StoriesLens <login@storieslens.test>",
+      ADMIN_ACCESS_KEY: "StoriesLens-Email-Test-Admin",
       AUTH_DELIVERY_WEBHOOK_URL: "",
       BETA_INVITE_ONLY: "false",
       BETA_ADULT_ACCOUNT_OWNER_ONLY: "false",
@@ -110,6 +111,33 @@ test("production email authentication sends and verifies a real provider code", 
     assert.equal(verifyResponse.status, 200);
     assert.equal(verified.authenticated, true);
     assert.equal(verified.user.displayName, "Test Creator");
+
+    const adminLoginResponse = await fetch(`${baseUrl}/api/admin/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: baseUrl },
+      body: JSON.stringify({ accessKey: "StoriesLens-Email-Test-Admin" })
+    });
+    const adminCookie = (adminLoginResponse.headers.get("set-cookie") || "").split(";")[0];
+    assert.equal(adminLoginResponse.status, 200);
+    const inviteResponse = await fetch(`${baseUrl}/api/admin/invites`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: baseUrl, Cookie: adminCookie },
+      body: JSON.stringify({ region: "us", packageId: "creator-story", count: 1, maxRedemptions: 1, expiresInDays: 7, label: "Email invite test", commercialType: "complimentary", currency: "USD", unitAmountMinor: 0 })
+    });
+    const invite = await inviteResponse.json();
+    assert.equal(inviteResponse.status, 201);
+    const sendInviteResponse = await fetch(`${baseUrl}/api/admin/invites/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: baseUrl, Cookie: adminCookie },
+      body: JSON.stringify({ deliveries: [{ email: "parent@example.com", code: invite.codes[0] }] })
+    });
+    const sentInvite = await sendInviteResponse.json();
+    assert.equal(sendInviteResponse.status, 200);
+    assert.equal(sentInvite.delivered, 1);
+    assert.equal(deliveries.length, 2);
+    assert.deepEqual(deliveries[1].body.to, ["parent@example.com"]);
+    assert.match(deliveries[1].body.subject, /invitation/i);
+    assert.match(deliveries[1].headers["idempotency-key"], /^storieslens-invite-/);
   } catch (error) {
     throw new Error(`${error.message}\nServer output:\n${serverOutput}`);
   }

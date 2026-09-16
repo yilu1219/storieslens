@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v71-usage-ledger-20260915";
+const VERSION = "storieslens-h5-v72-real-person-video-20260916";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -18,10 +18,10 @@ const APP_SHELL = [
   "/analytics.js",
   "/i18n.js?v=20260908-1",
   "/portal-home.css?v=20260913-35",
-  "/portal-home.js?v=20260914-37",
+  "/portal-home.js?v=20260916-40",
   "/family-flow.css?v=20260915-2",
   "/chinese-studio.css?v=20260914-3",
-  "/h5-app.js?v=20260915-3",
+  "/h5-app.js?v=20260916-7",
   "/yu-profile.css?v=20260915-3",
   "/yu-profile.js?v=20260915-3",
   "/showcase.html",

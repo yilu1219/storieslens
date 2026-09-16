@@ -335,6 +335,42 @@
     URL.revokeObjectURL(url);
   });
 
+  $("[data-send-codes]").addEventListener("click", async () => {
+    const notice = $("[data-send-notice]");
+    const emails = $("[data-invite-emails]").value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+    if (!generatedRows.length) {
+      notice.hidden = false;
+      notice.className = "notice error";
+      notice.textContent = "请先生成邀请码。";
+      return;
+    }
+    if (emails.length !== generatedRows.length) {
+      notice.hidden = false;
+      notice.className = "notice error";
+      notice.textContent = `当前有 ${generatedRows.length} 个邀请码，请填写同样数量的邮箱（每行一个）。`;
+      return;
+    }
+    if (!window.confirm(`确认分别向 ${emails.length} 个邮箱发送私人邀请码吗？`)) return;
+    const button = $("[data-send-codes]");
+    button.disabled = true;
+    notice.hidden = false;
+    notice.className = "notice";
+    notice.textContent = "正在发送…";
+    try {
+      const result = await api("/api/admin/invites/send", {
+        method: "POST",
+        body: JSON.stringify({ deliveries: emails.map((email, index) => ({ email, code: generatedRows[index].code })) })
+      });
+      notice.textContent = `已成功发送 ${result.delivered} 封私人邀请邮件。`;
+      toast("邀请码邮件已发送。不要再把同一邀请码发给其他人。");
+    } catch (error) {
+      notice.className = "notice error";
+      notice.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   api("/api/admin/session").then(async (session) => {
     if (!session.authenticated) {
       if (!session.configured) {

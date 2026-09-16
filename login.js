@@ -2,6 +2,8 @@
   "use strict";
 
   const platform = window.StoriesLensPlatform;
+  const requestedReturn = new URLSearchParams(location.search).get("return") || "";
+  const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio)\.html(?:[?#].*)?$/.test(requestedReturn) ? requestedReturn : "my-stories.html";
   const $ = (selector) => document.querySelector(selector);
   const startForm = $("[data-email-start]");
   const verifyForm = $("[data-email-verify]");
@@ -162,7 +164,9 @@
       $("[data-login-form-wrap]").hidden = true;
       $("[data-login-success]").hidden = false;
       $("[data-success-copy]").textContent = `${result.user.displayName}, your private library is ready. · 私人作品库已经准备好。`;
-      window.setTimeout(() => { location.href = "my-stories.html"; }, 900);
+      const successLink = $("[data-login-success] a");
+      if (successLink) successLink.href = returnAfterLogin;
+      window.setTimeout(() => { location.href = returnAfterLogin; }, 900);
     } catch (error) {
       showNotice(error.message, true);
       setBusy(verifyForm, false);

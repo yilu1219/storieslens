@@ -469,6 +469,11 @@ async function handleGenerateVideo(request, response) {
   let creditReservation = null;
   try {
     const body = await readJsonBody(request);
+    const requesterId = handlePlatformApi.creditManager.ownerId(request, response);
+    const squadContext = body.squadId && body.cardId
+      ? handlePlatformApi.creditManager.squadGenerationContext(request, response, { squadId: body.squadId, cardId: body.cardId })
+      : null;
+    const payerId = squadContext?.payerId || requesterId;
     if (process.env.SAFE_VIDEO_GENERATION_ENABLED !== "true") {
       sendJson(response, 503, { error: "Video generation remains disabled until output-frame safety review is configured." });
       return;
@@ -490,7 +495,8 @@ async function handleGenerateVideo(request, response) {
       idempotencyKey: `video:${request.headers["idempotency-key"] || crypto.randomUUID()}`,
       referenceType: "video-generation",
       referenceId: body.projectId,
-      metadata: { model: body.model || config.model, duration: requestedDuration, resolution: body.resolution || config.resolution }
+      metadata: { model: body.model || config.model, duration: requestedDuration, resolution: body.resolution || config.resolution, squadId: body.squadId || "", cardId: body.cardId || "" },
+      payerId
     }).reservation;
     const payload = {
       model: body.model || config.model,
@@ -524,6 +530,7 @@ async function handleGenerateVideo(request, response) {
     const job = {
       jobId: String(upstreamData.id),
       ownerId: creditReservation.userId,
+      requesterId,
       status: normalizeVideoStatus(upstreamData.status),
       pollingUrl: upstreamData.polling_url || `${config.openRouterVideoApiUrl}/${encodeURIComponent(upstreamData.id)}`,
       sourceImageUrl: body.imageUrl,
@@ -577,7 +584,7 @@ async function handleGetVideoJob(request, response, jobId) {
     sendJson(response, 404, { error: "Video job not found. Please start it again." });
     return;
   }
-  if (job.ownerId !== handlePlatformApi.creditManager.ownerId(request, response)) {
+  if ((job.requesterId || job.ownerId) !== handlePlatformApi.creditManager.ownerId(request, response)) {
     sendJson(response, 404, { error: "Video job not found. Please start it again." });
     return;
   }
@@ -683,7 +690,12 @@ function createImageGenerationRequest(body, overrides = {}) {
   }
 
   const referenceImageUrls = Array.isArray(body.referenceImageUrls)
-    ? body.referenceImageUrls.filter(Boolean)
+    ? body.referenceImageUrls.filter(Boolean).map((value) => {
+      const url = String(value);
+      if (/^https?:\/\//i.test(url)) return url;
+      if (url.startsWith("/")) return `${config.siteUrl.replace(/\/$/, "")}${url}`;
+      return url;
+    })
     : [];
 
   return {
@@ -866,8 +878,31 @@ async function handleGenerateImage(request, response) {
   let creditReservation = null;
   try {
     const body = await readJsonBody(request);
+    const squadContext = body.squadId && (body.cardId || body.squadAnchor === true)
+      ? handlePlatformApi.creditManager.squadGenerationContext(request, response, { squadId: body.squadId, cardId: body.cardId, anchor: body.squadAnchor === true })
+      : null;
+    const payerId = squadContext?.payerId || handlePlatformApi.creditManager.ownerId(request, response);
     const provider = createImageProvider();
-    const imageRequest = createImageGenerationRequest(body);
+    const styleNames = {
+      "storybook-watercolor": "premium luminous watercolor storybook illustration",
+      "ink-watercolor": "refined Chinese ink-and-watercolor story illustration",
+      cinematic: "cinematic animated-feature concept art",
+      comic: "polished graphic-novel illustration with clean readable staging",
+      "block-world": "original colorful voxel block-world story art with cubic environments and friendly block-built characters; do not copy Minecraft branding, characters, textures, logos, or protected game assets"
+    };
+    const consistencyPrompt = squadContext ? [
+      String(body.prompt || "").trim(),
+      "SHARED STORY VISUAL BIBLE — MUST FOLLOW:",
+      `Locked visual style (version ${squadContext.visualVersion}): ${styleNames[squadContext.visualStyle] || squadContext.visualStyle}.`,
+      squadContext.characterRules ? `Locked character and world rules: ${squadContext.characterRules}` : "Keep every recurring character’s face, age, hairstyle, clothing, proportions, signature objects, and color palette identical to the approved reference image.",
+      squadContext.referenceImageUrls.length ? "The supplied approved images are canonical references. Preserve their character identity and art direction; change only the action, pose, camera, and setting required by this scene." : "This is the owner-created visual anchor. Establish clear, repeatable character designs and a stable palette for every later scene.",
+      "Do not redesign recurring characters. Do not add readable text, logos, or watermarks."
+    ].filter(Boolean).join("\n\n") : body.prompt;
+    const imageRequest = createImageGenerationRequest({
+      ...body,
+      prompt: consistencyPrompt,
+      referenceImageUrls: squadContext?.referenceImageUrls || body.referenceImageUrls
+    });
     await enforceTextSafety(imageRequest.prompt, { media: true });
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
       resource: "imageGenerations",
@@ -875,7 +910,8 @@ async function handleGenerateImage(request, response) {
       idempotencyKey: `image:${request.headers["idempotency-key"] || crypto.randomUUID()}`,
       referenceType: "image-generation",
       referenceId: imageRequest.projectId,
-      metadata: { model: imageRequest.model, partId: imageRequest.partId }
+      metadata: { model: imageRequest.model, partId: imageRequest.partId, squadId: body.squadId || "", cardId: body.cardId || "", squadAnchor: body.squadAnchor === true },
+      payerId
     }).reservation;
     const result = await provider.generate(imageRequest);
     try {

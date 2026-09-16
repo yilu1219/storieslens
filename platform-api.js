@@ -221,6 +221,9 @@ function createStore(root) {
     modelUsageEvents: [],
     inviteBatches: [],
     inviteCodes: [],
+    squads: [],
+    squadMembers: [],
+    squadCards: [],
     adminSessions: []
   });
 
@@ -266,6 +269,85 @@ function publicUser(user) {
     signInMethod: user.signInMethod || "guest",
     maskedDestination: user.maskedDestination || "",
     createdAt: user.createdAt
+  };
+}
+
+function normalizeSquadCode(value) {
+  return cleanText(value, 32).replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+}
+
+function createSquadCode() {
+  return `SQ${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
+}
+
+function ensureSquadCollections(database) {
+  database.squads ||= [];
+  database.squadMembers ||= [];
+  database.squadCards ||= [];
+  return database;
+}
+
+function squadMembership(database, squadId, userId) {
+  ensureSquadCollections(database);
+  return database.squadMembers.find((member) => member.squadId === squadId && member.userId === userId && !member.removedAt) || null;
+}
+
+function publicSquad(database, squad, viewerId) {
+  const viewer = squadMembership(database, squad.id, viewerId);
+  const isOwner = squad.ownerId === viewerId;
+  const members = database.squadMembers
+    .filter((member) => member.squadId === squad.id && !member.removedAt && (isOwner || member.status === "approved" || member.userId === viewerId))
+    .map((member) => ({
+      id: member.id,
+      displayName: member.displayName,
+      role: member.role,
+      status: member.status,
+      joinedAt: member.joinedAt,
+      approvedAt: member.approvedAt || ""
+    }));
+  const cards = database.squadCards
+    .filter((card) => card.squadId === squad.id && !card.deletedAt && (isOwner || card.status === "approved" || card.authorId === viewerId))
+    .sort((a, b) => a.position - b.position || a.createdAt.localeCompare(b.createdAt))
+    .map((card) => {
+      const canEdit = card.authorId === viewerId;
+      const canSeeVisual = isOwner || canEdit || card.visualStatus === "approved";
+      return {
+        id: card.id,
+        authorName: card.authorName,
+        kind: card.kind,
+        text: card.text,
+        audioMediaId: card.audioMediaId || "",
+        imageUrl: canSeeVisual ? (card.imageUrl || "") : "",
+        videoUrl: canSeeVisual ? (card.videoUrl || "") : "",
+        visualStatus: card.visualStatus || (card.imageUrl || card.videoUrl ? "approved" : "none"),
+        yuGuided: card.yuGuided === true,
+        canEdit,
+        status: card.status,
+        position: card.position,
+        createdAt: card.createdAt,
+        updatedAt: card.updatedAt
+      };
+    });
+  return {
+    id: squad.id,
+    title: squad.title,
+    language: squad.language,
+    outputType: squad.outputType,
+    joinCode: isOwner ? squad.joinCode : "",
+    status: squad.status,
+    visualStyle: squad.visualStyle || (squad.language === "zh" ? "ink-watercolor" : "storybook-watercolor"),
+    characterRules: squad.characterRules || "",
+    visualAnchorReady: Boolean(squad.visualAnchorImageUrl),
+    visualAnchorImageUrl: viewer?.status === "approved" ? (squad.visualAnchorImageUrl || "") : "",
+    visualVersion: Number(squad.visualVersion || 1),
+    visualSettingsLocked: true,
+    visualSettingsLockedAt: squad.visualSettingsLockedAt || squad.createdAt,
+    createdAt: squad.createdAt,
+    updatedAt: squad.updatedAt,
+    assembledProjectId: squad.assembledProjectId || "",
+    viewer: viewer ? { membershipId: viewer.id, role: viewer.role, status: viewer.status, displayName: viewer.displayName } : null,
+    members,
+    cards
   };
 }
 
@@ -327,6 +409,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     return {
       id: media.id,
       projectId: media.projectId,
+      squadId: media.squadId || "",
       kind: media.kind,
       mimeType: media.mimeType,
       bytes: media.bytes,
@@ -606,6 +689,53 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         createdBy: admin.adminSession.id
       }));
       sendJson(response, 201, { batch: publicInviteBatch(store.read(), result.batch), codes: result.rawCodes, warning: "These codes are shown once. Save them before leaving this page." });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/invites/send" && request.method === "POST") {
+      assertSameOrigin(request);
+      if (!process.env.RESEND_API_KEY) {
+        sendJson(response, 503, { error: "Resend is not configured on this server." });
+        return true;
+      }
+      const body = await readJsonBody(request, 80_000);
+      const deliveries = Array.isArray(body.deliveries) ? body.deliveries.slice(0, 100) : [];
+      if (!deliveries.length) {
+        sendJson(response, 400, { error: "Add at least one recipient email and invitation code." });
+        return true;
+      }
+      const database = store.read();
+      const prepared = deliveries.map((delivery) => {
+        const email = validateDestination("email", delivery.email);
+        const code = normalizeInviteCode(delivery.code);
+        const invite = findInvite(database, code);
+        if (!email || !invite) throw Object.assign(new Error("Check every recipient email and invitation code."), { statusCode: 400, code: "INVALID_INVITE_DELIVERY" });
+        validateInvite(database, invite, invite.region);
+        const batch = database.inviteBatches.find((item) => item.id === invite.batchId);
+        return { email, code, invite, batch };
+      });
+      const from = cleanText(process.env.AUTH_EMAIL_FROM || "StoriesLens <login@storieslens.com>", 320);
+      const results = [];
+      for (const item of prepared) {
+        const redeemUrl = `https://www.storieslens.com/my-stories.html?redeem=${encodeURIComponent(item.code)}`;
+        const responseFromProvider = await fetch(cleanText(process.env.RESEND_API_URL, 800) || "https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+            "Idempotency-Key": `storieslens-invite-${item.invite.id}-${hashValue(item.email).slice(0, 16)}`
+          },
+          body: JSON.stringify({
+            from,
+            to: [item.email],
+            subject: "Your private StoriesLens invitation · 你的 StoriesLens 邀请码",
+            text: `You have been invited to StoriesLens. Your private invitation code is ${item.code}. Open ${redeemUrl} to sign in and redeem it. This invitation is for the intended recipient only.\n\n你已受邀加入 StoriesLens。你的私人邀请码是 ${item.code}。请打开 ${redeemUrl}，登录后兑换额度。请勿公开分享此邀请码。`,
+            html: `<div style="font-family:Arial,sans-serif;color:#102824;line-height:1.65;max-width:620px"><p style="color:#14724f;font-weight:700;letter-spacing:.12em">STORIESLENS PRIVATE BETA</p><h1 style="font-family:Georgia,serif">Your invitation is ready.</h1><p>Use this private code after signing in:</p><p style="font-size:24px;font-weight:800;letter-spacing:2px;padding:16px;background:#f2f6ef;border-radius:12px">${escapeHtml(item.code)}</p><p><a href="${escapeHtml(redeemUrl)}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#14724f;color:white;text-decoration:none;font-weight:700">Open StoriesLens</a></p><hr style="border:0;border-top:1px solid #d9e3dc;margin:28px 0"><h2 style="font-family:Georgia,serif">你的邀请已准备好</h2><p>登录后输入上方私人邀请码，即可领取创作额度。请勿公开分享。</p></div>`
+          })
+        });
+        if (!responseFromProvider.ok) throw Object.assign(new Error("An invitation email could not be delivered. Check the address and try again."), { statusCode: 502, code: "INVITE_EMAIL_FAILED" });
+        results.push({ email: maskDestination("email", item.email), delivered: true });
+      }
+      sendJson(response, 200, { delivered: results.length, results });
       return true;
     }
     const disableBatchMatch = requestUrl.pathname.match(/^\/api\/admin\/invites\/([^/]+)$/);
@@ -1028,6 +1158,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         database.creditTransactions = database.creditTransactions.filter((item) => item.userId !== current.user.id);
         database.creditReservations = database.creditReservations.filter((item) => item.userId !== current.user.id);
         database.modelUsageEvents = database.modelUsageEvents.filter((item) => item.userId !== current.user.id);
+        const ownedSquadIds = new Set((database.squads || []).filter((item) => item.ownerId === current.user.id).map((item) => item.id));
+        database.squads = (database.squads || []).filter((item) => item.ownerId !== current.user.id);
+        database.squadMembers = (database.squadMembers || []).filter((item) => item.userId !== current.user.id && !ownedSquadIds.has(item.squadId));
+        database.squadCards = (database.squadCards || []).filter((item) => item.authorId !== current.user.id && !ownedSquadIds.has(item.squadId));
       });
       clearSessionCookie(request, response);
       sendJson(response, 200, { deleted: true });
@@ -1129,6 +1263,324 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     return true;
   }
 
+  async function handleSquads(request, response, requestUrl) {
+    if (!requestUrl.pathname.startsWith("/api/squads")) return false;
+    const current = sessionFor(request, response, { create: false });
+    if (!current.user || current.user.kind !== "account") {
+      sendJson(response, 401, { error: "Sign in with a parent or adult-owned account before using private co-creation." });
+      return true;
+    }
+    const user = current.user;
+
+    if (requestUrl.pathname === "/api/squads" && request.method === "GET") {
+      const database = store.read();
+      ensureSquadCollections(database);
+      const squadIds = new Set(database.squadMembers.filter((member) => member.userId === user.id && !member.removedAt).map((member) => member.squadId));
+      const squads = database.squads.filter((squad) => squadIds.has(squad.id) && !squad.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map((squad) => publicSquad(database, squad, user.id));
+      sendJson(response, 200, { squads });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/squads" && request.method === "POST") {
+      const body = await readJsonBody(request, 20_000);
+      if (body.ageGroup === "under18" && body.guardianConfirmed !== true) {
+        sendJson(response, 400, { error: "A parent or guardian must confirm a private squad for young creators." });
+        return true;
+      }
+      const title = cleanText(body.title, 120) || "Our Story Squad";
+      await enforceTextSafety(title);
+      const created = store.mutate((database) => {
+        ensureSquadCollections(database);
+        let joinCode;
+        do joinCode = createSquadCode(); while (database.squads.some((item) => item.joinCode === joinCode));
+        const now = nowIso();
+        const squad = {
+          id: crypto.randomUUID(),
+          ownerId: user.id,
+          title,
+          language: body.language === "zh" ? "zh" : "en",
+          outputType: body.outputType === "film" ? "film" : "book",
+          ageGroup: body.ageGroup === "under18" ? "under18" : "mixed",
+          guardianConfirmed: body.guardianConfirmed === true,
+          joinCode,
+          status: "collecting",
+          visualStyle: ["storybook-watercolor", "ink-watercolor", "cinematic", "comic", "block-world"].includes(body.visualStyle) ? body.visualStyle : (body.language === "zh" ? "ink-watercolor" : "storybook-watercolor"),
+          characterRules: cleanText(body.characterRules, 1200),
+          visualAnchorImageUrl: "",
+          visualVersion: 1,
+          visualSettingsLockedAt: now,
+          assembledProjectId: "",
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: ""
+        };
+        const member = {
+          id: crypto.randomUUID(), squadId: squad.id, userId: user.id, role: "owner", status: "approved",
+          displayName: cleanText(body.displayName, 60) || user.displayName || "Project owner",
+          joinedAt: now, approvedAt: now, removedAt: ""
+        };
+        database.squads.push(squad);
+        database.squadMembers.push(member);
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 201, { squad: created, joinUrl: `/squad-board.html?code=${encodeURIComponent(created.joinCode)}` });
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/squads/join" && request.method === "POST") {
+      const body = await readJsonBody(request, 12_000);
+      const code = normalizeSquadCode(body.code);
+      const displayName = cleanText(body.displayName, 60) || user.displayName || "Contributor";
+      if (body.youngCreator === true && body.guardianConfirmed !== true) {
+        sendJson(response, 400, { error: "A parent or guardian must approve a young creator joining this private squad." });
+        return true;
+      }
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.joinCode === code && !item.deletedAt);
+        if (!squad) throw Object.assign(new Error("This Story Code is invalid."), { statusCode: 404, code: "SQUAD_NOT_FOUND" });
+        const existing = squadMembership(database, squad.id, user.id);
+        if (existing) return { squad: publicSquad(database, squad, user.id), duplicate: true };
+        const activeCount = database.squadMembers.filter((item) => item.squadId === squad.id && !item.removedAt && item.status === "approved").length;
+        if (activeCount >= 6) throw Object.assign(new Error("This private squad already has six approved creators."), { statusCode: 409, code: "SQUAD_FULL" });
+        const now = nowIso();
+        database.squadMembers.push({
+          id: crypto.randomUUID(), squadId: squad.id, userId: user.id, role: "contributor", status: "pending",
+          displayName, youngCreator: body.youngCreator === true, guardianConfirmed: body.guardianConfirmed === true,
+          joinedAt: now, approvedAt: "", removedAt: ""
+        });
+        squad.updatedAt = now;
+        return { squad: publicSquad(database, squad, user.id), duplicate: false };
+      });
+      sendJson(response, result.duplicate ? 200 : 201, { ...result, notice: result.squad.viewer?.status === "pending" ? "The project owner must approve this request before contributions become visible." : "You are already a member." });
+      return true;
+    }
+
+    const squadMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)$/);
+    if (squadMatch && request.method === "GET") {
+      const database = store.read();
+      ensureSquadCollections(database);
+      const squad = database.squads.find((item) => item.id === cleanId(decodeURIComponent(squadMatch[1])) && !item.deletedAt);
+      const member = squad ? squadMembership(database, squad.id, user.id) : null;
+      if (!squad || !member) {
+        sendJson(response, 404, { error: "Private squad not found." });
+        return true;
+      }
+      sendJson(response, 200, { squad: publicSquad(database, squad, user.id) });
+      return true;
+    }
+
+    const approveMemberMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/members\/([^/]+)\/approve$/);
+    if (approveMemberMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(approveMemberMatch[1]));
+      const memberId = cleanId(decodeURIComponent(approveMemberMatch[2]));
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+        const member = squad ? database.squadMembers.find((item) => item.id === memberId && item.squadId === squadId && !item.removedAt) : null;
+        if (!squad || !member) throw Object.assign(new Error("Pending member not found."), { statusCode: 404, code: "SQUAD_MEMBER_NOT_FOUND" });
+        if (member.status !== "approved") {
+          const approvedContributors = database.squadMembers.filter((item) => item.squadId === squad.id && item.role === "contributor" && item.status === "approved" && !item.removedAt).length;
+          if (approvedContributors >= 5) throw Object.assign(new Error("This squad already has five invited collaborators."), { statusCode: 409, code: "SQUAD_FULL" });
+          member.status = "approved";
+          member.approvedAt = nowIso();
+          squad.updatedAt = member.approvedAt;
+        }
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
+      return true;
+    }
+
+    const visualAnchorMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/visual-anchor$/);
+    if (visualAnchorMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(visualAnchorMatch[1]));
+      const body = await readJsonBody(request, 12_000);
+      const imageUrl = cleanUrl(body.imageUrl);
+      if (!imageUrl) {
+        sendJson(response, 400, { error: "A safe generated visual anchor is required." });
+        return true;
+      }
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+        if (!squad) throw Object.assign(new Error("Only the project owner can approve the visual anchor."), { statusCode: 403, code: "SQUAD_ANCHOR_OWNER_REQUIRED" });
+        const replacing = Boolean(squad.visualAnchorImageUrl && squad.visualAnchorImageUrl !== imageUrl);
+        squad.visualAnchorImageUrl = imageUrl;
+        squad.visualAnchorApprovedAt = nowIso();
+        if (replacing) squad.visualVersion = Number(squad.visualVersion || 1) + 1;
+        squad.updatedAt = squad.visualAnchorApprovedAt;
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
+      return true;
+    }
+
+    const cardsMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/cards$/);
+    if (cardsMatch && request.method === "POST") {
+      const squadId = cleanId(decodeURIComponent(cardsMatch[1]));
+      const body = await readJsonBody(request, 30_000);
+      const text = cleanText(body.text, 6000);
+      const audioMediaId = cleanId(body.audioMediaId);
+      const yuGuided = body.yuGuided === true;
+      if (!text && !audioMediaId) {
+        sendJson(response, 400, { error: "Write something or add a voice recording before posting." });
+        return true;
+      }
+      if (text) await enforceTextSafety(text);
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
+        const member = squad ? squadMembership(database, squad.id, user.id) : null;
+        if (!squad || !member || member.status !== "approved") throw Object.assign(new Error("The project owner must approve you before you can post."), { statusCode: 403, code: "SQUAD_APPROVAL_REQUIRED" });
+        if (audioMediaId) {
+          const audio = database.media.find((item) => item.id === audioMediaId && item.ownerId === user.id && item.squadId === squadId && item.kind === "audio");
+          if (!audio) throw Object.assign(new Error("Voice recording not found."), { statusCode: 404, code: "SQUAD_AUDIO_NOT_FOUND" });
+        }
+        const now = nowIso();
+        const card = {
+          id: crypto.randomUUID(), squadId, authorId: user.id, authorName: member.displayName,
+          kind: audioMediaId && text ? "mixed" : audioMediaId ? "audio" : "text",
+          text, audioMediaId, status: member.role === "owner" ? "approved" : "pending",
+          yuGuided,
+          imageUrl: "", videoUrl: "", visualStatus: "none",
+          position: database.squadCards.filter((item) => item.squadId === squadId && !item.deletedAt).length + 1,
+          createdAt: now, updatedAt: now, deletedAt: ""
+        };
+        database.squadCards.push(card);
+        squad.updatedAt = now;
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 201, { squad: result });
+      return true;
+    }
+
+    const approveCardMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/cards\/([^/]+)\/approve$/);
+    if (approveCardMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(approveCardMatch[1]));
+      const cardId = cleanId(decodeURIComponent(approveCardMatch[2]));
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+        const card = squad ? database.squadCards.find((item) => item.id === cardId && item.squadId === squadId && !item.deletedAt) : null;
+        if (!squad || !card) throw Object.assign(new Error("Contribution not found."), { statusCode: 404, code: "SQUAD_CARD_NOT_FOUND" });
+        card.status = "approved";
+        if (card.imageUrl || card.videoUrl) card.visualStatus = "approved";
+        if (card.imageUrl && !squad.visualAnchorImageUrl) squad.visualAnchorImageUrl = card.imageUrl;
+        card.updatedAt = nowIso();
+        squad.updatedAt = card.updatedAt;
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
+      return true;
+    }
+
+    const cardVisualMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/cards\/([^/]+)\/visual$/);
+    if (cardVisualMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(cardVisualMatch[1]));
+      const cardId = cleanId(decodeURIComponent(cardVisualMatch[2]));
+      const body = await readJsonBody(request, 12_000);
+      const imageUrl = cleanUrl(body.imageUrl);
+      const videoUrl = cleanUrl(body.videoUrl);
+      if (!imageUrl && !videoUrl) {
+        sendJson(response, 400, { error: "A safe generated image or video URL is required." });
+        return true;
+      }
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
+        const member = squad ? squadMembership(database, squad.id, user.id) : null;
+        const card = squad ? database.squadCards.find((item) => item.id === cardId && item.squadId === squadId && !item.deletedAt) : null;
+        const owner = squad?.ownerId === user.id;
+        if (!squad || !member || member.status !== "approved" || !card || card.authorId !== user.id) {
+          throw Object.assign(new Error("You can add visuals only to your own contribution."), { statusCode: 403, code: "SQUAD_VISUAL_FORBIDDEN" });
+        }
+        if (imageUrl) {
+          card.imageUrl = imageUrl;
+          if (!videoUrl) card.videoUrl = "";
+          if (owner && !squad.visualAnchorImageUrl) squad.visualAnchorImageUrl = imageUrl;
+        }
+        if (videoUrl) card.videoUrl = videoUrl;
+        card.visualStatus = owner ? "approved" : "pending";
+        card.updatedAt = nowIso();
+        squad.updatedAt = card.updatedAt;
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
+      return true;
+    }
+
+    const assembleMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/assemble$/);
+    if (assembleMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(assembleMatch[1]));
+      const database = store.read();
+      ensureSquadCollections(database);
+      const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+      if (!squad) {
+        sendJson(response, 404, { error: "Private squad not found." });
+        return true;
+      }
+      const cards = database.squadCards.filter((card) => card.squadId === squad.id && card.status === "approved" && !card.deletedAt).sort((a, b) => a.position - b.position);
+      if (!cards.length) {
+        sendJson(response, 400, { error: "Approve at least one contribution before assembling the story." });
+        return true;
+      }
+      await enforceTextSafety(cards.map((card) => card.text).filter(Boolean).join("\n"));
+      const requestKey = cleanText(request.headers["idempotency-key"] || `squad-assemble:${squad.id}`, 200);
+      const reserved = store.mutate((nextDatabase) => reserveCredits(nextDatabase, {
+        userId: user.id, resource: "storyProjects", units: 1, idempotencyKey: requestKey,
+        referenceType: "squad-project", referenceId: squad.id
+      }));
+      const assembled = store.mutate((nextDatabase) => {
+        const storedSquad = nextDatabase.squads.find((item) => item.id === squad.id);
+        if (storedSquad.assembledProjectId) {
+          releaseReservation(nextDatabase, { reservationId: reserved.reservation.id, reason: "squad-already-assembled" });
+          return nextDatabase.projects.find((item) => item.id === storedSquad.assembledProjectId);
+        }
+        const now = nowIso();
+        const scenes = cards.map((card, index) => cleanScene({
+          id: `scene-${index + 1}`,
+          title: `${squad.language === "zh" ? "第" : "Part "}${squad.language === "zh" ? index + 1 : index + 1}${squad.language === "zh" ? "章" : ""} · ${card.authorName}`,
+          text: card.text || (squad.language === "zh" ? `${card.authorName} 的语音创作` : `Voice contribution by ${card.authorName}`),
+          caption: card.text || card.authorName,
+          imageUrl: card.visualStatus === "approved" ? card.imageUrl : "",
+          videoUrl: card.visualStatus === "approved" ? card.videoUrl : "",
+          narrationMediaId: card.audioMediaId,
+          duration: 6
+        }, index));
+        const project = normalizeProject({
+          title: storedSquad.title,
+          language: storedSquad.language,
+          mode: "squad",
+          ageGroup: storedSquad.ageGroup === "under18" ? "under18" : "adult",
+          visibility: "private",
+          sourceType: "text",
+          sourceText: cards.map((card) => `${card.authorName}: ${card.text || "[voice]"}`).join("\n\n"),
+          draft: cards.map((card) => card.text).filter(Boolean).join("\n\n"),
+          scenes,
+          clientSnapshot: { squadId: storedSquad.id, outputType: storedSquad.outputType, credits: cards.map((card) => ({ cardId: card.id, authorName: card.authorName, yuGuided: card.yuGuided === true })) }
+        });
+        Object.assign(project, { id: crypto.randomUUID(), ownerId: user.id, createdAt: now, updatedAt: now, version: 1, deletedAt: "", creationReservationId: reserved.reservation.id });
+        nextDatabase.projects.push(project);
+        storedSquad.assembledProjectId = project.id;
+        storedSquad.status = "assembled";
+        storedSquad.updatedAt = now;
+        settleReservation(nextDatabase, { reservationId: reserved.reservation.id });
+        return project;
+      });
+      sendJson(response, 201, { project: assembled, nextUrl: `/my-stories.html#${encodeURIComponent(assembled.id)}` });
+      return true;
+    }
+
+    sendJson(response, 404, { error: "Co-creation endpoint not found." });
+    return true;
+  }
+
   async function handleMedia(request, response, requestUrl) {
     if (requestUrl.pathname === "/api/media-usage" && request.method === "GET") {
       const { database, user } = sessionFor(request, response);
@@ -1141,8 +1593,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const body = await readJsonBody(request, 18_000_000);
       const { database, user } = sessionFor(request, response);
       const project = requireProject(database, user, cleanId(body.projectId));
-      if (!project) {
-        sendJson(response, 404, { error: "Save the story project before uploading media." });
+      const squadId = cleanId(body.squadId);
+      const squad = squadId ? database.squads?.find((item) => item.id === squadId && !item.deletedAt) : null;
+      const member = squad ? squadMembership(database, squad.id, user.id) : null;
+      if (!project && (!squad || member?.status !== "approved")) {
+        sendJson(response, 404, { error: "Save a story project or join an approved private squad before uploading media." });
         return true;
       }
       const match = String(body.dataUrl || "").match(/^data:([^;,]+);base64,([A-Za-z0-9+/=]+)$/);
@@ -1172,18 +1627,17 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         });
         return true;
       }
+      let imageReview = null;
       if (kind === "image") {
         if (body.metadataRemoved !== true) {
           sendJson(response, 400, { error: "Image metadata must be removed on the device before upload." });
           return true;
         }
-        const artworkReview = await reviewArtworkSafety(body.dataUrl);
-        if (!artworkReview.approved) {
-          sendJson(response, artworkReview.statusCode || 422, {
-            error: ["real_person", "not_artwork"].includes(artworkReview.reasonCode)
-              ? "Real-person photos are not stored. Upload artwork without identifiable people."
-              : "This image was not stored because it did not pass the artwork privacy review.",
-            reasonCode: artworkReview.reasonCode || "uncertain"
+        imageReview = await reviewArtworkSafety(body.dataUrl);
+        if (!imageReview.approved) {
+          sendJson(response, imageReview.statusCode || 422, {
+            error: "This image was not stored because it did not pass the child-safety or privacy review.",
+            reasonCode: imageReview.reasonCode || "uncertain"
           });
           return true;
         }
@@ -1192,20 +1646,22 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const extension = imageExtensions[mimeType] || audioExtensions[mimeType];
       const storageRecord = await mediaStorage.put({
         user,
-        key: `${user.id}/${project.id}/${mediaId}.${extension}`,
+        key: `${user.id}/${project ? project.id : `squad-${squad.id}`}/${mediaId}.${extension}`,
         buffer,
         contentType: mimeType
       });
       const media = {
         id: mediaId,
         ownerId: user.id,
-        projectId: project.id,
+        projectId: project?.id || "",
+        squadId: squad?.id || "",
         kind,
         mimeType,
         bytes: buffer.length,
         ...storageRecord,
         private: true,
         metadataRemoved: kind === "image",
+        containsRealPerson: kind === "image" ? Boolean(imageReview?.checks?.realPerson) : false,
         createdAt: nowIso()
       };
       store.mutate((nextDatabase) => nextDatabase.media.push(media));
@@ -1217,7 +1673,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     if (!mediaMatch || request.method !== "GET") return false;
     const mediaId = cleanId(decodeURIComponent(mediaMatch[1]));
     const { database, user } = sessionFor(request, response);
-    const media = database.media.find((item) => item.id === mediaId && item.ownerId === user.id);
+    const media = database.media.find((item) => item.id === mediaId && (item.ownerId === user.id || (item.squadId && squadMembership(database, item.squadId, user.id)?.status === "approved")));
     const storedObject = media ? await mediaStorage.get(media) : null;
     if (!media || !storedObject) {
       sendJson(response, 404, { error: "Private media not found." });
@@ -1424,10 +1880,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       store.mutate((nextDatabase) => nextDatabase.renderJobs.push(job));
       let renderResult = { started: false };
       if (ready) {
+        const referencedMediaIds = new Set(scenes.map((scene) => scene.narrationMediaId).filter(Boolean));
         renderResult = queueHyperframesRender({
           root,
           project,
-          mediaRecords: database.media.filter((item) => item.ownerId === user.id),
+          mediaRecords: database.media.filter((item) => item.ownerId === user.id || referencedMediaIds.has(item.id)),
           job,
           onUpdate(update) {
             store.mutate((nextDatabase) => {
@@ -1566,6 +2023,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       if (await handleCredits(request, response, requestUrl)) return true;
       if (await handleAuth(request, response, requestUrl)) return true;
       if (await handleProjects(request, response, requestUrl)) return true;
+      if (await handleSquads(request, response, requestUrl)) return true;
       if (await handleMedia(request, response, requestUrl)) return true;
       if (await handleConsentAndSharing(request, response, requestUrl)) return true;
       if (await handleOrdersAndRender(request, response, requestUrl)) return true;
@@ -1581,10 +2039,40 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     ownerId(request, response) {
       return sessionFor(request, response).user.id;
     },
-    reserve(request, response, { resource, units = 1, idempotencyKey, referenceType, referenceId, metadata }) {
+    squadGenerationContext(request, response, { squadId, cardId, anchor: isAnchor = false }) {
+      const { database, user } = sessionFor(request, response, { create: false });
+      ensureSquadCollections(database);
+      const squad = database.squads.find((item) => item.id === cleanId(squadId) && !item.deletedAt);
+      const member = squad ? squadMembership(database, squad.id, user?.id) : null;
+      const card = !isAnchor && squad ? database.squadCards.find((item) => item.id === cleanId(cardId) && item.squadId === squad.id && !item.deletedAt) : null;
+      const allowed = isAnchor
+        ? Boolean(user && squad && member?.status === "approved" && squad.ownerId === user.id)
+        : Boolean(user && squad && member?.status === "approved" && card && card.authorId === user.id);
+      if (!allowed) {
+        throw Object.assign(new Error("This shared generation request is not allowed."), { statusCode: 403, code: "SQUAD_GENERATION_FORBIDDEN" });
+      }
+      const approvedImages = database.squadCards
+        .filter((item) => item.squadId === squad.id && item.visualStatus === "approved" && item.imageUrl && !item.deletedAt)
+        .sort((a, b) => a.position - b.position || a.createdAt.localeCompare(b.createdAt))
+        .map((item) => item.imageUrl);
+      const referenceAnchor = squad.visualAnchorImageUrl || approvedImages[0] || "";
+      if (!isAnchor && !referenceAnchor) {
+        throw Object.assign(new Error("The project owner needs to create and approve the first visual anchor before other creators generate images."), { statusCode: 409, code: "SQUAD_VISUAL_ANCHOR_REQUIRED" });
+      }
+      const latest = approvedImages.at(-1) || "";
+      return {
+        payerId: user.id,
+        anchor: isAnchor,
+        visualStyle: squad.visualStyle || (squad.language === "zh" ? "ink-watercolor" : "storybook-watercolor"),
+        characterRules: squad.characterRules || "",
+        visualVersion: Number(squad.visualVersion || 1),
+        referenceImageUrls: [...new Set([referenceAnchor, latest].filter(Boolean))].slice(0, 2)
+      };
+    },
+    reserve(request, response, { resource, units = 1, idempotencyKey, referenceType, referenceId, metadata, payerId = "" }) {
       const { user } = sessionFor(request, response);
       return store.mutate((database) => reserveCredits(database, {
-        userId: user.id,
+        userId: cleanId(payerId) || user.id,
         resource,
         units,
         idempotencyKey: cleanText(idempotencyKey || request.headers["idempotency-key"] || crypto.randomUUID(), 200),

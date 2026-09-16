@@ -1,6 +1,7 @@
 (function () {
   const platform = window.StoriesLensPlatform;
   const $ = (selector) => document.querySelector(selector);
+  const pageParams = new URLSearchParams(location.search);
   const grid = $("[data-project-grid]");
   const empty = $("[data-empty-state]");
   const toastNode = $("[data-toast]");
@@ -251,6 +252,11 @@
     $("[data-signin-card]").hidden = result.authenticated;
     $("[data-delete-card]").hidden = !result.authenticated;
     $("[data-redeem-form]").hidden = !result.authenticated;
+    if (result.authenticated && pageParams.get("redeem") && !$("[data-redeem-code]").value) {
+      $("[data-redeem-code]").value = pageParams.get("redeem").slice(0, 120);
+      $("[data-allowance-notice]").hidden = false;
+      $("[data-allowance-notice]").textContent = "Your code is ready. Confirm to add the allowance. · 兑换码已填好，点击确认即可到账。";
+    }
   }
 
   function suggestRegionFromPhone() {

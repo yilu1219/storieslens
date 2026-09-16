@@ -215,6 +215,8 @@
     document.querySelectorAll("[data-home-placeholder]").forEach((element) => {
       element.placeholder = t(element.dataset.homePlaceholder);
     });
+    const squadLink = document.querySelector("[data-audience='cocreate']");
+    if (squadLink) squadLink.href = `start.html?mode=squad&storyLang=${homeLocale === "zh" ? "zh" : "en"}`;
     document.title = homeLocale === "zh" ? "语镜故事｜从你的作品开始创作" : "StoriesLens | Start with your creation";
   };
 
@@ -278,11 +280,11 @@
         result = await window.StoriesLensArtworkSafety.processArtwork(file);
       } catch (error) {
         const reason = error.reasonCode || error.message;
-        if (!["review_unavailable", "real_person", "not_artwork"].includes(reason)) throw error;
+        if (reason !== "review_unavailable") throw error;
         result = await window.StoriesLensArtworkSafety.removeMetadata(file);
         privateOnly = true;
-        personalPhoto = reason === "real_person" || reason === "not_artwork";
       }
+      personalPhoto = Boolean(result.review?.checks?.realPerson);
       preparedImage = { dataUrl: result.dataUrl, name: file.name, privateOnly, personalPhoto, convertedFromHeic: Boolean(result.convertedFromHeic) };
       imagePreview.src = result.dataUrl;
       imageName.textContent = file.name;
