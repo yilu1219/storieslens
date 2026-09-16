@@ -2,9 +2,14 @@
   const uploadInput = document.querySelector("[data-home-upload]");
   const uploadLabel = document.querySelector("[data-home-upload-label]");
   const speechButton = document.querySelector("[data-home-speech]");
-  const typeButton = document.querySelector("[data-home-type]");
+  const ideaButton = document.querySelector("[data-home-idea]");
+  const existingButton = document.querySelector("[data-home-existing]");
   const voiceWrap = document.querySelector("[data-home-voice-wrap]");
   const voiceText = document.querySelector("[data-home-voice-text]");
+  const existingWrap = document.querySelector("[data-home-existing-wrap]");
+  const existingText = document.querySelector("[data-home-existing-text]");
+  const existingFile = document.querySelector("[data-home-existing-file]");
+  const existingFileName = document.querySelector("[data-home-existing-name]");
   const imageWrap = document.querySelector("[data-home-image-preview-wrap]");
   const imagePreview = document.querySelector("[data-home-image-preview]");
   const imageName = document.querySelector("[data-home-image-name]");
@@ -13,6 +18,8 @@
   const storyLanguageWrap = document.querySelector("[data-home-story-language]");
   const storyLanguageButtons = document.querySelectorAll("[data-story-language]");
   let preparedImage = null;
+  let existingWritingMode = false;
+  let existingWritingName = "";
   let preparedStoryLanguage = "";
   let recognition = null;
   // The public homepage is the English flagship. Chinese is a distinct
@@ -35,15 +42,23 @@
       "free-questions": "FREE FIRST-SCENE PREVIEW",
       "upload-primary": "Upload artwork or a photo",
       "upload-secondary": "",
-      "voice-primary": "Speak one idea",
-      "voice-secondary": "",
-      "type-primary": "Type one idea",
-      "type-secondary": "",
+      "idea-primary": "Speak or type one idea",
+      "idea-secondary": "Start with one sentence",
+      "existing-primary": "Bring a finished piece of writing",
+      "existing-secondary": "Let Yu begin with an essay already written",
       "spark-label": "YOUR STARTING SPARK",
       "spark-ready": "Ready for Yu’s three questions.",
       "idea-label": "Your idea",
       "idea-placeholder": "Speak—or type—what happens first...",
+      "speak-now": "Speak",
       "speech-note": "Speech becomes editable text. Live audio is not saved.",
+      "existing-kicker": "ALREADY WRITTEN",
+      "existing-title": "Bring your essay to Yu",
+      "existing-file": "Choose a document or a clear photo of the writing",
+      "existing-label": "Or paste the child’s writing here",
+      "existing-placeholder": "Paste an existing essay. Yu will review it one sentence at a time, while the child keeps every final decision.",
+      "existing-note": "Documents are read on this device. HEIC/HEIF photos are converted on this device, then you confirm the extracted text before Yu revises it.",
+      "continue-revise": "Let Yu help revise my writing",
       "language-question": "What language would you like to create in today?",
       "language-en": "Create in English",
       "language-zh": "Create in Chinese",
@@ -122,15 +137,23 @@
       "free-questions": "免费预览故事第一幕",
       "upload-primary": "上传你的画作或照片",
       "upload-secondary": "",
-      "voice-primary": "口述一个想法",
-      "voice-secondary": "",
-      "type-primary": "写下一个想法",
-      "type-secondary": "",
+      "idea-primary": "说出或写下一个想法",
+      "idea-secondary": "从一句话开始",
+      "existing-primary": "上传或粘贴一篇已写好的作文",
+      "existing-secondary": "让 Yu 从孩子已经写好的文字开始",
       "spark-label": "你的创作起点",
       "spark-ready": "已经可以回答 Yu 导师的三个问题。",
       "idea-label": "你的想法",
       "idea-placeholder": "说出或写下故事最先发生了什么……",
+      "speak-now": "口述",
       "speech-note": "语音会转成可以修改的文字，不保存现场录音。",
+      "existing-kicker": "已有作文",
+      "existing-title": "把已经写好的作文交给 Yu",
+      "existing-file": "选择文档或一张清晰的作文照片",
+      "existing-label": "或直接粘贴孩子已经写好的作文",
+      "existing-placeholder": "粘贴一篇已有作文。Yu 会一句一句陪孩子修改，但每个最终决定都由孩子自己确认。",
+      "existing-note": "文档先在本机读取；HEIC／HEIF 照片先在本机转换。识别出的文字由你确认后，Yu 才会逐句修改。",
+      "continue-revise": "让 Yu 帮我修改这篇作文",
       "language-question": "今天想用什么语言创作？",
       "language-en": "用英文创作",
       "language-zh": "用中文创作",
@@ -229,16 +252,48 @@
     storyLanguageWrap.hidden = false;
   };
 
+  const writingForHandoff = () => existingWritingMode ? existingText.value.trim() : voiceText.value.trim();
+
+  const updateContinueLabel = () => {
+    const label = continueButton?.querySelector("b");
+    if (label) label.textContent = existingWritingMode ? t("continue-revise") : t("continue-yu");
+  };
+
+  const activateExistingWriting = () => {
+    existingWritingMode = true;
+    preparedImage = null;
+    imageWrap.hidden = true;
+    uploadLabel.classList.remove("has-selection");
+    voiceText.value = "";
+    voiceWrap.hidden = true;
+    existingWrap.hidden = false;
+    existingButton.classList.add("is-selected");
+    showLanguageChoice();
+    updateContinueLabel();
+    existingText.focus();
+    setStatus(homeLocale === "zh" ? "粘贴作文或选择文件后，再选择创作语言。" : "Paste writing or choose a file, then select a story language.");
+  };
+
+  const deactivateExistingWriting = () => {
+    existingWritingMode = false;
+    existingButton.classList.remove("is-selected");
+    updateContinueLabel();
+  };
+
+
   const showContinue = () => {
-    const hasSpark = Boolean(preparedImage || voiceText.value.trim());
+    const hasSpark = Boolean(preparedImage || writingForHandoff());
     showLanguageChoice();
     continueButton.hidden = !(hasSpark && preparedStoryLanguage);
+    updateContinueLabel();
   };
 
   const storeAndContinue = async () => {
     const payload = {
       ...(preparedImage || {}),
-      seed: voiceText.value.trim(),
+      seed: writingForHandoff(),
+      existingWriting: existingWritingMode,
+      existingWritingName: existingWritingMode ? existingWritingName : "",
       storyLanguage: preparedStoryLanguage,
       createdAt: new Date().toISOString()
     };
@@ -253,9 +308,11 @@
       return;
     }
     window.StoriesLensAnalytics?.track("homepage_magic_moment_started", {
-      source: preparedImage && payload.seed
+      source: payload.existingWriting
+        ? "existing_writing"
+        : (preparedImage && payload.seed
         ? "image_and_voice"
-        : (preparedImage ? "image" : (payload.seed ? "voice" : "language_only"))
+        : (preparedImage ? "image" : (payload.seed ? "voice" : "language_only")))
     });
     location.href = preparedStoryLanguage === "zh"
       ? "chinese-studio.html?from=homepage-magic"
@@ -266,6 +323,8 @@
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    deactivateExistingWriting();
+    existingWrap.hidden = true;
     if (!window.StoriesLensArtworkSafety?.isSupportedImage(file) || file.size > 15 * 1024 * 1024) {
       setStatus(t("invalid-image"), true);
       return;
@@ -305,6 +364,8 @@
   });
 
   speechButton?.addEventListener("click", () => {
+    deactivateExistingWriting();
+    existingWrap.hidden = true;
     voiceWrap.hidden = false;
     showLanguageChoice();
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -338,15 +399,48 @@
     recognition.start();
   });
 
-  typeButton?.addEventListener("click", () => {
+  ideaButton?.addEventListener("click", () => {
+    deactivateExistingWriting();
+    existingWrap.hidden = true;
     voiceWrap.hidden = false;
     showLanguageChoice();
     voiceText.focus();
-    setStatus(homeLocale === "zh" ? "写下一句话，就可以选择创作语言。" : "Write one sentence, then choose your story language.");
-    window.StoriesLensAnalytics?.track("homepage_text_entry_opened");
+    setStatus(homeLocale === "zh" ? "写下一句话，或点击“口述”，再选择创作语言。" : "Write one sentence—or tap Speak—then choose your story language.");
+    window.StoriesLensAnalytics?.track("homepage_idea_entry_opened");
   });
 
   voiceText?.addEventListener("input", showContinue);
+  existingButton?.addEventListener("click", activateExistingWriting);
+  existingText?.addEventListener("input", () => {
+    existingWritingMode = true;
+    existingButton.classList.add("is-selected");
+    showContinue();
+  });
+  existingFile?.addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const imported = await window.StoriesLensWritingImport?.importFile(file);
+      if (!imported?.text) throw new Error("empty_file");
+      existingText.value = imported.text.slice(0, 7000);
+      existingWritingName = file.name;
+      existingFileName.textContent = imported.kind === "photo"
+        ? `${file.name} · ${homeLocale === "zh" ? "文字已识别，请先核对后再交给 Yu" : "text extracted—please check it before giving it to Yu"}`
+        : `${file.name} · ${homeLocale === "zh" ? "已在本机读取" : "read on this device"}`;
+      existingWritingMode = true;
+      existingButton.classList.add("is-selected");
+      showContinue();
+      setStatus(imported.kind === "photo"
+        ? (homeLocale === "zh" ? "作文照片已经识别。请先核对文字，再选择语言交给 Yu 修改。" : "Your writing photo was transcribed. Check the text, choose a language, then let Yu revise it.")
+        : (homeLocale === "zh" ? "作文已准备好，选择语言后交给 Yu 逐句修改。" : "Your writing is ready. Choose a language and let Yu revise it sentence by sentence."));
+    } catch (error) {
+      const privateInfo = error?.reasonCode === "personal_information" || error?.reasonCode === "personal_name" || error?.reasonCode === "school_information" || error?.reasonCode === "contact_information";
+      setStatus(privateInfo
+        ? (homeLocale === "zh" ? "请先遮盖姓名、学校、班级和联系方式，再上传作文照片。" : "Please cover names, school or class details, and contact information before uploading a writing photo.")
+        : (homeLocale === "zh" ? "这个文件暂时无法读取。请粘贴文字，或使用 DOCX、TXT、Markdown、JPG、PNG、WEBP、HEIC／HEIF。" : "We could not read that file. Paste the writing, or use DOCX, TXT, Markdown, JPG, PNG, WEBP, HEIC or HEIF."), true);
+    }
+  });
   storyLanguageButtons.forEach((button) => {
     button.addEventListener("click", () => {
       preparedStoryLanguage = button.dataset.storyLanguage === "zh" ? "zh" : "en";

@@ -11,6 +11,8 @@
     : (localStorage.getItem("storieslens_locale") === "zh" ? "zh" : "en"));
   let selectedArtwork = null;
   let selectedArtworkData = "";
+  let existingWritingMode = false;
+  let existingWritingName = "";
   let recognition = null;
   let answerRecognition = null;
   let answerSpeechHolding = false;
@@ -54,6 +56,14 @@
       "upload-help": "JPG, PNG, WEBP or HEIC · converted privately on this device",
       "privacy-note": "Location and camera information are removed before the image is used.",
       "beta-photo-note": "PRIVATE BETA · Personal photos may become a private book or video. Use only photos you have permission to use.",
+      "existing-writing-entry-title": "Already wrote an essay?",
+      "existing-writing-entry-copy": "Paste it, open a document, or scan a clear photo—Yu will begin with sentence-by-sentence revision.",
+      "existing-writing-kicker": "EXISTING WRITING",
+      "existing-writing-panel-title": "Bring the child’s writing to Yu",
+      "existing-writing-file": "Choose a document or a clear photo",
+      "existing-writing-paste": "Or paste the writing",
+      "existing-writing-placeholder": "Paste an existing essay. Yu will keep the child’s meaning and review it one sentence at a time.",
+      "existing-writing-note": "Documents are read on this device. HEIC/HEIF photos are converted on this device; check extracted text before Yu revises it.",
       "or-words": "Or begin with your own words",
       "write-speak": "WRITE · SPEAK",
       "seed-placeholder": "Tell Yu what is happening in the artwork—or begin with one idea.",
@@ -192,6 +202,14 @@
       "upload-help": "支持 JPG、PNG、WEBP、HEIC · 在本机私密转换",
       "privacy-note": "图片使用前会先删除位置与拍摄设备信息。",
       "beta-photo-note": "内测说明 · 本人或家人的真人照片可以用于制作私密故事书或视频，请先取得本人或监护人同意。",
+      "existing-writing-entry-title": "已经写好一篇作文？",
+      "existing-writing-entry-copy": "粘贴文字、打开文档，或上传清晰作文照片，让 Yu 从逐句修改开始。",
+      "existing-writing-kicker": "已有作文",
+      "existing-writing-panel-title": "把孩子已经写好的作文交给 Yu",
+      "existing-writing-file": "选择文档或清晰的作文照片",
+      "existing-writing-paste": "或直接粘贴这篇作文",
+      "existing-writing-placeholder": "粘贴已有作文。Yu 会保留孩子原意，一句一句陪他修改。",
+      "existing-writing-note": "文档先在本机读取；HEIC／HEIF 照片先在本机转换。识别出的文字由你确认后，Yu 才会逐句修改。",
       "or-words": "也可以从自己的话开始",
       "write-speak": "写下 · 口述",
       "seed-placeholder": "告诉羽导师画面里正在发生什么，或者先说出一个想法。",
@@ -348,7 +366,10 @@
   }
 
   function storySeed() {
-    return $("[data-seed]").value.trim();
+    const existingWriting = $("[data-existing-writing]");
+    return existingWritingMode && existingWriting
+      ? existingWriting.value.trim()
+      : $("[data-seed]").value.trim();
   }
 
   function creatorName() {
@@ -757,7 +778,17 @@
       $(`[data-language]`).value = spark.storyLanguage;
       languageTouched = true;
     }
-    if (spark.seed) $(`[data-seed]`).value = String(spark.seed).slice(0, 1800);
+    if (spark.existingWriting && spark.seed) {
+      existingWritingMode = true;
+      existingWritingName = String(spark.existingWritingName || "").slice(0, 180);
+      const existingWriting = $("[data-existing-writing]");
+      if (existingWriting) existingWriting.value = String(spark.seed).slice(0, 7000);
+      $("[data-existing-writing-panel]")?.removeAttribute("hidden");
+      const importedName = $("[data-existing-writing-file-name]");
+      if (importedName && existingWritingName) importedName.textContent = `${existingWritingName} · ${locale === "zh" ? "已在本机读取" : "read on this device"}`;
+    } else if (spark.seed) {
+      $("[data-seed]").value = String(spark.seed).slice(0, 1800);
+    }
     if (spark.creatorName) $(`[data-creator-name]`).value = String(spark.creatorName).slice(0, 40);
     if (["adult", "under18"].includes(spark.ageGroup)) {
       $(`[data-age]`).value = spark.ageGroup;
@@ -782,6 +813,17 @@
       $(`[data-coach-image]`).src = selectedArtworkData;
       $(`[data-coach-image]`).hidden = false;
     }
+    if (existingWritingMode && storySeed()) {
+      window.setTimeout(() => {
+        if (window.StoriesLensSafety && !window.StoriesLensSafety.check(storySeed()).safe) {
+          $("[data-form-message]").textContent = window.StoriesLensSafety.message;
+          return;
+        }
+        answers = [];
+        questionIndex = 0;
+        beginMentorReview();
+      }, 80);
+    }
   }
 
   function saveLocalDraft(draft) {
@@ -791,14 +833,14 @@
     const learningProfile = collectLearningProfile();
     const chineseCreativeProfile = collectChineseCreativeProfile();
     const dna = {
-      source: selectedArtwork ? "work" : "tell",
+      source: existingWritingMode ? "existing-writing" : (selectedArtwork ? "work" : "tell"),
       inspiration: seed || (locale === "zh" ? "我上传的作品" : "My uploaded creation"),
       storyLanguage: language,
       memory: "character",
       change: answers[1] || answers[0] || "",
       shift: "rule",
       answers: answers.slice(),
-      seed: answers.join(" "),
+      seed: existingWritingMode ? seed : answers.join(" "),
       learningProfile,
       chineseCreativeProfile,
       outputFormat: selectedOutputFormat || "book",
@@ -806,7 +848,7 @@
     };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify({
       mode: "solo",
-      origin: selectedArtwork ? "work" : "memory",
+      origin: existingWritingMode ? "existing-writing" : (selectedArtwork ? "work" : "memory"),
       ageGroup,
       supervisionConfirmed: ageGroup !== "under18" || $("[data-adult-support]").checked,
       storyLanguage: language,
@@ -1023,7 +1065,11 @@
   function beginMentorReview() {
     const revision = window.StoriesLensMentorRevision;
     if (!revision) { buildFirstPage(); return; }
-    mentorRevisionItems = revision.buildItems([storySeed(), ...answers], locale);
+    mentorRevisionItems = revision.buildItems(
+      existingWritingMode ? [storySeed()] : [storySeed(), ...answers],
+      locale,
+      existingWritingMode ? 80 : undefined
+    );
     if (!mentorRevisionItems.length) { buildFirstPage(); return; }
     mentorRevisionIndex = 0;
     mentorReviewedDraft = "";
@@ -1156,7 +1202,7 @@
       message.textContent = locale === "zh" ? "请上传一份作品，或者先写下一句话。" : "Upload one creation or begin with one sentence.";
       return;
     }
-    if (!$("[data-creator-name]").value.trim()) {
+    if (!$("[data-creator-name]").value.trim() && !existingWritingMode) {
       message.textContent = locale === "zh" ? "请填写要印在故事上的姓名或昵称。" : "Add the creator name or nickname to print on the story.";
       $("[data-creator-name]").focus();
       return;
@@ -1186,6 +1232,15 @@
     }
     answers = [];
     questionIndex = 0;
+    if (existingWritingMode) {
+      beginMentorReview();
+      window.StoriesLensAnalytics?.track("existing_writing_revision_started", {
+        language: $("[data-language]").value,
+        source: existingWritingName ? "file" : "paste",
+        ageGroup
+      });
+      return;
+    }
     $("[data-coach-seed]").textContent = seed || (locale === "zh" ? "我上传的这份作品" : "My uploaded creation");
     renderQuestion();
     showStage("coach");
@@ -1411,10 +1466,49 @@
     if (file) await processArtwork(file);
   });
 
+  const existingWritingEntry = $("[data-existing-writing-entry]");
+  const existingWritingPanel = $("[data-existing-writing-panel]");
+  const existingWritingField = $("[data-existing-writing]");
+  const existingWritingFile = $("[data-existing-writing-file]");
+  const existingWritingFileName = $("[data-existing-writing-file-name]");
+  const openExistingWriting = () => {
+    existingWritingMode = true;
+    existingWritingPanel?.removeAttribute("hidden");
+    existingWritingField?.focus();
+    existingWritingPanel?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.StoriesLensAnalytics?.track("existing_writing_entry_opened", { language: $("[data-language]").value });
+  };
+  existingWritingEntry?.addEventListener("click", openExistingWriting);
+  existingWritingField?.addEventListener("input", () => { existingWritingMode = true; });
+  existingWritingFile?.addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const imported = await window.StoriesLensWritingImport?.importFile(file);
+      if (!imported?.text) throw new Error("empty_file");
+      existingWritingMode = true;
+      existingWritingName = String(file.name || "").slice(0, 180);
+      existingWritingField.value = imported.text.slice(0, 7000);
+      existingWritingFileName.textContent = imported.kind === "photo"
+        ? `${existingWritingName} · ${locale === "zh" ? "文字已识别，请先核对" : "text extracted—please check it"}`
+        : `${existingWritingName} · ${locale === "zh" ? "已在本机读取" : "read on this device"}`;
+      toast(imported.kind === "photo"
+        ? (locale === "zh" ? "作文照片已识别。请先核对文字，再开始让羽大师逐句修改。" : "Your writing photo was transcribed. Check the text, then begin Yu’s sentence-by-sentence revision.")
+        : (locale === "zh" ? "作文已准备好。点击下方按钮，羽大师会开始逐句修改。" : "Your writing is ready. Use the button below to begin Yu’s sentence-by-sentence revision."));
+    } catch (error) {
+      const privateInfo = error?.reasonCode === "personal_information" || error?.reasonCode === "personal_name" || error?.reasonCode === "school_information" || error?.reasonCode === "contact_information";
+      toast(privateInfo
+        ? (locale === "zh" ? "请先遮盖姓名、学校、班级和联系方式，再上传作文照片。" : "Please cover names, school or class details, and contact information before uploading a writing photo.")
+        : (locale === "zh" ? "这个文件暂时无法读取。请粘贴文字，或使用 DOCX、TXT、Markdown、JPG、PNG、WEBP、HEIC／HEIF。" : "We could not read that file. Paste the writing, or use DOCX, TXT, Markdown, JPG, PNG, WEBP, HEIC or HEIF."), true);
+    }
+  });
+
   const speechButton = $("[data-speech]");
   const chineseVoiceEntry = $("[data-chinese-voice-entry]");
   const chineseTypeEntry = $("[data-chinese-type-entry]");
   const handleSpeechInput = () => {
+    existingWritingMode = false;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       $("[data-seed]")?.focus();
@@ -1452,6 +1546,7 @@
     handleSpeechInput();
   });
   chineseTypeEntry?.addEventListener("click", () => {
+    existingWritingMode = false;
     $(".words-heading")?.scrollIntoView({ behavior: "smooth", block: "center" });
     window.setTimeout(() => $("[data-seed]")?.focus(), 280);
     window.StoriesLensAnalytics?.track("chinese_type_entry_selected", { source: "start-card" });

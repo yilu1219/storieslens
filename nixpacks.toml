@@ -1,0 +1,5 @@
+[phases.setup]
+aptPkgs = ["...", "libreoffice-writer", "fonts-noto-cjk"]
+
+[start]
+cmd = "npm start"

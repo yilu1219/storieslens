@@ -28,7 +28,7 @@ function gate(id, label, ready, action, category = "required") {
   return { id, label, ready: Boolean(ready), action, category };
 }
 
-function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, env = process.env } = {}) {
+function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, renderWorkerReady = false, pdfRendererReady = false, env = process.env } = {}) {
   const allowedRegions = csv(env.ALLOWED_ACCOUNT_REGIONS).filter((region) => VALID_REGIONS.includes(region));
   const requiredRegions = csv(env.MEDIA_REQUIRED_REGIONS).filter((region) => VALID_REGIONS.includes(region));
   const configuredInviteRegions = inviteRegions(env.BETA_INVITE_CODE_HASHES);
@@ -65,7 +65,8 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, env = process.
     gate("payments", "Paid checkout", ["STRIPE_STORY_PASS_URL", "STRIPE_COCREATE_PACK_URL", "STRIPE_TEACHER_CLASSROOM_URL", "STRIPE_GUIDED_SQUAD_URL", "STRIPE_MOVIE_30_URL", "STRIPE_MOVIE_60_URL"].some((key) => Boolean(env[key])), "Optional for a free beta. Connect verified checkout links before charging.", "advisory"),
     gate("wechat", "WeChat account connection", Boolean(env.WECHAT_APP_ID && env.WECHAT_APP_SECRET), "Optional for web beta; required for a later Mini Program.", "advisory"),
     gate("monitoring", "Production error alerting", Boolean(env.ERROR_REPORTING_WEBHOOK_URL), "Strongly recommended: send server failures to a private founder alert channel.", "advisory"),
-    gate("render-worker", "Private movie render worker", Boolean(env.HYPERFRAMES_BIN), "Optional at sign-up; required before promising downloadable films.", "advisory")
+    gate("render-worker", "Private FFmpeg movie assembly", renderWorkerReady || Boolean(env.FFMPEG_BIN), "Required before promising downloadable films. Seedance creates scene clips; FFmpeg joins approved media without another AI video charge.", "advisory"),
+    gate("pdf-renderer", "A5 PDF book export", pdfRendererReady || Boolean(env.LIBREOFFICE_BIN), "Install the private LibreOffice renderer and CJK fonts before promising downloadable PDFs.", "advisory")
   ];
 
   const failedRequired = required.filter((item) => !item.ready);

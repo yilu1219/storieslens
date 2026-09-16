@@ -195,8 +195,13 @@ assert(!createHtml.includes("scrollIntoView"), "Upload should not scroll to late
   "data-narration-player"
 ].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Movie Editor should include: ${token}`));
 
-assert(serverJs.includes("/api/export-book-docx"), "Static server should export a real Word document");
+assert(read("platform-api.js").includes("export\\/(docx|pdf)"), "Private project API should export real Word and PDF books");
 assert(serverJs.includes("/api/checkout-link"), "Static server should expose an allowlisted checkout-link route");
+assert(serverJs.includes("/api/extract-writing"), "Static server should expose a privacy-reviewed writing-photo extraction route");
+assert(read("writing-import.js").includes("extractWritingFromImage"), "Existing-writing import should support photo-to-text extraction");
+assert(read("writing-import.js").includes("removeMetadata(file)"), "Writing photos should remove metadata locally before the privacy review pipeline");
+assert(htmlByFile["app.html"].includes(".heic,.heif"), "Existing-writing intake should accept phone HEIC/HEIF photos");
+assert(chineseStudioHtml.includes(".heic,.heif"), "Chinese existing-writing intake should accept phone HEIC/HEIF photos");
 assert(serverJs.includes("REQUIRE_EXTERNAL_MEDIA_MODERATION"), "Media generation should fail closed behind external moderation");
 assert(serverJs.includes("SAFE_VIDEO_GENERATION_ENABLED"), "Video generation should remain gated until frame review exists");
 assert(envExample.includes("OPENAI_MODERATION_MODEL=omni-moderation-latest"), "Environment example should configure the moderation model");
@@ -306,10 +311,11 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   'data-home-t="hero-title-one"',
   'data-home-upload',
   "Upload artwork or a photo",
+  'data-home-idea',
   'data-home-speech',
-  "Speak one idea",
-  'data-home-type',
-  "Type one idea",
+  "Speak or type one idea",
+  'data-home-existing',
+  "Bring a finished piece of writing",
   'data-home-story-language',
   'data-story-language="en"',
   'data-story-language="zh"',
@@ -368,6 +374,11 @@ assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
 assert(portalHomeJs.includes("StoriesLensSparkHandoff.save(payload)"), "Homepage should save one complete creative spark before routing");
+assert(indexHtml.includes('data-home-existing'), "Homepage should offer a direct entry for an existing child essay");
+assert(indexHtml.includes('data-home-existing-file'), "Existing-writing entry should accept a locally read writing file");
+assert(read("writing-import.js").includes('word/document.xml'), "DOCX writing should be read on the device rather than uploaded first");
+assert(h5AppJs.includes("existingWritingMode"), "The studio should distinguish existing-writing revision from a new story spark");
+assert(h5AppJs.includes("existing_writing_revision_started"), "Existing writing should enter Yu's revision path directly");
 assert(sparkHandoffJs.includes('indexedDB.open(DB_NAME, 1)'), "Large mobile artwork handoff should use device-local IndexedDB instead of relying on sessionStorage quota");
 assert(sparkHandoffJs.includes("24 * 60 * 60 * 1000"), "A homepage creative spark should expire instead of becoming permanent device data");
 assert(h5AppJs.includes("StoriesLensSparkHandoff.load()"), "Both language studios should restore the same homepage creative spark");

@@ -10,7 +10,7 @@
     <meta name="description" content="Upload one creation, answer three questions, and see your first signed story page." />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260915-5" />
+    <link rel="stylesheet" href="family-flow.css?v=20260916-6" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>Create a Story · StoriesLens</title>
@@ -54,6 +54,19 @@
           </label>
           <p class="privacy-note" data-t="privacy-note">Location and camera information are removed before the image is used.</p>
           <p class="beta-photo-note" data-t="beta-photo-note">PRIVATE BETA · Personal photos may become a private book or video. Use only photos you have permission to use.</p>
+
+          <button class="existing-writing-entry" type="button" data-existing-writing-entry>
+            <span class="existing-writing-entry-icon" aria-hidden="true">✦</span>
+            <span><strong data-t="existing-writing-entry-title">Already wrote an essay?</strong><small data-t="existing-writing-entry-copy">Paste it, open a document, or scan a clear photo—Yu will begin with sentence-by-sentence revision.</small></span>
+            <b aria-hidden="true">→</b>
+          </button>
+          <section class="existing-writing-panel" data-existing-writing-panel hidden aria-label="Bring existing writing">
+            <div><span data-t="existing-writing-kicker">EXISTING WRITING</span><strong data-t="existing-writing-panel-title">Bring the child’s writing to Yu</strong></div>
+            <label class="existing-writing-file-control"><input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,image/heic,image/heif" data-existing-writing-file hidden /><span aria-hidden="true">↥</span><b data-t="existing-writing-file">Choose a document or a clear photo</b></label>
+            <p data-existing-writing-file-name aria-live="polite"></p>
+            <label><span data-t="existing-writing-paste">Or paste the writing</span><textarea data-existing-writing maxlength="7000" rows="9" data-placeholder-t="existing-writing-placeholder" placeholder="Paste an existing essay. Yu will keep the child’s meaning and review it one sentence at a time."></textarea></label>
+            <small data-t="existing-writing-note">Read on this device first · private by default · long writing is reviewed in clear sections.</small>
+          </section>
 
           <div class="words-heading"><strong data-t="or-words">Or begin with your own words</strong><span data-t="write-speak">WRITE · SPEAK</span></div>
           <div class="voice-field">
@@ -262,7 +275,8 @@
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
+    <script src="writing-import.js?v=20260916-2"></script>
     <script src="mentor-revision.js?v=20260915-1"></script>
-    <script src="h5-app.js?v=20260916-7"></script>
+    <script src="h5-app.js?v=20260916-9"></script>
   </body>
 </html>

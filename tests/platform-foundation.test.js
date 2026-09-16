@@ -17,7 +17,8 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   const chineseStudio = read("chinese-studio.html");
   const manifest = JSON.parse(read("manifest.webmanifest"));
   const worker = read("service-worker.js");
-  const renderer = read("hyperframes-renderer.js");
+  const renderer = read("ffmpeg-movie-renderer.js");
+  const bookExport = read("book-export.js");
   const regionalStorage = read("regional-object-storage.js");
   const launchReadiness = read("launch-readiness.js");
   const launchPage = read("launch-readiness.html");
@@ -47,10 +48,13 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(api.includes("/api/orders"), "orders should exist");
   assert(api.includes("/api/product-events"), "activation events should be collected for the founder funnel without story content");
   assert(api.includes("/api/render-jobs"), "movie render plans should exist");
-  assert(renderer.includes('"render"') && renderer.includes("output.mp4"), "HyperFrames should render a real private MP4 when the worker is available");
+  assert(renderer.includes("ffmpeg-static") && renderer.includes("storieslens-final.mp4") && renderer.includes("seedance-scenes+ffmpeg"), "FFmpeg should privately join approved Seedance scenes without another AI video charge");
   assert(api.includes("outputFilePath: undefined"), "private render filesystem paths should never be returned to the browser");
   assert(studio.includes("data-scene-list") && studioJs.includes("MediaRecorder"), "movie editing and voice recording should be usable in-product");
-  assert(studioJs.includes("/api/export-book-docx"), "book export should remain in-product");
+  assert(studioJs.includes("/export/${format}") && api.includes("export\\/(docx|pdf)"), "authenticated Word and PDF book export should remain in-product");
+  assert(bookExport.includes("A5_WIDTH_MM = 148") && bookExport.includes("MARGIN_MM = 18") && bookExport.includes("方正书宋_GBK"), "book export should follow the Lightyear A5 typesetting specification");
+  assert(api.includes("/api/print-orders") && studio.includes("data-print-dialog"), "printing and delivery should use a no-charge quote request before collecting a street address");
+  assert(api.includes("/api/admin/print-orders") && read("admin-credits.html").includes("data-print-order-list"), "the founder console should expose print quote fulfillment");
   assert(app.includes("data-create-form") && app.includes("data-artwork") && app.includes("data-seed") && app.includes("data-speech"), "formal H5 should begin with artwork, words, or voice");
   assert(app.includes('data-stage="coach"') && app.includes('data-stage="result"'), "formal H5 should keep the three questions and first story page in one flow");
   assert(app.includes('data-stage="mentor-review"') && chineseStudio.includes('data-stage="mentor-review"'), "both solo flows should reveal a visible mentor revision stage after the three questions");
@@ -104,6 +108,9 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(read("squad-board.html").includes("data-create-and-generate") && read("squad-board.html").includes("data-visual-candidate"), "squad owners should generate a visual anchor beside the character lock and every creator should review candidates before saving");
   assert(read("squad-board.js").includes("acceptPendingVisual") && read("squad-board.html").includes("Not yet—regenerate"), "squad image generation should debit each attempt but attach only the creator-approved candidate");
   assert(api.includes("visual-anchor") && api.includes("SQUAD_ANCHOR_OWNER_REQUIRED"), "only the squad owner should be able to lock the shared visual anchor");
+  assert(read("my-stories.js").includes("project-report.html?project=") && read("project-report.html").includes("data-book-grid"), "every saved project should open a visible growth report and one-book reading path");
+  assert(api.includes("projectReports") && api.includes("createGrowthReport"), "growth reports should be owner-only persisted project records");
+  assert(read("project-report.js").includes("book.coverUrl") && read("project-report.js").includes("book.reason"), "each recommendation should show a verified cover and a project-specific reason");
   assert(library.includes("Save across devices") && library.includes("GUARDIAN APPROVAL"), "the mobile library should expose account and privacy controls");
   assert(library.includes("data-primary-region") && ["cn", "us", "intl"].every((region) => library.includes(`value="${region}"`)), "account signup should require one of the three global service regions");
   assert(library.includes("data-storage-meter") && read("my-stories.js").includes("/api/media-usage"), "account page should explain private storage usage without cloud jargon");

@@ -45,19 +45,21 @@
               <label>Quality<select data-resolution><option value="720p">Preview · 720p</option><option value="1080p">Keepsake · 1080p</option></select></label>
               <label class="wide">Narration language<select data-voice-language><option value="en-US">English</option><option value="zh-CN">中文普通话</option></select></label>
             </div>
-            <p class="helper">Your recorded voice stays private. Browser preview can also read captions aloud; the final MP4 render requires the private HyperFrames worker.</p>
-            <button class="app-primary" type="button" data-create-render>Create movie master</button>
+            <p class="helper">Seedance creates each optional scene clip with that creator’s own video allowance. StoriesLens then joins approved clips, still images and narration privately with FFmpeg—final assembly uses no extra AI video credit.</p>
+            <button class="app-primary" type="button" data-create-render data-needs-project>Create movie master</button>
             <p class="notice" data-render-notice hidden></p>
           </article>
 
-          <article class="app-card app-card-pad">
-            <p class="app-kicker">BOOK & DELIVERY</p>
-            <h3>Keep the same story as a book</h3>
-            <p class="muted">Download the editable book file now, or reserve printing and delivery after reviewing every page.</p>
+          <article class="app-card app-card-pad book-delivery-card">
+            <p class="app-kicker">BOOK · PRINT · DELIVERY</p>
+            <h3>Keep the same story as an A5 book</h3>
+            <p class="muted">Choose an editable Word book or a print-ready PDF in the Lightyear Biography A5 format. Printing is quoted only after you approve the pages.</p>
             <div class="project-actions">
-              <button class="app-secondary" type="button" data-export-book>Download book</button>
-              <button class="app-primary" type="button" data-order-story>Print & deliver · $19</button>
+              <button class="app-secondary" type="button" data-export-book="docx" data-needs-project>Word · 可编辑</button>
+              <button class="app-secondary" type="button" data-export-book="pdf" data-needs-project>PDF · 可印刷</button>
+              <button class="app-primary" type="button" data-order-story data-needs-project>Request print &amp; delivery quote · 申请印刷寄送</button>
             </div>
+            <small class="helper">A5 · 148 × 210 mm · no charge is made when requesting a quote.</small>
           </article>
         </aside>
 
@@ -102,9 +104,26 @@
     </template>
 
     <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <dialog class="print-order-dialog" data-print-dialog>
+      <form method="dialog" data-print-form>
+        <div><p class="app-kicker">PRINT &amp; DELIVERY QUOTE</p><h2>How would you like this book made?</h2><p class="muted">We collect only the destination needed for a quote. Your street address is requested later, after you accept the price.</p></div>
+        <div class="field-grid">
+          <label>Binding<select data-print-binding><option value="softcover">Softcover · 平装</option><option value="hardcover">Hardcover · 精装</option></select></label>
+          <label>Inside pages<select data-print-color><option value="full-color">Full color · 全彩</option><option value="black-and-white">Black and white · 黑白</option></select></label>
+          <label>Copies<select data-print-quantity><option>1</option><option>2</option><option>5</option><option>10</option><option>20</option><option>30</option></select></label>
+          <label>Service region<select data-print-region><option value="cn">China mainland · 中国大陆</option><option value="us">United States · 美国</option><option value="intl">Other country/region · 其他国家地区</option></select></label>
+          <label>Country code<input data-print-country maxlength="2" placeholder="CN / US" required /></label>
+          <label>City<input data-print-city maxlength="80" required /></label>
+          <label class="wide">Postal code<input data-print-postal maxlength="20" required /></label>
+          <label class="wide">Notes<textarea data-print-notes maxlength="500" placeholder="Deadline, gift message, or paper preference"></textarea></label>
+        </div>
+        <p class="notice" data-print-notice hidden></p>
+        <div class="project-actions"><button class="app-secondary" type="button" data-print-cancel>Cancel</button><button class="app-primary" type="submit">Request quote · 提交报价</button></div>
+      </form>
+    </dialog>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
-    <script src="movie-studio.js?v=20260913-1"></script>
+    <script src="movie-studio.js?v=20260916-1"></script>
   </body>
 </html>

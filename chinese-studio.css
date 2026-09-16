@@ -59,22 +59,34 @@
 .chinese-start-options .chinese-upload strong { align-self: end; margin: 0; font-size: clamp(31px, 3.6vw, 48px); line-height: 1.04; }
 .chinese-start-options .chinese-upload small { margin: 11px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
 .chinese-voice-entry,
-.chinese-type-entry { display: grid; grid-template-rows: auto 1fr auto; min-height: 320px; padding: 26px; border: 1px solid rgba(31,76,84,.2); border-radius: 22px; color: #163e34; box-shadow: inset 0 0 0 1px rgba(255,255,255,.62); text-align: left; cursor: pointer; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.chinese-type-entry,
+.chinese-existing-writing-entry { display: grid; grid-template-rows: auto 1fr auto; min-height: 320px; padding: 26px; border: 1px solid rgba(31,76,84,.2); border-radius: 22px; color: #163e34; box-shadow: inset 0 0 0 1px rgba(255,255,255,.62); text-align: left; cursor: pointer; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .chinese-voice-entry { background: radial-gradient(circle at 86% 14%, rgba(255,255,255,.76), transparent 35%), linear-gradient(145deg, #edf5eb, #cfe3d7); }
 .chinese-type-entry { background: radial-gradient(circle at 84% 14%, rgba(255,255,255,.82), transparent 34%), linear-gradient(145deg, #f8f0dc, #ead8aa); }
+.chinese-existing-writing-entry { background: radial-gradient(circle at 84% 14%, rgba(255,255,255,.82), transparent 34%), linear-gradient(145deg, #f4edf8, #e4d7ed); }
+.chinese-existing-writing-entry { grid-column: 1 / -1; grid-template-columns: auto minmax(0,1fr); grid-template-rows: 1fr auto; column-gap: 18px; min-height: 166px; }
+.chinese-existing-writing-entry .chinese-existing-writing-icon { grid-row: 1 / 3; }
 .chinese-voice-entry:hover,
-.chinese-type-entry:hover { border-color: rgba(31,76,84,.52); box-shadow: 0 14px 32px rgba(31,76,84,.12); transform: translateY(-3px); }
+.chinese-type-entry:hover,
+.chinese-existing-writing-entry:hover { border-color: rgba(31,76,84,.52); box-shadow: 0 14px 32px rgba(31,76,84,.12); transform: translateY(-3px); }
 .chinese-voice-entry:focus-visible,
-.chinese-type-entry:focus-visible { outline: 4px solid #e7bb58; outline-offset: 4px; }
+.chinese-type-entry:focus-visible,
+.chinese-existing-writing-entry:focus-visible { outline: 4px solid #e7bb58; outline-offset: 4px; }
 .chinese-voice-icon,
-.chinese-type-icon { display: grid; width: 64px; height: 64px; place-items: center; border-radius: 50%; color: var(--ink-blue); background: #f2ca6c; box-shadow: 0 9px 22px rgba(126,96,27,.14); }
+.chinese-type-icon,
+.chinese-existing-writing-icon { display: grid; width: 64px; height: 64px; place-items: center; border-radius: 50%; color: var(--ink-blue); background: #f2ca6c; box-shadow: 0 9px 22px rgba(126,96,27,.14); }
 .chinese-type-icon { color: #fff; background: var(--ink-blue); }
+.chinese-existing-writing-icon { color: #fff; background: #75538b; }
 .chinese-voice-icon svg,
-.chinese-type-icon svg { width: 37px; height: 31px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.chinese-type-icon svg,
+.chinese-existing-writing-icon svg { width: 37px; height: 31px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .chinese-voice-entry strong,
-.chinese-type-entry strong { align-self: end; font-size: clamp(27px, 2.7vw, 38px); line-height: 1.04; }
+.chinese-type-entry strong,
+.chinese-existing-writing-entry strong { align-self: end; font-size: clamp(27px, 2.7vw, 38px); line-height: 1.04; }
 .chinese-voice-entry small,
-.chinese-type-entry small { margin-top: 11px; color: #5d6963; font: 14px/1.45 Arial, "PingFang SC", sans-serif; }
+.chinese-type-entry small,
+.chinese-existing-writing-entry small { margin-top: 11px; color: #5d6963; font: 14px/1.45 Arial, "PingFang SC", sans-serif; }
+.chinese-existing-writing-panel { margin-top: 18px; }
 .chinese-voice-entry.is-listening { color: #fff; border-color: var(--ink-blue); background: linear-gradient(145deg, #316c61, #1f4c54); }
 .chinese-voice-entry.is-listening small { color: rgba(255,255,255,.76); }
 .chinese-voice-entry.is-listening .chinese-voice-icon { color: #fff; background: var(--cinnabar); animation: chinese-voice-pulse 650ms ease-in-out infinite alternate; }
@@ -170,16 +182,21 @@
   .chinese-start-options .chinese-upload { grid-column: 1 / -1; }
   .chinese-start-options .chinese-upload,
   .chinese-voice-entry,
-  .chinese-type-entry { min-height: 250px; padding: 19px; border-radius: 18px; }
+  .chinese-type-entry,
+  .chinese-existing-writing-entry { min-height: 250px; padding: 19px; border-radius: 18px; }
+  .chinese-existing-writing-entry { grid-column: 1 / -1; grid-template-columns: auto minmax(0,1fr); grid-template-rows: 1fr auto; min-height: 138px; }
   .chinese-start-options .chinese-upload .spark-upload-icon,
   .chinese-voice-icon,
-  .chinese-type-icon { width: 52px; height: 52px; }
+  .chinese-type-icon,
+  .chinese-existing-writing-icon { width: 52px; height: 52px; }
   .chinese-start-options .chinese-upload strong,
   .chinese-voice-entry strong,
-  .chinese-type-entry strong { font-size: clamp(23px, 5.8vw, 31px); }
+  .chinese-type-entry strong,
+  .chinese-existing-writing-entry strong { font-size: clamp(23px, 5.8vw, 31px); }
   .chinese-start-options .chinese-upload small,
   .chinese-voice-entry small,
-  .chinese-type-entry small { font-size: 12px; }
+  .chinese-type-entry small,
+  .chinese-existing-writing-entry small { font-size: 12px; }
   .chinese-format-grid { gap: 9px; }
   .format-card { min-height: 210px; }
   .format-card > span { padding: 14px; }
@@ -196,14 +213,17 @@
 @media (max-width: 480px) {
   .chinese-start-options { grid-template-columns: 1fr; }
   .chinese-start-options .chinese-upload { grid-column: auto; }
+  .chinese-existing-writing-entry { grid-column: auto; }
   .chinese-start-options .chinese-upload,
   .chinese-voice-entry,
-  .chinese-type-entry { min-height: 220px; }
+  .chinese-type-entry,
+  .chinese-existing-writing-entry { min-height: 220px; }
   .chinese-hero h1 { font-size: clamp(44px, 13.5vw, 56px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .chinese-voice-entry,
-  .chinese-type-entry { transition: none; }
+  .chinese-type-entry,
+  .chinese-existing-writing-entry { transition: none; }
   .chinese-voice-entry.is-listening .chinese-voice-icon { animation: none; }
 }

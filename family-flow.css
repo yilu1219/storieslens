@@ -233,6 +233,26 @@ a { -webkit-tap-highlight-color: transparent; }
 .words-heading { margin: 34px 0 12px; }
 .words-heading strong { font-size: 20px; }
 .words-heading span { color: var(--muted); }
+.existing-writing-entry { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 13px; width: 100%; margin-top: 18px; padding: 15px 17px; color: #513d67; border: 1px solid rgba(81,61,103,.22); border-radius: 17px; background: linear-gradient(145deg, #fbf8fc, #f0e8f5); text-align: left; cursor: pointer; transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease; }
+.existing-writing-entry:hover { border-color: #75538b; box-shadow: 0 12px 26px rgba(81,61,103,.1); transform: translateY(-2px); }
+.existing-writing-entry:focus-visible, .existing-writing-file-control:focus-within { outline: 3px solid rgba(117,83,139,.35); outline-offset: 3px; }
+.existing-writing-entry-icon { display: grid; width: 42px; height: 42px; place-items: center; color: #fff; border-radius: 50%; background: #75538b; font-size: 19px; }
+.existing-writing-entry span:nth-child(2) { display: grid; gap: 3px; }
+.existing-writing-entry strong { font-size: 17px; }
+.existing-writing-entry small { color: #6a6270; font: 13px/1.35 var(--sans); }
+.existing-writing-entry > b { font-size: 21px; }
+.existing-writing-panel { display: grid; gap: 10px; margin-top: 13px; padding: 19px; border: 1px solid rgba(81,61,103,.23); border-radius: 18px; background: linear-gradient(145deg, #fbf8fc, #f1e9f5); }
+.existing-writing-panel > div { display: grid; gap: 3px; }
+.existing-writing-panel > div span { color: #75538b; font: 700 11px var(--sans); letter-spacing: .13em; }
+.existing-writing-panel > div strong { font-size: 22px; }
+.existing-writing-file-control { display: inline-flex; align-items: center; gap: 9px; justify-self: start; padding: 10px 13px; color: #513d67; border: 1px solid rgba(81,61,103,.23); border-radius: 12px; background: rgba(255,255,255,.8); font: 700 13px var(--sans); cursor: pointer; }
+.existing-writing-file-control span { font-size: 20px; }
+.existing-writing-file-control:hover { border-color: #75538b; }
+.existing-writing-panel > p { min-height: 16px; margin: -3px 0 0; color: #75538b; font: 12px/1.4 var(--sans); }
+.existing-writing-panel > label:not(.existing-writing-file-control) { display: grid; gap: 7px; color: #4c4850; font: 700 12px var(--sans); letter-spacing: .03em; }
+.existing-writing-panel textarea { width: 100%; min-height: 190px; resize: vertical; padding: 15px; border: 1px solid rgba(81,61,103,.24); border-radius: 13px; background: #fff; color: var(--ink); font: 17px/1.55 var(--serif); }
+.existing-writing-panel textarea:focus { outline: 3px solid rgba(117,83,139,.22); border-color: #75538b; }
+.existing-writing-panel > small { color: var(--muted); font: 12px/1.45 var(--sans); }
 
 .voice-field { position: relative; }
 .voice-field textarea,
@@ -636,6 +656,7 @@ a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
   .spark-upload small { max-width: 260px; font-size: 14px; }
   .words-heading { align-items: flex-end; }
   .words-heading strong { max-width: 190px; }
+  .existing-writing-entry { align-items: start; }
   .voice-field textarea { padding-right: 92px; font-size: 18px; }
   .voice-field button { right: 8px; top: 8px; min-height: 44px; padding: 0 13px; }
   .creator-fields { grid-template-columns: 1fr; }

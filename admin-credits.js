@@ -182,6 +182,39 @@
     }));
   }
 
+  function renderPrintOrders(orders) {
+    const list = $("[data-print-order-list]");
+    if (!orders.length) {
+      list.innerHTML = '<p class="empty">暂无印刷报价请求。</p>';
+      return;
+    }
+    list.replaceChildren(...orders.map((order) => {
+      const row = document.createElement("div");
+      row.className = "batch-row print-order-row";
+      const spec = order.specification || {};
+      row.innerHTML = `<div class="print-order-copy"><strong></strong><small></small><label>报价金额 <input type="number" min="0" step="0.01" inputmode="decimal" /></label><label>币种 <select><option value="CNY">人民币 CNY</option><option value="USD">美元 USD</option></select></label><label>状态 <select data-status><option value="quoted">已报价</option><option value="in_production">制作中</option><option value="shipped">已寄出</option><option value="cancelled">已取消</option></select></label></div><button type="button">保存</button>`;
+      $("strong", row).textContent = `${order.projectTitle} · ${spec.quantity || 1} 本 · ${spec.binding === "hardcover" ? "精装" : "平装"}`;
+      $("small", row).textContent = `${order.customer?.displayName || "用户"} · ${order.customer?.maskedDestination || "私密账户"} · ${spec.city || "—"}, ${spec.countryCode || "—"} ${spec.postalCode || ""} · ${String(order.status || "quote_requested").replaceAll("_", " ")}`;
+      const amount = $("input", row);
+      const currency = $("select", row);
+      const status = $("[data-status]", row);
+      if (order.quote?.amountMinor) amount.value = (Number(order.quote.amountMinor) / 100).toFixed(2);
+      currency.value = order.quote?.currency === "USD" ? "USD" : "CNY";
+      status.value = ["quoted", "in_production", "shipped", "cancelled"].includes(order.status) ? order.status : "quoted";
+      $("button", row).addEventListener("click", async () => {
+        try {
+          await api(`/api/admin/print-orders/${encodeURIComponent(order.id)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ amountMinor: Math.round(Number(amount.value || 0) * 100), currency: currency.value, status: status.value, validDays: 7 })
+          });
+          toast("印刷订单状态已更新。");
+          await loadPrintOrders();
+        } catch (error) { toast(error.message, true); }
+      });
+      return row;
+    }));
+  }
+
   function renderLedger(transactions, reservations, sales, modelUsage) {
     const list = $("[data-ledger-list]");
     const rows = [
@@ -238,8 +271,13 @@
     renderLedger(result.transactions, result.reservations, result.sales, result.modelUsage);
   }
 
+  async function loadPrintOrders() {
+    const result = await api("/api/admin/print-orders");
+    renderPrintOrders(result.orders);
+  }
+
   async function loadConsole() {
-    await Promise.all([loadSummary(), loadBatches(), loadLedger()]);
+    await Promise.all([loadSummary(), loadBatches(), loadLedger(), loadPrintOrders()]);
     await loadUsers();
   }
 

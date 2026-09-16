@@ -7,8 +7,8 @@
     <meta name="description" content="从一幅画、一段话或一个声音开始，在羽大师的引导下创作水墨故事、连环画、绘本或故事电影。" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="family-flow.css?v=20260915-5" />
-    <link rel="stylesheet" href="chinese-studio.css?v=20260915-3" />
+    <link rel="stylesheet" href="family-flow.css?v=20260916-6" />
+    <link rel="stylesheet" href="chinese-studio.css?v=20260916-4" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>中文创作馆 · 语镜故事</title>
@@ -67,9 +67,24 @@
               <strong>写下一个想法</strong>
               <small>打字写一句，羽大师接着问你三个问题</small>
             </button>
+            <button class="chinese-existing-writing-entry" type="button" data-existing-writing-entry>
+              <span class="chinese-existing-writing-icon" aria-hidden="true">
+                <svg viewBox="0 0 38 32" focusable="false"><path d="M9 3h14l6 6v20H9z"/><path d="M23 3v6h6M14 15h10M14 20h10M14 25h6"/></svg>
+              </span>
+              <strong>上传已有作文</strong>
+              <small>粘贴、打开文档，或上传清晰作文照片，让羽大师从逐句修改开始</small>
+            </button>
           </div>
           <p class="privacy-note">图片使用前会删除位置与拍摄设备信息；默认私密。</p>
           <p class="beta-photo-note">内测说明 · 本人或家人的真人照片可以用于制作私密故事书或视频，请先取得本人或监护人同意。</p>
+
+          <section class="existing-writing-panel chinese-existing-writing-panel" data-existing-writing-panel hidden aria-label="上传已有作文">
+            <div><span>已有作文</span><strong>把孩子已经写好的作文交给羽大师</strong></div>
+            <label class="existing-writing-file-control"><input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,image/heic,image/heif" data-existing-writing-file hidden /><span aria-hidden="true">↥</span><b>选择文档或清晰的作文照片</b></label>
+            <p data-existing-writing-file-name aria-live="polite"></p>
+            <label><span>或直接粘贴孩子已经写好的作文</span><textarea data-existing-writing maxlength="7000" rows="9" placeholder="粘贴已有作文。羽大师会保留孩子原意，一句一句陪他修改。"></textarea></label>
+            <small>文档先在本机读取；HEIC／HEIF 会先在本机转换并移除拍摄信息。照片识别后，请先核对文字；默认私密。</small>
+          </section>
 
           <div class="words-heading"><strong>也可以从自己的话开始</strong><span>写下 · 口述</span></div>
           <div class="voice-field">
@@ -255,7 +270,8 @@
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
+    <script src="writing-import.js?v=20260916-2"></script>
     <script src="mentor-revision.js?v=20260915-1"></script>
-    <script src="h5-app.js?v=20260916-7"></script>
+    <script src="h5-app.js?v=20260916-9"></script>
   </body>
 </html>

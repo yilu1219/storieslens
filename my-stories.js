@@ -68,13 +68,18 @@
       const actions = node("div", "project-actions");
       const studio = node("a", "app-primary", "Edit movie");
       studio.href = `movie-studio.html?project=${encodeURIComponent(project.id)}`;
+      const reportLabel = project.completedAt
+        ? (project.language === "zh" ? "查看成长报告" : "View growth report")
+        : (project.language === "zh" ? "完成并生成报告" : "Finish & report");
+      const report = node("a", "app-secondary project-report-link", reportLabel);
+      report.href = `project-report.html?project=${encodeURIComponent(project.id)}`;
       const share = node("button", "app-secondary", "Share");
       share.type = "button";
       share.addEventListener("click", () => shareProject(project));
       const remove = node("button", "app-secondary", "Archive");
       remove.type = "button";
       remove.addEventListener("click", () => archiveProject(project));
-      actions.append(studio, share, remove);
+      actions.append(studio, report, share, remove);
       body.append(actions);
       card.append(cover, body);
       grid.append(card);

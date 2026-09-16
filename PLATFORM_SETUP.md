@@ -11,7 +11,7 @@ Friendly production routes are also available: `/app`, `/create`, `/stories`, `/
 3. Mobile camera/file selection, client-side image rewrite (removing EXIF), private image storage, and browser voice recording.
 4. Story DNA, draft, coach history and scene continuity stored together in each project.
 5. Scene ordering, timing, captions, artwork, private narration and in-browser movie preview.
-6. DOCX book export and a private HyperFrames MP4 render queue. Rendered MP4 files stay behind the owner session.
+6. A5 Word/PDF book export and private FFmpeg MP4 assembly. Seedance (or another configured video model) creates optional scene clips; FFmpeg joins approved clips, images and narration without another AI video call. Files stay behind the owner session.
 7. Under-18 privacy defaults, guardian approval, approval revocation, invitation revocation and project archive.
 8. Temporary invite-only share URLs with Open Graph metadata for WeChat and other messaging apps. Shared pages are `noindex`.
 9. One-time order records with Stripe Payment Link handoff. No subscription is created.
@@ -21,9 +21,9 @@ Safe text can be drafted locally with the built-in bilingual blocklist when no e
 
 ## Real-person photo boundary
 
-The current release is artwork-only. The browser rewrites a selected image through canvas to remove EXIF, then sends that sanitized copy to `/api/review-artwork`. The review request is not written to disk, API responses use `Cache-Control: no-store`, and the provider request uses `store: false`. If the classifier detects a real person, personal name, school information, contact information, identity document, non-artwork photo, or uncertainty, the media API refuses to persist it. Only approved artwork can be written under `.data/media/<owner-id>/` in local development.
+The private beta accepts safe personal photos as well as artwork. The browser rewrites a selected image through canvas to remove EXIF before sending the sanitized copy to `/api/review-artwork`; the original file is not uploaded. The review request is not written to disk, API responses use `Cache-Control: no-store`, and the provider request uses `store: false`. Sexual content, graphic violence, identity documents, visible contact or school information, and uncertain safety decisions remain blocked. Approved media is private by default and can be written under `.data/media/<owner-id>/` only in local development or routed to the account's configured private regional storage.
 
-Do not market this as fully on-device photo conversion. A future “I am the character” feature must be a separate parent-enabled mode with an on-device model; only its non-photorealistic avatar output—not the source photo—may enter project storage.
+Do not market this as biometric identity verification or unrestricted face cloning. For minors, guardian approval is required before invite sharing or printing, and the source photo must never become a public gallery asset by default.
 
 ## Production connections still required
 
@@ -32,7 +32,8 @@ Copy `.env.example` to the production secret manager and configure these values 
 - `AUTH_DELIVERY_WEBHOOK_URL` and `AUTH_DELIVERY_WEBHOOK_SECRET`: an HTTPS adapter that sends email/SMS codes. Production authentication fails closed when it is absent.
 - `WECHAT_APP_ID` and `WECHAT_APP_SECRET`: a verified WeChat Open Platform or Mini Program app. The current endpoint deliberately returns unavailable until real code exchange is added.
 - `STRIPE_*_URL`: allowlisted Stripe Payment Links. Without them, an order is recorded as interest only and no money is collected.
-- `HYPERFRAMES_BIN`: path to the local HyperFrames executable on the server. The desktop development installation is discovered automatically; a deployed container must install and set it explicitly.
+- `FFMPEG_BIN`: optional path to FFmpeg. The bundled `ffmpeg-static` binary is normally detected automatically.
+- `LIBREOFFICE_BIN`: optional path to LibreOffice/soffice for one-click PDF export. Railway installs LibreOffice Writer and Noto CJK fonts through `nixpacks.toml`.
 - `OPENAI_MODERATION_API_KEY` or `OPENAI_API_KEY`: required safe-content review for production image/video release.
 - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: optional web-push delivery. PWA installation and offline drafts work without push.
 

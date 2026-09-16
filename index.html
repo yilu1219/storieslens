@@ -15,7 +15,7 @@
     <title>StoriesLens | Start with your creation</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
-    <link rel="stylesheet" href="portal-home.css?v=20260914-2" />
+    <link rel="stylesheet" href="portal-home.css?v=20260916-4" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
@@ -72,8 +72,8 @@
               <strong data-home-t="upload-primary">Upload artwork or a photo</strong>
               <small data-home-t="upload-secondary">上传画作或照片</small>
             </label>
-            <button class="magic-action magic-action-voice" type="button" data-home-speech>
-              <span class="magic-action-icon magic-mouth-icon" aria-hidden="true">
+            <button class="magic-action magic-action-idea" type="button" data-home-idea>
+              <span class="magic-action-icon magic-idea-icon" aria-hidden="true">
                 <svg viewBox="0 0 38 32" focusable="false">
                   <path d="M3.5 16c4.6-1.5 7.7-4.7 11.1-8.4 3.3 3.5 6.3 6.7 10.8 8.4-4.3 5.2-7.4 7.4-10.8 7.4S8 21.2 3.5 16Z" />
                   <path d="M7.2 16h14.7" />
@@ -81,18 +81,18 @@
                   <path d="M32 8.3c4.2 4.1 4.2 11.3 0 15.4" />
                 </svg>
               </span>
-              <strong data-home-t="voice-primary">Speak one idea</strong>
-              <small data-home-t="voice-secondary">口述一个想法</small>
+              <strong data-home-t="idea-primary">Speak or type one idea</strong>
+              <small data-home-t="idea-secondary">从一句话开始</small>
             </button>
-            <button class="magic-action magic-action-type" type="button" data-home-type>
-              <span class="magic-action-icon magic-type-icon" aria-hidden="true">
+            <button class="magic-action magic-action-existing" type="button" data-home-existing>
+              <span class="magic-action-icon magic-existing-icon" aria-hidden="true">
                 <svg viewBox="0 0 32 32" focusable="false">
-                  <path d="M7 24.5 8.7 18 21.8 4.9a2.8 2.8 0 0 1 4 4L12.6 22Z" />
-                  <path d="m18.9 7.8 5.3 5.3M7 24.5l5.6-2.5" />
+                  <path d="M8 3.8h11l5 5v19.4H8z" />
+                  <path d="M19 3.8v5h5M12 14h8M12 18h8M12 22h5" />
                 </svg>
               </span>
-              <strong data-home-t="type-primary">Type one idea</strong>
-              <small data-home-t="type-secondary">写下一个想法</small>
+              <strong data-home-t="existing-primary">Bring a finished piece of writing</strong>
+              <small data-home-t="existing-secondary">让 Yu 从你已经写好的作文开始</small>
             </button>
           </div>
 
@@ -102,9 +102,21 @@
           </div>
 
           <div class="voice-capture" data-home-voice-wrap hidden>
-            <label for="home-voice-text" data-home-t="idea-label">Your idea · 你的想法</label>
+            <div class="voice-capture-heading"><label for="home-voice-text" data-home-t="idea-label">Your idea · 你的想法</label><button type="button" class="voice-capture-speak" data-home-speech><span aria-hidden="true">◉</span><b data-home-t="speak-now">Speak</b></button></div>
             <textarea id="home-voice-text" data-home-voice-text data-home-placeholder="idea-placeholder" maxlength="1800" rows="3" placeholder="Speak—or type—what happens first..."></textarea>
             <small data-home-t="speech-note">Speech becomes editable text. Live audio is not saved.</small>
+          </div>
+
+          <div class="existing-writing-capture" data-home-existing-wrap hidden>
+            <div class="existing-writing-heading"><span data-home-t="existing-kicker">ALREADY WRITTEN</span><strong data-home-t="existing-title">Bring your essay to Yu</strong></div>
+            <label class="existing-writing-file">
+              <input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,image/heic,image/heif" data-home-existing-file hidden />
+              <span aria-hidden="true">↥</span><b data-home-t="existing-file">Choose a document or a clear photo of the writing</b>
+            </label>
+            <p class="existing-writing-file-name" data-home-existing-name aria-live="polite"></p>
+            <label class="existing-writing-text-label" for="home-existing-writing" data-home-t="existing-label">Or paste the child’s writing here</label>
+            <textarea id="home-existing-writing" data-home-existing-text maxlength="7000" rows="7" data-home-placeholder="existing-placeholder" placeholder="Paste an existing essay. Yu will review it one sentence at a time, while the child keeps every final decision."></textarea>
+            <small data-home-t="existing-note">Read locally first · private by default · for long writing, Yu works through it in clear sections.</small>
           </div>
 
           <fieldset class="story-language-choice" data-home-story-language>
@@ -223,6 +235,7 @@
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
-    <script src="portal-home.js?v=20260916-40"></script>
+    <script src="writing-import.js?v=20260916-2"></script>
+    <script src="portal-home.js?v=20260916-43"></script>
   </body>
 </html>

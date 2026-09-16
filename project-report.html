@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f0e6" />
+    <meta name="description" content="A private StoriesLens project growth report with Yu's next-reading path." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="app-shell.css" />
+    <link rel="stylesheet" href="project-report.css?v=20260916-2" />
+    <title>Project Growth Report · StoriesLens</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="app-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" />StoriesLens</a>
+      <nav aria-label="Report navigation">
+        <a href="my-stories.html">My stories · 我的作品</a>
+        <a class="keep-mobile" href="index.html">Home</a>
+      </nav>
+    </header>
+
+    <main class="report-shell">
+      <section class="report-loading app-card" data-report-loading role="status">
+        <img src="assets/yu-mascot-logo-v2.png" alt="" />
+        <div><strong>Yu is preparing the project growth report…</strong><span>羽大师正在整理这次创作的亮点与下一步阅读路径。</span></div>
+      </section>
+
+      <section data-report hidden>
+        <header class="report-hero">
+          <div class="report-hero-copy">
+            <p class="report-kicker" data-kicker>PROJECT COMPLETE · 项目完成</p>
+            <h1 data-report-title></h1>
+            <p class="report-celebration" data-celebration></p>
+            <div class="report-meta"><span data-project-language></span><span data-report-date></span><span>Private · 默认私密</span></div>
+          </div>
+          <div class="report-yu" aria-label="Yu's project reflection">
+            <img src="assets/yu-mascot-logo-v2.png" alt="Bard Yu" />
+            <span><small>YU’S REFLECTION</small><strong data-yu-note></strong></span>
+          </div>
+        </header>
+
+        <section class="growth-grid" aria-label="Writing growth summary">
+          <article class="growth-card strength-card"><small>WHAT GREW · 本次亮点</small><h2 data-strength></h2><p data-strength-note></p></article>
+          <article class="growth-card next-card"><small>NEXT WRITING MOVE · 下一步</small><h2 data-next-goal></h2><p data-next-note></p></article>
+        </section>
+
+        <section class="reading-path" aria-labelledby="reading-path-title">
+          <div class="section-heading">
+            <div><p class="report-kicker">YU’S NEXT READING PATH · 羽大师的下一步阅读</p><h2 id="reading-path-title">One book, chosen for this project.</h2></div>
+            <p data-reading-intro>Each title comes from the StoriesLens reviewed catalog. Yu matches books to this project; the books are never invented by AI.</p>
+          </div>
+          <div class="book-grid" data-book-grid></div>
+        </section>
+
+        <section class="family-bridge app-card">
+          <div><p class="report-kicker">FOR THE FAMILY · 给家长</p><h2 data-family-title>Turn reading back into creating.</h2><p data-family-prompt></p></div>
+          <div class="family-actions">
+            <button class="app-secondary" type="button" data-refresh-report>Refresh after editing · 修改后更新</button>
+            <a class="app-primary" href="app.html">Begin the next creation · 开始下一次创作</a>
+          </div>
+        </section>
+
+        <footer class="report-footnote">
+          <p data-catalog-note>Recommendations support reading and writing conversations; they are not a test score or a diagnosis. Cover metadata is supplied by linked book-catalog services, and availability varies by region.</p>
+          <p>StoriesLens sends no child story, photo, or voice recording to the linked book catalog. Only the verified book link opens when a family chooses it.</p>
+        </footer>
+      </section>
+
+      <section class="report-error app-card" data-report-error hidden role="alert">
+        <h1>We couldn’t open this report.</h1><p data-error-message></p><a class="app-primary" href="my-stories.html">Return to My stories</a>
+      </section>
+    </main>
+
+    <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <script src="pwa.js"></script>
+    <script src="platform-client.js"></script>
+    <script src="project-report.js?v=20260916-2"></script>
+  </body>
+</html>

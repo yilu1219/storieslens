@@ -11,6 +11,10 @@
   let previewIndex = 0;
   let activeRecorder = null;
 
+  function setProjectActionsDisabled(disabled) {
+    document.querySelectorAll("[data-needs-project]").forEach((control) => { control.disabled = disabled; });
+  }
+
   function toast(message, isError = false) {
     toastNode.textContent = message;
     toastNode.classList.toggle("error", isError);
@@ -199,6 +203,7 @@
   }
 
   async function createRender() {
+    if (!project) return toast("Choose a saved story before creating a movie.", true);
     await saveNow();
     const notice = $("[data-render-notice]");
     try {
@@ -235,25 +240,54 @@
     } catch (error) { notice.className = "notice error"; notice.textContent = error.message; }
   }
 
-  async function exportBook() {
+  async function exportBook(format) {
+    if (!project) return toast("Choose a saved story before exporting a book.", true);
     await saveNow();
-    const response = await fetch("/api/export-book-docx", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: project.title, premise: project.sourceText, chapters: scenes.map((scene) => ({ title: scene.title, text: scene.text, imageUrl: scene.imageUrl, writer: "StoriesLens Creator" })) }) });
+    const response = await fetch(`/api/projects/${encodeURIComponent(project.id)}/export/${format}`, { credentials: "same-origin" });
     if (!response.ok) return toast((await response.json().catch(() => ({}))).error || "Book export failed.", true);
     const blob = await response.blob();
-    const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `${project.title || "story"}.docx`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `${project.title || "story"}.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  async function orderStory() {
+  function orderStory() {
+    if (!project) return toast("Choose a saved story before requesting printing.", true);
+    const dialog = $("[data-print-dialog]");
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+  }
+
+  async function submitPrintQuote(event) {
+    event.preventDefault();
     await saveNow();
+    const notice = $("[data-print-notice]");
+    const submit = event.submitter;
+    submit.disabled = true;
     try {
-      const result = await platform.api("/api/orders", { method: "POST", body: JSON.stringify({ projectId: project.id, offer: "story-pass" }) });
-      if (result.checkoutUrl) location.href = result.checkoutUrl;
-      else location.href = result.fallbackUrl;
-    } catch (error) { toast(error.message, true); }
+      const result = await platform.api("/api/print-orders", { method: "POST", body: JSON.stringify({
+        projectId: project.id,
+        binding: $("[data-print-binding]").value,
+        color: $("[data-print-color]").value,
+        quantity: Number($("[data-print-quantity]").value),
+        shippingRegion: $("[data-print-region]").value,
+        countryCode: $("[data-print-country]").value,
+        city: $("[data-print-city]").value,
+        postalCode: $("[data-print-postal]").value,
+        notes: $("[data-print-notes]").value
+      }) });
+      notice.hidden = false;
+      notice.className = "notice success";
+      notice.textContent = result.notice;
+      setTimeout(() => $("[data-print-dialog]").close(), 1800);
+    } catch (error) {
+      notice.hidden = false;
+      notice.className = "notice error";
+      notice.textContent = error.message;
+    } finally { submit.disabled = false; }
   }
 
   async function load() {
     if (!projectId) {
+      setProjectActionsDisabled(true);
       setNotice("Choose a story from My Stories, or create a new one first.", true);
       $("[data-save-state]").textContent = "No story selected";
       return;
@@ -261,6 +295,7 @@
     try {
       const result = await platform.api(`/api/projects/${encodeURIComponent(projectId)}`);
       project = result.project;
+      setProjectActionsDisabled(false);
       $("[data-project-title]").value = project.title;
       $("[data-project-language]").value = project.language;
       $("[data-project-visibility]").value = project.visibility;
@@ -278,8 +313,14 @@
   $("[data-play]").addEventListener("click", () => { stopPreview(); previewIndex = 0; displayScene(0); });
   $("[data-stop]").addEventListener("click", stopPreview);
   $("[data-create-render]").addEventListener("click", createRender);
-  $("[data-export-book]").addEventListener("click", exportBook);
+  document.querySelectorAll("[data-export-book]").forEach((button) => button.addEventListener("click", () => exportBook(button.dataset.exportBook)));
   $("[data-order-story]").addEventListener("click", orderStory);
+  $("[data-print-cancel]").addEventListener("click", () => $("[data-print-dialog]").close());
+  $("[data-print-form]").addEventListener("submit", submitPrintQuote);
+  $("[data-print-region]").addEventListener("change", (event) => {
+    if (event.target.value === "cn") $("[data-print-country]").value = "CN";
+    else if (event.target.value === "us") $("[data-print-country]").value = "US";
+  });
   window.addEventListener("beforeunload", () => { if (project) saveNow(); });
   load();
 }());

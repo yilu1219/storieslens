@@ -348,7 +348,14 @@
     $("[data-squad-meta]").textContent = `${squad.language === "zh" ? "中文创作" : "English creation"} · ${squad.outputType === "film" ? "Story film · 故事电影" : "Illustrated book · 绘本"} · ${styleNames[squad.visualStyle] || squad.visualStyle} · Style locked by owner · 风格由小组长锁定 · ${squad.visualAnchorReady ? "Visual anchor ready · 视觉锚点已完成" : "Waiting for owner’s first visual anchor · 等待首张视觉锚点"}`;
     const owner = squad.viewer?.role === "owner";
     const approved = squad.viewer?.status === "approved";
+    const assembled = Boolean(squad.assembledProjectId);
     $("[data-owner-actions]").hidden = !owner;
+    $("[data-assemble]").hidden = !owner || assembled;
+    const openProject = $("[data-open-project]");
+    openProject.hidden = !owner || !assembled;
+    if (assembled) openProject.href = `movie-studio.html?project=${encodeURIComponent(squad.assembledProjectId)}`;
+    document.querySelectorAll("[data-squad-export]").forEach((button) => { button.hidden = !owner || !assembled; });
+    $("[data-squad-render]").hidden = !owner || !assembled;
     $("[data-code-banner]").hidden = !owner;
     $("[data-story-code]").textContent = squad.joinCode || "";
     $("[data-pending-banner]").hidden = approved;
@@ -528,14 +535,73 @@
     finally { submit.disabled = false; }
   });
 
+  async function exportSquadBook(format) {
+    if (!activeSquad?.assembledProjectId) return;
+    const response = await fetch(`/api/projects/${encodeURIComponent(activeSquad.assembledProjectId)}/export/${format}`, { credentials: "same-origin" });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      showNotice(payload.error || "Book export failed.", true);
+      return;
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${activeSquad.title || "shared-story"}.${format}`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function pollFinalMovie(jobId, output, attempt = 0) {
+    if (attempt > 120) {
+      output.textContent = "The movie is still assembling. You can return to this private squad later. · 电影仍在合成，可稍后返回查看。";
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+    const result = await platform.api(`/api/render-jobs/${encodeURIComponent(jobId)}`);
+    const job = result.renderJob;
+    if (job.status === "completed" && job.outputUrl) {
+      output.replaceChildren(document.createTextNode("Final movie ready · 完整电影已完成 · "));
+      const link = document.createElement("a");
+      link.href = job.outputUrl;
+      link.textContent = "Download MP4 · 下载";
+      link.setAttribute("download", "");
+      output.append(link);
+      return;
+    }
+    if (job.status === "failed") throw new Error(job.error || "Final movie assembly failed.");
+    output.textContent = `Joining approved Seedance clips, images and voices… ${Number(job.progress || 0)}% · 正在合成…`;
+    return pollFinalMovie(jobId, output, attempt + 1);
+  }
+
+  async function renderFinalMovie() {
+    if (!activeSquad?.assembledProjectId) return;
+    const button = $("[data-squad-render]");
+    const output = $("[data-final-output]");
+    button.disabled = true;
+    output.hidden = false;
+    output.textContent = "Preparing private final movie… · 正在准备完整电影…";
+    try {
+      const result = await platform.api("/api/render-jobs", { method: "POST", body: JSON.stringify({ projectId: activeSquad.assembledProjectId, aspectRatio: "16:9", resolution: "720p" }) });
+      if (result.renderJob.status === "awaiting_media") throw new Error(result.notice);
+      await pollFinalMovie(result.renderJob.id, output);
+    } catch (error) {
+      output.textContent = error.message;
+      output.className = "notice error";
+    } finally { button.disabled = false; }
+  }
+
+  document.querySelectorAll("[data-squad-export]").forEach((button) => button.addEventListener("click", () => exportSquadBook(button.dataset.squadExport)));
+  $("[data-squad-render]").addEventListener("click", renderFinalMovie);
+
   $("[data-assemble]").addEventListener("click", async () => {
     if (!activeSquad || !confirm("Assemble all approved contributions into one private project? · 把所有已批准内容汇编为一个作品吗？")) return;
     const button = $("[data-assemble]");
     button.disabled = true;
     try {
-      const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}/assemble`, { method: "POST", headers: { "Idempotency-Key": `assemble-${activeSquad.id}` }, body: "{}" });
-      showNotice("Your shared project is ready. Opening My Stories…");
-      setTimeout(() => { location.href = result.nextUrl || "my-stories.html"; }, 800);
+      await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}/assemble`, { method: "POST", headers: { "Idempotency-Key": `assemble-${activeSquad.id}` }, body: "{}" });
+      await loadSquad(activeSquad.id);
+      showNotice("Your shared book/film project is ready. Choose Word, PDF, final movie, printing or delivery above. · 共创作品已汇编完成，请在上方选择导出与制作方式。");
     } catch (error) {
       showNotice(error.status === 402 ? "发起人需要至少 1 个故事项目额度。请先在 My Stories 兑换个人故事包或共创包。" : error.message, true);
       button.disabled = false;

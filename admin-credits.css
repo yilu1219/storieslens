@@ -83,6 +83,11 @@ button:hover { transform: translateY(-1px); }
 .batch-row strong, .ledger-row strong { display: block; margin-bottom: 5px; }
 .batch-row small, .ledger-row small { color: var(--muted); }
 .batch-row button { color: var(--danger); border-color: #e1b6b2; }
+.print-order-copy { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 10px; }
+.print-order-copy > strong, .print-order-copy > small { grid-column: 1 / -1; }
+.print-order-copy label { display: grid; gap: 5px; color: var(--muted); font-size: 13px; font-weight: 800; }
+.print-order-copy input, .print-order-copy select { min-height: 40px; padding: 8px 10px; }
+.print-order-row > button { align-self: end; color: var(--green); border-color: rgba(15, 104, 73, .3); }
 .notice { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; color: var(--green-dark); background: var(--mint); }
 .notice.error { color: #7b231e; background: #fae6e4; }
 .empty { color: var(--muted); }
@@ -111,4 +116,5 @@ button:hover { transform: translateY(-1px); }
   .wide { grid-column: auto; }
   .hero-row { align-items: stretch; flex-direction: column; }
   .search-form { flex-direction: column; }
+  .print-order-copy { grid-template-columns: 1fr; }
 }

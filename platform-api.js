@@ -1,10 +1,12 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { queueHyperframesRender, resolveBinary } = require("./hyperframes-renderer");
+const { fetchPublicHttps, queueFfmpegRender, resolveBinary: resolveFfmpegBinary } = require("./ffmpeg-movie-renderer");
+const { buildBookDocx, convertDocxToPdf, resolveLibreOfficeBinary } = require("./book-export");
 const { createRegionalObjectStorage } = require("./regional-object-storage");
 const { assertLaunchReady, evaluateLaunchReadiness } = require("./launch-readiness");
 const { createRequestRateLimiter } = require("./request-rate-limit");
+const { createGrowthReport, REPORT_VERSION } = require("./book-recommendations");
 const {
   ensureCreditCollections,
   publicPackageCatalog,
@@ -207,6 +209,7 @@ function createStore(root) {
     sessions: [],
     authChallenges: [],
     projects: [],
+    projectReports: [],
     media: [],
     guardianConsents: [],
     shares: [],
@@ -387,6 +390,7 @@ function normalizeProject(input, existing = {}) {
     })),
     scenes: rawScenes.slice(0, MAX_SCENES).map(cleanScene),
     coverImageUrl: cleanUrl(input.coverImageUrl ?? existing.coverImageUrl),
+    completedAt: cleanText(existing.completedAt || input.completedAt, 40),
     clientSnapshot: safeJsonValue(input.clientSnapshot ?? existing.clientSnapshot, 120_000)
   };
 }
@@ -402,7 +406,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     mediaStorage.assertReady(process.env.ALLOWED_ACCOUNT_REGIONS);
   }
   if (process.env.NODE_ENV === "production" && process.env.ENFORCE_LAUNCH_GATES === "true") {
-    assertLaunchReady({ root, mediaStorageStatus: mediaStorage.status() });
+    assertLaunchReady({ root, mediaStorageStatus: mediaStorage.status(), renderWorkerReady: Boolean(resolveFfmpegBinary()), pdfRendererReady: Boolean(resolveLibreOfficeBinary()) });
   }
 
   function publicMedia(media) {
@@ -453,6 +457,48 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
 
   function requireProject(database, user, projectId) {
     return database.projects.find((project) => project.id === projectId && project.ownerId === user.id && !project.deletedAt);
+  }
+
+  async function loadProjectImage(database, user, project, rawUrl) {
+    const imageUrl = cleanUrl(rawUrl);
+    if (!imageUrl) return null;
+    const privateMatch = imageUrl.match(/^\/api\/media\/([^/?#]+)/);
+    if (privateMatch) {
+      const mediaId = cleanId(privateMatch[1]);
+      const sourceSquadId = cleanId(project.clientSnapshot?.squadId);
+      const media = database.media.find((item) => item.id === mediaId && item.kind === "image" && (item.ownerId === user.id || (sourceSquadId && item.squadId === sourceSquadId)));
+      const stored = media ? await mediaStorage.get(media) : null;
+      return stored ? { buffer: stored.body, mimeType: stored.contentType || media.mimeType } : null;
+    }
+    if (/^\/(?:assets|public\/generated)\//.test(imageUrl)) {
+      const filePath = path.resolve(root, imageUrl.replace(/^\/+/, ""));
+      const relative = path.relative(path.resolve(root), filePath);
+      if (relative.startsWith("..") || path.isAbsolute(relative) || !fs.existsSync(filePath)) return null;
+      const extension = path.extname(filePath).toLowerCase();
+      const mimeType = ({ ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".gif": "image/gif", ".bmp": "image/bmp" })[extension];
+      return mimeType ? { buffer: fs.readFileSync(filePath), mimeType } : null;
+    }
+    if (/^https:\/\//i.test(imageUrl)) {
+      const result = await fetchPublicHttps(imageUrl, { timeoutMs: 30_000 });
+      if (!result.ok) return null;
+      const mimeType = String(result.headers.get("content-type") || "").split(";")[0].toLowerCase();
+      if (!mimeType.startsWith("image/")) return null;
+      const declaredBytes = Number(result.headers.get("content-length") || 0);
+      if (declaredBytes > MAX_IMAGE_BYTES) return null;
+      const buffer = Buffer.from(await result.arrayBuffer());
+      return buffer.length && buffer.length <= MAX_IMAGE_BYTES ? { buffer, mimeType } : null;
+    }
+    return null;
+  }
+
+  function removeRenderArtifacts(jobs) {
+    const renderRoot = path.resolve(root, ".data", "render-jobs");
+    for (const job of jobs) {
+      if (!job.outputFilePath) continue;
+      const jobDirectory = path.dirname(path.resolve(job.outputFilePath));
+      const relative = path.relative(renderRoot, jobDirectory);
+      if (!relative.startsWith("..") && !path.isAbsolute(relative)) fs.rmSync(jobDirectory, { recursive: true, force: true });
+    }
   }
 
   function configuredAdminKeyHash() {
@@ -664,6 +710,50 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         usage: usageSummaryFor(database, user.id)
       }));
       sendJson(response, 200, { users });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/admin/print-orders" && request.method === "GET") {
+      const database = store.read();
+      const orders = (database.orders || [])
+        .filter((item) => item.orderType === "print_quote")
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, 200)
+        .map((order) => {
+          const user = database.users.find((item) => item.id === order.ownerId);
+          const project = database.projects.find((item) => item.id === order.projectId);
+          return {
+            ...order,
+            customer: user ? { displayName: user.displayName, maskedDestination: user.maskedDestination, region: user.primaryRegion } : null,
+            projectTitle: project?.title || "Deleted story"
+          };
+        });
+      sendJson(response, 200, { orders });
+      return true;
+    }
+    const adminPrintOrderMatch = requestUrl.pathname.match(/^\/api\/admin\/print-orders\/([^/]+)$/);
+    if (adminPrintOrderMatch && request.method === "PATCH") {
+      assertSameOrigin(request);
+      const body = await readJsonBody(request, 12_000);
+      const orderId = cleanId(decodeURIComponent(adminPrintOrderMatch[1]));
+      const status = ["quote_requested", "quoted", "in_production", "shipped", "cancelled"].includes(body.status) ? body.status : "quoted";
+      const currency = body.currency === "CNY" ? "CNY" : "USD";
+      const amountMinor = Math.max(0, Math.round(Number(body.amountMinor) || 0));
+      const order = store.mutate((database) => {
+        const stored = (database.orders || []).find((item) => item.id === orderId && item.orderType === "print_quote");
+        if (!stored) throw Object.assign(new Error("Print request not found."), { statusCode: 404 });
+        stored.status = status;
+        stored.quote = amountMinor ? {
+          amountMinor,
+          currency,
+          includes: cleanText(body.includes || "Printing and tracked delivery", 240),
+          expiresAt: addDays(new Date(), Math.max(1, Math.min(30, Number(body.validDays) || 7)))
+        } : stored.quote || null;
+        stored.price = amountMinor ? `${currency === "CNY" ? "¥" : "$"}${(amountMinor / 100).toFixed(2)}` : stored.price;
+        stored.adminNote = cleanText(body.adminNote, 500);
+        stored.updatedAt = nowIso();
+        return stored;
+      });
+      sendJson(response, 200, { order });
       return true;
     }
     if (requestUrl.pathname === "/api/admin/invites" && request.method === "GET") {
@@ -1141,12 +1231,15 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return true;
       }
       const ownedMedia = current.database.media.filter((item) => item.ownerId === current.user.id);
+      const ownedRenderJobs = current.database.renderJobs.filter((item) => item.ownerId === current.user.id);
       for (const media of ownedMedia) await mediaStorage.remove(media);
+      removeRenderArtifacts(ownedRenderJobs);
       store.mutate((database) => {
         const projectIds = new Set(database.projects.filter((item) => item.ownerId === current.user.id).map((item) => item.id));
         database.users = database.users.filter((item) => item.id !== current.user.id);
         database.sessions = database.sessions.filter((item) => item.userId !== current.user.id);
         database.projects = database.projects.filter((item) => item.ownerId !== current.user.id);
+        database.projectReports = (database.projectReports || []).filter((item) => item.ownerId !== current.user.id);
         database.media = database.media.filter((item) => item.ownerId !== current.user.id);
         database.guardianConsents = database.guardianConsents.filter((item) => !projectIds.has(item.projectId));
         database.shares = database.shares.filter((item) => item.ownerId !== current.user.id && !projectIds.has(item.projectId));
@@ -1219,6 +1312,81 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       return true;
     }
 
+    const projectExportMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/export\/(docx|pdf)$/);
+    if (projectExportMatch) {
+      if (request.method !== "GET") {
+        sendJson(response, 405, { error: "Method not allowed" });
+        return true;
+      }
+      const format = projectExportMatch[2];
+      if (!rateLimiter.consume(request, response, { bucket: `book-export-${format}`, limit: format === "pdf" ? 10 : 30, windowMs: 60 * 60 * 1000, sendJson })) return true;
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(projectExportMatch[1])));
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      const book = await buildBookDocx(project, {
+        loadImage: (imageUrl) => loadProjectImage(database, user, project, imageUrl)
+      });
+      const artifact = format === "pdf" ? await convertDocxToPdf(root, book.buffer, book.filename) : book;
+      response.writeHead(200, {
+        "Content-Type": format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "Content-Length": artifact.buffer.length,
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(artifact.filename)}`,
+        "Cache-Control": "private, no-store",
+        "X-Robots-Tag": "noindex, noarchive",
+        "X-StoriesLens-Book-Format": "A5-Lightyear"
+      });
+      response.end(artifact.buffer);
+      return true;
+    }
+
+    const projectReportMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/report$/);
+    if (projectReportMatch) {
+      const projectId = cleanId(decodeURIComponent(projectReportMatch[1]));
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, projectId);
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      const existingReport = (database.projectReports || []).find((report) => report.projectId === project.id && report.ownerId === user.id);
+      if (request.method === "GET") {
+        sendJson(response, 200, {
+          report: existingReport || null,
+          reportStale: Boolean(existingReport && existingReport.reportVersion !== REPORT_VERSION),
+          project
+        });
+        return true;
+      }
+      if (request.method === "POST") {
+        const generated = createGrowthReport(project);
+        const createdAt = nowIso();
+        const report = {
+          id: existingReport?.id || crypto.randomUUID(),
+          projectId: project.id,
+          ownerId: user.id,
+          createdAt: existingReport?.createdAt || createdAt,
+          updatedAt: createdAt,
+          ...generated
+        };
+        const completedProject = store.mutate((nextDatabase) => {
+          nextDatabase.projectReports ||= [];
+          const storedProject = nextDatabase.projects.find((item) => item.id === project.id && item.ownerId === user.id && !item.deletedAt);
+          if (storedProject && !storedProject.completedAt) storedProject.completedAt = createdAt;
+          const index = nextDatabase.projectReports.findIndex((item) => item.projectId === project.id && item.ownerId === user.id);
+          if (index >= 0) nextDatabase.projectReports[index] = report;
+          else nextDatabase.projectReports.push(report);
+          return storedProject || project;
+        });
+        sendJson(response, existingReport ? 200 : 201, { report, project: completedProject });
+        return true;
+      }
+      sendJson(response, 405, { error: "Method not allowed" });
+      return true;
+    }
+
     const projectMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (!projectMatch) return false;
     const projectId = cleanId(decodeURIComponent(projectMatch[1]));
@@ -1254,6 +1422,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const stored = nextDatabase.projects.find((item) => item.id === projectId && item.ownerId === user.id);
         stored.deletedAt = nowIso();
         stored.purgeAfter = addDays(new Date(), 30);
+        nextDatabase.projectReports = (nextDatabase.projectReports || []).filter((report) => report.projectId !== projectId || report.ownerId !== user.id);
       });
       sendJson(response, 200, { archived: true, recoverableForDays: 30 });
       return true;
@@ -1819,6 +1988,58 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   }
 
   async function handleOrdersAndRender(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/print-orders" && request.method === "POST") {
+      const body = await readJsonBody(request, 20_000);
+      const { database, user } = sessionFor(request, response, { create: false });
+      if (!user || user.kind !== "account") {
+        sendJson(response, 401, { error: "Sign in before requesting printing and delivery." });
+        return true;
+      }
+      const project = requireProject(database, user, cleanId(body.projectId));
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      const quantity = [1, 2, 5, 10, 20, 30].includes(Number(body.quantity)) ? Number(body.quantity) : 1;
+      const shippingRegion = ["cn", "us", "intl"].includes(body.shippingRegion) ? body.shippingRegion : (user.primaryRegion || "intl");
+      const countryCode = cleanText(body.countryCode, 2).toUpperCase();
+      const city = cleanText(body.city, 80);
+      const postalCode = cleanText(body.postalCode, 20);
+      if (!/^[A-Z]{2}$/.test(countryCode) || !city || !postalCode) {
+        sendJson(response, 400, { error: "Add the destination country, city and postal code so printing and delivery can be quoted." });
+        return true;
+      }
+      const order = {
+        id: crypto.randomUUID(),
+        ownerId: user.id,
+        projectId: project.id,
+        offerId: "print-and-deliver",
+        orderType: "print_quote",
+        name: "A5 printed story book",
+        price: "Quote pending",
+        status: "quote_requested",
+        specification: {
+          trimSize: "A5 148x210mm",
+          binding: body.binding === "hardcover" ? "hardcover" : "softcover",
+          color: body.color === "black-and-white" ? "black-and-white" : "full-color",
+          quantity,
+          shippingRegion,
+          countryCode,
+          city,
+          postalCode,
+          notes: cleanText(body.notes, 500)
+        },
+        privacy: "Exact street address is requested only after the quote is accepted through a secure fulfillment step.",
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+      store.mutate((nextDatabase) => nextDatabase.orders.push(order));
+      sendJson(response, 201, {
+        order,
+        notice: "Quote request received. No charge has been made. Printing, tax and tracked delivery will be confirmed before payment."
+      });
+      return true;
+    }
     if (requestUrl.pathname === "/api/orders" && request.method === "GET") {
       const { database, user } = sessionFor(request, response);
       sendJson(response, 200, { orders: database.orders.filter((item) => item.ownerId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) });
@@ -1867,24 +2088,30 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         id: crypto.randomUUID(),
         ownerId: user.id,
         projectId: project.id,
-        provider: "hyperframes",
+        provider: "seedance-scenes+ffmpeg",
         status: ready ? "ready_for_render" : "awaiting_media",
         aspectRatio: body.aspectRatio === "9:16" ? "9:16" : "16:9",
         resolution: body.resolution === "1080p" ? "1080p" : "720p",
         totalDuration,
         plan: scenes.map((scene, index) => ({ ...scene, start: scenes.slice(0, index).reduce((sum, item) => sum + item.duration, 0), trackIndex: 1 })),
         outputUrl: "",
+        progress: 0,
         createdAt: nowIso(),
         updatedAt: nowIso()
       };
       store.mutate((nextDatabase) => nextDatabase.renderJobs.push(job));
       let renderResult = { started: false };
       if (ready) {
-        const referencedMediaIds = new Set(scenes.map((scene) => scene.narrationMediaId).filter(Boolean));
-        renderResult = queueHyperframesRender({
+        const referencedMediaIds = new Set(scenes.flatMap((scene) => {
+          const privateImage = String(scene.imageUrl || "").match(/^\/api\/media\/([^/?#]+)/)?.[1];
+          const privateVideo = String(scene.videoUrl || "").match(/^\/api\/media\/([^/?#]+)/)?.[1];
+          return [scene.narrationMediaId, privateImage, privateVideo].filter(Boolean);
+        }));
+        const sourceSquadId = cleanId(project.clientSnapshot?.squadId);
+        renderResult = queueFfmpegRender({
           root,
           project,
-          mediaRecords: database.media.filter((item) => item.ownerId === user.id || referencedMediaIds.has(item.id)),
+          mediaRecords: database.media.filter((item) => item.ownerId === user.id || referencedMediaIds.has(item.id) || (sourceSquadId && item.squadId === sourceSquadId)),
           job,
           onUpdate(update) {
             store.mutate((nextDatabase) => {
@@ -1904,8 +2131,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const notice = !ready
         ? "Add an approved image or video to every scene before rendering."
         : renderResult.started
-          ? "Your movie is rendering privately inside StoriesLens. You can return to My Stories while it finishes."
-          : "The movie plan is ready, but this server still needs the HyperFrames render worker installed.";
+          ? "Your approved Seedance clips, still images and narrations are being joined privately. Final assembly uses no additional AI video credits."
+          : "The movie plan is ready, but this server still needs its private FFmpeg assembly worker.";
       sendJson(response, 201, { renderJob: job, notice });
       return true;
     }
@@ -1979,7 +2206,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           wechatAuth: Boolean(process.env.WECHAT_APP_ID && process.env.WECHAT_APP_SECRET),
           pushDelivery: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
           stripeCheckout: Object.values(offerCatalog).some((offer) => Boolean(process.env[offer.envKey])),
-          hyperframesWorker: Boolean(resolveBinary(root)),
+          ffmpegAssembly: Boolean(resolveFfmpegBinary()),
+          pdfBookExport: Boolean(resolveLibreOfficeBinary()),
           mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY),
           safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
         },
@@ -1995,7 +2223,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     }
 
     if (requestUrl.pathname === "/api/launch-readiness" && request.method === "GET") {
-      sendJson(response, 200, evaluateLaunchReadiness({ root, mediaStorageStatus: mediaStorage.status() }));
+      sendJson(response, 200, evaluateLaunchReadiness({ root, mediaStorageStatus: mediaStorage.status(), renderWorkerReady: Boolean(resolveFfmpegBinary()), pdfRendererReady: Boolean(resolveLibreOfficeBinary()) }));
       return true;
     }
 
@@ -2106,6 +2334,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       });
     }
   };
+
+  handlePlatformApi.consumeRateLimit = (request, response, options) => rateLimiter.consume(request, response, { ...options, sendJson });
 
   return handlePlatformApi;
 }

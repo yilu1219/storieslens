@@ -68,12 +68,20 @@
       <section class="board-app" data-board hidden>
         <header class="board-head">
           <div><p class="eyebrow">PRIVATE · INVITE ONLY</p><h2 data-squad-title>Story Squad</h2><p data-squad-meta></p></div>
-          <div class="owner-actions" data-owner-actions hidden><button class="secondary" data-copy-invite type="button">Copy invite link · 复制邀请</button><button class="primary" data-assemble type="button">Assemble book/film · 汇编成作品</button></div>
+          <div class="owner-actions" data-owner-actions hidden>
+            <button class="secondary" data-copy-invite type="button">Copy invite link · 复制邀请</button>
+            <button class="primary" data-assemble type="button">Assemble book/film · 汇编成作品</button>
+            <a class="secondary" data-open-project hidden>Open book &amp; film studio · 打开成书与电影</a>
+            <button class="secondary" data-squad-export="docx" type="button" hidden>Word · 可编辑</button>
+            <button class="secondary" data-squad-export="pdf" type="button" hidden>PDF · 可印刷</button>
+            <button class="primary" data-squad-render type="button" hidden>Join final movie · 合成完整电影</button>
+          </div>
         </header>
 
         <div class="code-banner" data-code-banner hidden><span>Story Code · 故事码</span><strong data-story-code></strong><small>Send only to family, friends, classmates or invited workshop members.</small></div>
         <p class="status-banner" data-pending-banner hidden>Your request is waiting for the project owner. You cannot see or add contributions yet. · 正在等待发起人批准。</p>
         <p class="notice" data-notice hidden></p>
+        <p class="status-banner" data-final-output hidden></p>
 
         <section class="anchor-studio" data-anchor-studio hidden>
           <div class="anchor-studio-copy">
@@ -155,6 +163,6 @@
     <div class="toast" data-toast role="status" aria-live="polite"></div>
     <script src="platform-client.js"></script>
     <script src="mentor-revision.js"></script>
-    <script src="squad-board.js?v=20260916-2"></script>
+    <script src="squad-board.js?v=20260916-3"></script>
   </body>
 </html>
