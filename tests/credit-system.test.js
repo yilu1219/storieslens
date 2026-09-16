@@ -6,6 +6,7 @@ const {
   grantPackage,
   ensureFreePreview,
   walletFor,
+  usageSummaryFor,
   reserveCredits,
   settleReservation,
   releaseReservation,
@@ -80,4 +81,40 @@ test("invitation codes are region-bound, capacity-limited and never stored in ra
   assert.equal(redemption.wallet.resources.imageGenerations.remaining, 12);
   assert.throws(() => redeemInvite(data, { rawCode: rawCodes[0], userId: "another-us-user", userRegion: "us" }), (error) => error.code === "INVITE_REDEEMED");
   assert.equal(redeemInvite(data, { rawCode: rawCodes[0], userId: "us-user", userRegion: "us" }).duplicate, true);
+});
+
+test("paid redemption codes record revenue separately from complimentary credits", () => {
+  const data = database();
+  const { rawCodes } = createInviteBatch(data, {
+    region: "cn",
+    packageId: "creator-story",
+    count: 1,
+    maxRedemptions: 1,
+    expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    label: "Paid workshop",
+    commercialType: "paid",
+    currency: "CNY",
+    unitAmountMinor: 12900
+  });
+  redeemInvite(data, { rawCode: rawCodes[0], userId: "paid-user", userRegion: "cn" });
+  assert.equal(data.creditSales.length, 1);
+  assert.equal(data.creditSales[0].amountMinor, 12900);
+  assert.equal(data.creditSales[0].currency, "CNY");
+  assert.deepEqual(usageSummaryFor(data, "paid-user").totals.recordedRevenueMinor, { usd: 0, cny: 12900 });
+});
+
+test("usage summaries separate measured cost from operations whose provider cost is missing", () => {
+  const data = database();
+  ensureFreePreview(data, "user-1");
+  const priced = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "priced" });
+  settleReservation(data, { reservationId: priced.reservation.id, costUsd: 0.18 });
+  const unpriced = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "unpriced" });
+  settleReservation(data, { reservationId: unpriced.reservation.id });
+  data.modelUsageEvents.push({ userId: "user-1", operation: "yu-writing-assistant", model: "test-model", costUsd: 0.02, createdAt: new Date().toISOString() });
+  data.modelUsageEvents.push({ userId: "user-1", operation: "ai-writing-report", model: "test-model", costUsd: null, createdAt: new Date().toISOString() });
+  const summary = usageSummaryFor(data, "user-1");
+  assert.equal(summary.resources.imageGenerations.consumed, 2);
+  assert.ok(Math.abs(summary.totals.recordedCostUsd - 0.2) < 0.000001);
+  assert.equal(summary.totals.unpricedOperations, 2);
+  assert.equal(summary.totals.modelOperations, 2);
 });

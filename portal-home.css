@@ -50,10 +50,14 @@ button, textarea { color: inherit; font: inherit; }
 .portal-brand { display: inline-flex; align-items: center; gap: 14px; color: var(--ink); text-decoration: none; }
 .portal-brand img { width: 50px; height: 50px; border-radius: 14px; box-shadow: 0 8px 22px rgba(15, 98, 68, 0.12); }
 .portal-brand span { font-family: var(--sans); font-size: clamp(25px, 2.1vw, 34px); font-weight: 700; letter-spacing: -0.04em; }
+.portal-header-actions { display: flex; align-items: center; gap: 11px; }
 .portal-language-toggle { display: flex; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.46); box-shadow: 0 8px 22px rgba(34,31,27,.06); }
 .portal-language-toggle button { min-width: 58px; padding: 10px 14px; border: 0; border-radius: 999px; background: transparent; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; }
 .portal-language-toggle button.is-active { color: #fff; background: var(--ink); }
 .portal-language-toggle button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.portal-login { display: inline-flex; min-height: 45px; align-items: center; justify-content: center; padding: 0 18px; color: #fff; border: 1px solid var(--leaf-deep); border-radius: 999px; background: var(--leaf-deep); font-family: var(--sans); font-size: 14px; font-weight: 700; text-decoration: none; box-shadow: 0 9px 22px rgba(15,98,68,.16); }
+.portal-login:hover { background: var(--leaf); }
+.portal-login:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
 .magic-hero { display: grid; grid-template-columns: minmax(0, .86fr) minmax(500px, 1.14fr); align-items: center; gap: clamp(46px, 7vw, 100px); min-height: calc(100vh - 100px); padding: clamp(54px, 7vw, 90px) 0; }
 .portal-kicker { margin: 0; color: var(--leaf-deep); font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: .2em; }
@@ -213,6 +217,7 @@ button, textarea { color: inherit; font: inherit; }
   .portal-brand img { width: 43px; height: 43px; border-radius: 12px; }
   .portal-brand span { font-size: 24px; }
   .portal-language-toggle button { min-width: 48px; padding: 9px 10px; font-size: 13px; }
+  .portal-login { min-height: 42px; padding-inline: 14px; font-size: 13px; }
   .magic-hero { gap: 34px; padding: 42px 0 64px; }
   .magic-copy h1 { margin-top: 12px; font-size: clamp(52px, 16.5vw, 76px); line-height: .88; }
   .magic-lede { font-size: 20px; }
@@ -269,6 +274,8 @@ button, textarea { color: inherit; font: inherit; }
   .magic-copy h1 { font-size: clamp(49px, 15.5vw, 66px); }
   .portal-brand span { font-size: 21px; }
   .portal-language-toggle button { min-width: 43px; padding-inline: 8px; }
+  .portal-header-actions { gap: 7px; }
+  .portal-login { padding-inline: 11px; }
   .magic-launcher { padding: 16px; }
   .launcher-heading span { max-width: 130px; }
   .story-language-choice > div { grid-template-columns: 1fr; }

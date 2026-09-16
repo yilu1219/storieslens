@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="description" content="Sign in to your private StoriesLens library with email." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="login.css?v=20260915-1" />
+    <title>Email sign in · StoriesLens</title>
+  </head>
+  <body>
+    <header class="login-header">
+      <a class="login-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" /><span>StoriesLens</span></a>
+      <a class="home-link" href="index.html">Home · 首页</a>
+    </header>
+
+    <main class="login-shell">
+      <section class="login-intro" aria-labelledby="login-title">
+        <p class="login-kicker">PRIVATE CREATOR ACCOUNT · 私人创作账户</p>
+        <h1 id="login-title">Your story world,<br /><em>waiting for you.</em></h1>
+        <p>Sign in once to keep your stories and creation allowance together across devices.</p>
+        <ul>
+          <li>Private by default · 默认私密</li>
+          <li>Your region is chosen by you · 地区由你选择</li>
+          <li>No password to remember · 无需设置密码</li>
+        </ul>
+      </section>
+
+      <section class="login-card" aria-live="polite">
+        <div data-login-form-wrap>
+          <div class="login-card-heading">
+            <span>EMAIL SIGN IN</span>
+            <b>邮箱登录</b>
+          </div>
+
+          <form data-email-start novalidate>
+            <fieldset class="region-picker">
+              <legend><b>1</b><span>Where will you use StoriesLens?<small>你将在哪个国家或地区使用？</small></span></legend>
+              <div class="region-options">
+                <label><input type="radio" name="login-region" value="cn" /><span><strong>中国大陆</strong><small>China Mainland</small></span></label>
+                <label><input type="radio" name="login-region" value="us" /><span><strong>United States</strong><small>美国</small></span></label>
+                <label><input type="radio" name="login-region" value="intl" /><span><strong>Other regions</strong><small>其他国家或地区</small></span></label>
+              </div>
+            </fieldset>
+
+            <label class="country-field" data-country-field hidden>
+              <span>Country or region · 具体国家或地区</span>
+              <select data-country-code disabled required></select>
+              <small data-country-help>Only approved beta countries are available.</small>
+            </label>
+
+            <label class="email-field">
+              <span><b>2</b> Email address · 邮箱地址</span>
+              <input data-email type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required />
+            </label>
+            <button class="login-primary" type="submit" data-send-code>Send a 6-digit code <span>发送验证码 →</span></button>
+          </form>
+
+          <form data-email-verify hidden novalidate>
+            <button class="change-email" type="button" data-change-email>← Change email · 修改邮箱</button>
+            <p class="code-sent"><span data-code-delivery-lead>A six-digit code was sent to</span> <strong data-masked-email></strong>.<br /><span data-code-delivery-zh>请输入收到的6位验证码。</span></p>
+            <label>
+              <span>Verification code · 验证码</span>
+              <input class="code-input" data-code inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required />
+            </label>
+            <label>
+              <span>Name or nickname · 姓名或昵称</span>
+              <input data-display-name autocomplete="nickname" maxlength="40" placeholder="Creator" />
+            </label>
+            <label data-beta-invite hidden>
+              <span>Founding beta invitation code · 内测邀请码</span>
+              <input data-beta-invite-code autocomplete="one-time-code" maxlength="120" placeholder="STORIESLENS-…" />
+            </label>
+            <label class="adult-confirm"><input data-adult-confirm type="checkbox" required /><span>I am 18 or older and own this account.<small>我已满18岁，并由我本人持有此账户；孩子可在我的陪同下创作。</small></span></label>
+            <button class="login-primary" type="submit">Open my story library <span>进入我的作品 →</span></button>
+          </form>
+
+          <p class="login-notice" data-login-notice hidden></p>
+          <p class="login-footnote">Email is used only for secure sign-in and account notices. We never choose your region from your IP address.</p>
+        </div>
+
+        <div class="login-success" data-login-success hidden>
+          <span aria-hidden="true">✓</span>
+          <h2>Welcome back.</h2>
+          <p data-success-copy>Your private library is ready.</p>
+          <a class="login-primary" href="my-stories.html">Open My Stories <b>进入我的作品 →</b></a>
+        </div>
+      </section>
+    </main>
+
+    <script src="platform-client.js"></script>
+    <script src="login.js?v=20260915-2"></script>
+  </body>
+</html>

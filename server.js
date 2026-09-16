@@ -1082,6 +1082,13 @@ async function handleAIReport(request, response) {
       report = { overall: content, glow: "", grow: "", nextStep: "", ccssNotes: [], sentenceComments: [], videoScript: "" };
     }
 
+    handlePlatformApi.creditManager.recordUsage(request, response, {
+      operation: "ai-writing-report",
+      model,
+      costUsd: costUsdFromUsage(upstreamData.usage),
+      providerUsage: upstreamData.usage || null
+    });
+
     sendJson(response, 200, {
       report,
       coachMeta: {
@@ -1188,6 +1195,7 @@ async function handleWritingAssistant(request, response) {
     ].filter(Boolean).join("\n");
     await enforceTextSafety(userPrompt);
     const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
+    const model = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
     const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -1197,7 +1205,7 @@ async function handleWritingAssistant(request, response) {
         "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+        model,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
         temperature: 0.35,
         response_format: { type: "json_object" }
@@ -1251,6 +1259,12 @@ async function handleWritingAssistant(request, response) {
     };
     if (action === "begin" && !safeResult.question) safeResult.question = safeResult.reply;
     if (action === "begin" && !safeResult.reply) safeResult.reply = safeResult.question;
+    handlePlatformApi.creditManager.recordUsage(request, response, {
+      operation: "yu-writing-assistant",
+      model,
+      costUsd: costUsdFromUsage(upstreamData.usage),
+      providerUsage: upstreamData.usage || null
+    });
     sendJson(response, 200, { result: safeResult });
   } catch (error) {
     sendJson(response, error.statusCode || 500, { code: error.code || "WRITING_ASSISTANT_FAILED", error: error.message || "Writing assistant failed." });

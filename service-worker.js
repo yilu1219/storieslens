@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v67-product-film-20260915";
+const VERSION = "storieslens-h5-v71-usage-ledger-20260915";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -6,6 +6,8 @@ const APP_SHELL = [
   "/app.html",
   "/chinese-studio.html",
   "/index.html",
+  "/login.html",
+  "/my-stories.html",
   "/product-video.html",
   "/classroom-archive.html",
   "/manifest.webmanifest",
@@ -26,9 +28,12 @@ const APP_SHELL = [
   "/showcase.css?v=20260909-1",
   "/showcase.js",
   "/app-shell.css",
-  "/h5-app.css?v=20260907-4",
+  "/h5-app.css?v=20260915-usage-2",
   "/pwa.css",
   "/platform-client.js",
+  "/login.css?v=20260915-1",
+  "/login.js?v=20260915-2",
+  "/my-stories.js?v=20260915-usage-3",
   "/safety-client.js",
   "/artwork-upload-safety.js?v=20260913-1",
   "/pwa.js",

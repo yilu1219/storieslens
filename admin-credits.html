@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex,nofollow,noarchive" />
     <meta name="theme-color" content="#0f513d" />
-    <link rel="stylesheet" href="admin-credits.css" />
+    <link rel="stylesheet" href="admin-credits.css?v=20260915-2" />
     <title>Allowance Console · StoriesLens</title>
   </head>
   <body>
@@ -40,10 +40,12 @@
         <section class="summary-grid" aria-label="Allowance summary">
           <article><span>认证账户</span><strong data-summary-accounts>—</strong></article>
           <article><span>有效邀请码</span><strong data-summary-codes>—</strong></article>
-          <article><span>发放记录</span><strong data-summary-grants>—</strong></article>
-          <article><span>扣减记录</span><strong data-summary-consumed>—</strong></article>
-          <article><span>处理中预占</span><strong data-summary-reserved>—</strong></article>
-          <article><span>已记录模型成本</span><strong data-summary-cost>—</strong></article>
+          <article><span>美元实收记录</span><strong data-summary-usd>—</strong></article>
+          <article><span>人民币实收记录</span><strong data-summary-cny>—</strong></article>
+          <article><span>模型成本（美元）</span><strong data-summary-cost>—</strong></article>
+          <article><span>成本记录覆盖率</span><strong data-summary-coverage>—</strong></article>
+          <article><span>已完成扣减</span><strong data-summary-consumed>—</strong></article>
+          <article><span>待补成本 / 处理中</span><strong data-summary-pending>—</strong></article>
         </section>
 
         <section class="panel package-panel">
@@ -68,6 +70,9 @@
               <label>每码可用人数<input data-invite-uses type="number" min="1" max="50" value="1" required /></label>
               <label>有效天数<input data-invite-days type="number" min="1" max="365" value="30" required /></label>
               <label>批次名称<input data-invite-label maxlength="100" value="创始内测" required /></label>
+              <label>兑换码性质<select data-commercial-type><option value="complimentary">免费／赠送码</option><option value="paid">已收款充值码</option></select></label>
+              <label data-sale-currency hidden>收款币种<select data-sale-currency-select><option value="CNY">人民币 CNY</option><option value="USD">美元 USD</option></select></label>
+              <label data-sale-amount hidden>每次兑换实收金额<input data-sale-amount-input type="number" min="0.01" max="100000" step="0.01" inputmode="decimal" /></label>
               <button class="primary wide" type="submit">生成邀请码</button>
             </form>
             <p class="notice" data-invite-notice hidden></p>
@@ -86,7 +91,7 @@
 
         <section class="panel">
           <div class="panel-heading">
-            <div><p class="eyebrow">ACCOUNTS · 用户</p><h2>查找用户并补发额度</h2></div>
+            <div><p class="eyebrow">ACCOUNTS · 用户</p><h2>查用户、看用量与成本</h2></div>
             <form class="search-form" data-user-search><input data-user-query maxlength="100" placeholder="姓名、脱敏邮箱/手机号或账户 ID" /><button type="submit">查找</button></form>
           </div>
           <div class="user-list" data-user-list><p class="empty">暂无认证账户。</p></div>
@@ -106,6 +111,6 @@
     </main>
 
     <div class="toast" data-toast role="status" aria-live="polite"></div>
-    <script src="admin-credits.js"></script>
+    <script src="admin-credits.js?v=20260915-4"></script>
   </body>
 </html>

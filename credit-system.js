@@ -61,6 +61,7 @@ const PACKAGE_CATALOG = Object.freeze({
 });
 
 const ACTIVE_RESERVATION_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const COST_BEARING_RESOURCES = new Set(["imageGenerations", "videoClips"]);
 
 function nowIso() {
   return new Date().toISOString();
@@ -81,11 +82,65 @@ function cleanId(value) {
 function ensureCreditCollections(database) {
   database.creditTransactions ||= [];
   database.creditReservations ||= [];
+  database.creditSales ||= [];
+  database.modelUsageEvents ||= [];
   database.inviteBatches ||= [];
   database.inviteCodes ||= [];
   database.betaInviteRedemptions ||= [];
   database.adminSessions ||= [];
   return database;
+}
+
+function moneyTotals(entries) {
+  return entries.reduce((totals, entry) => {
+    const currency = ["USD", "CNY"].includes(entry.currency) ? entry.currency : "USD";
+    const amountMinor = Math.max(0, Number(entry.amountMinor) || 0);
+    totals[currency.toLowerCase()] += amountMinor;
+    return totals;
+  }, { usd: 0, cny: 0 });
+}
+
+function usageSummaryFor(database, userId) {
+  ensureCreditCollections(database);
+  const wallet = walletFor(database, userId);
+  const transactions = database.creditTransactions.filter((entry) => entry.userId === userId);
+  const consumptions = transactions.filter((entry) => entry.type === "consumption");
+  const sales = database.creditSales.filter((entry) => entry.userId === userId && entry.status === "recorded");
+  const modelEvents = database.modelUsageEvents.filter((entry) => entry.userId === userId);
+  const resources = Object.fromEntries(Object.entries(wallet.resources).map(([key, allowance]) => {
+    const resourceConsumption = consumptions.filter((entry) => entry.resource === key);
+    const recordedCostUsd = resourceConsumption.reduce((total, entry) => {
+      const cost = Number(entry.costUsd);
+      return total + (entry.costUsd != null && Number.isFinite(cost) && cost >= 0 ? cost : 0);
+    }, 0);
+    return [key, {
+      ...allowance,
+      recordedCostUsd,
+      unpricedOperations: COST_BEARING_RESOURCES.has(key) ? resourceConsumption.filter((entry) => entry.costUsd == null || !Number.isFinite(Number(entry.costUsd))).length : 0,
+      lastUsedAt: resourceConsumption.map((entry) => entry.createdAt).sort().at(-1) || ""
+    }];
+  }));
+  const recordedCostUsd = [...consumptions, ...modelEvents].reduce((total, entry) => {
+    const cost = Number(entry.costUsd);
+    return total + (entry.costUsd != null && Number.isFinite(cost) && cost >= 0 ? cost : 0);
+  }, 0);
+  return {
+    userId,
+    resources,
+    totals: {
+      grantedUnits: Object.values(wallet.resources).reduce((total, item) => total + item.granted, 0),
+      consumedUnits: Object.values(wallet.resources).reduce((total, item) => total + item.consumed, 0),
+      reservedUnits: Object.values(wallet.resources).reduce((total, item) => total + item.reserved, 0),
+      remainingUnits: Object.values(wallet.resources).reduce((total, item) => total + item.remaining, 0),
+      consumptionOperations: consumptions.length,
+      recordedCostUsd,
+      unpricedOperations: consumptions.filter((entry) => COST_BEARING_RESOURCES.has(entry.resource) && (entry.costUsd == null || !Number.isFinite(Number(entry.costUsd)))).length + modelEvents.filter((entry) => entry.costUsd == null || !Number.isFinite(Number(entry.costUsd))).length,
+      modelOperations: modelEvents.length,
+      recordedRevenueMinor: moneyTotals(sales),
+      lastUsedAt: [...consumptions, ...modelEvents].map((entry) => entry.createdAt).sort().at(-1) || ""
+    },
+    calculatedAt: nowIso()
+  };
 }
 
 function publicPackageCatalog() {
@@ -232,7 +287,7 @@ function settleReservation(database, { reservationId, costUsd = null, providerUs
   if (reservation.status !== "reserved") throw Object.assign(new Error("This allowance reservation has already been released."), { statusCode: 409, code: "RESERVATION_RELEASED" });
   reservation.status = "settled";
   reservation.settledAt = nowIso();
-  reservation.costUsd = Number.isFinite(Number(costUsd)) ? Number(costUsd) : null;
+  reservation.costUsd = costUsd != null && Number.isFinite(Number(costUsd)) ? Number(costUsd) : null;
   reservation.providerUsage = providerUsage && typeof providerUsage === "object" ? JSON.parse(JSON.stringify(providerUsage)) : null;
   database.creditTransactions.push({
     id: crypto.randomUUID(),
@@ -267,14 +322,19 @@ function randomInviteCode(region, packageId) {
   return `SL-${region.toUpperCase()}-${packageMark}-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
-function createInviteBatch(database, { region, packageId, count, maxRedemptions = 1, expiresAt, label = "", createdBy = "admin" }) {
+function createInviteBatch(database, { region, packageId, count, maxRedemptions = 1, expiresAt, label = "", commercialType = "complimentary", currency = "USD", unitAmountMinor = 0, createdBy = "admin" }) {
   ensureCreditCollections(database);
   if (!["cn", "us", "intl"].includes(region)) throw Object.assign(new Error("Choose China, United States, or International."), { statusCode: 400, code: "INVALID_REGION" });
   if (!PACKAGE_CATALOG[packageId]) throw Object.assign(new Error("Choose a valid allowance package."), { statusCode: 400, code: "INVALID_PACKAGE" });
   const safeCount = Number(count);
   const safeUses = Number(maxRedemptions);
+  const safeCommercialType = ["complimentary", "paid"].includes(commercialType) ? commercialType : "complimentary";
+  const safeCurrency = ["USD", "CNY"].includes(currency) ? currency : "USD";
+  const safeUnitAmountMinor = Number(unitAmountMinor);
   if (!Number.isSafeInteger(safeCount) || safeCount < 1 || safeCount > 100) throw Object.assign(new Error("Generate between 1 and 100 invitation codes."), { statusCode: 400, code: "INVALID_INVITE_COUNT" });
   if (!Number.isSafeInteger(safeUses) || safeUses < 1 || safeUses > 50) throw Object.assign(new Error("Each code may allow between 1 and 50 redemptions."), { statusCode: 400, code: "INVALID_REDEMPTION_LIMIT" });
+  if (!Number.isSafeInteger(safeUnitAmountMinor) || safeUnitAmountMinor < 0 || safeUnitAmountMinor > 10_000_000) throw Object.assign(new Error("Enter a valid amount collected per redemption."), { statusCode: 400, code: "INVALID_SALE_AMOUNT" });
+  if (safeCommercialType === "paid" && safeUnitAmountMinor < 1) throw Object.assign(new Error("A paid code must record the amount collected."), { statusCode: 400, code: "PAID_AMOUNT_REQUIRED" });
   const expiry = new Date(expiresAt);
   if (!Number.isFinite(expiry.getTime()) || expiry <= new Date()) throw Object.assign(new Error("Choose a future expiry date."), { statusCode: 400, code: "INVALID_EXPIRY" });
   const batch = {
@@ -284,6 +344,9 @@ function createInviteBatch(database, { region, packageId, count, maxRedemptions 
     count: safeCount,
     maxRedemptions: safeUses,
     label: String(label || "").slice(0, 100),
+    commercialType: safeCommercialType,
+    currency: safeCurrency,
+    unitAmountMinor: safeCommercialType === "paid" ? safeUnitAmountMinor : 0,
     expiresAt: expiry.toISOString(),
     disabledAt: "",
     createdBy: String(createdBy || "admin").slice(0, 100),
@@ -356,6 +419,21 @@ function redeemInvite(database, { rawCode, userId, userRegion }) {
     packageId: invite.packageId,
     redeemedAt: nowIso()
   });
+  const batch = database.inviteBatches.find((entry) => entry.id === invite.batchId);
+  if (batch?.commercialType === "paid" && Number(batch.unitAmountMinor) > 0) {
+    database.creditSales.push({
+      id: crypto.randomUUID(),
+      userId,
+      inviteCodeId: invite.id,
+      batchId: invite.batchId,
+      packageId: invite.packageId,
+      amountMinor: Number(batch.unitAmountMinor),
+      currency: ["USD", "CNY"].includes(batch.currency) ? batch.currency : "USD",
+      status: "recorded",
+      source: "paid-redemption-code",
+      createdAt: nowIso()
+    });
+  }
   return { duplicate: false, invite, grant, wallet: walletFor(database, userId) };
 }
 
@@ -365,6 +443,7 @@ module.exports = {
   ensureCreditCollections,
   publicPackageCatalog,
   walletFor,
+  usageSummaryFor,
   grantPackage,
   ensureFreePreview,
   reserveCredits,

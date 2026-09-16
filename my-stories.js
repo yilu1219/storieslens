@@ -33,6 +33,11 @@
     return `${(bytes / 1024 / 1024).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
   }
 
+  function formatMoney(amountMinor, currency) {
+    const code = currency === "CNY" ? "CNY" : "USD";
+    return new Intl.NumberFormat(code === "CNY" ? "zh-CN" : "en-US", { style: "currency", currency: code }).format((Number(amountMinor) || 0) / 100);
+  }
+
   function node(tag, className, text) {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -125,16 +130,52 @@
     };
     const list = $("[data-allowance-list]");
     list.replaceChildren();
-    Object.entries(result.wallet.resources).filter(([, allowance]) => allowance.granted > 0 || allowance.reserved > 0).forEach(([resource, allowance]) => {
+    const resources = result.usage?.resources || result.wallet.resources;
+    Object.entries(resources).filter(([, allowance]) => allowance.granted > 0 || allowance.reserved > 0).forEach(([resource, allowance]) => {
       const row = node("div");
       const title = labels[resource] || [allowance.label, allowance.labelZh];
+      const copy = node("span", "", `Used ${allowance.consumed} · 已用 ${allowance.consumed}　|　Remaining ${allowance.remaining} · 剩余 ${allowance.remaining}　|　Total ${allowance.granted} · 总计 ${allowance.granted}${allowance.reserved ? `　|　${allowance.reserved} processing · 处理中` : ""}`);
+      const meter = node("i", "allowance-meter");
+      const fill = node("b");
+      fill.style.width = `${allowance.granted ? Math.min(100, Math.round((allowance.consumed / allowance.granted) * 100)) : 0}%`;
+      meter.append(fill);
       row.append(
         node("strong", "", `${title[0]} · ${title[1]}`),
-        node("span", "", `${allowance.remaining} remaining of ${allowance.granted}${allowance.reserved ? ` · ${allowance.reserved} processing` : ""}`)
+        copy,
+        meter
       );
       list.append(row);
     });
     if (!list.children.length) list.append(node("div", "", "No creation allowance has been granted yet."));
+    const totals = result.usage?.totals || {};
+    $("[data-usage-consumed]").textContent = `${Number(totals.consumedUnits) || 0} credits`;
+    $("[data-usage-reserved]").textContent = `${Number(totals.reservedUnits) || 0} credits`;
+    $("[data-usage-last]").textContent = totals.lastUsedAt ? formatDate(totals.lastUsedAt) : "Not used yet · 尚未使用";
+
+    const activity = $("[data-allowance-activity]");
+    activity.replaceChildren();
+    const resourceNames = Object.fromEntries(Object.entries(labels).map(([key, value]) => [key, `${value[0]} · ${value[1]}`]));
+    (result.recentActivity || []).slice(0, 12).forEach((entry) => {
+      const item = node("div", "usage-row");
+      const amount = Number(entry.delta) || 0;
+      item.append(
+        node("strong", amount > 0 ? "usage-plus" : "usage-minus", `${amount > 0 ? "+" : "−"}${Math.abs(amount)} ${resourceNames[entry.resource] || entry.resource}`),
+        node("span", "", `${entry.type === "grant" ? "Added · 已到账" : "Used · 已使用"} · ${formatDate(entry.createdAt)}`)
+      );
+      activity.append(item);
+    });
+    if (!activity.children.length) activity.append(node("p", "muted", "No usage yet · 暂无使用记录"));
+
+    const purchases = result.purchases || [];
+    const purchaseWrap = $("[data-purchase-history]");
+    const purchaseList = $("[data-purchase-list]");
+    purchaseWrap.hidden = !purchases.length;
+    purchaseList.replaceChildren();
+    purchases.forEach((purchase) => {
+      const item = node("div", "usage-row");
+      item.append(node("strong", "usage-plus", formatMoney(purchase.amountMinor, purchase.currency)), node("span", "", `${purchase.packageId} · ${formatDate(purchase.createdAt)}`));
+      purchaseList.append(item);
+    });
     return result;
   }
 
@@ -376,5 +417,10 @@
     } catch (error) { toast(error.message, true); }
   });
 
-  Promise.all([platform.getSession(), loadProjects(), loadOrders(), loadStorageUsage(), loadAvailableRegions(), loadCredits()]).then(([session]) => updateSession(session)).catch((error) => toast(error.message, true));
+  platform.getSession().then(async (session) => {
+    // Establish exactly one private session before parallel account requests.
+    // Otherwise a first-time browser can race several guest-session cookies.
+    await Promise.all([loadProjects(), loadOrders(), loadStorageUsage(), loadAvailableRegions(), loadCredits()]);
+    updateSession(session);
+  }).catch((error) => toast(error.message, true));
 }());

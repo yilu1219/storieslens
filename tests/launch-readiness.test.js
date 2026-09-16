@@ -64,3 +64,13 @@ test("OpenRouter can satisfy the external review gate when it is the configured 
   const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
   assert(report.required.some((item) => item.id === "external-safety" && item.ready));
 });
+
+test("Resend with a verified sender satisfies the sign-in delivery gate", () => {
+  const env = readyEnvironment();
+  delete env.AUTH_DELIVERY_WEBHOOK_URL;
+  delete env.AUTH_DELIVERY_WEBHOOK_SECRET;
+  env.RESEND_API_KEY = "server-only-resend-key";
+  env.AUTH_EMAIL_FROM = "StoriesLens <login@storieslens.com>";
+  const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(report.required.some((item) => item.id === "otp-delivery" && item.ready));
+});

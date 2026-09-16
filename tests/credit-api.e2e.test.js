@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
+const http = require("node:http");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
@@ -45,6 +46,30 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
   const port = 3137;
   const baseUrl = `http://127.0.0.1:${port}`;
   const accessKey = "StoriesLens-E2E-Admin-2026";
+  const provider = http.createServer((request, response) => {
+    if (request.url !== "/chat/completions" || request.method !== "POST") {
+      response.writeHead(404).end();
+      return;
+    }
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({
+        reply: "Your opening gives the reader a clear place to begin.",
+        strength: "A clear opening image.",
+        priority: "Add one sensory detail.",
+        microLesson: "Specific details help readers picture a scene.",
+        question: "What can the character hear?",
+        task: "Add one sound in your own words.",
+        suggestion: "",
+        readyForVisual: false,
+        visualBrief: "",
+        authorshipCheck: "pass"
+      }) } }],
+      usage: { prompt_tokens: 120, completion_tokens: 36, cost: 0.0123 }
+    }));
+  });
+  await new Promise((resolve) => provider.listen(0, "127.0.0.1", resolve));
+  const providerPort = provider.address().port;
   const child = spawn(nodeBinary, ["server.js"], {
     cwd: root,
     env: {
@@ -54,7 +79,10 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
       ADMIN_ACCESS_KEY: accessKey,
       INVITE_CODE_AUTH_ENABLED: "true",
       BETA_INVITE_ONLY: "true",
-      ALLOWED_ACCOUNT_REGIONS: "us"
+      ALLOWED_ACCOUNT_REGIONS: "us",
+      OPENROUTER_API_KEY: "test-openrouter-key",
+      OPENROUTER_BASE_URL: `http://127.0.0.1:${providerPort}`,
+      OPENROUTER_MODEL: "test/yu-cost-model"
     },
     stdio: ["ignore", "pipe", "pipe"]
   });
@@ -63,6 +91,7 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
   child.stderr.on("data", (chunk) => { serverOutput += chunk; });
   t.after(() => {
     child.kill("SIGTERM");
+    provider.close();
     fs.rmSync(dataDirectory, { recursive: true, force: true });
   });
 
@@ -88,7 +117,10 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
         count: 2,
         maxRedemptions: 1,
         expiresInDays: 14,
-        label: "Founding creator beta"
+        label: "Founding creator beta",
+        commercialType: "paid",
+        currency: "USD",
+        unitAmountMinor: 1900
       }
     });
     assert.equal(inviteCreation.response.status, 201);
@@ -139,12 +171,44 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
     assert.equal(project.response.status, 201);
     assert.equal(project.payload.wallet.resources.storyProjects.remaining, 1);
 
+    const coaching = await request(baseUrl, "/api/writing-assistant", {
+      method: "POST",
+      cookies: [accountCookie],
+      body: { action: "hint", storyLanguage: "en", grade: "3", studentDraft: "A child follows a lantern into a library." }
+    });
+    assert.equal(coaching.response.status, 200);
+
+    const usage = await request(baseUrl, "/api/credits", { cookies: [accountCookie] });
+    assert.equal(usage.payload.usage.resources.storyProjects.consumed, 1);
+    assert.equal(usage.payload.purchases[0].amountMinor, 1900);
+    assert.equal(usage.payload.purchases[0].currency, "USD");
+    assert.equal(Object.hasOwn(usage.payload.recentActivity.find((entry) => entry.type === "consumption"), "costUsd"), false);
+
+    const refreshedUsers = await request(baseUrl, "/api/admin/users?query=Beta%20Creator", { cookies: [adminCookie] });
+    assert.equal(refreshedUsers.payload.users[0].usage.totals.consumedUnits, 1);
+    assert.equal(refreshedUsers.payload.users[0].usage.totals.recordedRevenueMinor.usd, 1900);
+    assert.equal(refreshedUsers.payload.users[0].usage.totals.modelOperations, 1);
+    assert.equal(refreshedUsers.payload.users[0].usage.totals.recordedCostUsd, 0.0123);
+
+    const summary = await request(baseUrl, "/api/admin/summary", { cookies: [adminCookie] });
+    assert.equal(summary.payload.recordedRevenueMinor.usd, 1900);
+    assert.equal(summary.payload.unpricedConsumptions, 0);
+    assert.equal(summary.payload.modelOperations, 1);
+    assert.equal(summary.payload.recordedModelCostUsd, 0.0123);
+
+    const ledger = await request(baseUrl, "/api/admin/ledger", { cookies: [adminCookie] });
+    assert.equal(ledger.payload.sales.length, 1);
+    assert.equal(ledger.payload.modelUsage.length, 1);
+    assert.equal(ledger.payload.modelUsage[0].model, "test/yu-cost-model");
+    assert.equal(ledger.payload.modelUsage[0].costUsd, 0.0123);
+
     const batches = await request(baseUrl, "/api/admin/invites", { cookies: [adminCookie] });
     assert.equal(batches.payload.batches[0].totalRedemptions, 1);
 
     const database = JSON.parse(fs.readFileSync(path.join(dataDirectory, "platform.json"), "utf8"));
     assert.equal(JSON.stringify(database).includes(inviteCode), false, "raw invitation codes must never be stored");
     assert.ok(database.creditTransactions.some((entry) => entry.type === "consumption" && entry.resource === "storyProjects"));
+    assert.equal(database.creditSales[0].amountMinor, 1900);
   } catch (error) {
     error.message += `\nServer output:\n${serverOutput}`;
     throw error;

@@ -9,6 +9,7 @@ const {
   ensureCreditCollections,
   publicPackageCatalog,
   walletFor,
+  usageSummaryFor,
   grantPackage,
   ensureFreePreview,
   reserveCredits,
@@ -216,6 +217,8 @@ function createStore(root) {
     betaInviteRedemptions: [],
     creditTransactions: [],
     creditReservations: [],
+    creditSales: [],
+    modelUsageEvents: [],
     inviteBatches: [],
     inviteCodes: [],
     adminSessions: []
@@ -427,9 +430,46 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const result = store.mutate((database) => {
         ensureCreditCollections(database);
         ensureFreePreview(database, user.id);
+        const wallet = walletFor(database, user.id);
+        const summary = usageSummaryFor(database, user.id);
         return {
-          wallet: walletFor(database, user.id),
-          recentActivity: database.creditTransactions.filter((entry) => entry.userId === user.id).slice(-20).reverse()
+          wallet,
+          usage: {
+            resources: Object.fromEntries(Object.entries(summary.resources).map(([key, item]) => [key, {
+              resource: item.resource,
+              label: item.label,
+              labelZh: item.labelZh,
+              granted: item.granted,
+              consumed: item.consumed,
+              reserved: item.reserved,
+              remaining: item.remaining,
+              lastUsedAt: item.lastUsedAt
+            }])),
+            totals: {
+              grantedUnits: summary.totals.grantedUnits,
+              consumedUnits: summary.totals.consumedUnits,
+              reservedUnits: summary.totals.reservedUnits,
+              remainingUnits: summary.totals.remainingUnits,
+              consumptionOperations: summary.totals.consumptionOperations,
+              lastUsedAt: summary.totals.lastUsedAt
+            }
+          },
+          purchases: database.creditSales.filter((entry) => entry.userId === user.id && entry.status === "recorded").slice(-20).reverse().map((entry) => ({
+            id: entry.id,
+            packageId: entry.packageId,
+            amountMinor: entry.amountMinor,
+            currency: entry.currency,
+            createdAt: entry.createdAt
+          })),
+          recentActivity: database.creditTransactions.filter((entry) => entry.userId === user.id).slice(-30).reverse().map((entry) => ({
+            id: entry.id,
+            resource: entry.resource,
+            delta: entry.delta,
+            type: entry.type,
+            packageId: entry.packageId || "",
+            source: entry.source || "",
+            createdAt: entry.createdAt
+          }))
         };
       });
       sendJson(response, 200, result);
@@ -503,10 +543,19 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const database = store.read();
       ensureCreditCollections(database);
       const consumption = database.creditTransactions.filter((item) => item.type === "consumption");
-      const recordedModelCostUsd = consumption.reduce((total, item) => {
+      const costBearingConsumption = consumption.filter((item) => ["imageGenerations", "videoClips"].includes(item.resource));
+      const modelUsage = database.modelUsageEvents;
+      const recordedModelCostUsd = [...consumption, ...modelUsage].reduce((total, item) => {
         const cost = Number(item.costUsd);
         return total + (Number.isFinite(cost) && cost > 0 ? cost : 0);
       }, 0);
+      const recordedRevenueMinor = database.creditSales.filter((item) => item.status === "recorded").reduce((totals, item) => {
+        const currency = item.currency === "CNY" ? "cny" : "usd";
+        totals[currency] += Math.max(0, Number(item.amountMinor) || 0);
+        return totals;
+      }, { usd: 0, cny: 0 });
+      const costRecords = [...costBearingConsumption, ...modelUsage];
+      const pricedConsumptions = costRecords.filter((item) => item.costUsd != null && Number.isFinite(Number(item.costUsd))).length;
       sendJson(response, 200, {
         accounts: database.users.filter((item) => item.kind === "account").length,
         activeCodes: database.inviteCodes.filter((item) => !item.disabledAt && new Date(item.expiresAt) > new Date() && item.redemptionCount < item.maxRedemptions).length,
@@ -514,6 +563,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         consumed: consumption.length,
         activeReservations: database.creditReservations.filter((item) => item.status === "reserved").length,
         recordedModelCostUsd,
+        recordedRevenueMinor,
+        modelOperations: modelUsage.length,
+        unpricedConsumptions: costRecords.length - pricedConsumptions,
+        costCoveragePercent: costRecords.length ? Math.round((pricedConsumptions / costRecords.length) * 100) : 100,
         packages: publicPackageCatalog()
       });
       return true;
@@ -524,7 +577,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       ensureCreditCollections(database);
       const users = database.users.filter((item) => item.kind === "account").filter((item) => !query || [item.id, item.displayName, item.maskedDestination].some((value) => String(value || "").toLowerCase().includes(query))).slice(0, 100).map((user) => ({
         ...publicUser(user),
-        wallet: walletFor(database, user.id)
+        wallet: walletFor(database, user.id),
+        usage: usageSummaryFor(database, user.id)
       }));
       sendJson(response, 200, { users });
       return true;
@@ -546,6 +600,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         maxRedemptions: Number(body.maxRedemptions || 1),
         expiresAt: addDays(new Date(), expiresInDays),
         label: cleanText(body.label, 100),
+        commercialType: body.commercialType,
+        currency: body.currency,
+        unitAmountMinor: Number(body.unitAmountMinor),
         createdBy: admin.adminSession.id
       }));
       sendJson(response, 201, { batch: publicInviteBatch(store.read(), result.batch), codes: result.rawCodes, warning: "These codes are shown once. Save them before leaving this page." });
@@ -591,7 +648,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       ensureCreditCollections(database);
       sendJson(response, 200, {
         transactions: database.creditTransactions.slice(-200).reverse(),
-        reservations: database.creditReservations.slice(-200).reverse()
+        reservations: database.creditReservations.slice(-200).reverse(),
+        sales: database.creditSales.slice(-200).reverse(),
+        modelUsage: database.modelUsageEvents.slice(-200).reverse()
       });
       return true;
     }
@@ -600,9 +659,43 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     return true;
   }
 
+  function authDeliveryStatus(method) {
+    const hasWebhook = Boolean(cleanText(process.env.AUTH_DELIVERY_WEBHOOK_URL, 800));
+    const hasResendEmail = method === "email" && Boolean(cleanText(process.env.RESEND_API_KEY, 800));
+    if (hasResendEmail) return { configured: true, provider: "resend" };
+    if (hasWebhook) return { configured: true, provider: "webhook" };
+    return { configured: false, provider: process.env.NODE_ENV === "production" ? "not-configured" : "local-preview" };
+  }
+
   async function deliverAuthCode(method, destination, code, challengeId) {
+    const delivery = authDeliveryStatus(method);
+    if (delivery.provider === "resend") {
+      const resendApiUrl = cleanText(process.env.RESEND_API_URL, 800) || "https://api.resend.com/emails";
+      const from = cleanText(process.env.AUTH_EMAIL_FROM, 320);
+      if (!from) throw new Error("The sign-in email sender is not configured.");
+      const replyTo = cleanText(process.env.AUTH_EMAIL_REPLY_TO, 320);
+      const deliveryResponse = await fetch(resendApiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": `storieslens-auth-${challengeId}`
+        },
+        body: JSON.stringify({
+          from,
+          to: [destination],
+          subject: `${code} is your StoriesLens sign-in code`,
+          text: `Your StoriesLens sign-in code is ${code}. It expires in ${CHALLENGE_MINUTES} minutes. If you did not request this code, you can ignore this email.`,
+          html: `<div style="font-family:Arial,sans-serif;color:#102824;line-height:1.6"><p>Your StoriesLens sign-in code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:6px;margin:16px 0">${code}</p><p>This code expires in ${CHALLENGE_MINUTES} minutes. If you did not request it, you can ignore this email.</p></div>`,
+          ...(replyTo ? { reply_to: replyTo } : {})
+        })
+      });
+      if (!deliveryResponse.ok) throw new Error("The sign-in email could not be delivered. Please check the address and try again.");
+      return { delivered: true, provider: "resend" };
+    }
+
     const webhookUrl = cleanText(process.env.AUTH_DELIVERY_WEBHOOK_URL, 800);
-    if (!webhookUrl) return false;
+    if (!webhookUrl) return { delivered: false, provider: delivery.provider };
     const deliveryResponse = await fetch(webhookUrl, {
       method: "POST",
       headers: {
@@ -612,7 +705,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       body: JSON.stringify({ method, destination, code, challengeId, product: "StoriesLens" })
     });
     if (!deliveryResponse.ok) throw new Error("The sign-in code could not be delivered.");
-    return true;
+    return { delivered: true, provider: "webhook" };
   }
 
   async function handleAuth(request, response, requestUrl) {
@@ -708,8 +801,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return true;
       }
       const isProduction = process.env.NODE_ENV === "production";
-      if (isProduction && !process.env.AUTH_DELIVERY_WEBHOOK_URL) {
-        sendJson(response, 503, { error: "Secure sign-in delivery is not configured yet." });
+      const deliveryStatus = authDeliveryStatus(method);
+      if (isProduction && !deliveryStatus.configured) {
+        sendJson(response, 503, { error: method === "email" ? "Email sign-in delivery is not configured yet." : "SMS sign-in delivery is not configured yet." });
         return true;
       }
       const code = String(crypto.randomInt(100000, 999999));
@@ -728,9 +822,13 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         database.authChallenges = database.authChallenges.filter((item) => new Date(item.expiresAt) > new Date() && !item.usedAt).slice(-1000);
         database.authChallenges.push(challenge);
       });
+      let deliveryResult;
       try {
-        await deliverAuthCode(method, destination, code, challenge.id);
+        deliveryResult = await deliverAuthCode(method, destination, code, challenge.id);
       } catch (error) {
+        store.mutate((database) => {
+          database.authChallenges = database.authChallenges.filter((item) => item.id !== challenge.id);
+        });
         sendJson(response, 502, { error: error.message });
         return true;
       }
@@ -738,7 +836,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         challengeId: challenge.id,
         maskedDestination: challenge.maskedDestination,
         expiresInSeconds: CHALLENGE_MINUTES * 60,
-        ...(isProduction ? {} : { devCode: code })
+        delivery: deliveryResult.delivered ? "sent" : "local-preview",
+        ...(!isProduction && !deliveryResult.delivered ? { devCode: code } : {})
       });
       return true;
     }
@@ -851,6 +950,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         database.creditReservations.forEach((entry) => {
           if (entry.userId === current.user.id) entry.userId = account.id;
         });
+        database.modelUsageEvents.forEach((entry) => {
+          if (entry.userId === current.user.id) entry.userId = account.id;
+        });
+        database.creditSales.forEach((entry) => {
+          if (entry.userId === current.user.id) entry.userId = account.id;
+        });
         if (databaseInvite) {
           redeemInvite(database, { rawCode: rawInviteCode, userId: account.id, userRegion: requestedRegion.primaryRegion });
         } else if (inviteAccess && !database.betaInviteRedemptions.some((item) => item.accountId === account.id && item.inviteFingerprint === inviteAccess.inviteFingerprint)) {
@@ -922,6 +1027,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         database.betaInviteRedemptions = database.betaInviteRedemptions.filter((item) => item.accountId !== current.user.id);
         database.creditTransactions = database.creditTransactions.filter((item) => item.userId !== current.user.id);
         database.creditReservations = database.creditReservations.filter((item) => item.userId !== current.user.id);
+        database.modelUsageEvents = database.modelUsageEvents.filter((item) => item.userId !== current.user.id);
       });
       clearSessionCookie(request, response);
       sendJson(response, 200, { deleted: true });
@@ -1406,10 +1512,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     }
 
     if (requestUrl.pathname === "/api/platform/status" && request.method === "GET") {
+      const emailDelivery = authDeliveryStatus("email");
+      const phoneDelivery = authDeliveryStatus("phone");
       sendJson(response, 200, {
         features: {
           localCloudSave: true,
-          emailPhoneAuth: process.env.NODE_ENV !== "production" || Boolean(process.env.AUTH_DELIVERY_WEBHOOK_URL),
+          emailPhoneAuth: process.env.NODE_ENV !== "production" || emailDelivery.configured || phoneDelivery.configured,
           inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true",
           wechatAuth: Boolean(process.env.WECHAT_APP_ID && process.env.WECHAT_APP_SECRET),
           pushDelivery: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
@@ -1421,6 +1529,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         mediaStorage: mediaStorage.status(),
         registrationRegions: configuredRegistrationRegions(),
         allowedInternationalCountries: allowedInternationalCountries(),
+        authDelivery: { email: emailDelivery.provider, phone: phoneDelivery.provider },
         beta: { inviteOnly: process.env.BETA_INVITE_ONLY === "true", inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true", adultAccountOwnerOnly: process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" },
         region: process.env.STORIESLENS_REGION || "local",
         dataMode: process.env.NODE_ENV === "production" ? "production" : "local-development"
@@ -1489,6 +1598,24 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     },
     release(reservationId, reason) {
       return store.mutate((database) => releaseReservation(database, { reservationId, reason }));
+    },
+    recordUsage(request, response, { operation, model, costUsd = null, providerUsage = null }) {
+      const { user } = sessionFor(request, response);
+      return store.mutate((database) => {
+        ensureCreditCollections(database);
+        const event = {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          operation: cleanText(operation, 80) || "model-call",
+          model: cleanText(model, 160),
+          costUsd: costUsd != null && Number.isFinite(Number(costUsd)) ? Number(costUsd) : null,
+          providerUsage: safeJsonValue(providerUsage, 12_000),
+          createdAt: nowIso()
+        };
+        database.modelUsageEvents.push(event);
+        database.modelUsageEvents = database.modelUsageEvents.slice(-50_000);
+        return event;
+      });
     }
   };
 
