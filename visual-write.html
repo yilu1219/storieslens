@@ -1210,6 +1210,7 @@
     </main>
 
     <script src="script.js"></script>
+    <script src="spark-handoff.js?v=20260917-story-reference-1"></script>
     <script src="safety-client.js"></script>
     <script src="analytics.js"></script>
     <script>
@@ -1993,13 +1994,26 @@
             throw new Error("API calls need the local server. Run npm start and open http://localhost:3000/visual-write.html.");
           }
 
+          let storyReference = null;
+          if (mode === "free") {
+            try {
+              const candidate = await window.StoriesLensSparkHandoff?.load();
+              if (candidate?.purpose === "story-reference" && /^data:image\/(?:webp|png|jpeg);base64,/.test(candidate.dataUrl || "")) storyReference = candidate;
+            } catch (_error) {
+              storyReference = null;
+            }
+          }
           const response = await fetch("/api/generate-image", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               prompt: buildImagePrompt(mode),
               aspectRatio: "16:9",
-              assetType: mode === "assignment" ? "SCENE_IMAGE" : "FREE_CREATE_IMAGE"
+              assetType: mode === "assignment" ? "SCENE_IMAGE" : "FREE_CREATE_IMAGE",
+              projectId: storyReference?.projectId || "",
+              referenceImageUrls: storyReference ? [storyReference.dataUrl] : [],
+              personalPhoto: Boolean(storyReference?.personalPhoto),
+              personalPhotoConsentId: storyReference?.personalPhotoConsentId || ""
             })
           });
 

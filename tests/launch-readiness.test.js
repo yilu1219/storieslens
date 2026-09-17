@@ -12,6 +12,9 @@ function readyEnvironment() {
     PUBLIC_BASE_URL: "https://www.storieslens.com",
     ALLOWED_ACCOUNT_REGIONS: "cn,us,intl",
     MEDIA_REQUIRED_REGIONS: "cn,us,intl",
+    CHINA_ARK_API_KEY: "server-only-ark-key",
+    CHINA_ARK_TEXT_MODEL: "doubao-seed-2-0-lite-260215",
+    CHINA_ARK_IMAGE_MODEL: "doubao-seedream-5-0-lite-260128",
     AUTH_DELIVERY_WEBHOOK_URL: "https://delivery.example.test/send",
     AUTH_DELIVERY_WEBHOOK_SECRET: "private-secret",
     BETA_INVITE_ONLY: "true",
@@ -55,6 +58,13 @@ test("international launch cannot silently mean every country", () => {
   env.ALLOWED_INTL_COUNTRY_CODES = "";
   const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
   assert(report.required.some((item) => item.id === "country-allowlist" && !item.ready));
+});
+
+test("China launch requires both the domestic text and image route", () => {
+  const env = readyEnvironment();
+  delete env.CHINA_ARK_IMAGE_MODEL;
+  const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(report.required.some((item) => item.id === "china-ai-route" && !item.ready));
 });
 
 test("OpenRouter can satisfy the external review gate when it is the configured vision provider", () => {

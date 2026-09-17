@@ -17,15 +17,15 @@
   <body>
     <main class="success">
       <section class="success-card">
-        <span class="check" aria-hidden="true">✓</span>
+        <span class="check" aria-hidden="true" data-payment-icon>···</span>
         <p class="eyebrow"><span></span> Thank you, creator</p>
-        <h1>Your creator’s next chapter starts here.</h1>
-        <p>Stripe will send the purchaser a receipt. StoriesLens will verify the payment before activating or delivering the purchased project.</p>
-        <a class="button" href="visual-write.html?mode=free&from=start">Return to the Story Studio →</a>
-        <small>This page alone is not proof of payment. If you opened it directly, no purchase was made.</small>
+        <h1 data-payment-title>Verifying your payment…</h1>
+        <p data-payment-copy>Stripe is securely confirming the purchase. Your allowance appears only after the signed payment notice reaches StoriesLens.</p>
+        <a class="button" href="my-stories.html" data-payment-action>View my allowance →</a>
+        <small data-payment-note>This page alone is not proof of payment. Opening it directly never adds allowance.</small>
       </section>
     </main>
     <script src="analytics.js"></script>
-    <script>window.StoriesLensAnalytics?.track("payment_return_viewed",{offer:new URLSearchParams(location.search).get("offer")||"unknown"});</script>
+    <script src="payment-success.js?v=20260917-1"></script>
   </body>
 </html>

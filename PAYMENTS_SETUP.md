@@ -2,7 +2,7 @@
 
 ## 当前结论
 
-首发采用 Stripe Payment Links，不在 StoriesLens 页面里处理银行卡信息。网站已经具备安全的跳转接口；在环境变量为空时，系统会明确提示“结账尚未接通”，不会假装成交或误收款。
+首发采用 Stripe 官方 Checkout Sessions API，不在 StoriesLens 页面里处理银行卡信息。网站服务器为每位已登录的成人账户创建独立订单和 Stripe Checkout Session；只有 Stripe 官方 webhook 通过原始请求签名验证，且账户、套餐、金额、币种和运行模式全部匹配后，才自动发放额度。成功页本身永远不能发额度。
 
 首发将自助产品保持为按项目付费，不做无限量订阅：
 
@@ -13,12 +13,13 @@
 
 Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决策里。
 
-## 为什么先用 Payment Links
+## 为什么使用官方 Checkout API
 
-- 不需要先开发完整购物车或保存银行卡资料。
-- Stripe 托管支付页面、收据和常见付款方式。
-- 每个商品只有一个受控链接，当前服务器只允许跳转到 `buy.stripe.com` 或 `checkout.stripe.com`，避免开放重定向。
-- 先验证真实付款，再决定是否开发账户、订阅、优惠券与自动授权。
+- StoriesLens 不接触或保存银行卡资料，Stripe 托管收款页面、收据和符合条件的付款方式。
+- 每笔 Checkout Session 都绑定内部订单号、成人账户、地区、套餐和精确金额。
+- `checkout.session.completed` 与延迟支付成功通知只有通过 `Stripe-Signature` 原始请求验签后才履约。
+- Stripe 重复发送同一个 event 或用户反复刷新成功页，都不会重复加额度。
+- 退款事件会标记到后台等待人工审核，不会静默删除已经使用的创作成果。
 
 ## Stripe 中需要创建的商品
 
@@ -58,20 +59,30 @@ Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决
 - 描述：`One teacher-controlled publishing project for up to 30 student works, with a dated cover and digital class-book layout.`
 - 成功页：`https://storieslens.com/payment-success.html?offer=teacher-classroom`
 
-## 把链接接入网站
+## 把官方 API 接入网站
 
-将 Stripe 生成的 `https://buy.stripe.com/...` 链接写入部署环境变量：
+在 Stripe Dashboard 的测试模式取得 Secret key，并创建 webhook endpoint：
+
+`https://www.storieslens.com/api/stripe/webhook`
+
+订阅至少以下事件：
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`
+- `checkout.session.expired`
+- `charge.refunded`
+
+然后把 Secret key 与 webhook signing secret 写入 Railway：
 
 ```text
-STRIPE_STORY_PASS_URL=https://buy.stripe.com/...
-STRIPE_COCREATE_PACK_URL=https://buy.stripe.com/...
-STRIPE_TEACHER_CLASSROOM_URL=https://buy.stripe.com/...
-STRIPE_GUIDED_SQUAD_URL=https://buy.stripe.com/...
-STRIPE_MOVIE_30_URL=https://buy.stripe.com/...
-STRIPE_MOVIE_60_URL=https://buy.stripe.com/...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_LIVE_MODE=false
+STRIPE_API_BASE_URL=https://api.stripe.com
 ```
 
-本地测试时，也可以复制 `.env.example` 为 `.env` 后填写。不要把密钥、后台登录信息或真实付款数据提交进 Git。
+先保持 `STRIPE_LIVE_MODE=false` 跑完测试卡、重复 webhook、延迟付款、失败、取消、退款和收据。正式开放时再同时切换到 `sk_live_...`、正式 webhook 的 `whsec_...`，并把 `STRIPE_LIVE_MODE=true`。不要把密钥、后台登录信息或真实付款数据提交进 Git。
 
 ## 上线收款前的硬门槛
 
@@ -79,7 +90,7 @@ STRIPE_MOVIE_60_URL=https://buy.stripe.com/...
 - 由家长或法定监护人完成购买；儿童不输入付款资料。
 - 用 Stripe 测试模式完整跑通一次：成功、取消、失败、退款、收据。
 - 确认你可以人工履行前 10 个订单，再开放真实付款。
-- 付款成功只代表 Stripe 已收款；后续自动解锁必须使用服务端 webhook 验签，不能只相信成功页 URL。
+- 确认 Railway 的持久化卷正常；订单、webhook 幂等记录、额度流水不能存入临时文件系统。
 
 ## 最小成交实验
 

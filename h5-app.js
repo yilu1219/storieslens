@@ -873,7 +873,26 @@
       creatorName: creatorName(),
       outputFormat: selectedOutputFormat || "book"
     }));
+    persistStoryReferenceHandoff().catch(() => {});
     return dna;
+  }
+
+  async function persistStoryReferenceHandoff() {
+    if (!window.StoriesLensSparkHandoff) return;
+    if (!selectedArtworkData) {
+      await window.StoriesLensSparkHandoff.clear();
+      return;
+    }
+    await window.StoriesLensSparkHandoff.save({
+      purpose: "story-reference",
+      dataUrl: selectedArtworkData,
+      mediaUrl: selectedArtwork?.mediaUrl || "",
+      name: selectedArtwork?.name || "Story reference",
+      personalPhoto: Boolean(selectedArtwork?.personalPhoto),
+      personalPhotoConsentId: selectedArtwork?.personalPhotoConsentId || "",
+      projectId: savedProjectId || "",
+      createdAt: new Date().toISOString()
+    });
   }
 
   async function persistApprovedArtwork() {
@@ -1450,7 +1469,12 @@
   });
 
   $("[data-story-title]").addEventListener("input", () => saveLocalDraft($("[data-story-draft]").value.trim()));
-  $("[data-continue]").addEventListener("click", () => saveLocalDraft($("[data-story-draft]").value.trim()));
+  $("[data-continue]").addEventListener("click", async (event) => {
+    event.preventDefault();
+    saveLocalDraft($("[data-story-draft]").value.trim());
+    try { await persistStoryReferenceHandoff(); } catch (_error) { /* The saved private project remains available. */ }
+    location.href = event.currentTarget.href;
+  });
   $("[data-checkout]").addEventListener("click", () => {
     saveLocalDraft($("[data-story-draft]").value.trim());
     window.StoriesLensAnalytics?.track("first_story_page_checkout_clicked", { offer: "story-pass", projectId: savedProjectId || "local" });

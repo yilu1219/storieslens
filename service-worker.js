@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v81-personal-photo-governance-20260917";
+const VERSION = "storieslens-h5-v83-stripe-checkout-20260917";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -22,6 +22,7 @@ const APP_SHELL = [
   "/family-flow.css?v=20260916-6",
   "/chinese-studio.css?v=20260916-5",
   "/h5-app.js?v=20260917-photo-governance-1",
+  "/spark-handoff.js?v=20260917-story-reference-1",
   "/writing-import.js?v=20260916-2",
   "/yu-profile.css?v=20260915-3",
   "/yu-profile.js?v=20260915-3",
@@ -34,6 +35,7 @@ const APP_SHELL = [
   "/platform-client.js",
   "/login.css?v=20260915-1",
   "/login.js?v=20260915-2",
+  "/payment-success.js?v=20260917-1",
   "/my-stories.js?v=20260917-photo-governance-1",
   "/safety-client.js",
   "/artwork-upload-safety.js?v=20260913-1",

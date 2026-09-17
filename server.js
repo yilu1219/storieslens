@@ -88,54 +88,6 @@ function discardUnsafeLocalImage(imageUrl) {
   if (filePath?.startsWith(generatedRoot) && fs.existsSync(filePath)) fs.unlinkSync(filePath);
 }
 
-const checkoutOffers = {
-  "story-pass": {
-    name: "Story Pass",
-    price: "$19",
-    envKey: "STRIPE_STORY_PASS_URL",
-    fallbackUrl: "/beta-interest.html?offer=story-pass"
-  },
-  "cocreate-pack": {
-    name: "Invited Co-creation Pack",
-    price: "$39",
-    envKey: "STRIPE_COCREATE_PACK_URL",
-    fallbackUrl: "/beta-interest.html?offer=cocreate-pack"
-  },
-  "teacher-classroom": {
-    name: "Teacher Classroom Project",
-    price: "$79",
-    envKey: "STRIPE_TEACHER_CLASSROOM_URL",
-    fallbackUrl: "/beta-interest.html?offer=teacher-classroom"
-  },
-  "guided-squad": {
-    name: "Guided Story Squad seat deposit",
-    price: "$49",
-    envKey: "STRIPE_GUIDED_SQUAD_URL",
-    fallbackUrl: "/beta-interest.html?offer=guided-squad"
-  },
-  "movie-30": {
-    name: "30-second Movie Pack",
-    price: "$39",
-    envKey: "STRIPE_MOVIE_30_URL",
-    fallbackUrl: "/beta-interest.html?offer=movie-30"
-  },
-  "movie-60": {
-    name: "60-second Movie Pack",
-    price: "$69",
-    envKey: "STRIPE_MOVIE_60_URL",
-    fallbackUrl: "/beta-interest.html?offer=movie-60"
-  }
-};
-
-function isTrustedStripeCheckoutUrl(value) {
-  try {
-    const checkoutUrl = new URL(String(value || ""));
-    return checkoutUrl.protocol === "https:" && ["buy.stripe.com", "checkout.stripe.com"].includes(checkoutUrl.hostname);
-  } catch {
-    return false;
-  }
-}
-
 function resolveRequestPath(urlPathname) {
   const decodedPath = decodeURIComponent(urlPathname);
   const relativePath = decodedPath === "/" ? "index.html" : decodedPath.replace(/^\/+/, "");
@@ -318,40 +270,6 @@ async function handleWritingImageExtraction(request, response) {
   }
 }
 
-async function handleCheckoutLink(request, response) {
-  if (request.method !== "POST") {
-    sendJson(response, 405, { error: "Method not allowed" });
-    return;
-  }
-
-  try {
-    const body = await readJsonBody(request);
-    const offerId = String(body.offer || "");
-    const offer = checkoutOffers[offerId];
-    if (!offer) {
-      sendJson(response, 400, { error: "Unknown offer" });
-      return;
-    }
-
-    const checkoutUrl = process.env[offer.envKey] || "";
-    if (!isTrustedStripeCheckoutUrl(checkoutUrl)) {
-      sendJson(response, 503, {
-        error: "Secure checkout is not connected yet.",
-        offer: { id: offerId, name: offer.name, price: offer.price },
-        fallbackUrl: offer.fallbackUrl
-      });
-      return;
-    }
-
-    sendJson(response, 200, {
-      checkoutUrl,
-      offer: { id: offerId, name: offer.name, price: offer.price }
-    });
-  } catch (error) {
-    sendJson(response, 400, { error: error.message || "Checkout request failed" });
-  }
-}
-
 const imageTasks = new Map();
 const videoJobs = new Map();
 
@@ -381,6 +299,19 @@ function getImageConfig() {
     openRouterImageApiUrl: getConfigValue("OPENROUTER_IMAGE_API_URL", "openrouter.imageApiUrl") || `${baseUrl}/images`,
     siteUrl: process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
     siteTitle: process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+  };
+}
+
+function getChinaImageConfig() {
+  const baseUrl = String(process.env.CHINA_ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3").replace(/\/+$/, "");
+  return {
+    provider: "VOLCENGINE_ARK",
+    model: process.env.CHINA_ARK_IMAGE_MODEL || "doubao-seedream-5-0-lite-260128",
+    size: process.env.CHINA_ARK_IMAGE_SIZE || "2K",
+    apiKey: process.env.CHINA_ARK_API_KEY || "",
+    imageApiUrl: process.env.CHINA_ARK_IMAGE_API_URL || `${baseUrl}/images/generations`,
+    costCny: Number(process.env.CHINA_ARK_IMAGE_COST_CNY || 0.22),
+    cnyPerUsd: Number(process.env.CHINA_CNY_PER_USD || 7.2)
   };
 }
 
@@ -832,7 +763,51 @@ class OpenRouterImageProvider {
   }
 }
 
-function createImageProvider() {
+class VolcengineArkImageProvider {
+  constructor(config) {
+    this.config = config;
+  }
+
+  providerName() {
+    return "VOLCENGINE_ARK";
+  }
+
+  async generate(imageRequest) {
+    if (!this.config.apiKey) {
+      throw Object.assign(new Error("China image generation is not configured yet."), { statusCode: 503, code: "CHINA_IMAGE_ROUTE_UNAVAILABLE" });
+    }
+    const payload = {
+      model: this.config.model,
+      prompt: imageRequest.prompt,
+      size: this.config.size,
+      response_format: "url",
+      sequential_image_generation: "disabled",
+      stream: false,
+      watermark: false
+    };
+    if (imageRequest.referenceImageUrls.length === 1) payload.image = imageRequest.referenceImageUrls[0];
+    else if (imageRequest.referenceImageUrls.length > 1) payload.image = imageRequest.referenceImageUrls;
+
+    const upstreamResponse = await fetch(this.config.imageApiUrl, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${this.config.apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const upstreamData = await upstreamResponse.json().catch(() => ({}));
+    if (!upstreamResponse.ok) {
+      const message = upstreamData?.error?.message || upstreamData?.message || `China image generation failed with status ${upstreamResponse.status}`;
+      throw Object.assign(new Error(message), { statusCode: upstreamResponse.status >= 500 ? 502 : 422, code: "CHINA_IMAGE_GENERATION_FAILED" });
+    }
+    const firstImage = extractImageCandidate(upstreamData);
+    const imageUrl = firstImage.url || (firstImage.b64_json ? saveBase64Image(firstImage.b64_json, imageRequest) : "");
+    if (!imageUrl) throw new Error("China image generation finished without an image URL.");
+    const costUsd = this.config.costCny > 0 && this.config.cnyPerUsd > 0 ? Number((this.config.costCny / this.config.cnyPerUsd).toFixed(6)) : null;
+    return { success: true, imageUrl, downloadUrl: imageUrl, taskId: upstreamData.id || null, costUsd };
+  }
+}
+
+function createImageProvider(region = "") {
+  if (region === "cn") return new VolcengineArkImageProvider(getChinaImageConfig());
   const config = getImageConfig();
   const providerName = String(config.provider || "OPENROUTER").toUpperCase();
   const ImageProvider = {
@@ -847,7 +822,7 @@ function createImageProvider() {
 }
 
 async function runImageTask(task) {
-  const provider = createImageProvider();
+  const provider = createImageProvider(task.providerRegion);
   task.status = "PROCESSING";
   task.updateTime = new Date().toISOString();
 
@@ -884,12 +859,14 @@ async function handleGenerateImage(request, response) {
 
   let creditReservation = null;
   try {
-    const body = await readJsonBody(request);
+    const body = await readJsonBody(request, 12_000_000);
+    if (body.personalPhoto === true) handlePlatformApi.creditManager.assertPersonalPhotoConsent(request, response, body.personalPhotoConsentId);
     const squadContext = body.squadId && (body.cardId || body.squadAnchor === true)
       ? handlePlatformApi.creditManager.squadGenerationContext(request, response, { squadId: body.squadId, cardId: body.cardId, anchor: body.squadAnchor === true })
       : null;
     const payerId = squadContext?.payerId || handlePlatformApi.creditManager.ownerId(request, response);
-    const provider = createImageProvider();
+    const providerRegion = handlePlatformApi.creditManager.accountRegion(request, response);
+    const provider = createImageProvider(providerRegion);
     const styleNames = {
       "storybook-watercolor": "premium luminous watercolor storybook illustration",
       "ink-watercolor": "refined Chinese ink-and-watercolor story illustration",
@@ -951,7 +928,8 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
 
   let creditReservation = null;
   try {
-    const body = await readJsonBody(request);
+    const body = await readJsonBody(request, 12_000_000);
+    if (body.personalPhoto === true) handlePlatformApi.creditManager.assertPersonalPhotoConsent(request, response, body.personalPhotoConsentId);
     const taskId = Date.now();
     const imageRequest = createImageGenerationRequest(body, {
       projectId: body.projectId || "project",
@@ -974,6 +952,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
       status: "PENDING",
       partId,
       imageRequest,
+      providerRegion: handlePlatformApi.creditManager.accountRegion(request, response),
       creditReservationId: creditReservation.id,
       imageUrl: "",
       errorMessage: "",
@@ -1389,11 +1368,6 @@ const server = http.createServer(async (request, response) => {
   if (requestUrl.pathname === "/api/writing-assistant") {
     if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "writing-assistant", limit: 120, windowMs: 60 * 60 * 1000 })) return;
     handleWritingAssistant(request, response);
-    return;
-  }
-
-  if (requestUrl.pathname === "/api/checkout-link") {
-    handleCheckoutLink(request, response);
     return;
   }
 

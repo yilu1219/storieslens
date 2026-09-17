@@ -196,7 +196,7 @@ assert(!createHtml.includes("scrollIntoView"), "Upload should not scroll to late
 ].forEach((token) => assert(groupProjectStudioHtml?.includes(token), `Movie Editor should include: ${token}`));
 
 assert(read("platform-api.js").includes("export\\/(docx|pdf)"), "Private project API should export real Word and PDF books");
-assert(serverJs.includes("/api/checkout-link"), "Static server should expose an allowlisted checkout-link route");
+assert(read("platform-api.js").includes('"/api/checkout-link"'), "Account platform should expose a server-created Stripe Checkout route");
 assert(serverJs.includes("/api/extract-writing"), "Static server should expose a privacy-reviewed writing-photo extraction route");
 assert(read("writing-import.js").includes("extractWritingFromImage"), "Existing-writing import should support photo-to-text extraction");
 assert(read("writing-import.js").includes("removeMetadata(file)"), "Writing photos should remove metadata locally before the privacy review pipeline");
@@ -208,8 +208,8 @@ assert(envExample.includes("OPENAI_MODERATION_MODEL=omni-moderation-latest"), "E
 assert(startHtml.includes("data-age-group"), "Creator setup should collect an under-18 versus adult age group");
 assert(startHtml.includes("data-supervision-confirm"), "Under-18 setup should require adult supervision confirmation");
 assert(safetyClientJs.includes("StoriesLensSafety"), "Client flows should provide immediate safe-content feedback");
-assert(serverJs.includes("buy.stripe.com"), "Checkout should only redirect to a trusted Stripe host");
-assert(envExample.includes("STRIPE_STORY_PASS_URL="), "Environment example should document the Story Pass Payment Link");
+assert(read("stripe-payments.js").includes('checkout.stripe.com') && read("stripe-payments.js").includes("metadata[order_id]"), "Checkout should accept only Stripe-hosted sessions bound to a server order");
+assert(envExample.includes("STRIPE_SECRET_KEY=") && envExample.includes("STRIPE_WEBHOOK_SECRET="), "Environment example should document signed Stripe fulfillment");
 
 assert.strictEqual(packageJson.scripts?.start, "node server.js", "Railway/Railpack should have a start command");
 assert.strictEqual(packageJson.main, "server.js", "Package entry should point to the static server");
@@ -561,7 +561,8 @@ assert(betaInterestHtml.includes("pricing_intent_recorded"), "Pricing test shoul
 assert(indexHtml.includes('href="app.html"'), "Homepage family entrance should lead directly to the mobile creation flow");
 assert(checkoutHtml.includes("Creator or guardian checkout"), "Checkout should support adult creators and guardian purchases for minors");
 assert(checkoutHtml.includes("No subscription"), "Checkout should clarify that Story Pass is not a subscription");
-assert(checkoutJs.includes('fetch("/api/checkout-link"'), "Checkout should request a server-approved Payment Link");
+assert(checkoutJs.includes('fetch("/api/checkout-link"'), "Checkout should request a server-created Stripe Checkout Session");
+assert(read("payment-success.js").includes("/api/payments/checkout-status"), "The return page should verify server-side fulfillment instead of trusting its URL");
 assert(ycDemoHtml.includes("90-second founder demo"), "Founder demo should provide a timed pitch route");
 assert(ycDemoHtml.includes("fictional demonstration data"), "Founder demo should clearly disclose fictional demo data");
 assert(ycDemoHtml.includes("founder_demo_started"), "Founder demo should track demo activation separately from user traction");

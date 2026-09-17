@@ -120,6 +120,9 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(read("my-stories.js").includes("registrationRegions") && read("my-stories.js").includes("option.disabled"), "unopened regions should be visibly unavailable during a staged pilot");
   assert(api.includes("regionProfile") && api.includes("regionConsentVersion") && api.includes("regionConfirmedAt"), "the account should persist an explicit region decision and consent version");
   assert(api.includes('aiProviderRoute: "china"') && api.includes('aiProviderRoute: "us"') && api.includes('aiProviderRoute: "international"'), "the backend should keep provider-neutral regional AI routes");
+  assert(server.includes("VolcengineArkImageProvider") && server.includes("CHINA_ARK_IMAGE_MODEL") && server.includes('createImageProvider(providerRegion)'), "signed-in China accounts should use the domestic Ark image route");
+  assert(api.includes("assertPersonalPhotoConsent") && api.includes("PERSONAL_PHOTO_CONSENT_REQUIRED") && server.includes("creditManager.assertPersonalPhotoConsent"), "personal-photo AI generation must revalidate the active adult consent on the server");
+  assert(read("visual-write.html").includes("story-reference") && read("visual-write.html").includes("personalPhotoConsentId"), "the sanitized reference should carry into illustration generation without asking for a second upload");
   assert(library.includes("never change it from your IP alone") && !api.includes("cf-ipcountry"), "IP geolocation must not silently choose a data region");
   assert.strictEqual(manifest.display, "standalone", "PWA should install in standalone mode");
   assert.strictEqual(manifest.start_url, "/app.html?source=pwa", "installed PWA should open the formal H5 product");

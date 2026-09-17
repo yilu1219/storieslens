@@ -7,6 +7,7 @@ const { createRegionalObjectStorage } = require("./regional-object-storage");
 const { assertLaunchReady, evaluateLaunchReadiness } = require("./launch-readiness");
 const { createRequestRateLimiter } = require("./request-rate-limit");
 const { createGrowthReport, REPORT_VERSION } = require("./book-recommendations");
+const { STRIPE_OFFERS, createCheckoutSession, verifyWebhookSignature } = require("./stripe-payments");
 const {
   ensureCreditCollections,
   publicPackageCatalog,
@@ -34,14 +35,11 @@ const DEFAULT_ACCOUNT_MEDIA_QUOTA_BYTES = 250 * 1024 * 1024;
 const REGION_CONSENT_VERSION = "2026-09-14";
 const ADMIN_SESSION_HOURS = 12;
 
-const offerCatalog = {
-  "story-pass": { name: "Story Pass", price: "$19", packageId: "creator-story", envKey: "STRIPE_STORY_PASS_URL", fallbackUrl: "/beta-interest.html?offer=story-pass" },
-  "cocreate-pack": { name: "Invited Co-creation Pack", price: "$39", packageId: "invite-cocreate", envKey: "STRIPE_COCREATE_PACK_URL", fallbackUrl: "/beta-interest.html?offer=cocreate-pack" },
-  "teacher-classroom": { name: "Teacher Classroom Project", price: "$79", packageId: "teacher-classroom", envKey: "STRIPE_TEACHER_CLASSROOM_URL", fallbackUrl: "/beta-interest.html?offer=teacher-classroom" },
-  "guided-squad": { name: "Guided Story Squad", price: "$49", envKey: "STRIPE_GUIDED_SQUAD_URL", fallbackUrl: "/beta-interest.html?offer=guided-squad" },
-  "movie-30": { name: "30-second Movie Pack", price: "$39", packageId: "movie-30", envKey: "STRIPE_MOVIE_30_URL", fallbackUrl: "/beta-interest.html?offer=movie-30" },
-  "movie-60": { name: "60-second Movie Pack", price: "$69", packageId: "movie-60", envKey: "STRIPE_MOVIE_60_URL", fallbackUrl: "/beta-interest.html?offer=movie-60" }
-};
+const offerCatalog = Object.fromEntries(Object.entries(STRIPE_OFFERS).map(([id, offer]) => [id, {
+  ...offer,
+  price: `$${(offer.amountMinor / 100).toFixed(0)}`,
+  fallbackUrl: `/beta-interest.html?offer=${id}`
+}]));
 
 function nowIso() {
   return new Date().toISOString();
@@ -65,6 +63,24 @@ function cleanUrl(value) {
   if (/^https:\/\//i.test(url)) return url;
   if (/^\/(?:api\/media|public\/generated|assets)\//.test(url)) return url;
   return "";
+}
+
+function readRawRequest(request, maxBytes = 1_000_000) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    request.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        reject(Object.assign(new Error("Request body is too large."), { statusCode: 413, code: "BODY_TOO_LARGE" }));
+        request.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    request.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    request.on("error", reject);
+  });
 }
 
 function safeJsonValue(value, maxLength = 20_000) {
@@ -221,6 +237,7 @@ function createStore(root) {
     creditTransactions: [],
     creditReservations: [],
     creditSales: [],
+    stripeEvents: [],
     modelUsageEvents: [],
     inviteBatches: [],
     inviteCodes: [],
@@ -547,6 +564,228 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       totalRedemptions: codes.reduce((total, item) => total + Number(item.redemptionCount || 0), 0),
       availableRedemptions: codes.reduce((total, item) => total + Math.max(0, Number(item.maxRedemptions || 0) - Number(item.redemptionCount || 0)), 0)
     };
+  }
+
+  function stripeConfigured() {
+    const secretKey = cleanText(process.env.STRIPE_SECRET_KEY, 300);
+    const webhookSecret = cleanText(process.env.STRIPE_WEBHOOK_SECRET, 300);
+    const liveExpected = process.env.STRIPE_LIVE_MODE === "true";
+    const keyMatchesMode = liveExpected ? secretKey.startsWith("sk_live_") : secretKey.startsWith("sk_test_");
+    return { secretKey, webhookSecret, liveExpected, ready: keyMatchesMode && webhookSecret.startsWith("whsec_") };
+  }
+
+  function ensureStripeCollections(database) {
+    database.stripeEvents ||= [];
+    database.orders ||= [];
+    ensureCreditCollections(database);
+  }
+
+  function fulfillStripeSession(database, event, session) {
+    ensureStripeCollections(database);
+    if (database.stripeEvents.some((item) => item.id === event.id)) return { duplicate: true };
+    const orderId = cleanId(session?.metadata?.order_id || session?.client_reference_id);
+    const order = database.orders.find((item) => item.id === orderId && item.paymentProvider === "stripe");
+    const offer = order ? offerCatalog[order.offerId] : null;
+    const expectedLiveMode = process.env.STRIPE_LIVE_MODE === "true";
+    const sessionPaymentIntent = typeof session?.payment_intent === "string" ? session.payment_intent : session?.payment_intent?.id || "";
+    const amountMatches = Number(session?.amount_total) === Number(offer?.amountMinor);
+    const currencyMatches = String(session?.currency || "").toLowerCase() === String(offer?.currency || "").toLowerCase();
+    const metadataMatches = Boolean(order && offer
+      && session?.client_reference_id === order.id
+      && session?.metadata?.account_id === order.ownerId
+      && session?.metadata?.offer_id === order.offerId
+      && String(session?.metadata?.package_id || "") === String(offer.packageId || ""));
+    const liveModeMatches = Boolean(session?.livemode) === expectedLiveMode;
+    const paid = ["paid", "no_payment_required"].includes(session?.payment_status);
+    const accepted = metadataMatches && amountMatches && currencyMatches && liveModeMatches && paid;
+
+    if (!accepted) {
+      if (order) {
+        order.status = paid ? "payment_verification_failed" : "payment_processing";
+        order.updatedAt = nowIso();
+      }
+      database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId, status: paid ? "rejected" : "pending", createdAt: nowIso() });
+      return { accepted: false, order, reason: paid ? "Payment details did not match the server order." : "Payment is not final yet." };
+    }
+
+    let grant = null;
+    if (offer.packageId) {
+      grant = grantPackage(database, {
+        userId: order.ownerId,
+        packageId: offer.packageId,
+        source: "stripe-checkout",
+        referenceId: session.id,
+        idempotencyKey: `stripe:${session.id}`,
+        note: `${offer.name} paid through Stripe`,
+        createdBy: "stripe-webhook"
+      });
+    }
+    if (!database.creditSales.some((item) => item.providerReference === session.id)) {
+      database.creditSales.push({
+        id: crypto.randomUUID(),
+        userId: order.ownerId,
+        packageId: offer.packageId || "guided-service",
+        offerId: order.offerId,
+        amountMinor: Number(session.amount_total),
+        currency: String(session.currency || "usd").toUpperCase(),
+        status: "recorded",
+        source: "stripe-checkout",
+        providerReference: session.id,
+        paymentIntentId: cleanId(sessionPaymentIntent),
+        createdAt: nowIso()
+      });
+    }
+    const customerEmail = validateDestination("email", session?.customer_details?.email);
+    Object.assign(order, {
+      status: "paid",
+      paidAt: order.paidAt || nowIso(),
+      stripeCheckoutSessionId: cleanId(session.id),
+      stripePaymentIntentId: cleanId(sessionPaymentIntent),
+      amountPaidMinor: Number(session.amount_total),
+      currency: String(session.currency || "usd").toUpperCase(),
+      customerEmailMasked: customerEmail ? maskDestination("email", customerEmail) : "",
+      customerEmailHash: customerEmail ? hashValue(`stripe-email:${customerEmail}`) : "",
+      updatedAt: nowIso()
+    });
+    database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: order.id, status: "fulfilled", createdAt: nowIso() });
+    return { accepted: true, order, grant };
+  }
+
+  function recordStripeRefund(database, event, charge) {
+    ensureStripeCollections(database);
+    if (database.stripeEvents.some((item) => item.id === event.id)) return { duplicate: true };
+    const paymentIntentId = cleanId(typeof charge?.payment_intent === "string" ? charge.payment_intent : charge?.payment_intent?.id);
+    const order = database.orders.find((item) => item.paymentProvider === "stripe" && item.stripePaymentIntentId === paymentIntentId);
+    if (order) {
+      const fullRefund = Number(charge.amount_refunded) >= Number(charge.amount);
+      order.status = fullRefund ? "refunded_review" : "partially_refunded_review";
+      order.amountRefundedMinor = Math.max(0, Number(charge.amount_refunded) || 0);
+      order.updatedAt = nowIso();
+      const sale = database.creditSales.find((item) => item.providerReference === order.stripeCheckoutSessionId);
+      if (sale) {
+        sale.status = fullRefund ? "refunded" : "partially_refunded";
+        sale.amountRefundedMinor = order.amountRefundedMinor;
+        sale.updatedAt = nowIso();
+      }
+    }
+    database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: order?.id || "", status: order ? "refund-recorded" : "unmatched", createdAt: nowIso() });
+    return { order };
+  }
+
+  async function handlePayments(request, response, requestUrl) {
+    if (requestUrl.pathname === "/api/stripe/webhook" && request.method === "POST") {
+      const stripe = stripeConfigured();
+      try {
+        const rawBody = await readRawRequest(request);
+        verifyWebhookSignature(rawBody, request.headers["stripe-signature"], stripe.webhookSecret);
+        const event = JSON.parse(rawBody);
+        if (!/^evt_/.test(String(event.id || "")) || !event.type || !event.data?.object) throw Object.assign(new Error("Stripe event is malformed."), { statusCode: 400, code: "STRIPE_EVENT_INVALID" });
+        let result = { ignored: true };
+        if (["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type)) {
+          result = store.mutate((database) => fulfillStripeSession(database, event, event.data.object));
+        } else if (["checkout.session.expired", "checkout.session.async_payment_failed"].includes(event.type)) {
+          result = store.mutate((database) => {
+            ensureStripeCollections(database);
+            if (database.stripeEvents.some((item) => item.id === event.id)) return { duplicate: true };
+            const session = event.data.object;
+            const order = database.orders.find((item) => item.id === cleanId(session?.metadata?.order_id || session?.client_reference_id) && item.paymentProvider === "stripe");
+            if (order && order.status !== "paid") Object.assign(order, { status: event.type.endsWith("expired") ? "expired" : "payment_failed", updatedAt: nowIso() });
+            database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: order?.id || "", status: "recorded", createdAt: nowIso() });
+            return { order };
+          });
+        } else if (event.type === "charge.refunded") {
+          result = store.mutate((database) => recordStripeRefund(database, event, event.data.object));
+        } else {
+          store.mutate((database) => {
+            ensureStripeCollections(database);
+            if (!database.stripeEvents.some((item) => item.id === event.id)) database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: "", status: "ignored", createdAt: nowIso() });
+          });
+        }
+        sendJson(response, 200, { received: true, duplicate: Boolean(result?.duplicate) });
+      } catch (error) {
+        sendJson(response, error.statusCode || 400, { code: error.code || "STRIPE_WEBHOOK_FAILED", error: error.message || "Stripe webhook could not be verified." });
+      }
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/checkout-link" && request.method === "POST") {
+      if (!rateLimiter.consume(request, response, { bucket: "checkout-create", limit: 10, windowMs: 60 * 60 * 1000, sendJson })) return true;
+      const { user } = sessionFor(request, response, { create: false });
+      if (!user || user.kind !== "account") {
+        sendJson(response, 401, { code: "SIGN_IN_REQUIRED", error: "Sign in with the parent or adult creator account before checkout." });
+        return true;
+      }
+      const stripe = stripeConfigured();
+      if (!stripe.ready) {
+        sendJson(response, 503, { code: "STRIPE_NOT_CONFIGURED", error: "Secure Stripe checkout is not connected yet." });
+        return true;
+      }
+      const body = await readJsonBody(request, 12_000);
+      const offerId = cleanId(body.offer);
+      const offer = offerCatalog[offerId];
+      if (!offer) {
+        sendJson(response, 400, { error: "Choose a valid StoriesLens package." });
+        return true;
+      }
+      const order = {
+        id: crypto.randomUUID(),
+        ownerId: user.id,
+        projectId: cleanId(body.projectId),
+        region: user.primaryRegion || "intl",
+        offerId,
+        packageId: offer.packageId || "",
+        name: offer.name,
+        price: offer.price,
+        expectedAmountMinor: offer.amountMinor,
+        currency: offer.currency.toUpperCase(),
+        paymentProvider: "stripe",
+        status: "creating_checkout",
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+      store.mutate((database) => {
+        ensureStripeCollections(database);
+        database.orders.push(order);
+      });
+      try {
+        const session = await createCheckoutSession({
+          secretKey: stripe.secretKey,
+          apiBaseUrl: process.env.STRIPE_API_BASE_URL || "https://api.stripe.com",
+          publicBaseUrl: process.env.PUBLIC_BASE_URL,
+          order,
+          offer
+        });
+        store.mutate((database) => {
+          const stored = database.orders.find((item) => item.id === order.id);
+          if (stored) Object.assign(stored, { status: "awaiting_payment", stripeCheckoutSessionId: session.id, checkoutExpiresAt: session.expiresAt, updatedAt: nowIso() });
+        });
+        sendJson(response, 201, { checkoutUrl: session.url, sessionId: session.id, orderId: order.id, offer: { id: offerId, name: offer.name, price: offer.price } });
+      } catch (error) {
+        store.mutate((database) => {
+          const stored = database.orders.find((item) => item.id === order.id);
+          if (stored) Object.assign(stored, { status: "checkout_failed", paymentError: cleanText(error.message, 240), updatedAt: nowIso() });
+        });
+        sendJson(response, error.statusCode || 502, { code: error.code || "STRIPE_CHECKOUT_FAILED", error: error.message || "Stripe checkout could not be opened." });
+      }
+      return true;
+    }
+
+    if (requestUrl.pathname === "/api/payments/checkout-status" && request.method === "GET") {
+      const { database, user } = sessionFor(request, response, { create: false });
+      if (!user || user.kind !== "account") {
+        sendJson(response, 401, { error: "Sign in to view this purchase." });
+        return true;
+      }
+      const sessionId = cleanId(requestUrl.searchParams.get("session_id"));
+      const order = database.orders.find((item) => item.ownerId === user.id && item.stripeCheckoutSessionId === sessionId);
+      if (!order) {
+        sendJson(response, 404, { error: "Purchase not found for this account." });
+        return true;
+      }
+      sendJson(response, 200, { order: { id: order.id, offerId: order.offerId, name: order.name, status: order.status, paidAt: order.paidAt || "", amountPaidMinor: order.amountPaidMinor || 0, currency: order.currency }, wallet: order.status === "paid" ? walletFor(database, user.id) : null });
+      return true;
+    }
+    return false;
   }
 
   async function handleCredits(request, response, requestUrl) {
@@ -2294,7 +2533,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true",
           wechatAuth: Boolean(process.env.WECHAT_APP_ID && process.env.WECHAT_APP_SECRET),
           pushDelivery: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
-          stripeCheckout: Object.values(offerCatalog).some((offer) => Boolean(process.env[offer.envKey])),
+          stripeCheckout: stripeConfigured().ready,
           ffmpegAssembly: Boolean(resolveFfmpegBinary()),
           pdfBookExport: Boolean(resolveLibreOfficeBinary()),
           mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY || (process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL)),
@@ -2340,6 +2579,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   const handlePlatformApi = async function handlePlatformApi(request, response, requestUrl) {
     try {
       if (await handleAdmin(request, response, requestUrl)) return true;
+      if (await handlePayments(request, response, requestUrl)) return true;
       if (await handleCredits(request, response, requestUrl)) return true;
       if (await handleAuth(request, response, requestUrl)) return true;
       if (await handleProjects(request, response, requestUrl)) return true;
@@ -2362,6 +2602,15 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     accountRegion(request, response) {
       const { user } = sessionFor(request, response);
       return user?.primaryRegion || "";
+    },
+    assertPersonalPhotoConsent(request, response, consentId) {
+      const { database, user } = sessionFor(request, response, { create: false });
+      const consent = database.guardianConsents.find((item) => item.id === cleanId(consentId) && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("regional_ai_processing"));
+      const project = consent ? database.projects.find((item) => item.id === consent.projectId && item.ownerId === user?.id && !item.deletedAt) : null;
+      if (user?.kind !== "account" || !consent || !project) {
+        throw Object.assign(new Error("Adult consent is required before a personal photo can be sent for AI creation."), { statusCode: 403, code: "PERSONAL_PHOTO_CONSENT_REQUIRED" });
+      }
+      return { consent, project };
     },
     squadGenerationContext(request, response, { squadId, cardId, anchor: isAnchor = false }) {
       const { database, user } = sessionFor(request, response, { create: false });

@@ -90,6 +90,7 @@
 
   const checkoutButton = document.querySelector("[data-checkout]");
   const status = document.querySelector("[data-checkout-status]");
+  if (params.get("cancelled") === "1") status.textContent = t("Checkout was cancelled. No charge was made.");
   checkoutButton.addEventListener("click", async () => {
     checkoutButton.disabled = true;
     status.textContent = t("Opening secure checkout…");
@@ -100,9 +101,14 @@
       const response = await fetch("/api/checkout-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offer: offerId })
+        body: JSON.stringify({ offer: offerId, projectId: params.get("project") || "" })
       });
       const result = await response.json();
+      if (response.status === 401) {
+        const returnTo = encodeURIComponent(`${location.pathname}${location.search}`);
+        location.assign(`/login.html?returnTo=${returnTo}`);
+        return;
+      }
       if (!response.ok || !result.checkoutUrl) throw Object.assign(new Error(result.error || "Checkout is unavailable."), { fallbackUrl: result.fallbackUrl });
       window.location.assign(result.checkoutUrl);
     } catch (error) {

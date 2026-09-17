@@ -32,7 +32,7 @@ Copy `.env.example` to the production secret manager and configure these values 
 - `AUTH_DELIVERY_WEBHOOK_URL` and `AUTH_DELIVERY_WEBHOOK_SECRET`: an HTTPS adapter that sends email/SMS codes. Production authentication fails closed when it is absent.
 - `WECHAT_APP_ID` and `WECHAT_APP_SECRET`: a verified WeChat Open Platform or Mini Program app. The current endpoint deliberately returns unavailable until real code exchange is added.
 - `CHINA_ARK_BASE_URL`, `CHINA_ARK_API_KEY` and `CHINA_ARK_TEXT_MODEL`: a dedicated Volcano Engine Ark inference endpoint for Mainland accounts. The text endpoints now fail closed instead of using OpenRouter for a signed-in account whose route is `cn`. Image and video stay closed until their official China async providers and safety review are separately configured.
-- `STRIPE_*_URL`: allowlisted Stripe Payment Links. Without them, an order is recorded as interest only and no money is collected.
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_LIVE_MODE`: official Stripe Checkout Sessions API and signed webhook fulfillment. Keep test mode until end-to-end payment and refund checks pass.
 - `FFMPEG_BIN`: optional path to FFmpeg. The bundled `ffmpeg-static` binary is normally detected automatically.
 - `LIBREOFFICE_BIN`: optional path to LibreOffice/soffice for one-click PDF export. Railway installs LibreOffice Writer and Noto CJK fonts through `nixpacks.toml`.
 - `OPENAI_MODERATION_API_KEY` or `OPENAI_API_KEY`: required safe-content review for production image/video release.
