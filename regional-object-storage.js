@@ -39,7 +39,9 @@ function configForRegion(region) {
     secretAccessKey: process.env[`${prefix}_SECRET_ACCESS_KEY`] || "",
     sessionToken: process.env[`${prefix}_SESSION_TOKEN`] || "",
     signingRegion: process.env[`${prefix}_SIGNING_REGION`] || (region === "cn" ? "cn-beijing" : "auto"),
-    service: process.env[`${prefix}_SIGNING_SERVICE`] || "s3"
+    service: process.env[`${prefix}_SIGNING_SERVICE`] || (region === "cn" ? "tos" : "s3"),
+    protocol: process.env[`${prefix}_PROTOCOL`] || (region === "cn" ? "tos" : "s3"),
+    addressingStyle: process.env[`${prefix}_ADDRESSING_STYLE`] || (region === "cn" ? "virtual" : "path")
   };
 }
 
@@ -51,15 +53,30 @@ function volumeRegions() {
   return [...new Set(String(process.env.MEDIA_VOLUME_REGIONS || "").split(",").map((item) => item.trim().toLowerCase()).filter((item) => REGION_NAMES.includes(item)))];
 }
 
-function createSignedRequest(config, method, key, body, contentType) {
+function requestLocation(config, key) {
   const endpoint = new URL(config.endpoint);
   const objectKey = cleanKey(key);
-  const canonicalPath = `${endpoint.pathname.replace(/\/$/, "")}/${encodeKey(config.bucket)}/${encodeKey(objectKey)}`.replace(/^([^/])/, "/$1");
   const requestUrl = new URL(endpoint.toString());
+  const basePath = endpoint.pathname.replace(/\/$/, "");
+  const virtualHost = config.addressingStyle === "virtual";
+  if (virtualHost) {
+    if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(config.bucket)) {
+      throw new Error("Invalid virtual-hosted private-media bucket name.");
+    }
+    requestUrl.hostname = `${config.bucket}.${endpoint.hostname}`;
+  }
+  const canonicalPath = virtualHost
+    ? `${basePath}/${encodeKey(objectKey)}`.replace(/^([^/])/, "/$1")
+    : `${basePath}/${encodeKey(config.bucket)}/${encodeKey(objectKey)}`.replace(/^([^/])/, "/$1");
   requestUrl.pathname = canonicalPath;
   requestUrl.search = "";
+  return { canonicalPath, requestUrl };
+}
 
-  const timestamp = new Date();
+function createS3SignedRequest(config, method, key, body, contentType, requestDate) {
+  const { canonicalPath, requestUrl } = requestLocation(config, key);
+
+  const timestamp = requestDate || new Date();
   const amzDate = timestamp.toISOString().replace(/[:-]|\.\d{3}/g, "");
   const dateStamp = amzDate.slice(0, 8);
   const payload = body || Buffer.alloc(0);
@@ -86,6 +103,43 @@ function createSignedRequest(config, method, key, body, contentType) {
   headers.authorization = `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
   delete headers.host;
   return { url: requestUrl, headers };
+}
+
+function createTosSignedRequest(config, method, key, body, contentType, requestDate) {
+  const { canonicalPath, requestUrl } = requestLocation({ ...config, addressingStyle: "virtual" }, key);
+  const timestamp = requestDate || new Date();
+  const tosDate = timestamp.toISOString().replace(/[:-]|\.\d{3}/g, "");
+  const dateStamp = tosDate.slice(0, 8);
+  const payload = body || Buffer.alloc(0);
+  const payloadHash = sha256(payload);
+  const headers = {
+    host: requestUrl.host,
+    "x-tos-content-sha256": payloadHash,
+    "x-tos-date": tosDate
+  };
+  if (contentType) headers["content-type"] = contentType;
+  if (config.sessionToken) headers["x-tos-security-token"] = config.sessionToken;
+
+  const signedHeaderNames = Object.keys(headers).sort();
+  const canonicalHeaders = signedHeaderNames.map((name) => `${name}:${String(headers[name]).trim()}\n`).join("");
+  const signedHeaders = signedHeaderNames.join(";");
+  const canonicalRequest = [method, canonicalPath, "", canonicalHeaders, signedHeaders, payloadHash].join("\n");
+  const scope = `${dateStamp}/${config.signingRegion}/tos/request`;
+  const stringToSign = ["TOS4-HMAC-SHA256", tosDate, scope, sha256(canonicalRequest)].join("\n");
+  const dateKey = hmac(config.secretAccessKey, dateStamp);
+  const regionKey = hmac(dateKey, config.signingRegion);
+  const serviceKey = hmac(regionKey, "tos");
+  const signingKey = hmac(serviceKey, "request");
+  const signature = hmac(signingKey, stringToSign, "hex");
+  headers.authorization = `TOS4-HMAC-SHA256 Credential=${config.accessKeyId}/${scope},SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  delete headers.host;
+  return { url: requestUrl, headers };
+}
+
+function createSignedRequest(config, method, key, body, contentType, requestDate) {
+  return config.protocol === "tos"
+    ? createTosSignedRequest(config, method, key, body, contentType, requestDate)
+    : createS3SignedRequest(config, method, key, body, contentType, requestDate);
 }
 
 function createRegionalObjectStorage({ mediaDirectory }) {
