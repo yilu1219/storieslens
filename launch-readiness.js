@@ -44,7 +44,11 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, renderWorkerRe
   const requiredMatchesAllowed = allowedRegions.length > 0 && allowedRegions.every((region) => requiredRegions.includes(region));
   const invitesReady = allowedRegions.length > 0 && allowedRegions.every((region) => configuredInviteRegions.includes(region));
   const stripeSecret = String(env.STRIPE_SECRET_KEY || "");
-  const stripeReady = (env.STRIPE_LIVE_MODE === "true" ? stripeSecret.startsWith("sk_live_") : stripeSecret.startsWith("sk_test_")) && String(env.STRIPE_WEBHOOK_SECRET || "").startsWith("whsec_");
+  const stripeReady = (
+    env.STRIPE_LIVE_MODE === "true"
+      ? /^(?:sk|rk)_live_/.test(stripeSecret)
+      : /^(?:sk|rk)_test_/.test(stripeSecret)
+  ) && String(env.STRIPE_WEBHOOK_SECRET || "").startsWith("whsec_");
 
   const required = [
     gate("production-runtime", "Production runtime", env.NODE_ENV === "production", "Set NODE_ENV=production on the production host."),

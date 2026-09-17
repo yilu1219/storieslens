@@ -77,7 +77,7 @@ test("a verified Stripe webhook grants the purchased allowance exactly once", { 
       INVITE_CODE_AUTH_ENABLED: "true",
       BETA_INVITE_ONLY: "true",
       ALLOWED_ACCOUNT_REGIONS: "us",
-      STRIPE_SECRET_KEY: "sk_test_server_only",
+      STRIPE_SECRET_KEY: "rk_test_server_only",
       STRIPE_WEBHOOK_SECRET: stripeSigningSecret,
       STRIPE_LIVE_MODE: "false",
       STRIPE_API_BASE_URL: `http://127.0.0.1:${stripeProvider.address().port}`

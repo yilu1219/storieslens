@@ -62,7 +62,7 @@ function publicOrigin(value) {
 }
 
 async function createCheckoutSession({ secretKey, apiBaseUrl = "https://api.stripe.com", publicBaseUrl, order, offer, fetchImpl = fetch }) {
-  if (!/^sk_(?:test|live)_/.test(String(secretKey || ""))) throw Object.assign(new Error("Stripe checkout is not configured yet."), { statusCode: 503, code: "STRIPE_NOT_CONFIGURED" });
+  if (!/^(?:sk|rk)_(?:test|live)_/.test(String(secretKey || ""))) throw Object.assign(new Error("Stripe checkout is not configured yet."), { statusCode: 503, code: "STRIPE_NOT_CONFIGURED" });
   if (!order?.id || !order?.ownerId || !offer?.amountMinor) throw new Error("A valid account order is required.");
   const origin = publicOrigin(publicBaseUrl);
   const form = new URLSearchParams();

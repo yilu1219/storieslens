@@ -76,13 +76,13 @@ Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决
 然后把 Secret key 与 webhook signing secret 写入 Railway：
 
 ```text
-STRIPE_SECRET_KEY=sk_test_...
+STRIPE_SECRET_KEY=rk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_LIVE_MODE=false
 STRIPE_API_BASE_URL=https://api.stripe.com
 ```
 
-先保持 `STRIPE_LIVE_MODE=false` 跑完测试卡、重复 webhook、延迟付款、失败、取消、退款和收据。正式开放时再同时切换到 `sk_live_...`、正式 webhook 的 `whsec_...`，并把 `STRIPE_LIVE_MODE=true`。不要把密钥、后台登录信息或真实付款数据提交进 Git。
+优先使用只授予 Checkout Sessions 写权限的受限密钥（`rk_test_...` / `rk_live_...`），不要给网站使用账户级标准密钥。先保持 `STRIPE_LIVE_MODE=false` 跑完测试卡、重复 webhook、延迟付款、失败、取消、退款和收据。正式开放时再同时切换到正式受限密钥、正式 webhook 的 `whsec_...`，并把 `STRIPE_LIVE_MODE=true`。不要把密钥、后台登录信息或真实付款数据提交进 Git。
 
 ## 上线收款前的硬门槛
 

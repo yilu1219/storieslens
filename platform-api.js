@@ -570,7 +570,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     const secretKey = cleanText(process.env.STRIPE_SECRET_KEY, 300);
     const webhookSecret = cleanText(process.env.STRIPE_WEBHOOK_SECRET, 300);
     const liveExpected = process.env.STRIPE_LIVE_MODE === "true";
-    const keyMatchesMode = liveExpected ? secretKey.startsWith("sk_live_") : secretKey.startsWith("sk_test_");
+    const keyMatchesMode = liveExpected
+      ? /^(?:sk|rk)_live_/.test(secretKey)
+      : /^(?:sk|rk)_test_/.test(secretKey);
     return { secretKey, webhookSecret, liveExpected, ready: keyMatchesMode && webhookSecret.startsWith("whsec_") };
   }
 
@@ -2538,7 +2540,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           pdfBookExport: Boolean(resolveLibreOfficeBinary()),
           mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY || (process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL)),
           chinaTextRoute: Boolean(process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL),
-          chinaImageRoute: process.env.CHINA_ARK_IMAGE_ENABLED === "true",
+          chinaImageRoute: Boolean(
+            cleanText(process.env.CHINA_ARK_IMAGE_API_KEY, 300)
+            && cleanText(process.env.CHINA_ARK_IMAGE_MODEL, 200)
+          ),
           chinaVideoRoute: process.env.CHINA_ARK_VIDEO_ENABLED === "true",
           safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
         },
