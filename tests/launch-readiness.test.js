@@ -74,3 +74,16 @@ test("Resend with a verified sender satisfies the sign-in delivery gate", () => 
   const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
   assert(report.required.some((item) => item.id === "otp-delivery" && item.ready));
 });
+
+test("personal-photo stories pass the launch gate only with account, consent and deletion controls", () => {
+  const env = readyEnvironment();
+  env.REAL_PERSON_PHOTO_UPLOADS_ENABLED = "true";
+  env.REAL_PERSON_PHOTO_REQUIRE_ACCOUNT = "true";
+  env.REQUIRE_PERSONAL_PHOTO_CONSENT = "true";
+  const passing = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(passing.required.some((item) => item.id === "real-person-uploads" && item.ready));
+
+  env.REQUIRE_PERSONAL_PHOTO_CONSENT = "false";
+  const blocked = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(blocked.required.some((item) => item.id === "real-person-uploads" && !item.ready));
+});

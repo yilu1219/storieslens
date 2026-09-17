@@ -79,7 +79,10 @@
       const remove = node("button", "app-secondary", "Archive");
       remove.type = "button";
       remove.addEventListener("click", () => archiveProject(project));
-      actions.append(studio, report, share, remove);
+      const purge = node("button", "app-secondary app-danger", project.language === "zh" ? "永久删除" : "Delete forever");
+      purge.type = "button";
+      purge.addEventListener("click", () => deleteProjectForever(project));
+      actions.append(studio, report, share, remove, purge);
       body.append(actions);
       card.append(cover, body);
       grid.append(card);
@@ -246,6 +249,22 @@
       projects = projects.filter((item) => item.id !== project.id);
       renderProjects();
       toast("Story archived. Recovery window: 30 days.");
+    } catch (error) { toast(error.message, true); }
+  }
+
+  async function deleteProjectForever(project) {
+    const confirmation = window.prompt(`Permanently delete “${project.title}”, its source photos, generated media, invitations and consent records? Type DELETE PROJECT AND MEDIA to continue.`);
+    if (confirmation !== "DELETE PROJECT AND MEDIA") return toast("Permanent deletion cancelled.");
+    if (!window.confirm("Final confirmation: this project and its private media cannot be recovered.")) return;
+    try {
+      const result = await platform.api(`/api/projects/${project.id}?permanent=true`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirmation })
+      });
+      projects = projects.filter((item) => item.id !== project.id);
+      renderProjects();
+      await loadStorageUsage();
+      toast(`Project permanently deleted · ${Number(result.mediaDeleted) || 0} private media files removed.`);
     } catch (error) { toast(error.message, true); }
   }
 

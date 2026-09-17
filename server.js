@@ -1025,14 +1025,6 @@ async function handleAIReport(request, response) {
     return;
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    sendJson(response, 501, {
-      error: "OPENROUTER_API_KEY is not configured. Add it to .env or set it before running npm start."
-    });
-    return;
-  }
-
   try {
     const body = await readJsonBody(request);
     const studentDraft = String(body.studentDraft || "").trim();
@@ -1061,8 +1053,8 @@ async function handleAIReport(request, response) {
       genre: body.genre,
       action: "report"
     });
-    const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
-    const model = body.model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+    const provider = textProviderForRequest(request, response, body.model || "");
+    const { baseUrl, model } = provider;
 
     const systemPrompt = [
       "You are Yu, the StoriesLens writing mentor for creators of any age.",
@@ -1090,12 +1082,7 @@ async function handleAIReport(request, response) {
 
     const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
-        "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
-      },
+      headers: textProviderHeaders(provider),
       body: JSON.stringify({
         model,
         messages: [
@@ -1127,7 +1114,7 @@ async function handleAIReport(request, response) {
 
     handlePlatformApi.creditManager.recordUsage(request, response, {
       operation: "ai-writing-report",
-      model,
+      model: `${provider.provider}:${model}`,
       costUsd: costUsdFromUsage(upstreamData.usage),
       providerUsage: upstreamData.usage || null
     });
@@ -1162,11 +1149,6 @@ async function handleAIReport(request, response) {
 async function handleWritingAssistant(request, response) {
   if (request.method !== "POST") {
     sendJson(response, 405, { error: "Method not allowed" });
-    return;
-  }
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    sendJson(response, 501, { error: "The writing assistant is not configured yet." });
     return;
   }
   try {
@@ -1237,16 +1219,11 @@ async function handleWritingAssistant(request, response) {
       draft ? `Full creator draft: ${draft.slice(0, 6000)}` : "Full creator draft: Not started. Ask one question that unlocks the creator's own first sentence."
     ].filter(Boolean).join("\n");
     await enforceTextSafety(userPrompt);
-    const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
-    const model = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+    const provider = textProviderForRequest(request, response);
+    const { baseUrl, model } = provider;
     const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
-        "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
-      },
+      headers: textProviderHeaders(provider),
       body: JSON.stringify({
         model,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
@@ -1304,7 +1281,7 @@ async function handleWritingAssistant(request, response) {
     if (action === "begin" && !safeResult.reply) safeResult.reply = safeResult.question;
     handlePlatformApi.creditManager.recordUsage(request, response, {
       operation: "yu-writing-assistant",
-      model,
+      model: `${provider.provider}:${model}`,
       costUsd: costUsdFromUsage(upstreamData.usage),
       providerUsage: upstreamData.usage || null
     });
@@ -1322,6 +1299,33 @@ const handlePlatformApi = createPlatformApi({
   enforceImageSafety,
   reviewArtworkSafety: reviewArtworkImage
 });
+
+function textProviderForRequest(request, response, requestedModel = "") {
+  const accountRegion = handlePlatformApi.creditManager.accountRegion(request, response);
+  if (accountRegion === "cn") {
+    const baseUrl = String(process.env.CHINA_ARK_BASE_URL || "").replace(/\/+$/, "");
+    const apiKey = String(process.env.CHINA_ARK_API_KEY || "");
+    const model = String(requestedModel || process.env.CHINA_ARK_TEXT_MODEL || "");
+    if (!baseUrl || !apiKey || !model) {
+      throw Object.assign(new Error("China AI routing is not configured yet. Add CHINA_ARK_BASE_URL, CHINA_ARK_API_KEY and CHINA_ARK_TEXT_MODEL on the China service before enabling Mainland accounts."), { statusCode: 503, code: "CHINA_AI_ROUTE_UNAVAILABLE" });
+    }
+    return { provider: "VOLCENGINE_ARK", baseUrl, apiKey, model, region: "cn" };
+  }
+  const baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
+  const apiKey = String(process.env.OPENROUTER_API_KEY || "");
+  const model = String(requestedModel || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini");
+  if (!apiKey) throw Object.assign(new Error("The writing assistant is not configured yet."), { statusCode: 501 });
+  return { provider: "OPENROUTER", baseUrl, apiKey, model, region: accountRegion || "default" };
+}
+
+function textProviderHeaders(provider) {
+  const headers = { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" };
+  if (provider.provider === "OPENROUTER") {
+    headers["HTTP-Referer"] = process.env.OPENROUTER_SITE_URL || "http://localhost:3000";
+    headers["X-Title"] = process.env.OPENROUTER_SITE_TITLE || "StoriesLens";
+  }
+  return headers;
+}
 
 const server = http.createServer(async (request, response) => {
   response.setHeader("X-Content-Type-Options", "nosniff");

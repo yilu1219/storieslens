@@ -49,7 +49,9 @@ test("S3-compatible request signing never places credentials in the URL", () => 
     secretAccessKey: "test-secret-key",
     sessionToken: "",
     signingRegion: "auto",
-    service: "s3"
+    service: "s3",
+    protocol: "s3",
+    addressingStyle: "path"
   }, "PUT", "creator/story/artwork.webp", Buffer.from("art"), "image/webp");
 
   assert.strictEqual(signed.url.protocol, "https:");
@@ -57,6 +59,100 @@ test("S3-compatible request signing never places credentials in the URL", () => 
   assert.match(signed.headers.authorization, /^AWS4-HMAC-SHA256 Credential=test-access-key\//);
   assert(!signed.url.toString().includes("test-access-key"));
   assert(!JSON.stringify(signed).includes("test-secret-key"));
+});
+
+test("Volcengine TOS signing uses native headers and virtual-hosted bucket URLs", () => {
+  const signed = createSignedRequest({
+    endpoint: "https://tos-cn-beijing.volces.com",
+    bucket: "storieslens-cn-private-2026",
+    accessKeyId: "test-access-key",
+    secretAccessKey: "test-secret-key",
+    sessionToken: "",
+    signingRegion: "cn-beijing",
+    service: "tos",
+    protocol: "tos",
+    addressingStyle: "virtual"
+  }, "PUT", "creator/story/artwork.webp", Buffer.from("art"), "image/webp");
+
+  assert.strictEqual(signed.url.protocol, "https:");
+  assert.strictEqual(signed.url.hostname, "storieslens-cn-private-2026.tos-cn-beijing.volces.com");
+  assert.strictEqual(signed.url.pathname, "/creator/story/artwork.webp");
+  assert.match(signed.headers.authorization, /^TOS4-HMAC-SHA256 Credential=test-access-key\/\d{8}\/cn-beijing\/tos\/request,/);
+  assert.match(signed.headers["x-tos-date"], /^\d{8}T\d{6}Z$/);
+  assert.match(signed.headers["x-tos-content-sha256"], /^[a-f0-9]{64}$/);
+  assert(!("x-amz-date" in signed.headers));
+  assert(!signed.url.toString().includes("test-access-key"));
+  assert(!JSON.stringify(signed).includes("test-secret-key"));
+});
+
+test("Volcengine TOS signing matches the official fixed-date signature example", () => {
+  const signed = createSignedRequest({
+    endpoint: "https://tos-cn-beijing.volces.com",
+    bucket: "examplebucket",
+    accessKeyId: "testAK",
+    secretAccessKey: "testSK",
+    sessionToken: "",
+    signingRegion: "cn-beijing",
+    service: "tos",
+    protocol: "tos",
+    addressingStyle: "virtual"
+  }, "GET", "exampleobject", null, "", new Date("2022-01-01T00:00:00Z"));
+
+  assert.strictEqual(
+    signed.headers.authorization,
+    "TOS4-HMAC-SHA256 Credential=testAK/20220101/cn-beijing/tos/request,SignedHeaders=host;x-tos-content-sha256;x-tos-date, Signature=d40b66cf0054d1642843670d10fa095e1609c7896f25df217770b0abe717693b"
+  );
+});
+
+test("China media storage sends a real TOS request when CN credentials are configured", async (context) => {
+  const keys = [
+    "MEDIA_CN_ENDPOINT",
+    "MEDIA_CN_BUCKET",
+    "MEDIA_CN_ACCESS_KEY_ID",
+    "MEDIA_CN_SECRET_ACCESS_KEY",
+    "MEDIA_CN_SIGNING_REGION",
+    "MEDIA_CN_PROTOCOL",
+    "MEDIA_CN_ADDRESSING_STYLE"
+  ];
+  const original = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  const originalFetch = global.fetch;
+  context.after(() => {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+    global.fetch = originalFetch;
+  });
+  Object.assign(process.env, {
+    MEDIA_CN_ENDPOINT: "https://tos-cn-beijing.volces.com",
+    MEDIA_CN_BUCKET: "storieslens-cn-private-2026",
+    MEDIA_CN_ACCESS_KEY_ID: "test-access-key",
+    MEDIA_CN_SECRET_ACCESS_KEY: "test-secret-key",
+    MEDIA_CN_SIGNING_REGION: "cn-beijing",
+    MEDIA_CN_PROTOCOL: "tos",
+    MEDIA_CN_ADDRESSING_STYLE: "virtual"
+  });
+  let request;
+  global.fetch = async (url, options) => {
+    request = { url: String(url), options };
+    return { ok: true, status: 200, headers: new Headers({ etag: '"stored-etag"' }) };
+  };
+  const mediaDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "storieslens-media-cn-"));
+  context.after(() => fs.rmSync(mediaDirectory, { recursive: true, force: true }));
+  const storage = createRegionalObjectStorage({ mediaDirectory });
+
+  const stored = await storage.put({
+    user: { id: "creator-cn", primaryRegion: "cn" },
+    key: "creator-cn/story/artwork.webp",
+    buffer: Buffer.from("private artwork"),
+    contentType: "image/webp"
+  });
+
+  assert.strictEqual(storage.status().cn, "cloud-private");
+  assert.strictEqual(stored.storageProvider, "tos");
+  assert.strictEqual(stored.storageRegion, "cn");
+  assert.strictEqual(stored.storageEtag, "stored-etag");
+  assert.strictEqual(request.url, "https://storieslens-cn-private-2026.tos-cn-beijing.volces.com/creator-cn/story/artwork.webp");
+  assert.match(request.options.headers.authorization, /^TOS4-HMAC-SHA256 /);
 });
 
 test("regional storage reads the documented MEDIA_US environment names", (context) => {

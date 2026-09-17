@@ -54,6 +54,15 @@
           </label>
           <p class="privacy-note" data-t="privacy-note">Location and camera information are removed before the image is used.</p>
           <p class="beta-photo-note" data-t="beta-photo-note">PRIVATE BETA · Personal photos may become a private book or video. Use only photos you have permission to use.</p>
+          <section class="personal-photo-consent" data-personal-photo-consent hidden aria-live="polite">
+            <p>PERSONAL PHOTO · PRIVATE BETA</p>
+            <h3>Before this photo is saved</h3>
+            <span>The original file stays on this device. After you consent, a metadata-stripped working copy is sent to your selected regional private service for safety review and AI creation. It is never published automatically and can be permanently deleted.</span>
+            <label class="photo-consent-check"><input type="checkbox" data-photo-consent-adult /> <b>I am the person pictured, or their parent / legal guardian, and I permit this private story use.</b></label>
+            <label class="photo-consent-check"><input type="checkbox" data-photo-consent-processing /> <b>I understand that a processed copy will leave this device and be handled by the selected regional storage, safety and AI services.</b></label>
+            <div class="photo-consent-fields"><label><span>Adult name</span><input data-photo-guardian-name maxlength="100" autocomplete="name" /></label><label><span>Relationship to the person pictured</span><input data-photo-guardian-relationship maxlength="80" placeholder="e.g. parent, self" /></label></div>
+            <small>Do not upload other people’s photos without permission. Revoking photo permission or choosing “Delete forever” in My Stories removes the saved source photo; account deletion removes all private media.</small>
+          </section>
 
           <button class="existing-writing-entry" type="button" data-existing-writing-entry>
             <span class="existing-writing-entry-icon" aria-hidden="true">✦</span>
@@ -277,6 +286,6 @@
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>
     <script src="mentor-revision.js?v=20260915-1"></script>
-    <script src="h5-app.js?v=20260916-9"></script>
+    <script src="h5-app.js?v=20260917-photo-governance-1"></script>
   </body>
 </html>

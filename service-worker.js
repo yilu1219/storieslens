@@ -1,4 +1,4 @@
-const VERSION = "storieslens-h5-v75-writing-photo-import-20260916";
+const VERSION = "storieslens-h5-v81-personal-photo-governance-20260917";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -17,11 +17,11 @@ const APP_SHELL = [
   "/classroom-archive.js?v=20260913-4",
   "/analytics.js",
   "/i18n.js?v=20260908-1",
-  "/portal-home.css?v=20260916-4",
+  "/portal-home.css?v=20260916-6",
   "/portal-home.js?v=20260916-43",
   "/family-flow.css?v=20260916-6",
-  "/chinese-studio.css?v=20260916-4",
-  "/h5-app.js?v=20260916-9",
+  "/chinese-studio.css?v=20260916-5",
+  "/h5-app.js?v=20260917-photo-governance-1",
   "/writing-import.js?v=20260916-2",
   "/yu-profile.css?v=20260915-3",
   "/yu-profile.js?v=20260915-3",
@@ -34,7 +34,7 @@ const APP_SHELL = [
   "/platform-client.js",
   "/login.css?v=20260915-1",
   "/login.js?v=20260915-2",
-  "/my-stories.js?v=20260915-usage-3",
+  "/my-stories.js?v=20260917-photo-governance-1",
   "/safety-client.js",
   "/artwork-upload-safety.js?v=20260913-1",
   "/pwa.js",

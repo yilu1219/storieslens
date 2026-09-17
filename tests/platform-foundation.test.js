@@ -72,7 +72,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   });
   assert(app.includes("assets/yu-mascot-logo-v2.png"), "English coaching should show the brand-colored Yu mascot");
   assert(chineseStudio.includes("assets/yu-sage-v1.png"), "Chinese coaching should show its original white-haired Yu story master");
-  assert(chineseStudio.includes("data-chinese-type-entry") && appJs.includes("chineseTypeEntry"), "Chinese creation should expose a first-class typing entry beside upload and voice");
+  assert(chineseStudio.includes("data-chinese-idea-entry") && appJs.includes("chineseIdeaEntry"), "Chinese creation should merge typing and speech into one first-class idea entry beside upload");
   assert(app.includes("data-answer-speech-time") && chineseStudio.includes("data-answer-speech-time"), "voice answers should show a visible recording timer in both studios");
   assert(appJs.includes('activeRecognition.continuous = true'), "voice answers should continue through longer child responses");
   assert(appJs.includes('addEventListener("pointerdown"') && appJs.includes('addEventListener("pointerup"'), "voice answers should use press-and-hold interaction");
@@ -84,7 +84,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   const chineseStoryLanguage = chineseStudio.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");
   assert(chineseStoryLanguage.includes('value="zh"') && !chineseStoryLanguage.includes('value="en"'), "Chinese studio should keep its creation language fixed to Chinese");
-  assert(chineseStudio.includes("data-chinese-voice-entry") && appJs.includes("chineseVoiceEntry") && appJs.includes("handleSpeechInput"), "Chinese studio should expose a first-class voice entry wired to editable speech input");
+  assert(chineseStudio.includes("data-chinese-idea-entry") && appJs.includes("handleSpeechInput"), "Chinese studio should keep editable speech input within its unified idea entry");
   ["经典小人书", "四格故事", "电影分镜", "data-stage=\"comic-template\""].forEach((token) => assert(chineseStudio.includes(token), `Chinese studio should expose comic template: ${token}`));
   assert(appJs.includes("showComicTemplateStage") && appJs.includes("comicTemplate"), "Comic selection should happen after Yu's three questions and persist into the story profile");
   assert(app.includes("data-chinese-studio-switch"), "English studio should provide one explicit route to the Chinese studio");
@@ -100,6 +100,9 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(app.includes('src="artwork-upload-safety.js?') && appJs.includes("StoriesLensArtworkSafety.processArtwork"), "formal H5 should privacy-review artwork before it can be stored");
   assert(api.includes("reviewArtworkSafety(body.dataUrl)") && api.includes("containsRealPerson") && !api.includes("Real-person photos are not stored"), "private media API should accept safety-reviewed real-person photos and label them server-side");
   assert(app.includes("Personal photos may become a private book or video") && chineseStudio.includes("真人照片可以用于制作私密故事书或视频"), "private beta studios should clearly accept consented personal photos for books and videos");
+  assert(app.includes("data-photo-consent-processing") && chineseStudio.includes("data-photo-consent-processing"), "both studios should disclose regional cloud processing before personal-photo consent");
+  assert(api.includes('"regional_ai_processing"') && api.includes("acknowledgedRegionalProcessing"), "personal-photo consent must explicitly cover regional safety and AI processing");
+  assert(api.includes("personalPhotoMediaDeleted") && api.includes('searchParams.get("permanent") === "true"'), "revocation and permanent project deletion should remove stored personal-photo media");
   assert(!appJs.includes("工作坊仅接收画作，不接收真人照片") && appJs.includes("真人照片安全检查通过"), "a safe real-person photo should continue into private cloud creation instead of being blocked");
   assert(appJs.includes("safeArtwork.review?.checks?.realPerson") && appJs.includes("personalPhoto"), "personal photos should be classified explicitly without making a face itself a rejection reason");
   assert(appJs.includes('platform.api("/api/projects"') && appJs.includes('platform.api("/api/media"'), "formal H5 should save real private projects and artwork");

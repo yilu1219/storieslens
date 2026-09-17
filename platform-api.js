@@ -1418,6 +1418,29 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     }
 
     if (request.method === "DELETE") {
+      if (requestUrl.searchParams.get("permanent") === "true") {
+        const body = await readJsonBody(request);
+        if (body.confirmation !== "DELETE PROJECT AND MEDIA") {
+          sendJson(response, 400, { error: "Type DELETE PROJECT AND MEDIA to confirm permanent deletion." });
+          return true;
+        }
+        const projectMedia = database.media.filter((item) => item.ownerId === user.id && item.projectId === projectId);
+        const projectRenderJobs = (database.renderJobs || []).filter((item) => item.ownerId === user.id && item.projectId === projectId);
+        for (const media of projectMedia) await mediaStorage.remove(media);
+        removeRenderArtifacts(projectRenderJobs);
+        store.mutate((nextDatabase) => {
+          nextDatabase.projects = nextDatabase.projects.filter((item) => !(item.id === projectId && item.ownerId === user.id));
+          nextDatabase.projectReports = (nextDatabase.projectReports || []).filter((report) => !(report.projectId === projectId && report.ownerId === user.id));
+          nextDatabase.media = nextDatabase.media.filter((item) => !(item.projectId === projectId && item.ownerId === user.id));
+          nextDatabase.guardianConsents = (nextDatabase.guardianConsents || []).filter((item) => item.projectId !== projectId);
+          nextDatabase.shares = (nextDatabase.shares || []).filter((item) => item.projectId !== projectId);
+          nextDatabase.orders = (nextDatabase.orders || []).filter((item) => item.projectId !== projectId);
+          nextDatabase.renderJobs = (nextDatabase.renderJobs || []).filter((item) => !(item.projectId === projectId && item.ownerId === user.id));
+          nextDatabase.productEvents = (nextDatabase.productEvents || []).filter((item) => item.projectId !== projectId);
+        });
+        sendJson(response, 200, { deleted: true, mediaDeleted: projectMedia.length });
+        return true;
+      }
       store.mutate((nextDatabase) => {
         const stored = nextDatabase.projects.find((item) => item.id === projectId && item.ownerId === user.id);
         stored.deletedAt = nowIso();
@@ -1810,6 +1833,22 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           });
           return true;
         }
+        if (imageReview?.checks?.realPerson) {
+          if (process.env.REAL_PERSON_PHOTO_UPLOADS_ENABLED !== "true") {
+            sendJson(response, 403, { error: "Personal-photo stories are not enabled for this beta yet." });
+            return true;
+          }
+          if (process.env.REAL_PERSON_PHOTO_REQUIRE_ACCOUNT !== "false" && user.kind !== "account") {
+            sendJson(response, 403, { error: "Sign in to an adult-owned account before saving a real-person photo." });
+            return true;
+          }
+          const consentId = cleanId(body.personalPhotoConsentId);
+          const consent = database.guardianConsents.find((item) => item.id === consentId && item.projectId === project?.id && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("private_media") && item.scopes?.includes("regional_ai_processing"));
+          if (!consent) {
+            sendJson(response, 403, { error: "Adult consent is required before saving a real-person photo." });
+            return true;
+          }
+        }
       }
       const mediaId = crypto.randomUUID();
       const extension = imageExtensions[mimeType] || audioExtensions[mimeType];
@@ -1831,6 +1870,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         private: true,
         metadataRemoved: kind === "image",
         containsRealPerson: kind === "image" ? Boolean(imageReview?.checks?.realPerson) : false,
+        personalPhotoConsentId: kind === "image" ? cleanId(body.personalPhotoConsentId) : "",
         createdAt: nowIso()
       };
       store.mutate((nextDatabase) => nextDatabase.media.push(media));
@@ -1870,12 +1910,61 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         sendJson(response, 404, { error: "Active guardian approval not found." });
         return true;
       }
+      const consentMedia = database.media.filter((item) => item.ownerId === user.id && item.projectId === project.id && item.personalPhotoConsentId === consent.id);
+      for (const media of consentMedia) await mediaStorage.remove(media);
       store.mutate((nextDatabase) => {
         const stored = nextDatabase.guardianConsents.find((item) => item.id === consent.id);
         stored.revokedAt = nowIso();
         nextDatabase.shares.forEach((share) => { if (share.projectId === project.id && !share.revokedAt) share.revokedAt = nowIso(); });
+        nextDatabase.media = nextDatabase.media.filter((item) => item.personalPhotoConsentId !== consent.id);
+        const storedProject = nextDatabase.projects.find((item) => item.id === project.id && item.ownerId === user.id);
+        if (storedProject) {
+          const removedUrls = new Set(consentMedia.map((item) => `/api/media/${item.id}`));
+          if (removedUrls.has(storedProject.coverImageUrl)) storedProject.coverImageUrl = "";
+          storedProject.scenes = (storedProject.scenes || []).map((scene) => removedUrls.has(scene.imageUrl) ? { ...scene, imageUrl: "" } : scene);
+          storedProject.updatedAt = nowIso();
+        }
       });
-      sendJson(response, 200, { revoked: true, invitationsRevoked: true });
+      sendJson(response, 200, { revoked: true, invitationsRevoked: true, personalPhotoMediaDeleted: consentMedia.length });
+      return true;
+    }
+
+    const photoConsentMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/photo-consent$/);
+    if (photoConsentMatch) {
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(photoConsentMatch[1])));
+      if (!project) {
+        sendJson(response, 404, { error: "Story project not found." });
+        return true;
+      }
+      if (request.method !== "POST") {
+        sendJson(response, 405, { error: "Method not allowed" });
+        return true;
+      }
+      const body = await readJsonBody(request);
+      if (user.kind !== "account" || body.confirmedAdult !== true || body.approvedPrivateMedia !== true || body.approvedPersonalPhoto !== true || body.acknowledgedRegionalProcessing !== true) {
+        sendJson(response, 400, { error: "An adult-owned account must confirm private use of a real-person photo." });
+        return true;
+      }
+      const guardianName = cleanText(body.guardianName, 100);
+      const relationship = cleanText(body.relationship, 80);
+      if (!guardianName || !relationship) {
+        sendJson(response, 400, { error: "Enter the adult name and relationship to the person pictured." });
+        return true;
+      }
+      const consent = {
+        id: crypto.randomUUID(),
+        projectId: project.id,
+        guardianName,
+        relationship,
+        scopes: ["private_media", "personal_photo_reference", "regional_ai_processing"],
+        verificationStatus: "account-attested",
+        policyVersion: "2026-09-16",
+        createdAt: nowIso(),
+        revokedAt: ""
+      };
+      store.mutate((nextDatabase) => nextDatabase.guardianConsents.push(consent));
+      sendJson(response, 201, { consent, notice: "This photo is private by default. Delete the project or account to permanently delete its stored media." });
       return true;
     }
 
@@ -2208,7 +2297,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           stripeCheckout: Object.values(offerCatalog).some((offer) => Boolean(process.env[offer.envKey])),
           ffmpegAssembly: Boolean(resolveFfmpegBinary()),
           pdfBookExport: Boolean(resolveLibreOfficeBinary()),
-          mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY),
+          mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY || (process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL)),
+          chinaTextRoute: Boolean(process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL),
+          chinaImageRoute: process.env.CHINA_ARK_IMAGE_ENABLED === "true",
+          chinaVideoRoute: process.env.CHINA_ARK_VIDEO_ENABLED === "true",
           safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
         },
         mediaStorage: mediaStorage.status(),
@@ -2266,6 +2358,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   handlePlatformApi.creditManager = {
     ownerId(request, response) {
       return sessionFor(request, response).user.id;
+    },
+    accountRegion(request, response) {
+      const { user } = sessionFor(request, response);
+      return user?.primaryRegion || "";
     },
     squadGenerationContext(request, response, { squadId, cardId, anchor: isAnchor = false }) {
       const { database, user } = sessionFor(request, response, { create: false });

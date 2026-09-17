@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
     <link rel="stylesheet" href="family-flow.css?v=20260916-6" />
-    <link rel="stylesheet" href="chinese-studio.css?v=20260916-4" />
+    <link rel="stylesheet" href="chinese-studio.css?v=20260916-5" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>中文创作馆 · 语镜故事</title>
@@ -53,19 +53,12 @@
               <small>支持 JPG、PNG、WEBP、HEIC · 图片先在本机安全处理</small>
               <img data-artwork-preview alt="已选择的作品" hidden />
             </label>
-            <button class="chinese-voice-entry" type="button" data-chinese-voice-entry aria-pressed="false">
-              <span class="chinese-voice-icon" aria-hidden="true">
-                <svg viewBox="0 0 38 32" focusable="false"><path d="M3.5 16c4.6-1.5 7.7-4.7 11.1-8.4 3.3 3.5 6.3 6.7 10.8 8.4-4.3 5.2-7.4 7.4-10.8 7.4S8 21.2 3.5 16Z"/><path d="M7.2 16h14.7"/><path d="M28 11.5c2.1 2.2 2.1 6.8 0 9"/><path d="M32 8.3c4.2 4.1 4.2 11.3 0 15.4"/></svg>
+            <button class="chinese-idea-entry" type="button" data-chinese-idea-entry>
+              <span class="chinese-idea-icon" aria-hidden="true">
+                <svg viewBox="0 0 38 32" focusable="false"><path d="M4 7.5h20a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H14l-6.5 4v-4H4a3 3 0 0 1-3-3v-10a3 3 0 0 1 3-3Z"/><path d="m25.5 7.5 4.7-4.7 4 4-4.7 4.7M23 10l-2 5 5-2"/></svg>
               </span>
-              <strong>口述一个想法</strong>
-              <small>不用先画，也可以从一句话开始</small>
-            </button>
-            <button class="chinese-type-entry" type="button" data-chinese-type-entry>
-              <span class="chinese-type-icon" aria-hidden="true">
-                <svg viewBox="0 0 38 32" focusable="false"><rect x="3" y="6" width="32" height="21" rx="4"/><path d="M8 12h3M14 12h3M20 12h3M26 12h3M8 17h3M14 17h3M20 17h3M26 17h3M11 22h16"/></svg>
-              </span>
-              <strong>写下一个想法</strong>
-              <small>打字写一句，羽大师接着问你三个问题</small>
+              <strong>说或写下一个想法</strong>
+              <small>直接打字，或点输入框里的口述按钮，把声音变成可修改的文字</small>
             </button>
             <button class="chinese-existing-writing-entry" type="button" data-existing-writing-entry>
               <span class="chinese-existing-writing-icon" aria-hidden="true">
@@ -77,6 +70,15 @@
           </div>
           <p class="privacy-note">图片使用前会删除位置与拍摄设备信息；默认私密。</p>
           <p class="beta-photo-note">内测说明 · 本人或家人的真人照片可以用于制作私密故事书或视频，请先取得本人或监护人同意。</p>
+          <section class="personal-photo-consent" data-personal-photo-consent hidden aria-live="polite">
+            <p>真人照片 · 内测保护</p>
+            <h3>保存这张照片前，请完成监护确认</h3>
+            <span>原始文件留在本机。你同意后，系统只把已删除定位和设备信息的工作副本发送到所选地区的私有存储、安全审核与 AI 服务；不会自动公开，并可永久删除。</span>
+            <label class="photo-consent-check"><input type="checkbox" data-photo-consent-adult /> <b>我是照片中的本人，或其父母／法定监护人，同意将照片用于这份私密故事作品。</b></label>
+            <label class="photo-consent-check"><input type="checkbox" data-photo-consent-processing /> <b>我理解处理副本会离开本机，并由所选地区的私有存储、安全审核与 AI 服务处理。</b></label>
+            <div class="photo-consent-fields"><label><span>成年人姓名</span><input data-photo-guardian-name maxlength="100" autocomplete="name" /></label><label><span>与照片中人物的关系</span><input data-photo-guardian-relationship maxlength="80" placeholder="例如：本人、母亲、父亲、监护人" /></label></div>
+            <small>请勿上传未经同意的他人照片。撤回照片许可或在“我的故事”选择“永久删除”，会删除已保存的源照片；删除账户会清除全部私密媒体。</small>
+          </section>
 
           <section class="existing-writing-panel chinese-existing-writing-panel" data-existing-writing-panel hidden aria-label="上传已有作文">
             <div><span>已有作文</span><strong>把孩子已经写好的作文交给羽大师</strong></div>
@@ -86,9 +88,8 @@
             <small>文档先在本机读取；HEIC／HEIF 会先在本机转换并移除拍摄信息。照片识别后，请先核对文字；默认私密。</small>
           </section>
 
-          <div class="words-heading"><strong>也可以从自己的话开始</strong><span>写下 · 口述</span></div>
           <div class="voice-field">
-            <textarea data-seed maxlength="1800" rows="4" placeholder="告诉羽大师画面里正在发生什么，或者先说出一个想法。"></textarea>
+            <textarea data-seed maxlength="1800" rows="4" placeholder="把你的想法写下来；想说时，点右边的口述按钮。"></textarea>
             <button type="button" data-speech aria-label="开始语音输入"><span aria-hidden="true">●</span><b>口述</b></button>
           </div>
           <small class="speech-note">口述会转成可修改的文字，不保存现场录音。</small>
@@ -272,6 +273,6 @@
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>
     <script src="mentor-revision.js?v=20260915-1"></script>
-    <script src="h5-app.js?v=20260916-9"></script>
+    <script src="h5-app.js?v=20260917-photo-governance-1"></script>
   </body>
 </html>

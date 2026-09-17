@@ -407,9 +407,8 @@ assert.match(
   "绘本",
   "故事电影",
   "中文创作档案",
-  "data-chinese-voice-entry",
-  "口述一个想法",
-  "不用先画，也可以从一句话开始"
+  "data-chinese-idea-entry",
+  "说或写下一个想法"
 ].forEach((token) => assert(chineseStudioHtml.includes(token), `Chinese studio should include: ${token}`));
 assert(!chineseStudioHtml.includes("MAP"), "Chinese studio should not expose the English MAP learning profile");
 

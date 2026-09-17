@@ -812,6 +812,8 @@
       if (uploadHelp) uploadHelp.textContent = locale === "zh" ? "轻点图片可以更换，不需要重新上传" : "Tap the image only if you want to replace it";
       $(`[data-coach-image]`).src = selectedArtworkData;
       $(`[data-coach-image]`).hidden = false;
+      const personalPhotoConsent = $("[data-personal-photo-consent]");
+      if (personalPhotoConsent) personalPhotoConsent.hidden = !selectedArtwork.personalPhoto;
     }
     if (existingWritingMode && storySeed()) {
       window.setTimeout(() => {
@@ -901,9 +903,28 @@
         localStorage.setItem("storieslens_cloud_project_id", savedProjectId);
       }
 
+      let personalPhotoConsentId = "";
+      if (selectedArtwork?.personalPhoto) {
+        const account = await platform.api("/api/auth/session");
+        if (!account.authenticated || account.user?.kind !== "account") throw new Error("account_required_for_personal_photo");
+        const confirmedAdult = Boolean($("[data-photo-consent-adult]")?.checked);
+        const acknowledgedRegionalProcessing = Boolean($("[data-photo-consent-processing]")?.checked);
+        const guardianName = $("[data-photo-guardian-name]")?.value.trim() || "";
+        const relationship = $("[data-photo-guardian-relationship]")?.value.trim() || "";
+        if (!confirmedAdult || !acknowledgedRegionalProcessing || !guardianName || !relationship) throw new Error("personal_photo_consent_required");
+        if (!selectedArtwork.personalPhotoConsentId) {
+          const consentResult = await platform.api(`/api/projects/${savedProjectId}/photo-consent`, {
+            method: "POST",
+            body: JSON.stringify({ confirmedAdult: true, approvedPrivateMedia: true, approvedPersonalPhoto: true, acknowledgedRegionalProcessing: true, guardianName, relationship })
+          });
+          selectedArtwork.personalPhotoConsentId = consentResult.consent.id;
+        }
+        personalPhotoConsentId = selectedArtwork.personalPhotoConsentId;
+      }
+
       const mediaResult = await platform.api("/api/media", {
         method: "POST",
-        body: JSON.stringify({ projectId: savedProjectId, dataUrl: selectedArtworkData, metadataRemoved: true, purpose: "artwork" })
+        body: JSON.stringify({ projectId: savedProjectId, dataUrl: selectedArtworkData, metadataRemoved: true, purpose: "artwork", personalPhotoConsentId })
       });
       selectedArtwork.mediaUrl = mediaResult.media.url;
       await platform.api(`/api/projects/${savedProjectId}`, {
@@ -1175,8 +1196,10 @@
     $("[data-upload-label]").classList.add("has-image");
     $("[data-coach-image]").src = selectedArtworkData;
     $("[data-coach-image]").hidden = false;
+    const personalPhotoConsent = $("[data-personal-photo-consent]");
+    if (personalPhotoConsent) personalPhotoConsent.hidden = !selectedArtwork.personalPhoto;
     if (selectedArtwork.convertedFromHeic) toast(locale === "zh" ? "HEIC 已在本机安全转换，原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.");
-    if (!selectedArtwork.privateOnly && !workshopMode) {
+    if (!selectedArtwork.privateOnly && !workshopMode && !selectedArtwork.personalPhoto) {
       try {
         toast(selectedArtwork.personalPhoto
           ? (locale === "zh" ? "真人照片安全检查通过，正在保存到你的私密作品库……" : "Personal photo safety check passed. Saving to your private library…")
@@ -1186,6 +1209,9 @@
       } catch (error) {
         toast(locale === "zh" ? "图片已在本机准备好，但云端保存暂时失败，请稍后重试。" : "The image is ready on this device, but private cloud saving is temporarily unavailable. Try again shortly.", true);
       }
+    }
+    if (selectedArtwork.personalPhoto && !workshopMode) {
+      toast(locale === "zh" ? "真人照片已在本机准备好。完成下方成年人确认并登录账户后，才会保存到私密作品库。" : "Your personal photo is ready on this device. Complete the adult confirmation and sign in before it is saved privately.");
     }
     window.StoriesLensAnalytics?.track("family_artwork_ready", { privateOnly: Boolean(selectedArtwork.privateOnly), convertedFromHeic: Boolean(selectedArtwork.convertedFromHeic) });
   }
@@ -1211,11 +1237,27 @@
       message.textContent = locale === "zh" ? "需要成年人确认支持后才能继续。" : "An adult must confirm support before continuing.";
       return;
     }
+    if (selectedArtwork?.personalPhoto) {
+      const confirmedAdult = Boolean($("[data-photo-consent-adult]")?.checked);
+      const acknowledgedRegionalProcessing = Boolean($("[data-photo-consent-processing]")?.checked);
+      const guardianName = $("[data-photo-guardian-name]")?.value.trim();
+      const relationship = $("[data-photo-guardian-relationship]")?.value.trim();
+      if (!confirmedAdult || !acknowledgedRegionalProcessing || !guardianName || !relationship) {
+        message.textContent = locale === "zh" ? "使用真人照片前，请完成成年人许可、区域云端处理确认、姓名与关系填写。" : "Before using a personal photo, confirm adult permission, regional cloud processing, name and relationship.";
+        $("[data-personal-photo-consent]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+    }
     if (learningProfileError) {
       if ($("[data-learning-profile]")) $("[data-learning-profile]").open = true;
       if ($("[data-learning-profile-status]")) $("[data-learning-profile-status]").textContent = learningProfileError;
       message.textContent = learningProfileError;
       return;
+    }
+    if (selectedArtwork?.personalPhoto && !workshopMode) {
+      persistApprovedArtwork().catch(() => {
+        toast(locale === "zh" ? "真人照片已用于本次创作，但私密保存暂时失败；请登录账户后重试。" : "The personal photo is ready for this story, but private saving did not complete. Sign in and try again.", true);
+      });
     }
     if (window.StoriesLensSafety && seed && !window.StoriesLensSafety.check(seed).safe) {
       message.textContent = window.StoriesLensSafety.message;
@@ -1505,8 +1547,7 @@
   });
 
   const speechButton = $("[data-speech]");
-  const chineseVoiceEntry = $("[data-chinese-voice-entry]");
-  const chineseTypeEntry = $("[data-chinese-type-entry]");
+  const chineseIdeaEntry = $("[data-chinese-idea-entry]");
   const handleSpeechInput = () => {
     existingWritingMode = false;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1525,8 +1566,6 @@
     recognition.lang = locale === "zh" ? "zh-CN" : "en-US";
     recognition.interimResults = true;
     speechButton.classList.add("listening");
-    chineseVoiceEntry?.classList.add("is-listening");
-    chineseVoiceEntry?.setAttribute("aria-pressed", "true");
     recognition.onresult = (event) => {
       const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
       field.value = `${original}${original ? " " : ""}${spoken}`;
@@ -1535,21 +1574,15 @@
     recognition.onend = () => {
       recognition = null;
       speechButton.classList.remove("listening");
-      chineseVoiceEntry?.classList.remove("is-listening");
-      chineseVoiceEntry?.setAttribute("aria-pressed", "false");
     };
     recognition.start();
   };
   speechButton.addEventListener("click", handleSpeechInput);
-  chineseVoiceEntry?.addEventListener("click", () => {
-    $(".words-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    handleSpeechInput();
-  });
-  chineseTypeEntry?.addEventListener("click", () => {
+  chineseIdeaEntry?.addEventListener("click", () => {
     existingWritingMode = false;
     $(".words-heading")?.scrollIntoView({ behavior: "smooth", block: "center" });
     window.setTimeout(() => $("[data-seed]")?.focus(), 280);
-    window.StoriesLensAnalytics?.track("chinese_type_entry_selected", { source: "start-card" });
+    window.StoriesLensAnalytics?.track("chinese_idea_entry_selected", { source: "start-card" });
   });
 
   if ($("[data-auto-read-question]")) {

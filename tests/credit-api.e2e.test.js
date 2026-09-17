@@ -199,7 +199,7 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
     const ledger = await request(baseUrl, "/api/admin/ledger", { cookies: [adminCookie] });
     assert.equal(ledger.payload.sales.length, 1);
     assert.equal(ledger.payload.modelUsage.length, 1);
-    assert.equal(ledger.payload.modelUsage[0].model, "test/yu-cost-model");
+    assert.equal(ledger.payload.modelUsage[0].model, "OPENROUTER:test/yu-cost-model");
     assert.equal(ledger.payload.modelUsage[0].costUsd, 0.0123);
 
     const batches = await request(baseUrl, "/api/admin/invites", { cookies: [adminCookie] });

@@ -21,7 +21,7 @@ Safe text can be drafted locally with the built-in bilingual blocklist when no e
 
 ## Real-person photo boundary
 
-The private beta accepts safe personal photos as well as artwork. The browser rewrites a selected image through canvas to remove EXIF before sending the sanitized copy to `/api/review-artwork`; the original file is not uploaded. The review request is not written to disk, API responses use `Cache-Control: no-store`, and the provider request uses `store: false`. Sexual content, graphic violence, identity documents, visible contact or school information, and uncertain safety decisions remain blocked. Approved media is private by default and can be written under `.data/media/<owner-id>/` only in local development or routed to the account's configured private regional storage.
+The private beta accepts safe personal photos only when `REAL_PERSON_PHOTO_UPLOADS_ENABLED=true`. The browser rewrites a selected image through canvas to remove EXIF before sending the sanitized copy to `/api/review-artwork`; the original file is not uploaded. A real-person photo is not automatically persisted: the owner must be signed in to an adult-owned account and record an affirmative relationship/permission confirmation. The server independently verifies the resulting consent record before it accepts the media. The review request is not written to disk, API responses use `Cache-Control: no-store`, and the provider request uses `store: false`. Sexual content, graphic violence, identity documents, visible contact or school information, and uncertain safety decisions remain blocked. Approved media is private by default and can be written under `.data/media/<owner-id>/` only in local development or routed to the account's configured private regional storage.
 
 Do not market this as biometric identity verification or unrestricted face cloning. For minors, guardian approval is required before invite sharing or printing, and the source photo must never become a public gallery asset by default.
 
@@ -31,6 +31,7 @@ Copy `.env.example` to the production secret manager and configure these values 
 
 - `AUTH_DELIVERY_WEBHOOK_URL` and `AUTH_DELIVERY_WEBHOOK_SECRET`: an HTTPS adapter that sends email/SMS codes. Production authentication fails closed when it is absent.
 - `WECHAT_APP_ID` and `WECHAT_APP_SECRET`: a verified WeChat Open Platform or Mini Program app. The current endpoint deliberately returns unavailable until real code exchange is added.
+- `CHINA_ARK_BASE_URL`, `CHINA_ARK_API_KEY` and `CHINA_ARK_TEXT_MODEL`: a dedicated Volcano Engine Ark inference endpoint for Mainland accounts. The text endpoints now fail closed instead of using OpenRouter for a signed-in account whose route is `cn`. Image and video stay closed until their official China async providers and safety review are separately configured.
 - `STRIPE_*_URL`: allowlisted Stripe Payment Links. Without them, an order is recorded as interest only and no money is collected.
 - `FFMPEG_BIN`: optional path to FFmpeg. The bundled `ffmpeg-static` binary is normally detected automatically.
 - `LIBREOFFICE_BIN`: optional path to LibreOffice/soffice for one-click PDF export. Railway installs LibreOffice Writer and Noto CJK fonts through `nixpacks.toml`.
