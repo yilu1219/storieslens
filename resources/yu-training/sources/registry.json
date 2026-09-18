@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-09-15",
+  "lastReviewed": "2026-09-18",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -76,6 +76,60 @@
       "skills": ["viewpoint", "scene and feeling", "fictional logic", "concrete detail", "word choice"],
       "credibility": "high for modern Chinese literary thought; contemporary story-writing transfer requires human review",
       "localRecord": "sources/zh/renjian-cihua-realm.md"
+    },
+    {
+      "id": "writing-photoplay-1913",
+      "status": "adopted",
+      "language": "en",
+      "title": "Writing the Photoplay",
+      "authorOrInstitution": "J. Berg Esenwein and Arthur Leeds; rights record hosted by Project Gutenberg",
+      "published": "1913; Project Gutenberg eBook released 2006 and updated 2020",
+      "retrieved": "2026-09-18",
+      "url": "https://www.gutenberg.org/ebooks/17903",
+      "rights": "Project Gutenberg marks eBook 17903 public domain in the USA. The knowledge base stores no source prose, only original pedagogical abstractions and a link.",
+      "ages": ["secondary", "adult"],
+      "skills": ["visual storytelling", "observable action", "scene purpose", "screen adaptation", "revision"],
+      "credibility": "historically important primary craft source; only durable visual-story principles are adopted and silent-era rules are explicitly excluded",
+      "localRecord": "sources/en/project-gutenberg-photoplay.md"
+    },
+    {
+      "id": "suiyuan-shihua-revision",
+      "status": "adopted",
+      "language": "zh",
+      "title": "《随园诗话》卷三：修改、停顿与原意",
+      "authorOrInstitution": "袁枚（1716—1797）；核查版本为中文维基文库",
+      "published": "清代；网页版本持续维护",
+      "retrieved": "2026-09-18",
+      "url": "https://zh.wikisource.org/zh-hans/随園詩話/03",
+      "rights": "Yuan Mei's original works are public domain worldwide because the author died more than 100 years ago; Wikisource explicitly marks the author accordingly. Only original pedagogical abstractions and a link are stored.",
+      "ages": ["upper elementary", "secondary", "adult"],
+      "skills": ["延时重读", "上下文判断", "克制修改", "保留作者声音", "修改反思"],
+      "credibility": "high as a primary classical Chinese revision source; modern classroom transfer is independently authored and bounded",
+      "localRecord": "sources/zh/suiyuan-shihua-revision.md"
+    },
+    {
+      "id": "ccss-ela-2010-alignment-only",
+      "status": "reference-only",
+      "language": "en",
+      "title": "Common Core State Standards for English Language Arts & Literacy",
+      "authorOrInstitution": "National Governors Association Center for Best Practices and Council of Chief State School Officers",
+      "published": "2010",
+      "retrieved": "2026-09-18",
+      "url": "https://corestandards.org/english-language-arts-standards/",
+      "rights": "The standards are copyrighted and offered under a public license for uses supporting the initiative, with attribution and scope conditions; examples may contain third-party material.",
+      "rejectionReason": "Used only as a standards-alignment reference. No standard text or examples were ingested into the Yu knowledge modules, and no endorsement is claimed."
+    },
+    {
+      "id": "moe-cn-chinese-curriculum-2022",
+      "status": "quarantined",
+      "language": "zh",
+      "title": "《义务教育语文课程标准（2022年版）》",
+      "authorOrInstitution": "中华人民共和国教育部",
+      "published": "2022-03-25",
+      "retrieved": "2026-09-18",
+      "url": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
+      "rights": "Official and publicly downloadable, but this review did not locate an explicit commercial reuse or AI-training permission for the attached curriculum-standard text.",
+      "rejectionReason": "Authoritative but rights basis is not explicit enough for ingestion under the Yu training policy. No text was added; retain only the official link for future human rights review."
     },
     {
       "id": "naep-writing-framework-2017",
