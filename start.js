@@ -19,6 +19,8 @@
   const progressFill = document.querySelector("[data-progress-fill]");
   const displayName = document.querySelector("[data-display-name]");
   const storySeed = document.querySelector("[data-story-seed]");
+  const sparkSpeak = document.querySelector("[data-spark-speak]");
+  const sparkVoiceStatus = document.querySelector("[data-spark-voice-status]");
   const workFileField = document.querySelector("[data-work-file-field]");
   const workFile = document.querySelector("[data-work-file]");
   const workFileStatus = document.querySelector("[data-work-file-status]");
@@ -28,6 +30,11 @@
   const supervisionPanel = document.querySelector("[data-supervision-panel]");
   const supervisionConfirm = document.querySelector("[data-supervision-confirm]");
   const storyLanguage = document.querySelector("[data-story-language]");
+  const squadCreateFields = document.querySelector("[data-squad-create-fields]");
+  const squadTitle = document.querySelector("[data-squad-title]");
+  const squadOutput = document.querySelector("[data-squad-output]");
+  const squadStyle = document.querySelector("[data-squad-style]");
+  const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
   const error = document.querySelector("[data-form-error]");
   const t = (text) => window.StoriesLensI18n?.t(text) || text;
 
@@ -48,7 +55,13 @@
   let origin = sourceToOrigin[requestedSource] || "imagination";
   let squadAction = "create";
   let importedWork = null;
+  let sparkRecognition = null;
+  let sparkListeningRequested = false;
+  let sparkPointerSession = false;
+  let suppressSparkClick = false;
+  let sparkRestartTimer = null;
   let storyLanguageTouched = ["en", "zh"].includes(requestedStoryLanguage);
+  let squadStyleTouched = false;
 
   if (storyLanguage) storyLanguage.value = storyLanguageTouched ? requestedStoryLanguage : window.StoriesLensI18n?.locale === "zh" ? "zh" : "en";
   if (storySeed && requestedDna) storySeed.value = requestedDna;
@@ -90,9 +103,12 @@
     squadOptions.hidden = step !== 2 || mode !== "squad";
     setupFields.hidden = step !== 3;
     const joining = mode === "squad" && squadAction === "join";
+    const creatingSquad = mode === "squad" && !joining;
     ideaField.hidden = joining;
     codeField.hidden = !joining;
-    if (workFileField) workFileField.hidden = joining || origin !== "work";
+    if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
+    if (squadTitle) squadTitle.required = creatingSquad;
+    if (workFileField) workFileField.hidden = joining || (mode !== "squad" && origin !== "work");
     const copy = stepCopy[step];
     stepCurrent.textContent = String(step);
     stepLabel.textContent = t(copy.label);
@@ -135,24 +151,113 @@
 
   storyLanguage?.addEventListener("change", () => {
     storyLanguageTouched = true;
+    if (!squadStyleTouched && squadStyle) squadStyle.value = storyLanguage.value === "zh" ? "ink-watercolor" : "storybook-watercolor";
   });
+  squadStyle?.addEventListener("change", () => { squadStyleTouched = true; });
   ageGroup?.addEventListener("change", renderAgeGate);
+
+  const resetSparkSpeakUi = () => {
+    sparkSpeak.classList.remove("is-listening");
+    sparkSpeak.setAttribute("aria-pressed", "false");
+    sparkSpeak.textContent = t("● Hold to Speak");
+    if (sparkVoiceStatus && storySeed.value.trim()) sparkVoiceStatus.textContent = t("Voice converted to editable text. Live audio was not stored.");
+  };
+
+  const beginSparkRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      sparkListeningRequested = false;
+      if (sparkVoiceStatus) sparkVoiceStatus.textContent = t("Voice typing is unavailable in this browser. You can still type or upload your work.");
+      storySeed?.focus();
+      return;
+    }
+    if (sparkRecognition || !sparkListeningRequested) return;
+    const original = storySeed.value.trim();
+    sparkRecognition = new SpeechRecognition();
+    sparkRecognition.lang = storyLanguage?.value === "zh" ? "zh-CN" : "en-US";
+    sparkRecognition.interimResults = true;
+    sparkRecognition.continuous = true;
+    sparkSpeak.classList.add("is-listening");
+    sparkSpeak.setAttribute("aria-pressed", "true");
+    sparkSpeak.textContent = sparkPointerSession ? t("● Listening… release to stop") : t("■ Stop");
+    if (sparkVoiceStatus) sparkVoiceStatus.textContent = t("Listening… keep holding while you speak. Brief pauses are okay.");
+    sparkRecognition.onresult = (event) => {
+      const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
+      storySeed.value = `${original}${original ? " " : ""}${spoken}`.slice(0, storySeed.maxLength || 280);
+      storySeed.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    sparkRecognition.onerror = (event) => {
+      if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
+        sparkListeningRequested = false;
+        sparkPointerSession = false;
+      }
+      if (event.error !== "no-speech" && sparkVoiceStatus) sparkVoiceStatus.textContent = t("I could not hear that clearly. Hold the button to try again, or type your idea.");
+    };
+    sparkRecognition.onend = () => {
+      sparkRecognition = null;
+      if (sparkListeningRequested) {
+        clearTimeout(sparkRestartTimer);
+        sparkRestartTimer = setTimeout(beginSparkRecognition, 120);
+        return;
+      }
+      resetSparkSpeakUi();
+    };
+    sparkRecognition.start();
+  };
+
+  const startSparkListening = (pointerSession = false) => {
+    if (sparkListeningRequested) return;
+    sparkPointerSession = pointerSession;
+    sparkListeningRequested = true;
+    beginSparkRecognition();
+  };
+
+  const stopSparkListening = () => {
+    sparkListeningRequested = false;
+    sparkPointerSession = false;
+    clearTimeout(sparkRestartTimer);
+    if (sparkRecognition) sparkRecognition.stop();
+    else resetSparkSpeakUi();
+  };
+
+  sparkSpeak?.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    suppressSparkClick = true;
+    sparkSpeak.setPointerCapture?.(event.pointerId);
+    startSparkListening(true);
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => sparkSpeak?.addEventListener(eventName, (event) => {
+    if (!sparkPointerSession) return;
+    event.preventDefault();
+    stopSparkListening();
+  }));
+
+  sparkSpeak?.addEventListener("click", () => {
+    if (suppressSparkClick) {
+      suppressSparkClick = false;
+      return;
+    }
+    if (sparkListeningRequested) stopSparkListening();
+    else startSparkListening(false);
+  });
 
   workFile?.addEventListener("change", async () => {
     const file = workFile.files?.[0];
     importedWork = null;
     if (!file) return;
-    const isText = file.type === "text/plain" || file.type === "text/markdown" || /\.(txt|md)$/i.test(file.name);
+    const isText = file.type === "text/plain" || file.type === "text/markdown" || /\.(txt|md|docx)$/i.test(file.name);
     const isImage = Boolean(window.StoriesLensArtworkSafety?.isSupportedImage(file));
-    const maximumSize = isImage ? 15 * 1024 * 1024 : 2 * 1024 * 1024;
+    const maximumSize = isImage ? 15 * 1024 * 1024 : 7 * 1024 * 1024;
     if (file.size > maximumSize) {
       workFile.value = "";
-      error.textContent = t(isImage ? "Choose an image smaller than 15 MB." : "Choose a file smaller than 2 MB.");
+      error.textContent = t(isImage ? "Choose an image smaller than 15 MB." : "Choose a file smaller than 7 MB.");
       return;
     }
     if (!isText && !isImage) {
       workFile.value = "";
-      error.textContent = t("Choose a JPG, PNG, WEBP, HEIC, HEIF, TXT, or MD file.");
+      error.textContent = t("Choose a JPG, PNG, WEBP, HEIC, HEIF, DOCX, TXT, or MD file.");
       return;
     }
     let content;
@@ -160,7 +265,13 @@
     let storedType = file.type || (isText ? "text/plain" : "image");
     let artworkReview = null;
     if (isText) {
-      content = await file.text();
+      try {
+        content = window.StoriesLensWritingImport ? await window.StoriesLensWritingImport.readFile(file) : await file.text();
+      } catch (_readError) {
+        workFile.value = "";
+        error.textContent = t("This writing file could not be read. Try DOCX, TXT, or MD.");
+        return;
+      }
     } else {
       if (workFileStatus) workFileStatus.textContent = t("Removing metadata and checking artwork safety…");
       try {
@@ -201,11 +312,12 @@
     render();
   });
 
-  form?.addEventListener("submit", (event) => {
+  form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const name = displayName.value.trim();
     const code = storyCode.value.trim().toUpperCase();
     const seed = storySeed.value.trim();
+    const title = squadTitle?.value.trim() || "";
 
     if (mode === "solo" && origin === "work" && !importedWork && !seed) {
       error.textContent = t("Choose a work file or paste a short excerpt so Story Coach knows where to begin.");
@@ -237,7 +349,13 @@
       return;
     }
 
-    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true } : null, createdAt: new Date().toISOString() };
+    if (mode === "squad" && squadAction === "create" && !title) {
+      error.textContent = t("Give your Story Squad a title.");
+      squadTitle?.focus();
+      return;
+    }
+
+    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}`;
@@ -247,12 +365,12 @@
       return;
     }
 
-    if (squadAction === "join") {
-      window.location.href = `squad-board.html?code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&${languageQuery}`;
-      return;
-    }
-
-    window.location.href = `squad-board.html?action=create&name=${encodeURIComponent(name)}&${languageQuery}`;
+    const resumePath = squadAction === "join"
+      ? `squad-board.html?action=join&resume=1&code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&${languageQuery}`
+      : `squad-board.html?action=create&resume=1&name=${encodeURIComponent(name)}&${languageQuery}`;
+    let authenticated = false;
+    try { authenticated = Boolean((await window.StoriesLensPlatform?.getSession?.())?.authenticated); } catch (_sessionError) {}
+    window.location.href = authenticated ? resumePath : `login.html?return=${encodeURIComponent(resumePath)}`;
   });
 
   renderAgeGate();

@@ -133,6 +133,98 @@
     return `login.html?return=${encodeURIComponent(returnTo)}`;
   }
 
+  function readStoredJson(storage, key) {
+    try { return JSON.parse(storage.getItem(key) || "null"); } catch (_error) { return null; }
+  }
+
+  async function carryStartingMaterial(squad, setup) {
+    const imported = readStoredJson(sessionStorage, "storieslens_imported_work");
+    const importedText = imported?.kind === "text" ? String(imported.content || "").trim() : "";
+    const starterText = (importedText || setup.seed || (imported?.kind === "image"
+      ? (setup.storyLanguage === "zh" ? "这是我们的故事起点。" : "This is our story starting point.")
+      : "")).slice(0, 6000);
+    if (!starterText) return { squad, personalPhotoPending: false };
+
+    const posted = await platform.api(`/api/squads/${encodeURIComponent(squad.id)}/cards`, {
+      method: "POST",
+      body: JSON.stringify({ text: starterText, yuGuided: false })
+    });
+    let updatedSquad = posted.squad;
+    const firstCard = [...updatedSquad.cards].reverse().find((card) => card.canEdit);
+    let personalPhotoPending = false;
+
+    if (imported?.kind === "image" && imported.content && firstCard) {
+      if (imported.personalPhoto === true) {
+        personalPhotoPending = true;
+      } else {
+        const media = await platform.api("/api/media", {
+          method: "POST",
+          body: JSON.stringify({ squadId: squad.id, dataUrl: imported.content, metadataRemoved: imported.metadataRemoved === true })
+        });
+        const attached = await platform.api(`/api/squads/${encodeURIComponent(squad.id)}/cards/${encodeURIComponent(firstCard.id)}/visual`, {
+          method: "POST",
+          body: JSON.stringify({ imageUrl: media.media.url })
+        });
+        updatedSquad = attached.squad;
+        sessionStorage.removeItem("storieslens_imported_work");
+      }
+    } else if (imported?.kind === "text") {
+      sessionStorage.removeItem("storieslens_imported_work");
+    }
+    return { squad: updatedSquad, personalPhotoPending };
+  }
+
+  async function resumeSquadSetup() {
+    if (params.get("resume") !== "1") return false;
+    const setup = readStoredJson(localStorage, "storieslens_creator_setup");
+    if (!setup || setup.mode !== "squad") return false;
+    showNotice(setup.squadAction === "join" ? "Joining your private squad… · 正在加入共创小组……" : "Creating your private squad… · 正在创建共创小组……");
+
+    if (setup.squadAction === "join") {
+      const result = await platform.api("/api/squads/join", {
+        method: "POST",
+        body: JSON.stringify({
+          code: setup.code,
+          displayName: setup.displayName,
+          youngCreator: setup.ageGroup === "under18",
+          guardianConfirmed: setup.ageGroup !== "under18" || setup.supervisionConfirmed === true
+        })
+      });
+      history.replaceState({}, "", `squad-board.html?id=${encodeURIComponent(result.squad.id)}`);
+      activeSquad = result.squad;
+      renderBoard(activeSquad);
+      showNotice(result.notice || "Your request was sent to the project owner.");
+      startPolling();
+      return true;
+    }
+
+    const created = await platform.api("/api/squads", {
+      method: "POST",
+      body: JSON.stringify({
+        title: setup.squadTitle,
+        displayName: setup.displayName,
+        language: setup.storyLanguage,
+        outputType: setup.squadOutputType,
+        visualStyle: setup.squadVisualStyle,
+        characterRules: setup.squadCharacterRules,
+        ageGroup: setup.ageGroup === "under18" ? "under18" : "mixed",
+        guardianConfirmed: setup.ageGroup !== "under18" || setup.supervisionConfirmed === true
+      })
+    });
+    history.replaceState({}, "", `squad-board.html?id=${encodeURIComponent(created.squad.id)}`);
+    activeSquad = created.squad;
+    renderBoard(activeSquad);
+    const carried = await carryStartingMaterial(created.squad, setup);
+    activeSquad = carried.squad;
+    renderBoard(activeSquad);
+    showNotice(carried.personalPhotoPending
+      ? "Your squad and first text are ready. The personal photo remains safely on this device until adult photo consent is confirmed. · 小组和首段文字已创建；真人照片会留在本机，待完成照片授权后再保存。"
+      : "Your squad and starting material are ready—nothing needs to be uploaded again. · 小组与起始素材已就绪，无需再次上传。"
+    );
+    startPolling();
+    return true;
+  }
+
   async function blobToDataUrl(blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -623,6 +715,7 @@
       $("[data-auth-gate]").hidden = false;
       return;
     }
+    if (await resumeSquadSetup()) return;
     $("[data-setup]").hidden = false;
     $("[data-create-name]").value = params.get("name") || session.user.displayName || "";
     $("[data-join-name]").value = params.get("name") || session.user.displayName || "";

@@ -152,6 +152,12 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .setup-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
 .setup-fields label { display: grid; gap: 8px; color: var(--start-ink); font-family: var(--start-sans); font-size: 14px; font-weight: 700; }
 .setup-fields label.wide { grid-column: 1 / -1; }
+.squad-create-fields { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; border: 1px solid rgba(22, 132, 91, 0.23); border-radius: 18px; background: #eef6ef; }
+.squad-create-fields[hidden] { display: none; }
+.squad-create-heading { display: grid; grid-column: 1 / -1; gap: 4px; padding-bottom: 4px; }
+.squad-create-heading strong { color: var(--start-ink); font-family: var(--start-serif); font-size: 24px; }
+.squad-create-heading small { color: var(--start-muted); font-family: var(--start-sans); font-size: 13px; line-height: 1.45; }
+.squad-create-fields label > small:first-child { display: inline; margin-left: 5px; font-weight: 400; }
 .setup-fields input,
 .setup-fields select,
 .setup-fields textarea { width: 100%; color: var(--start-ink); border: 1px solid var(--start-line); border-radius: 14px; background: rgba(255, 255, 255, 0.86); }
@@ -160,6 +166,12 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .setup-fields textarea { min-height: 104px; padding: 14px 15px; resize: vertical; line-height: 1.5; }
 .setup-fields input::placeholder,
 .setup-fields textarea::placeholder { color: #989b96; }
+.story-spark-box { position: relative; }
+.story-spark-box textarea { padding-right: 132px; }
+.spark-speak { position: absolute; top: 12px; right: 12px; min-height: 40px; padding: 0 14px; color: var(--start-leaf-deep); border: 1px solid rgba(22, 132, 91, 0.34); border-radius: 999px; background: #e9f4ed; cursor: pointer; font-family: var(--start-sans); font-size: 13px; font-weight: 700; }
+.spark-speak:hover { border-color: var(--start-leaf); background: #dceee2; }
+.spark-speak.is-listening { color: #fff; border-color: var(--start-leaf); background: var(--start-leaf); animation: start-listening 700ms ease-in-out infinite alternate; }
+@keyframes start-listening { from { box-shadow: 0 0 0 0 rgba(22,132,91,.15); } to { box-shadow: 0 0 0 8px rgba(22,132,91,.1); } }
 .setup-fields .work-file-field input[type="file"] { height: auto; padding: 12px 14px; }
 .setup-fields .work-file-field input[type="file"]::file-selector-button { margin-right: 12px; padding: 9px 12px; color: #fff; border: 0; border-radius: 9px; background: var(--start-leaf-deep); cursor: pointer; }
 
@@ -213,11 +225,16 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
   .start-progress > div { align-items: flex-start; flex-direction: column; gap: 5px; }
   .start-panel h1 { font-size: clamp(43px, 13vw, 58px); }
   .start-lede { font-size: 18px; }
+  .story-spark-box textarea { min-height: 150px; padding-right: 15px; padding-top: 64px; }
+  .spark-speak { left: 12px; right: auto; }
   .start-mode-grid,
   .story-origin-grid,
   .story-origin-grid.two-up,
-  .setup-fields { grid-template-columns: 1fr; }
+  .setup-fields,
+  .squad-create-fields { grid-template-columns: 1fr; }
   .setup-fields label.wide { grid-column: auto; }
+  .squad-create-heading { grid-column: auto; }
+  .squad-create-fields { grid-column: auto; }
   .start-choice { min-height: 142px; }
   .start-actions { align-items: stretch; flex-direction: column; }
   .start-actions p { margin-left: 0; text-align: center; }

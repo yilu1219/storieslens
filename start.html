@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20260918-1" />
+    <link rel="stylesheet" href="start.css?v=20260918-2" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -114,15 +114,50 @@
               </select>
               <small>Story Coach will use this language for questions and feedback.</small>
             </label>
+            <section class="wide squad-create-fields" data-squad-create-fields hidden>
+              <div class="squad-create-heading">
+                <strong>Set up your shared story once</strong>
+                <small>These choices go directly to your Story Squad. You will not enter them again.</small>
+              </div>
+              <label class="wide">
+                Story Squad title
+                <input data-squad-title maxlength="120" placeholder="Our Moonlight Adventure" />
+              </label>
+              <label>
+                Final outcome
+                <select data-squad-output>
+                  <option value="book">Illustrated book</option>
+                  <option value="film">Story film</option>
+                </select>
+              </label>
+              <label>
+                Locked visual style
+                <select data-squad-style>
+                  <option value="storybook-watercolor">Storybook watercolor</option>
+                  <option value="ink-watercolor">Chinese ink watercolor</option>
+                  <option value="cinematic">Cinematic animation</option>
+                  <option value="comic">Graphic novel</option>
+                  <option value="block-world">Block World</option>
+                </select>
+              </label>
+              <label class="wide">
+                Character &amp; world lock <small>Optional</small>
+                <textarea data-squad-character-rules maxlength="1200" rows="3" placeholder="Maya is 8, with short black hair and a yellow raincoat; the moon fox has silver wings…"></textarea>
+                <small>Everyone’s later images will follow these shared character and world rules.</small>
+              </label>
+            </section>
             <label class="wide" data-idea-field>
               Your story spark
-              <textarea data-story-seed rows="3" maxlength="280" placeholder="A shy inventor discovers that the moon is sending secret messages..."></textarea>
-              <small>One sentence is enough. Story Coach will ask what comes next.</small>
+              <div class="story-spark-box">
+                <textarea data-story-seed rows="3" maxlength="1200" placeholder="Type your idea here…"></textarea>
+                <button class="spark-speak" type="button" data-spark-speak aria-pressed="false">● Hold to Speak</button>
+              </div>
+              <small data-spark-voice-status>Press and hold to speak for as long as you need. Release to stop. Your voice becomes editable text and live audio is not stored.</small>
             </label>
             <label class="wide work-file-field" data-work-file-field hidden>
-              Upload your work
-              <input type="file" data-work-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,text/plain,text/markdown,.txt,.md" />
-              <small data-work-file-status>Choose a drawing, manuscript image, TXT, or MD file up to 2 MB. Artwork is reviewed before private upload.</small>
+              Add existing writing, artwork, or a photo
+              <input type="file" data-work-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,text/plain,text/markdown,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" />
+              <small data-work-file-status>Choose DOCX, TXT, MD, JPG, PNG, WEBP, or HEIC. Files are prepared privately before the next step.</small>
             </label>
             <label class="wide" data-code-field hidden>
               Story Code
@@ -152,9 +187,10 @@
 
     <script src="safety-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="writing-import.js?v=20260916-2"></script>
     <script src="i18n.js"></script>
     <script src="analytics.js"></script>
-    <script src="start.js?v=20260913-3"></script>
+    <script src="start.js?v=20260918-5"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>
