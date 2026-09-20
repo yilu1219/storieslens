@@ -2,7 +2,7 @@
   --archive-paper: #f4efe4;
   --archive-ink: #17211d;
   --archive-muted: #69716a;
-  --archive-red: #aa3f34;
+  --archive-accent: #0f6b4d;
   --archive-green: #21372f;
   --archive-gold: #c99a43;
   --archive-line: rgba(23, 33, 29, 0.14);
@@ -27,7 +27,7 @@ body.archive-page::before {
   pointer-events: none;
   background:
     radial-gradient(ellipse at 92% 7%, rgba(37, 57, 48, 0.12), transparent 24%),
-    radial-gradient(ellipse at 5% 70%, rgba(168, 70, 55, 0.07), transparent 25%);
+    radial-gradient(ellipse at 5% 70%, rgba(15, 107, 77, 0.07), transparent 25%);
   content: "";
 }
 
@@ -66,7 +66,7 @@ body.archive-page::before {
 }
 
 .archive-kicker {
-  color: var(--archive-red);
+  color: var(--archive-accent);
   font-size: 13px;
   font-weight: 900;
   letter-spacing: .16em;
@@ -84,7 +84,7 @@ body.archive-page::before {
   line-height: .9;
 }
 
-.archive-hero h1 em { color: var(--archive-red); font-weight: inherit; }
+.archive-hero h1 em { color: var(--archive-accent); font-weight: inherit; }
 
 .archive-hero > p {
   margin: 0;
@@ -117,7 +117,7 @@ body.archive-page::before {
 .archive-progress b { font-size: 16px; }
 .archive-progress small { font-size: 14px; }
 .archive-progress li.is-active { color: var(--archive-ink); }
-.archive-progress li.is-active > span { border-color: var(--archive-red); color: white; background: var(--archive-red); }
+.archive-progress li.is-active > span { border-color: var(--archive-accent); color: white; background: var(--archive-accent); }
 
 .archive-intake-layout {
   display: grid;
@@ -137,7 +137,7 @@ body.archive-page::before {
 }
 
 .archive-capture-card { padding: clamp(24px, 4vw, 48px); }
-.archive-capture-card header > span { color: var(--archive-red); font-size: 13px; font-weight: 900; letter-spacing: .15em; }
+.archive-capture-card header > span { color: var(--archive-accent); font-size: 13px; font-weight: 900; letter-spacing: .15em; }
 .archive-capture-card h2 { margin: 9px 0 8px; color: var(--archive-ink); font-family: Georgia, "Songti SC", serif; font-size: clamp(34px, 4vw, 56px); font-weight: 600; line-height: 1; }
 .archive-capture-card header p { max-width: 720px; margin: 0; color: var(--archive-muted); line-height: 1.6; }
 
@@ -158,7 +158,7 @@ body.archive-page::before {
   text-align: center;
 }
 
-.archive-dropzone:hover { border-color: var(--archive-red); }
+.archive-dropzone:hover { border-color: var(--archive-accent); }
 .archive-dropzone input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
 .archive-dropzone > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .archive-dropzone > img[hidden] { display: none !important; }
@@ -211,7 +211,7 @@ body.archive-page::before {
 .archive-local-note > span { color: var(--archive-green); font-size: 26px; }
 .archive-local-note p { margin: 0; color: var(--archive-muted); font-size: 15px; line-height: 1.5; }
 .archive-local-note strong { color: var(--archive-ink); }
-.archive-error { min-height: 20px; margin: 10px 0 0; color: #a52d27; font-size: 15px; }
+.archive-error { min-height: 20px; margin: 10px 0 0; color: var(--archive-accent); font-size: 15px; }
 
 .archive-primary-button {
   display: inline-flex;
@@ -223,8 +223,8 @@ body.archive-page::before {
   border: 0;
   border-radius: 999px;
   color: white;
-  background: var(--archive-red);
-  box-shadow: 0 14px 30px rgba(170, 63, 52, .2);
+  background: var(--archive-accent);
+  box-shadow: 0 14px 30px rgba(15, 107, 77, .2);
   font: inherit;
   font-size: 16px;
   font-weight: 850;
@@ -238,7 +238,7 @@ body.archive-page::before {
 .archive-explainer { padding: clamp(24px, 3vw, 34px); }
 .archive-explainer ol { margin: 22px 0 0; padding: 0; list-style: none; }
 .archive-explainer li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 18px 0; border-top: 1px solid var(--archive-line); }
-.archive-explainer li > span { color: var(--archive-red); font-size: 13px; font-weight: 900; }
+.archive-explainer li > span { color: var(--archive-accent); font-size: 13px; font-weight: 900; }
 .archive-explainer strong,
 .archive-explainer small { display: block; }
 .archive-explainer strong { margin-bottom: 5px; font-size: 16px; }
@@ -264,7 +264,7 @@ body.archive-page::before {
 .archive-approval { align-self: start; padding: 26px; border: 1px solid var(--archive-line); border-radius: 20px; background: #faf7f0; }
 .archive-approval h3 { margin: 9px 0 16px; font-family: Georgia, "Songti SC", serif; font-size: 30px; }
 .archive-approval label { display: flex; gap: 12px; align-items: flex-start; padding: 17px 0; border-top: 1px solid var(--archive-line); cursor: pointer; }
-.archive-approval input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 2px; accent-color: var(--archive-red); }
+.archive-approval input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 2px; accent-color: var(--archive-accent); }
 .archive-approval b,
 .archive-approval small { display: block; }
 .archive-approval b { font-size: 15px; }
@@ -288,11 +288,11 @@ body.archive-page::before {
 .archive-output-options { margin: 24px 0; border-block: 1px solid var(--archive-line); }
 .archive-output-options > div { display: grid; grid-template-columns: 44px 1fr; column-gap: 12px; padding: 17px 0; border-bottom: 1px solid var(--archive-line); }
 .archive-output-options > div:last-child { border-bottom: 0; }
-.archive-output-options span { grid-row: 1 / 3; color: var(--archive-red); font-size: 13px; font-weight: 900; }
+.archive-output-options span { grid-row: 1 / 3; color: var(--archive-accent); font-size: 13px; font-weight: 900; }
 .archive-output-options strong,
 .archive-output-options small { display: block; }
 .archive-output-options small { margin-top: 4px; color: var(--archive-muted); }
-.archive-pilot-note { margin-bottom: 24px; padding: 17px; border: 1px solid rgba(170, 63, 52, .16); border-radius: 15px; background: rgba(170, 63, 52, .05); }
+.archive-pilot-note { margin-bottom: 24px; padding: 17px; border: 1px solid rgba(15, 107, 77, .16); border-radius: 15px; background: rgba(15, 107, 77, .05); }
 .archive-pilot-note p { margin: 5px 0 0; color: var(--archive-muted); font-size: 15px; line-height: 1.5; }
 
 .archive-footer { display: flex; justify-content: space-between; gap: 20px; padding-block: 24px; border-top: 1px solid var(--archive-line); color: var(--archive-muted); font-size: 14px; }
@@ -363,8 +363,8 @@ html[lang="zh-CN"] .archive-hero h1 em {
   margin-top: 18px;
   padding: 10px 0;
   border: 0;
-  border-bottom: 1px solid var(--archive-red);
-  color: var(--archive-red);
+  border-bottom: 1px solid var(--archive-accent);
+  color: var(--archive-accent);
   background: transparent;
   font: inherit;
   font-weight: 850;
@@ -411,7 +411,7 @@ html[lang="zh-CN"] .archive-hero h1 em {
 .archive-mode-picker small { display: block; }
 .archive-mode-picker b { align-self: end; font-size: 16px; }
 .archive-mode-picker small { align-self: start; color: var(--archive-muted); font-size: 13px; line-height: 1.4; }
-.archive-mode-picker button.is-active { border-color: var(--archive-red); color: white; background: var(--archive-red); box-shadow: 0 14px 30px rgba(170, 63, 52, .18); }
+.archive-mode-picker button.is-active { border-color: var(--archive-accent); color: white; background: var(--archive-accent); box-shadow: 0 14px 30px rgba(15, 107, 77, .18); }
 .archive-mode-picker button.is-active small { color: rgba(255, 255, 255, .76); }
 
 .archive-capture-panel[hidden] { display: none; }
@@ -449,7 +449,7 @@ html[lang="zh-CN"] .archive-hero h1 em {
 
 .archive-selection[hidden] { display: none; }
 .archive-selection-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.archive-selection-heading button { padding: 4px 0; border: 0; border-bottom: 1px solid currentColor; color: var(--archive-red); background: transparent; font: inherit; font-weight: 800; cursor: pointer; }
+.archive-selection-heading button { padding: 4px 0; border: 0; border-bottom: 1px solid currentColor; color: var(--archive-accent); background: transparent; font: inherit; font-weight: 800; cursor: pointer; }
 .archive-file-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 112px; gap: 10px; overflow-x: auto; margin-top: 12px; padding-bottom: 5px; scroll-snap-type: x mandatory; }
 .archive-file-strip figure { position: relative; margin: 0; scroll-snap-align: start; }
 .archive-file-strip img { display: block; width: 112px; height: 84px; object-fit: cover; border-radius: 10px; background: #e7dfd1; }
@@ -480,12 +480,12 @@ html[lang="zh-CN"] .archive-hero h1 em {
 .archive-page-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .archive-page-visual > span { position: absolute; top: 12px; left: 12px; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; color: white; background: rgba(20, 31, 27, .78); font-size: 12px; font-weight: 900; }
 .archive-page-details { display: grid; align-content: center; gap: 12px; padding: 18px; }
-.archive-review-chip { justify-self: start; padding: 6px 9px; border-radius: 999px; color: #8a322c; background: rgba(170, 63, 52, .09); font-size: 10px; font-weight: 900; letter-spacing: .09em; }
+.archive-review-chip { justify-self: start; padding: 6px 9px; border-radius: 999px; color: var(--archive-accent); background: rgba(15, 107, 77, .09); font-size: 10px; font-weight: 900; letter-spacing: .09em; }
 .archive-page-details label > span { display: block; margin-bottom: 5px; color: var(--archive-muted); font-size: 12px; font-weight: 800; }
 .archive-page-details input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--archive-line); border-radius: 10px; color: var(--archive-ink); background: #fbf9f4; font: inherit; }
 .archive-page-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .archive-page-actions button { min-height: 34px; padding: 0 10px; border: 1px solid var(--archive-line); border-radius: 999px; color: var(--archive-ink); background: white; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
-.archive-page-actions button:last-child { color: var(--archive-red); }
+.archive-page-actions button:last-child { color: var(--archive-accent); }
 .archive-page-actions button:disabled { opacity: .35; cursor: not-allowed; }
 .archive-review-grid-v2 { grid-template-columns: minmax(0, 1.45fr) minmax(310px, .55fr); }
 .archive-review-grid-v2 .archive-approval { position: sticky; top: 18px; }
@@ -515,7 +515,7 @@ html[lang="zh-CN"] .archive-hero h1 em {
 .archive-ebook-page[hidden] { display: none; }
 .archive-ebook-page > img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
 .archive-ebook-page > div { padding: 18px 4px 4px; border-top: 1px solid var(--archive-line); }
-.archive-ebook-page span { color: var(--archive-red); font-size: 11px; font-weight: 900; letter-spacing: .13em; }
+.archive-ebook-page span { color: var(--archive-accent); font-size: 11px; font-weight: 900; letter-spacing: .13em; }
 .archive-ebook-page h3 { margin: 7px 0 4px; font-family: Georgia, "Songti SC", serif; font-size: 30px; line-height: 1; }
 .archive-ebook-page p { margin: 0; color: var(--archive-muted); font-size: 14px; }
 
@@ -526,7 +526,7 @@ html[lang="zh-CN"] .archive-hero h1 em {
 .archive-output-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
 .archive-secondary-button { display: inline-flex; min-height: 54px; align-items: center; justify-content: center; padding: 0 22px; border: 1px solid var(--archive-line); border-radius: 999px; color: var(--archive-ink); background: white; font: inherit; font-weight: 850; cursor: pointer; }
 .archive-save-state { min-height: 22px; margin-top: 14px; color: var(--archive-green); font-size: 14px; line-height: 1.45; }
-.archive-text-button { padding: 5px 0; border: 0; border-bottom: 1px solid currentColor; color: var(--archive-red); background: transparent; font: inherit; font-weight: 850; cursor: pointer; }
+.archive-text-button { padding: 5px 0; border: 0; border-bottom: 1px solid currentColor; color: var(--archive-accent); background: transparent; font: inherit; font-weight: 850; cursor: pointer; }
 
 @media (max-width: 980px) {
   .archive-fields { grid-template-columns: 1fr 1fr; }

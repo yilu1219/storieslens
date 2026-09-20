@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v85-personal-photo-20260920";
+const VERSION = "storieslens-pwa-v86-archive-green-20260920";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -16,7 +16,7 @@ const APP_SHELL = [
   "/manifest.webmanifest",
   "/styles.css",
   "/teacher-dashboard.css",
-  "/classroom-archive.css?v=20260911-4",
+  "/classroom-archive.css?v=20260920-green-1",
   "/classroom-archive.js?v=20260913-4",
   "/analytics.js",
   "/i18n.js?v=20260908-1",
