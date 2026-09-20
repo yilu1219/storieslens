@@ -97,7 +97,7 @@ test("an adult can consent to a personal photo and revocation or permanent delet
     ALLOWED_ACCOUNT_REGIONS: "cn",
     BETA_INVITE_ONLY: "false",
     BETA_ADULT_ACCOUNT_OWNER_ONLY: "true",
-    REAL_PERSON_PHOTO_UPLOADS_ENABLED: "true",
+    REAL_PERSON_PHOTO_UPLOADS_ENABLED: "false",
     REAL_PERSON_PHOTO_REQUIRE_ACCOUNT: "true",
     REQUIRE_PERSONAL_PHOTO_CONSENT: "true"
   });

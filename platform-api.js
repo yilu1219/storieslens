@@ -2285,10 +2285,6 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           return true;
         }
         if (imageReview?.checks?.realPerson) {
-          if (process.env.REAL_PERSON_PHOTO_UPLOADS_ENABLED !== "true") {
-            sendJson(response, 403, { error: "Personal-photo stories are not enabled for this beta yet." });
-            return true;
-          }
           if (process.env.REAL_PERSON_PHOTO_REQUIRE_ACCOUNT !== "false" && user.kind !== "account") {
             sendJson(response, 403, { error: "Sign in to an adult-owned account before saving a real-person photo." });
             return true;

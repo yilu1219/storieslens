@@ -101,6 +101,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(appJs.includes("coach_question_answered") && appJs.includes("first_story_page_created"), "formal H5 should measure its activation moment");
   assert(app.includes('src="artwork-upload-safety.js?') && appJs.includes("StoriesLensArtworkSafety.processArtwork"), "formal H5 should privacy-review artwork before it can be stored");
   assert(api.includes("reviewArtworkSafety(body.dataUrl)") && api.includes("containsRealPerson") && !api.includes("Real-person photos are not stored"), "private media API should accept safety-reviewed real-person photos and label them server-side");
+  assert(!api.includes("Personal-photo stories are not enabled for this beta yet."), "the legacy real-person beta switch must not block a consented private photo");
   assert(app.includes("Personal photos may become a private book or video") && chineseStudio.includes("真人照片可以用于制作私密故事书或视频"), "private beta studios should clearly accept consented personal photos for books and videos");
   assert(app.includes("data-photo-consent-processing") && chineseStudio.includes("data-photo-consent-processing"), "both studios should disclose regional cloud processing before personal-photo consent");
   assert(api.includes('"regional_ai_processing"') && api.includes("acknowledgedRegionalProcessing"), "personal-photo consent must explicitly cover regional safety and AI processing");
