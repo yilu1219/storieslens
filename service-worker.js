@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v84-install-20260920";
+const VERSION = "storieslens-pwa-v85-personal-photo-20260920";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -24,7 +24,7 @@ const APP_SHELL = [
   "/portal-home.js?v=20260916-43",
   "/family-flow.css?v=20260916-6",
   "/chinese-studio.css?v=20260916-5",
-  "/h5-app.js?v=20260917-photo-governance-1",
+  "/h5-app.js?v=20260920-personal-photo-2",
   "/spark-handoff.js?v=20260917-story-reference-1",
   "/writing-import.js?v=20260916-2",
   "/yu-profile.css?v=20260915-3",
