@@ -32,6 +32,8 @@
   const storyLanguage = document.querySelector("[data-story-language]");
   const squadCreateFields = document.querySelector("[data-squad-create-fields]");
   const squadTitle = document.querySelector("[data-squad-title]");
+  const titleSpeak = document.querySelector("[data-title-speak]");
+  const titleVoiceStatus = document.querySelector("[data-title-voice-status]");
   const squadOutput = document.querySelector("[data-squad-output]");
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
@@ -87,6 +89,11 @@
   let sparkPointerSession = false;
   let suppressSparkClick = false;
   let sparkRestartTimer = null;
+  let titleRecognition = null;
+  let titleListeningRequested = false;
+  let titlePointerSession = false;
+  let suppressTitleClick = false;
+  let titleRestartTimer = null;
   let characterRecognition = null;
   let characterListeningRequested = false;
   let characterPointerSession = false;
@@ -424,6 +431,95 @@
     }
     if (sparkListeningRequested) stopSparkListening();
     else startSparkListening(false);
+  });
+
+  const resetTitleSpeakUi = () => {
+    titleSpeak?.classList.remove("is-listening");
+    titleSpeak?.setAttribute("aria-pressed", "false");
+    if (titleSpeak) titleSpeak.textContent = t("● Hold to Speak");
+    if (titleVoiceStatus && squadTitle?.value.trim()) titleVoiceStatus.textContent = t("Voice converted to an editable story name. Live audio was not stored.");
+  };
+
+  const beginTitleRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      titleListeningRequested = false;
+      if (titleVoiceStatus) titleVoiceStatus.textContent = t("Voice typing is unavailable in this browser. You can still type your story name.");
+      squadTitle?.focus();
+      return;
+    }
+    if (titleRecognition || !titleListeningRequested) return;
+    const original = squadTitle?.value.trim() || "";
+    titleRecognition = new SpeechRecognition();
+    titleRecognition.lang = storyLanguage?.value === "zh" ? "zh-CN" : "en-US";
+    titleRecognition.interimResults = true;
+    titleRecognition.continuous = true;
+    titleSpeak?.classList.add("is-listening");
+    titleSpeak?.setAttribute("aria-pressed", "true");
+    if (titleSpeak) titleSpeak.textContent = titlePointerSession ? t("● Listening… release to stop") : t("■ Stop");
+    if (titleVoiceStatus) titleVoiceStatus.textContent = t("Listening… say your story name.");
+    titleRecognition.onresult = (event) => {
+      const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
+      if (squadTitle) {
+        squadTitle.value = `${original}${original ? " " : ""}${spoken}`.slice(0, squadTitle.maxLength || 120);
+        squadTitle.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    };
+    titleRecognition.onerror = (event) => {
+      if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
+        titleListeningRequested = false;
+        titlePointerSession = false;
+      }
+      if (event.error !== "no-speech" && titleVoiceStatus) titleVoiceStatus.textContent = t("I could not hear that clearly. Hold the button to try again, or type your story name.");
+    };
+    titleRecognition.onend = () => {
+      titleRecognition = null;
+      if (titleListeningRequested) {
+        clearTimeout(titleRestartTimer);
+        titleRestartTimer = setTimeout(beginTitleRecognition, 120);
+        return;
+      }
+      resetTitleSpeakUi();
+    };
+    titleRecognition.start();
+  };
+
+  const startTitleListening = (pointerSession = false) => {
+    if (titleListeningRequested) return;
+    titlePointerSession = pointerSession;
+    titleListeningRequested = true;
+    beginTitleRecognition();
+  };
+
+  const stopTitleListening = () => {
+    titleListeningRequested = false;
+    titlePointerSession = false;
+    clearTimeout(titleRestartTimer);
+    if (titleRecognition) titleRecognition.stop();
+    else resetTitleSpeakUi();
+  };
+
+  titleSpeak?.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    suppressTitleClick = true;
+    titleSpeak.setPointerCapture?.(event.pointerId);
+    startTitleListening(true);
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => titleSpeak?.addEventListener(eventName, (event) => {
+    if (!titlePointerSession) return;
+    event.preventDefault();
+    stopTitleListening();
+  }));
+
+  titleSpeak?.addEventListener("click", () => {
+    if (suppressTitleClick) {
+      suppressTitleClick = false;
+      return;
+    }
+    if (titleListeningRequested) stopTitleListening();
+    else startTitleListening(false);
   });
 
   const resetCharacterSpeakUi = () => {

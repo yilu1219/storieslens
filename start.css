@@ -262,6 +262,11 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .setup-fields textarea { min-height: 104px; padding: 14px 15px; resize: vertical; font-size: 18px; line-height: 1.5; }
 .setup-fields input::placeholder,
 .setup-fields textarea::placeholder { color: #989b96; }
+.title-voice-box { position: relative; }
+.title-voice-box input { padding-right: 150px; }
+.title-speak { position: absolute; top: 7px; right: 8px; min-height: 42px; padding: 0 13px; color: var(--start-leaf-deep); border: 1px solid rgba(22, 132, 91, .34); border-radius: 999px; background: #e9f4ed; cursor: pointer; font-family: var(--start-sans); font-size: 14px; font-weight: 800; }
+.title-speak:hover { border-color: var(--start-leaf); background: #dceee2; }
+.title-speak.is-listening { color: #fff; border-color: var(--start-leaf); background: var(--start-leaf); animation: start-listening 700ms ease-in-out infinite alternate; }
 .story-spark-box { position: relative; }
 .story-spark-box textarea { padding-right: 132px; }
 .spark-speak { position: absolute; top: 12px; right: 12px; min-height: 42px; padding: 0 14px; color: var(--start-leaf-deep); border: 1px solid rgba(22, 132, 91, 0.34); border-radius: 999px; background: #e9f4ed; cursor: pointer; font-family: var(--start-sans); font-size: 15px; font-weight: 700; }
@@ -326,6 +331,8 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
   .carried-spark > span { display: none; }
   .story-spark-box textarea { min-height: 150px; padding-right: 15px; padding-top: 64px; }
   .spark-speak { left: 12px; right: auto; }
+  .title-voice-box input { min-height: 112px; padding: 58px 14px 14px; }
+  .title-speak { top: 9px; left: 10px; right: auto; }
   .yu-listen-intro { grid-template-columns: auto 1fr; }
   .yu-listen-intro > button { grid-column: 1 / -1; width: 100%; min-height: 42px; }
   .field-title { align-items: flex-start; }

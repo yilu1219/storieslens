@@ -1,5 +1,8 @@
 const STRICT_SCORE_THRESHOLDS = {
-  sexual: 0.01,
+  // Ordinary portraits can receive a small non-zero adult-sexual score from
+  // vision moderation. The provider's own `flagged` decision still blocks
+  // unsafe imagery; this supplemental threshold catches only a strong signal.
+  sexual: 0.12,
   "sexual/minors": 0.001,
   violence: 0.05,
   "violence/graphic": 0.005,
@@ -10,6 +13,11 @@ const STRICT_SCORE_THRESHOLDS = {
   "harassment/threatening": 0.03,
   "illicit/violent": 0.02
 };
+
+function isModerationResultBlocked(result = {}) {
+  if (result.flagged === true) return true;
+  return Object.entries(STRICT_SCORE_THRESHOLDS).some(([category, threshold]) => Number(result.category_scores?.[category] || 0) >= threshold);
+}
 
 const LOCAL_RULES = [
   {
@@ -83,10 +91,7 @@ async function callOpenAIModeration(input) {
       return { available: false, reason: "provider_error" };
     }
 
-    const blocked = data.results.some((result) => {
-      if (result.flagged) return true;
-      return Object.entries(STRICT_SCORE_THRESHOLDS).some(([category, threshold]) => Number(result.category_scores?.[category] || 0) >= threshold);
-    });
+    const blocked = data.results.some(isModerationResultBlocked);
     return { available: true, safe: !blocked, source: "omni-moderation-latest" };
   } catch {
     return { available: false, reason: "network_error" };
@@ -170,4 +175,4 @@ async function checkImageSafety(imageUrl, { requireExternal = true } = {}) {
   return external;
 }
 
-module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, localSafetyCheck, normalizeSafetyText };
+module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, isModerationResultBlocked, localSafetyCheck, normalizeSafetyText };

@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { checkImageSafety, extractOpenRouterJson, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, extractOpenRouterJson, isModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -26,6 +26,12 @@ test("does not block ordinary safe story ideas", () => {
     "一位奶奶和孙女共同寻找遗失的家书。",
     "A dragon learns to solve disagreements with words."
   ].forEach((sample) => assert.strictEqual(localSafetyCheck(sample).safe, true, sample));
+});
+
+test("ordinary portrait noise is tolerated while flagged and child-sexual signals stay blocked", () => {
+  assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { sexual: 0.04 } }), false);
+  assert.strictEqual(isModerationResultBlocked({ flagged: true, category_scores: { sexual: 0.001 } }), true);
+  assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { "sexual/minors": 0.002 } }), true);
 });
 
 test("parses a JSON safety verdict from OpenRouter-compatible output", () => {

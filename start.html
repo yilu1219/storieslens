@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20260920-8" />
+    <link rel="stylesheet" href="start.css?v=20260920-9" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -136,7 +136,11 @@
               </div>
               <label class="wide">
                 <span class="field-title"><span>Name your story</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Give your shared story a fun title. You can change it later." data-read-zh="给你们的共创故事取一个有趣的名字，以后还可以修改。" aria-label="Hear Yu explain story title">▶ Ask Yu</button></span>
-                <input data-squad-title maxlength="120" placeholder="Our Moonlight Adventure" />
+                <div class="title-voice-box">
+                  <input data-squad-title maxlength="120" placeholder="Type or say your story name" />
+                  <button class="title-speak" type="button" data-title-speak aria-pressed="false">● Hold to Speak</button>
+                </div>
+                <small data-title-voice-status>Type a name, or hold the button and say it aloud. Live audio is not stored.</small>
               </label>
               <label>
                 <span class="field-title"><span>What will you make?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Choose an illustrated book or a story film. Your team can build it together." data-read-zh="请选择最后做成插画书或故事电影，大家可以一起完成。" aria-label="Hear Yu explain final outcome">▶ Ask Yu</button></span>
@@ -265,7 +269,7 @@
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="i18n.js"></script>
     <script src="analytics.js"></script>
-    <script src="start.js?v=20260920-12"></script>
+    <script src="start.js?v=20260920-13"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

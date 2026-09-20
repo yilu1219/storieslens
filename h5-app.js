@@ -1227,7 +1227,15 @@
       } else {
         selectedArtworkData = "";
         selectedArtwork = null;
-        toast(locale === "zh" ? "图片未通过安全检查，没有保存。" : "The image did not pass the safety check and was not saved.", true);
+        const reasonMessages = {
+          identity_document: locale === "zh" ? "照片中可能包含身份证件，请换一张普通人像照片。" : "The photo may contain an identity document. Choose an ordinary portrait instead.",
+          school_information: locale === "zh" ? "照片中可能包含学校名称或校徽，请裁剪后重试。" : "The photo may show a school name or logo. Crop it and try again.",
+          contact_information: locale === "zh" ? "照片中可能包含联系方式、地址或二维码，请裁剪后重试。" : "The photo may contain contact details, an address, or a QR code. Crop it and try again.",
+          unsafe_content: locale === "zh" ? "照片可能包含不适合儿童平台的色情、血腥暴力或其他危险内容。" : "The photo may contain sexual, graphic, violent, or other content unsuitable for a children’s platform.",
+          uncertain: locale === "zh" ? "系统暂时无法确认这张照片是否安全，请换一张光线清楚、无遮挡的人像。" : "The system could not confirm this photo is safe. Try a clear, unobstructed portrait.",
+          invalid_image: locale === "zh" ? "图片无法读取，请改用 JPG、PNG、WEBP、HEIC 或 HEIF。" : "The image could not be read. Try JPG, PNG, WEBP, HEIC, or HEIF."
+        };
+        toast(reasonMessages[reasonCode] || (locale === "zh" ? "图片未通过安全检查，请换一张普通、清晰、无隐私信息的人像。" : "The image did not pass the safety check. Choose a clear portrait without private information."), true);
         return;
       }
     }
