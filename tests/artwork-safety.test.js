@@ -35,6 +35,19 @@ test("safe real-person photos are accepted while protected information remains b
   assert.equal(personalPhoto.reasonCode, "approved");
   assert.equal(personalPhoto.checks.realPerson, true);
 
+  const namedPersonalPhoto = evaluateArtworkSignals({
+    is_artwork: false,
+    has_real_person: true,
+    has_identity_document: false,
+    has_personal_name: true,
+    has_school_information: false,
+    has_contact_information: false,
+    reason_code: "personal_name"
+  });
+  assert.equal(namedPersonalPhoto.approved, true);
+  assert.equal(namedPersonalPhoto.reasonCode, "approved");
+  assert.equal(namedPersonalPhoto.checks.personalName, true);
+
   const identityDocument = evaluateArtworkSignals({
     is_artwork: false,
     has_real_person: true,
