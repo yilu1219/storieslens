@@ -400,6 +400,7 @@ assert(h5AppJs.includes("Your image is already here"), "The destination studio s
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
 assert(startHtml.includes('data-carried-spark') && startJs.includes("restoreHomepageSpark"), "Solo-or-group setup should visibly restore the homepage photo instead of asking for it again");
 assert(startJs.includes('sessionStorage.setItem("storieslens_imported_work"') && startJs.includes('origin = "picture"'), "The carried homepage photo should become the selected starting picture for either creation mode");
+assert(startJs.includes('const language = "en"') && startJs.includes("speakAsYu(button.dataset.readEn, button)"), "The shared solo-or-group route should keep Yu's interface narration in English even when the destination story language is Chinese");
 assert(startJs.includes('chinese-studio.html?from=homepage-magic') && startJs.includes('app.html?locale=en&from=homepage-magic'), "A solo creator should continue with the same photo into the matching language studio");
 assert(read("squad-board.js").includes("StoriesLensSparkHandoff.load()"), "A Story Squad should recover a large homepage photo from IndexedDB when session storage is too small");
 assert.match(

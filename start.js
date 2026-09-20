@@ -310,7 +310,10 @@
     const wasSpeaking = button?.classList.contains("is-speaking");
     stopYuVoice();
     if (wasSpeaking) return;
-    const language = storyLanguage?.value === "zh" ? "zh" : "en";
+    // This shared route is the English entry experience. The selected story
+    // language controls the creator's dictation and destination studio, but it
+    // must not silently switch Yu's interface narration to Chinese.
+    const language = "en";
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language === "zh" ? "zh-CN" : "en-US";
     utterance.rate = language === "zh" ? 0.8 : 0.86;
@@ -326,15 +329,11 @@
   yuReadButtons.forEach((button) => button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const language = storyLanguage?.value === "zh" ? "zh" : "en";
-    speakAsYu(language === "zh" ? button.dataset.readZh : button.dataset.readEn, button);
+    speakAsYu(button.dataset.readEn, button);
   }));
 
   yuReadPageButton?.addEventListener("click", () => {
-    const language = storyLanguage?.value === "zh" ? "zh" : "en";
-    const pageGuide = language === "zh"
-      ? "你好，我是羽大师。先告诉我谁在创作，再选择你喜欢的创作方式和故事语言。如果要创建共创小组，请给故事起名字，选择做成书还是电影，再选一种画风。最后，你可以打字、按住说话，或者上传已有作品。"
-      : "Hello, I’m Yu. First tell me who is creating, then choose how you like to create and your story language. For a Story Squad, name your story, choose a book or film, and pick one picture style. Finally, type an idea, hold to speak, or add something you already made.";
+    const pageGuide = "Hello, I’m Yu. First tell me who is creating, then choose how you like to create and your story language. For a Story Squad, name your story, choose a book or film, and pick one picture style. Finally, type an idea, hold to speak, or add something you already made.";
     speakAsYu(pageGuide, yuReadPageButton);
   });
 
