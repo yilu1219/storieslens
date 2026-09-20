@@ -58,6 +58,9 @@ button, textarea { color: inherit; font: inherit; }
 .portal-login { display: inline-flex; min-height: 45px; align-items: center; justify-content: center; padding: 0 18px; color: #fff; border: 1px solid var(--leaf-deep); border-radius: 999px; background: var(--leaf-deep); font-family: var(--sans); font-size: 14px; font-weight: 700; text-decoration: none; box-shadow: 0 9px 22px rgba(15,98,68,.16); }
 .portal-login:hover { background: var(--leaf); }
 .portal-login:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.portal-install { display:inline-flex; min-height:45px; align-items:center; justify-content:center; padding:0 16px; border:1px solid rgba(15,98,68,.25); border-radius:999px; color:var(--leaf-deep); background:rgba(255,255,255,.72); font-family:var(--sans); font-size:14px; font-weight:800; cursor:pointer; }
+.portal-install:hover { background:#fff; border-color:var(--leaf); }
+.portal-install:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
 
 .magic-hero { display: grid; grid-template-columns: minmax(0, .86fr) minmax(500px, 1.14fr); align-items: center; gap: clamp(46px, 7vw, 100px); min-height: calc(100vh - 100px); padding: clamp(54px, 7vw, 90px) 0; }
 .portal-kicker { margin: 0; color: var(--leaf-deep); font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: .2em; }
@@ -232,6 +235,7 @@ button, textarea { color: inherit; font: inherit; }
   .portal-brand span { font-size: 24px; }
   .portal-language-toggle button { min-width: 48px; padding: 9px 10px; font-size: 13px; }
   .portal-login { min-height: 42px; padding-inline: 14px; font-size: 13px; }
+  .portal-install { min-height:42px; padding-inline:13px; font-size:13px; }
   .magic-hero { gap: 34px; padding: 42px 0 64px; }
   .magic-copy h1 { margin-top: 12px; font-size: clamp(52px, 16.5vw, 76px); line-height: .88; }
   .magic-lede { font-size: 20px; }
@@ -286,6 +290,7 @@ button, textarea { color: inherit; font: inherit; }
   .portal-language-toggle button { min-width: 43px; padding-inline: 8px; }
   .portal-header-actions { gap: 7px; }
   .portal-login { padding-inline: 11px; }
+  .portal-install { display:none; }
   .magic-launcher { padding: 16px; }
   .launcher-heading span { max-width: 130px; }
   .story-language-choice > div { grid-template-columns: 1fr; }

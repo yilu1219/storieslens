@@ -6,18 +6,21 @@
   "start_url": "/app.html?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#f4f0e6",
   "theme_color": "#f4f0e6",
   "orientation": "any",
   "lang": "en",
+  "dir": "auto",
   "categories": ["education", "creativity", "entertainment"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "/assets/storieslens-logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/assets/storieslens-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/assets/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Start a story", "short_name": "Create", "url": "/app.html?source=pwa" },
-    { "name": "My stories", "short_name": "Library", "url": "/my-stories.html?source=pwa" },
-    { "name": "Teacher archive", "short_name": "Class", "url": "/classroom-archive.html?source=pwa" }
+    { "name": "Start a story", "short_name": "Create", "description": "Begin with artwork, words or voice", "url": "/app.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
+    { "name": "My stories", "short_name": "Library", "description": "Return to private drafts and finished work", "url": "/my-stories.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
+    { "name": "Teacher archive", "short_name": "Class", "description": "Open the teacher publishing workspace", "url": "/classroom-archive.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] }
   ]
 }

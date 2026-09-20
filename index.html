@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f4efe6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="StoriesLens" />
     <meta name="description" content="Upload something you made—or speak one idea. Yu asks three questions, and you create the first scene of a storybook or short film." />
     <meta property="og:title" content="StoriesLens — Your story starts with you" />
     <meta property="og:description" content="One creation. Three questions. Your first original story scene—ready to grow into a book or short film." />
@@ -14,7 +18,7 @@
     <meta name="twitter:image" content="https://www.storieslens.com/assets/hero-en-art-to-story-triptych-v1.jpg" />
     <title>StoriesLens | Start with your creation</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
     <link rel="stylesheet" href="portal-home.css?v=20260918-1" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
@@ -28,6 +32,7 @@
         <span>StoriesLens</span>
       </a>
       <div class="portal-header-actions">
+        <button class="portal-install" type="button" data-pwa-install>Install App · 安装</button>
         <div class="portal-language-toggle" aria-label="Creation language">
           <button class="is-active" type="button" data-home-locale="en" aria-pressed="true">EN</button>
           <button type="button" data-home-locale="zh" aria-pressed="false">中文</button>
@@ -228,6 +233,7 @@
       <span>© 2026 StoriesLens</span>
       <a href="product-video.html">Watch product film · 观看产品视频</a>
       <a href="refund-policy.html">Refund Policy · 退款规则</a>
+      <a href="install-app.html">Install App · 安装轻应用</a>
       <span data-home-t="footer-trust">Private by default · AI guides, people create</span>
     </footer>
 

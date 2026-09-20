@@ -1,8 +1,11 @@
-const VERSION = "storieslens-h5-v83-stripe-checkout-20260917";
+const VERSION = "storieslens-pwa-v84-install-20260920";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
   "/offline.html",
+  "/offline.js",
+  "/install-app.html",
+  "/install-app.css",
   "/app.html",
   "/chinese-studio.html",
   "/index.html",
@@ -42,6 +45,8 @@ const APP_SHELL = [
   "/pwa.js",
   "/offline.js",
   "/assets/storieslens-logo.png",
+  "/assets/app-icon-192.png",
+  "/assets/app-icon-512.png",
   "/assets/yu-mascot-logo-v2.png",
   "/assets/yu-feather-mark.svg",
   "/assets/storieslens-zh-seal-v2.png",

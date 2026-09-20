@@ -4,10 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="theme-color" content="#f4efe6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="StoriesLens" />
     <meta name="robots" content="noindex,nofollow" />
     <meta name="description" content="Sign in to your private StoriesLens library with email." />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
+    <link rel="stylesheet" href="pwa.css" />
     <link rel="stylesheet" href="login.css?v=20260915-1" />
     <title>Email sign in · StoriesLens</title>
   </head>
@@ -93,5 +98,6 @@
 
     <script src="platform-client.js"></script>
     <script src="login.js?v=20260915-2"></script>
+    <script src="pwa.js"></script>
   </body>
 </html>

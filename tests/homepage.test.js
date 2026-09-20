@@ -31,7 +31,8 @@ const htmlFiles = [
   "chinese-studio.html",
   "my-stories.html",
   "movie-studio.html",
-  "showcase.html"
+  "showcase.html",
+  "install-app.html"
 ].filter((file) => fs.existsSync(path.join(root, file)));
 
 const htmlByFile = Object.fromEntries(htmlFiles.map((file) => [file, read(file)]));

@@ -17,6 +17,8 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   const chineseStudio = read("chinese-studio.html");
   const manifest = JSON.parse(read("manifest.webmanifest"));
   const worker = read("service-worker.js");
+  const pwa = read("pwa.js");
+  const installPage = read("install-app.html");
   const renderer = read("ffmpeg-movie-renderer.js");
   const bookExport = read("book-export.js");
   const regionalStorage = read("regional-object-storage.js");
@@ -129,7 +131,11 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(library.includes("never change it from your IP alone") && !api.includes("cf-ipcountry"), "IP geolocation must not silently choose a data region");
   assert.strictEqual(manifest.display, "standalone", "PWA should install in standalone mode");
   assert.strictEqual(manifest.start_url, "/app.html?source=pwa", "installed PWA should open the formal H5 product");
+  assert.deepStrictEqual(manifest.icons.map((icon) => icon.sizes), ["192x192", "512x512"], "PWA icons should declare real installable sizes");
+  assert(fs.existsSync(path.join(root, "assets/app-icon-192.png")) && fs.existsSync(path.join(root, "assets/app-icon-512.png")), "PWA install icons should exist");
   assert(worker.includes("/api/") && worker.includes("offline.html"), "service worker should preserve offline pages without caching private APIs");
+  assert(worker.includes("install-app.html") && pwa.includes("beforeinstallprompt") && pwa.includes("Add to Home Screen"), "PWA should guide both automatic installation and iPhone home-screen installation");
+  assert(installPage.includes("iPhone / iPad") && installPage.includes("Android") && installPage.includes("Same allowance and saved work"), "install page should explain the device paths and account continuity");
   assert(server.includes("microphone=(self)"), "first-party recording should be permitted");
 });
 
