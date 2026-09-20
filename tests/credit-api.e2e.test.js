@@ -148,7 +148,7 @@ test("founder can issue a regional invite, onboard a creator, and grant auditabl
 
     const initialCredits = await request(baseUrl, "/api/credits", { cookies: [accountCookie] });
     assert.equal(initialCredits.payload.wallet.resources.storyProjects.remaining, 2);
-    assert.equal(initialCredits.payload.wallet.resources.imageGenerations.remaining, 15);
+    assert.equal(initialCredits.payload.wallet.resources.imageGenerations.remaining, 13);
 
     const users = await request(baseUrl, "/api/admin/users?query=Beta%20Creator", { cookies: [adminCookie] });
     assert.equal(users.payload.users.length, 1);

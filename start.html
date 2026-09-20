@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20260918-2" />
+    <link rel="stylesheet" href="start.css?v=20260918-7" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -45,7 +45,7 @@
 
         <form data-start-form novalidate>
           <fieldset class="choice-fieldset step-panel" data-step-panel="1">
-            <legend>Choose a creation mode</legend>
+            <legend class="choice-legend"><span>Choose a creation mode</span><button type="button" class="yu-read-button choice-read-button" data-yu-read data-read-en="How do you want to create? Choose Solo Story for your own idea and voice. Choose Story Squad to create one private story world with family or friends." data-read-zh="你想怎样创作？选择个人故事，用自己的想法和声音创作；选择故事小组，和家人或朋友一起创造一个私密故事世界。" aria-label="Hear Yu read the creation choices">▶ Hear choices</button></legend>
             <div class="start-mode-grid">
               <button class="start-choice is-selected" type="button" data-mode-choice="solo" aria-pressed="true">
                 <span class="choice-kicker">Solo Story</span>
@@ -61,7 +61,7 @@
           </fieldset>
 
           <fieldset class="choice-fieldset step-panel" data-step-panel="2" data-solo-options hidden>
-            <legend>What kind of story?</legend>
+            <legend class="choice-legend"><span>What kind of story?</span><button type="button" class="yu-read-button choice-read-button" data-yu-read data-read-en="What kind of story will you begin? You can invent a world, tell a memory, start from a picture, or bring writing or artwork you already made. Pick the easiest starting point. There is no wrong answer." data-read-zh="你想从哪一种故事开始？你可以创造一个世界、讲述一段回忆、从图片开始，或者带来已经写好或画好的作品。选择最容易开始的一种，没有错误答案。" aria-label="Hear Yu read the story choices">▶ Hear choices</button></legend>
             <div class="story-origin-grid">
               <button class="origin-choice is-selected" type="button" data-origin="imagination" aria-pressed="true"><strong>Invent a world</strong><small>Characters, quests, mysteries</small></button>
               <button class="origin-choice" type="button" data-origin="memory" aria-pressed="false"><strong>Tell my story</strong><small>A memory or life moment</small></button>
@@ -71,7 +71,7 @@
           </fieldset>
 
           <fieldset class="choice-fieldset step-panel" data-step-panel="2" data-squad-options hidden>
-            <legend>What would you like to do?</legend>
+            <legend class="choice-legend"><span>What would you like to do?</span><button type="button" class="yu-read-button choice-read-button" data-yu-read data-read-en="How will you join the adventure? Start a private squad if you want to create a new story with family or friends. Join with a code if someone already sent you a private Story Code." data-read-zh="你想怎样加入这次故事冒险？如果你想和家人或朋友创建一个新故事，请选择创建私密小组；如果别人已经发给你故事邀请码，请选择使用邀请码加入。" aria-label="Hear Yu read the squad choices">▶ Hear choices</button></legend>
             <div class="story-origin-grid two-up">
               <button class="origin-choice is-selected" type="button" data-squad-action="create" aria-pressed="true"><strong>Start a private squad</strong><small>Invite 1–5 family members or friends after setup</small></button>
               <button class="origin-choice" type="button" data-squad-action="join" aria-pressed="false"><strong>Join with a code</strong><small>Use the code from family or a friend</small></button>
@@ -79,8 +79,13 @@
           </fieldset>
 
           <div class="setup-fields step-panel" data-step-panel="3" hidden>
+            <div class="wide yu-listen-intro">
+              <span class="yu-listen-mark" aria-hidden="true"><img src="assets/storieslens-logo.png" alt="" /></span>
+              <div><strong>Need help reading this page?</strong><small>Yu can explain each choice out loud.</small></div>
+              <button type="button" data-yu-read-page>▶ Hear Yu guide me</button>
+            </div>
             <label class="wide age-gate-field">
-              Account & safety
+              <span class="field-title"><span>Who is creating?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Choose whether an adult is creating, or a child is creating with an adult nearby." data-read-zh="请选择是成年人创作，还是孩子在成年人陪伴下创作。" aria-label="Hear Yu explain who is creating">▶ Ask Yu</button></span>
               <select data-age-group required>
                 <option value="adult">I am 18 or older · independent account</option>
                 <option value="under18">I am under 18 · creating with adult support</option>
@@ -93,21 +98,21 @@
               <label><input type="checkbox" data-supervision-confirm /> <span>I am an adult responsible for supervising this account.</span></label>
             </section>
             <label>
-              Writing level
+              <span class="field-title"><span>How do you like to create?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Tell me how you like to create. This helps me make my questions easier or more challenging for you. It is not a test." data-read-zh="告诉我你喜欢怎样创作。这能帮助我调整问题的难度，但这不是考试。" aria-label="Hear Yu explain creation style">▶ Ask Yu</button></span>
               <select data-creator-level required>
-                <option value="starter">New storyteller · pictures and voice</option>
-                <option value="growing">Growing writer · school and independent practice</option>
-                <option value="independent">Teen or adult writer · deeper craft feedback</option>
-                <option value="family">Family creating together</option>
+                <option value="starter">Tell and draw · easiest start</option>
+                <option value="growing">Write and grow · school writing</option>
+                <option value="independent">Build a bigger story · deeper feedback</option>
+                <option value="family">Create together · family team</option>
               </select>
-              <small>Story Coach adapts its questions to your experience and goal—not just your age.</small>
+              <small>This is not a test. It only helps Yu choose the right kind of questions.</small>
             </label>
             <label>
-              Display name
+              <span class="field-title"><span>What should we call you?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Type a first name or nickname. This is the name your story team will see." data-read-zh="请输入名字或昵称，这是故事小组里大家会看到的名字。" aria-label="Hear Yu explain display name">▶ Ask Yu</button></span>
               <input data-display-name autocomplete="nickname" maxlength="24" placeholder="Use a first name or nickname" required />
             </label>
             <label class="wide">
-              Story language
+              <span class="field-title"><span>What language will your story use?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Choose English or Chinese. I will ask questions and give feedback in this language." data-read-zh="请选择英文或中文。之后我会用这个语言提问和反馈。" aria-label="Hear Yu explain story language">▶ Ask Yu</button></span>
               <select data-story-language required>
                 <option value="en">English</option>
                 <option value="zh">中文</option>
@@ -116,38 +121,97 @@
             </label>
             <section class="wide squad-create-fields" data-squad-create-fields hidden>
               <div class="squad-create-heading">
-                <strong>Set up your shared story once</strong>
+                <div class="field-title"><strong>Set up your shared story once</strong><button type="button" class="yu-read-button" data-yu-read data-read-en="Now we will name your shared story, choose what you want to make, and keep its characters and world looking the same." data-read-zh="现在我们给共创故事起名字，选择最后做成书还是电影，并让人物和世界保持一致。" aria-label="Hear Yu explain shared story setup">▶ Ask Yu</button></div>
                 <small>These choices go directly to your Story Squad. You will not enter them again.</small>
               </div>
               <label class="wide">
-                Story Squad title
+                <span class="field-title"><span>Name your story</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Give your shared story a fun title. You can change it later." data-read-zh="给你们的共创故事取一个有趣的名字，以后还可以修改。" aria-label="Hear Yu explain story title">▶ Ask Yu</button></span>
                 <input data-squad-title maxlength="120" placeholder="Our Moonlight Adventure" />
               </label>
               <label>
-                Final outcome
+                <span class="field-title"><span>What will you make?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Choose an illustrated book or a story film. Your team can build it together." data-read-zh="请选择最后做成插画书或故事电影，大家可以一起完成。" aria-label="Hear Yu explain final outcome">▶ Ask Yu</button></span>
                 <select data-squad-output>
                   <option value="book">Illustrated book</option>
                   <option value="film">Story film</option>
                 </select>
               </label>
-              <label>
-                Locked visual style
-                <select data-squad-style>
+              <div class="visual-style-field">
+                <div class="field-title"><span>Choose one picture style</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Pick one picture style for the whole project, so everyone’s pictures feel like one story world. Open the picture guide to see an example of every style." data-read-zh="请为整个项目选择一种画风，这样大家生成的图片会像来自同一个故事世界。打开画风图鉴可以看到每种风格的参考图。" aria-label="Hear Yu explain picture style">▶ Ask Yu</button></div>
+                <select data-squad-style hidden aria-label="Selected picture style">
                   <option value="storybook-watercolor">Storybook watercolor</option>
                   <option value="ink-watercolor">Chinese ink watercolor</option>
                   <option value="cinematic">Cinematic animation</option>
                   <option value="comic">Graphic novel</option>
                   <option value="block-world">Block World</option>
                 </select>
-              </label>
-              <label class="wide">
-                Character &amp; world lock <small>Optional</small>
-                <textarea data-squad-character-rules maxlength="1200" rows="3" placeholder="Maya is 8, with short black hair and a yellow raincoat; the moon fox has silver wings…"></textarea>
-                <small>Everyone’s later images will follow these shared character and world rules.</small>
-              </label>
+                <details class="visual-style-picker" data-style-picker>
+                  <summary>
+                    <span class="style-summary-preview"><img data-style-summary-image src="assets/portal-cocreate-watercolor-v3.jpg" alt="" /><span><small>Selected style</small><strong data-style-summary-label>Storybook watercolor</strong></span></span>
+                    <span class="style-summary-action">See picture styles <b aria-hidden="true">⌄</b></span>
+                  </summary>
+                  <div class="visual-style-grid" role="radiogroup" aria-label="Picture style examples">
+                    <button type="button" class="visual-style-card is-selected" data-style-card="storybook-watercolor" data-style-label="Storybook watercolor" data-style-image="assets/portal-cocreate-watercolor-v3.jpg" aria-pressed="true">
+                      <img src="assets/portal-cocreate-watercolor-v3.jpg" alt="Storybook watercolor example" /><span><strong>Storybook watercolor</strong><small>Soft, warm, magical</small></span>
+                    </button>
+                    <button type="button" class="visual-style-card" data-style-card="ink-watercolor" data-style-label="Chinese ink watercolor" data-style-image="assets/hero-zh-wuxia-ink-v1.png" aria-pressed="false">
+                      <img src="assets/hero-zh-wuxia-ink-v1.png" alt="Chinese ink watercolor example" /><span><strong>Chinese ink watercolor</strong><small>Poetic ink and color</small></span>
+                    </button>
+                    <button type="button" class="visual-style-card" data-style-card="cinematic" data-style-label="Cinematic animation" data-style-image="assets/hero-en-cinematic-studio-v1.png" aria-pressed="false">
+                      <img src="assets/hero-en-cinematic-studio-v1.png" alt="Cinematic animation example" /><span><strong>Cinematic animation</strong><small>Light, depth, adventure</small></span>
+                    </button>
+                    <button type="button" class="visual-style-card" data-style-card="comic" data-style-label="Graphic novel" data-style-image="assets/outcome-comic-hd-v2.png" aria-pressed="false">
+                      <img src="assets/outcome-comic-hd-v2.png" alt="Graphic novel example" /><span><strong>Graphic novel</strong><small>Bold panels and action</small></span>
+                    </button>
+                    <button type="button" class="visual-style-card" data-style-card="block-world" data-style-label="Block World" data-style-image="assets/showcase-block-castle.png" aria-pressed="false">
+                      <img src="assets/showcase-block-castle.png" alt="Block World example" /><span><strong>Block World</strong><small>Playful cubes and builds</small></span>
+                    </button>
+                  </div>
+                </details>
+                <section class="style-reference-upload" data-style-reference-upload>
+                  <div class="style-reference-copy"><strong>Have a style you love?</strong><small>Add one image. Yu will borrow only its colors, light, texture and mood—not its characters or exact composition.</small></div>
+                  <label class="style-reference-button"><span>＋ Add a style reference</span><input type="file" data-style-reference-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" /></label>
+                  <div class="style-reference-preview" data-style-reference-preview hidden>
+                    <img data-style-reference-image alt="Uploaded picture style reference" />
+                    <div><strong data-style-reference-name>Style reference ready</strong><small data-style-reference-status>Metadata removed on this device.</small><label><input type="checkbox" data-style-reference-permission /> <span>I made this image or have permission to use it as a private style reference.</span></label></div>
+                    <button type="button" data-style-reference-remove aria-label="Remove style reference">×</button>
+                  </div>
+                </section>
+              </div>
+              <section class="wide character-builder" data-character-builder>
+                <div class="character-input-panel">
+                  <div class="field-title"><span>Build your main character <small>Optional</small></span><button type="button" class="yu-read-button" data-yu-read data-read-en="Describe your main character, hold to speak, or add a drawing or photo. Yu will use it to create one visual reference for the whole team." data-read-zh="你可以描述主角、按住说话，或者上传画作或照片。羽大师会把它变成整个小组统一使用的人物参考图。" aria-label="Hear Yu explain the character builder">▶ Ask Yu</button></div>
+                  <div class="character-rules-box">
+                    <textarea data-squad-character-rules maxlength="1200" rows="4" placeholder="Describe your hero, their clothes, special objects, and story world…"></textarea>
+                    <button class="character-speak" type="button" data-character-speak aria-pressed="false">● Hold to Speak</button>
+                  </div>
+                  <small data-character-voice-status>Type or hold to speak. Everyone’s later images will follow these shared rules.</small>
+                  <label class="character-upload">
+                    <span>＋ Add a drawing or photo</span>
+                    <input type="file" data-character-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" />
+                  </label>
+                  <small data-character-file-status>The original stays on this device while Yu removes location and camera information.</small>
+                  <section class="character-photo-consent" data-character-photo-consent hidden>
+                    <strong>Adult permission for a real-person photo</strong>
+                    <p>A metadata-free working copy will be sent to your selected regional safety and AI image service, then removed from this setup flow. It is never made public automatically.</p>
+                    <label><input type="checkbox" data-character-consent-person /> <span>I am the person pictured, or their parent/legal guardian, and I permit this private story use.</span></label>
+                    <label><input type="checkbox" data-character-consent-processing /> <span>I understand that a processed copy will leave this device for private regional AI processing.</span></label>
+                    <div><label><span>Adult name</span><input data-character-guardian-name maxlength="100" autocomplete="name" /></label><label><span>Relationship</span><input data-character-guardian-relationship maxlength="80" placeholder="Parent or self" /></label></div>
+                  </section>
+                </div>
+                <aside class="character-preview-panel">
+                  <span class="character-preview-kicker">MAIN CHARACTER PREVIEW</span>
+                  <div class="character-preview-frame" data-character-preview-frame>
+                    <img data-character-preview-image alt="Your uploaded character reference" hidden />
+                    <div data-character-preview-empty><span aria-hidden="true">✦</span><strong>Your hero will appear here</strong><small>Add a description, drawing, or photo.</small></div>
+                  </div>
+                  <p>Yu combines your character, chosen picture style and story world into one team reference.</p>
+                  <button class="character-generate" type="submit" data-character-generate>Create squad &amp; generate my hero <span>1 image credit</span></button>
+                  <small>Nothing is charged until generation begins in your private squad.</small>
+                </aside>
+              </section>
             </section>
             <label class="wide" data-idea-field>
-              Your story spark
+              <span class="field-title"><span>Start your story</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Type one idea, or hold the speak button while you tell me. One sentence is enough." data-read-zh="你可以打字写下一个想法，也可以按住说话按钮告诉我。一句话就够了。" aria-label="Hear Yu explain how to start">▶ Ask Yu</button></span>
               <div class="story-spark-box">
                 <textarea data-story-seed rows="3" maxlength="1200" placeholder="Type your idea here…"></textarea>
                 <button class="spark-speak" type="button" data-spark-speak aria-pressed="false">● Hold to Speak</button>
@@ -155,12 +219,12 @@
               <small data-spark-voice-status>Press and hold to speak for as long as you need. Release to stop. Your voice becomes editable text and live audio is not stored.</small>
             </label>
             <label class="wide work-file-field" data-work-file-field hidden>
-              Add existing writing, artwork, or a photo
+              <span class="field-title"><span>Already made something?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="You can add writing you already made, or upload artwork or a photo to begin from." data-read-zh="你可以上传已经写好的文字，也可以上传画作或照片作为故事起点。" aria-label="Hear Yu explain file upload">▶ Ask Yu</button></span>
               <input type="file" data-work-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,text/plain,text/markdown,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" />
               <small data-work-file-status>Choose DOCX, TXT, MD, JPG, PNG, WEBP, or HEIC. Files are prepared privately before the next step.</small>
             </label>
             <label class="wide" data-code-field hidden>
-              Story Code
+              <span class="field-title"><span>Story Code</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Type the private Story Code your family member, friend, or teacher sent you." data-read-zh="请输入家人、朋友或老师发给你的共创邀请码。" aria-label="Hear Yu explain Story Code">▶ Ask Yu</button></span>
               <input data-story-code maxlength="16" autocomplete="off" placeholder="Example: STAR-4821" />
               <small>Ask the family member, friend, or project owner for the private invite code.</small>
             </label>
@@ -190,7 +254,7 @@
     <script src="writing-import.js?v=20260916-2"></script>
     <script src="i18n.js"></script>
     <script src="analytics.js"></script>
-    <script src="start.js?v=20260918-5"></script>
+    <script src="start.js?v=20260918-10"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

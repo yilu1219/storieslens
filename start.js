@@ -35,6 +35,30 @@
   const squadOutput = document.querySelector("[data-squad-output]");
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
+  const characterSpeak = document.querySelector("[data-character-speak]");
+  const characterVoiceStatus = document.querySelector("[data-character-voice-status]");
+  const characterFile = document.querySelector("[data-character-file]");
+  const characterFileStatus = document.querySelector("[data-character-file-status]");
+  const characterPreviewImage = document.querySelector("[data-character-preview-image]");
+  const characterPreviewEmpty = document.querySelector("[data-character-preview-empty]");
+  const characterPhotoConsent = document.querySelector("[data-character-photo-consent]");
+  const characterConsentPerson = document.querySelector("[data-character-consent-person]");
+  const characterConsentProcessing = document.querySelector("[data-character-consent-processing]");
+  const characterGuardianName = document.querySelector("[data-character-guardian-name]");
+  const characterGuardianRelationship = document.querySelector("[data-character-guardian-relationship]");
+  const stylePicker = document.querySelector("[data-style-picker]");
+  const styleCards = [...document.querySelectorAll("[data-style-card]")];
+  const styleSummaryImage = document.querySelector("[data-style-summary-image]");
+  const styleSummaryLabel = document.querySelector("[data-style-summary-label]");
+  const styleReferenceFile = document.querySelector("[data-style-reference-file]");
+  const styleReferencePreview = document.querySelector("[data-style-reference-preview]");
+  const styleReferenceImage = document.querySelector("[data-style-reference-image]");
+  const styleReferenceName = document.querySelector("[data-style-reference-name]");
+  const styleReferenceStatus = document.querySelector("[data-style-reference-status]");
+  const styleReferencePermission = document.querySelector("[data-style-reference-permission]");
+  const styleReferenceRemove = document.querySelector("[data-style-reference-remove]");
+  const yuReadButtons = [...document.querySelectorAll("[data-yu-read]")];
+  const yuReadPageButton = document.querySelector("[data-yu-read-page]");
   const error = document.querySelector("[data-form-error]");
   const t = (text) => window.StoriesLensI18n?.t(text) || text;
 
@@ -60,6 +84,13 @@
   let sparkPointerSession = false;
   let suppressSparkClick = false;
   let sparkRestartTimer = null;
+  let characterRecognition = null;
+  let characterListeningRequested = false;
+  let characterPointerSession = false;
+  let suppressCharacterClick = false;
+  let characterRestartTimer = null;
+  let characterReference = null;
+  let styleReference = null;
   let storyLanguageTouched = ["en", "zh"].includes(requestedStoryLanguage);
   let squadStyleTouched = false;
 
@@ -151,10 +182,123 @@
 
   storyLanguage?.addEventListener("change", () => {
     storyLanguageTouched = true;
-    if (!squadStyleTouched && squadStyle) squadStyle.value = storyLanguage.value === "zh" ? "ink-watercolor" : "storybook-watercolor";
+    if (!squadStyleTouched && squadStyle) {
+      squadStyle.value = storyLanguage.value === "zh" ? "ink-watercolor" : "storybook-watercolor";
+      renderStylePicker();
+    }
   });
-  squadStyle?.addEventListener("change", () => { squadStyleTouched = true; });
+  const renderStylePicker = () => {
+    const active = styleCards.find((card) => card.dataset.styleCard === squadStyle?.value) || styleCards[0];
+    styleCards.forEach((card) => {
+      const selected = card === active;
+      card.classList.toggle("is-selected", selected);
+      card.setAttribute("aria-pressed", String(selected));
+    });
+    if (active && styleSummaryImage) styleSummaryImage.src = active.dataset.styleImage;
+    if (active && styleSummaryLabel) styleSummaryLabel.textContent = active.dataset.styleLabel;
+  };
+  squadStyle?.addEventListener("change", () => { squadStyleTouched = true; renderStylePicker(); });
+  styleCards.forEach((card) => card.addEventListener("click", () => {
+    if (!squadStyle) return;
+    squadStyle.value = card.dataset.styleCard;
+    squadStyleTouched = true;
+    renderStylePicker();
+    stylePicker?.removeAttribute("open");
+  }));
+
+  const clearStyleReference = () => {
+    styleReference = null;
+    sessionStorage.removeItem("storieslens_style_reference");
+    if (styleReferenceFile) styleReferenceFile.value = "";
+    if (styleReferenceImage) styleReferenceImage.removeAttribute("src");
+    if (styleReferencePreview) styleReferencePreview.hidden = true;
+    if (styleReferencePermission) styleReferencePermission.checked = false;
+  };
+
+  styleReferenceRemove?.addEventListener("click", clearStyleReference);
+  styleReferenceFile?.addEventListener("change", async () => {
+    const file = styleReferenceFile.files?.[0];
+    clearStyleReference();
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      error.textContent = t("Choose an image smaller than 15 MB.");
+      return;
+    }
+    if (!window.StoriesLensArtworkSafety?.isSupportedImage(file)) {
+      error.textContent = t("Choose a JPG, PNG, WEBP, HEIC, or HEIF image.");
+      return;
+    }
+    try {
+      const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
+      if (safeArtwork.review?.checks?.realPerson) {
+        error.textContent = t("For a photo of a person, use the Main Character section below so adult permission and identity protection can be applied.");
+        return;
+      }
+      styleReference = { dataUrl: safeArtwork.dataUrl, type: safeArtwork.type, metadataRemoved: true, personalPhoto: false };
+      sessionStorage.setItem("storieslens_style_reference", JSON.stringify(styleReference));
+      if (styleReferenceImage) styleReferenceImage.src = safeArtwork.dataUrl;
+      if (styleReferenceName) styleReferenceName.textContent = file.name;
+      if (styleReferenceStatus) styleReferenceStatus.textContent = safeArtwork.convertedFromHeic ? t("HEIC converted and metadata removed on this device.") : t("Metadata removed on this device. Yu will use only high-level visual traits.");
+      if (styleReferencePreview) styleReferencePreview.hidden = false;
+      error.textContent = "";
+    } catch (uploadError) {
+      error.textContent = t(uploadError.reasonCode === "unsafe_content" ? "This image did not pass the safe-content review." : "This image could not be prepared safely. Try another image.");
+    }
+  });
   ageGroup?.addEventListener("change", renderAgeGate);
+
+  const stopYuVoice = () => {
+    window.speechSynthesis?.cancel();
+    [...yuReadButtons, yuReadPageButton].filter(Boolean).forEach((button) => button.classList.remove("is-speaking"));
+  };
+
+  const findYuVoice = (language) => {
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    const prefix = language === "zh" ? "zh" : "en";
+    const languageVoices = voices.filter((voice) => voice.lang?.toLowerCase().startsWith(prefix));
+    const magneticMaleNames = language === "zh"
+      ? /yunxi|yunjian|yunyang|kangkang|yong|li-mu|male|普通话.*男/i
+      : /daniel|alex|aaron|arthur|fred|reed|eddy|rocko|evan|lee|rishi|male/i;
+    return languageVoices.find((voice) => magneticMaleNames.test(`${voice.name} ${voice.voiceURI}`))
+      || languageVoices.find((voice) => /premium|enhanced|natural/i.test(`${voice.name} ${voice.voiceURI}`))
+      || languageVoices[0]
+      || null;
+  };
+
+  const speakAsYu = (text, button) => {
+    if (!("speechSynthesis" in window) || !text) return;
+    const wasSpeaking = button?.classList.contains("is-speaking");
+    stopYuVoice();
+    if (wasSpeaking) return;
+    const language = storyLanguage?.value === "zh" ? "zh" : "en";
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === "zh" ? "zh-CN" : "en-US";
+    utterance.rate = language === "zh" ? 0.8 : 0.86;
+    utterance.pitch = language === "zh" ? 0.72 : 0.78;
+    utterance.volume = 1;
+    utterance.voice = findYuVoice(language);
+    button?.classList.add("is-speaking");
+    utterance.onend = () => button?.classList.remove("is-speaking");
+    utterance.onerror = () => button?.classList.remove("is-speaking");
+    window.speechSynthesis.speak(utterance);
+  };
+
+  yuReadButtons.forEach((button) => button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const language = storyLanguage?.value === "zh" ? "zh" : "en";
+    speakAsYu(language === "zh" ? button.dataset.readZh : button.dataset.readEn, button);
+  }));
+
+  yuReadPageButton?.addEventListener("click", () => {
+    const language = storyLanguage?.value === "zh" ? "zh" : "en";
+    const pageGuide = language === "zh"
+      ? "你好，我是羽大师。先告诉我谁在创作，再选择你喜欢的创作方式和故事语言。如果要创建共创小组，请给故事起名字，选择做成书还是电影，再选一种画风。最后，你可以打字、按住说话，或者上传已有作品。"
+      : "Hello, I’m Yu. First tell me who is creating, then choose how you like to create and your story language. For a Story Squad, name your story, choose a book or film, and pick one picture style. Finally, type an idea, hold to speak, or add something you already made.";
+    speakAsYu(pageGuide, yuReadPageButton);
+  });
+
+  window.addEventListener("beforeunload", stopYuVoice);
 
   const resetSparkSpeakUi = () => {
     sparkSpeak.classList.remove("is-listening");
@@ -243,6 +387,139 @@
     else startSparkListening(false);
   });
 
+  const resetCharacterSpeakUi = () => {
+    characterSpeak?.classList.remove("is-listening");
+    characterSpeak?.setAttribute("aria-pressed", "false");
+    if (characterSpeak) characterSpeak.textContent = t("● Hold to Speak");
+    if (characterVoiceStatus && squadCharacterRules?.value.trim()) characterVoiceStatus.textContent = t("Voice converted to editable character notes. Live audio was not stored.");
+  };
+
+  const beginCharacterRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      characterListeningRequested = false;
+      if (characterVoiceStatus) characterVoiceStatus.textContent = t("Voice typing is unavailable in this browser. You can still type or add a picture.");
+      squadCharacterRules?.focus();
+      return;
+    }
+    if (characterRecognition || !characterListeningRequested) return;
+    const original = squadCharacterRules?.value.trim() || "";
+    characterRecognition = new SpeechRecognition();
+    characterRecognition.lang = storyLanguage?.value === "zh" ? "zh-CN" : "en-US";
+    characterRecognition.interimResults = true;
+    characterRecognition.continuous = true;
+    characterSpeak?.classList.add("is-listening");
+    characterSpeak?.setAttribute("aria-pressed", "true");
+    if (characterSpeak) characterSpeak.textContent = characterPointerSession ? t("● Listening… release to stop") : t("■ Stop");
+    if (characterVoiceStatus) characterVoiceStatus.textContent = t("Listening… describe the hero and their world.");
+    characterRecognition.onresult = (event) => {
+      const spoken = Array.from(event.results).map((result) => result[0].transcript).join("");
+      if (squadCharacterRules) squadCharacterRules.value = `${original}${original ? " " : ""}${spoken}`.slice(0, squadCharacterRules.maxLength || 1200);
+    };
+    characterRecognition.onerror = (event) => {
+      if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
+        characterListeningRequested = false;
+        characterPointerSession = false;
+      }
+      if (event.error !== "no-speech" && characterVoiceStatus) characterVoiceStatus.textContent = t("I could not hear that clearly. Hold the button to try again, or type your character idea.");
+    };
+    characterRecognition.onend = () => {
+      characterRecognition = null;
+      if (characterListeningRequested) {
+        clearTimeout(characterRestartTimer);
+        characterRestartTimer = setTimeout(beginCharacterRecognition, 120);
+        return;
+      }
+      resetCharacterSpeakUi();
+    };
+    characterRecognition.start();
+  };
+
+  const startCharacterListening = (pointerSession = false) => {
+    if (characterListeningRequested) return;
+    characterPointerSession = pointerSession;
+    characterListeningRequested = true;
+    beginCharacterRecognition();
+  };
+
+  const stopCharacterListening = () => {
+    characterListeningRequested = false;
+    characterPointerSession = false;
+    clearTimeout(characterRestartTimer);
+    if (characterRecognition) characterRecognition.stop();
+    else resetCharacterSpeakUi();
+  };
+
+  characterSpeak?.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    suppressCharacterClick = true;
+    characterSpeak.setPointerCapture?.(event.pointerId);
+    startCharacterListening(true);
+  });
+  ["pointerup", "pointercancel"].forEach((eventName) => characterSpeak?.addEventListener(eventName, (event) => {
+    if (!characterPointerSession) return;
+    event.preventDefault();
+    stopCharacterListening();
+  }));
+  characterSpeak?.addEventListener("click", () => {
+    if (suppressCharacterClick) {
+      suppressCharacterClick = false;
+      return;
+    }
+    if (characterListeningRequested) stopCharacterListening();
+    else startCharacterListening(false);
+  });
+
+  characterFile?.addEventListener("change", async () => {
+    const file = characterFile.files?.[0];
+    characterReference = null;
+    sessionStorage.removeItem("storieslens_character_reference");
+    if (characterPreviewImage) {
+      characterPreviewImage.hidden = true;
+      characterPreviewImage.removeAttribute("src");
+    }
+    if (characterPreviewEmpty) characterPreviewEmpty.hidden = false;
+    if (characterPhotoConsent) characterPhotoConsent.hidden = true;
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      characterFile.value = "";
+      error.textContent = t("Choose an image smaller than 15 MB.");
+      return;
+    }
+    if (!window.StoriesLensArtworkSafety?.isSupportedImage(file)) {
+      characterFile.value = "";
+      error.textContent = t("Choose a JPG, PNG, WEBP, HEIC, or HEIF image.");
+      return;
+    }
+    if (characterFileStatus) characterFileStatus.textContent = t("Removing location and camera information and checking image safety…");
+    try {
+      const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
+      characterReference = {
+        dataUrl: safeArtwork.dataUrl,
+        type: safeArtwork.type,
+        metadataRemoved: true,
+        personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson),
+        convertedFromHeic: Boolean(safeArtwork.convertedFromHeic)
+      };
+      sessionStorage.setItem("storieslens_character_reference", JSON.stringify(characterReference));
+      if (characterPreviewImage) {
+        characterPreviewImage.src = safeArtwork.dataUrl;
+        characterPreviewImage.hidden = false;
+      }
+      if (characterPreviewEmpty) characterPreviewEmpty.hidden = true;
+      if (characterPhotoConsent) characterPhotoConsent.hidden = !characterReference.personalPhoto;
+      if (characterFileStatus) characterFileStatus.textContent = characterReference.personalPhoto
+        ? t("Personal photo detected. It remains on this device until the adult permission below is completed and generation begins.")
+        : t("Reference ready. Metadata was removed on this device.");
+      error.textContent = "";
+    } catch (uploadError) {
+      characterFile.value = "";
+      error.textContent = t(uploadError.reasonCode === "unsafe_content" ? "This image did not pass the safe-content review." : "This image could not be prepared safely. Try another image.");
+      if (characterFileStatus) characterFileStatus.textContent = t("Reference was not added.");
+    }
+  });
+
   workFile?.addEventListener("change", async () => {
     const file = workFile.files?.[0];
     importedWork = null;
@@ -318,6 +595,7 @@
     const code = storyCode.value.trim().toUpperCase();
     const seed = storySeed.value.trim();
     const title = squadTitle?.value.trim() || "";
+    const generateAnchor = Boolean(event.submitter?.matches("[data-character-generate]"));
 
     if (mode === "solo" && origin === "work" && !importedWork && !seed) {
       error.textContent = t("Choose a work file or paste a short excerpt so Story Coach knows where to begin.");
@@ -355,7 +633,30 @@
       return;
     }
 
-    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
+    if (generateAnchor && characterReference?.personalPhoto) {
+      if (!characterConsentPerson?.checked || !characterConsentProcessing?.checked || !characterGuardianName?.value.trim() || !characterGuardianRelationship?.value.trim()) {
+        error.textContent = t("An adult must complete the photo permission before this personal photo can be used for AI creation.");
+        characterPhotoConsent?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      characterReference.consent = {
+        guardianName: characterGuardianName.value.trim(),
+        relationship: characterGuardianRelationship.value.trim(),
+        confirmedAdult: true,
+        approvedPrivateMedia: true,
+        approvedPersonalPhoto: true,
+        acknowledgedRegionalProcessing: true
+      };
+      sessionStorage.setItem("storieslens_character_reference", JSON.stringify(characterReference));
+    }
+
+    if (generateAnchor && styleReference && !styleReferencePermission?.checked) {
+      error.textContent = t("Confirm that you made the style reference or have permission to use it before generation.");
+      styleReferencePreview?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}`;
@@ -374,5 +675,6 @@
   });
 
   renderAgeGate();
+  renderStylePicker();
   render();
 })();

@@ -12,11 +12,29 @@ const CREDIT_RESOURCES = Object.freeze({
 const PACKAGE_CATALOG = Object.freeze({
   "free-preview": {
     name: "Free Preview",
-    nameZh: "免费体验包",
+    nameZh: "免费创作礼物",
     price: { usd: 0, cny: 0 },
-    costGuardUsd: 0.35,
+    costGuardUsd: 0.15,
     saleMode: "automatic-trial",
-    grants: { storyProjects: 1, imageGenerations: 3 }
+    grants: { storyProjects: 1, imageGenerations: 1 }
+  },
+  "revision-read-gift": {
+    name: "Revision and Reading Gift",
+    nameZh: "修改朗读礼物",
+    price: { usd: 0, cny: 0 },
+    costGuardUsd: 0.1,
+    saleMode: "earned-trial",
+    internal: true,
+    grants: { imageGenerations: 1 }
+  },
+  "referral-scene-gift": {
+    name: "Completed Story Referral Gift",
+    nameZh: "好友完成创作礼物",
+    price: { usd: 0, cny: 0 },
+    costGuardUsd: 0.1,
+    saleMode: "earned-referral",
+    internal: true,
+    grants: { imageGenerations: 1 }
   },
   "creator-story": {
     name: "Creator Story Pass",
@@ -88,6 +106,7 @@ function ensureCreditCollections(database) {
   database.inviteCodes ||= [];
   database.betaInviteRedemptions ||= [];
   database.adminSessions ||= [];
+  database.referrals ||= [];
   return database;
 }
 
@@ -144,14 +163,90 @@ function usageSummaryFor(database, userId) {
 }
 
 function publicPackageCatalog() {
-  return Object.entries(PACKAGE_CATALOG).map(([id, item]) => ({ id, ...item }));
+  return Object.entries(PACKAGE_CATALOG).filter(([, item]) => !item.internal).map(([id, item]) => ({ id, ...item }));
+}
+
+function ensureReferral(database, userId) {
+  ensureCreditCollections(database);
+  let referral = database.referrals.find((entry) => entry.referrerUserId === userId && entry.kind === "code");
+  if (!referral) {
+    referral = {
+      id: crypto.randomUUID(),
+      kind: "code",
+      referrerUserId: userId,
+      code: crypto.randomBytes(6).toString("base64url").toUpperCase(),
+      createdAt: nowIso()
+    };
+    database.referrals.push(referral);
+  }
+  return referral;
+}
+
+function attributeReferral(database, { referredUserId, rawCode }) {
+  ensureCreditCollections(database);
+  const code = normalizeCode(rawCode);
+  if (!code) return null;
+  const source = database.referrals.find((entry) => entry.kind === "code" && normalizeCode(entry.code) === code);
+  if (!source || source.referrerUserId === referredUserId) return null;
+  const existing = database.referrals.find((entry) => entry.kind === "attribution" && entry.referredUserId === referredUserId);
+  if (existing) return existing;
+  const attribution = {
+    id: crypto.randomUUID(),
+    kind: "attribution",
+    referrerUserId: source.referrerUserId,
+    referredUserId,
+    codeId: source.id,
+    status: "pending_first_scene",
+    createdAt: nowIso()
+  };
+  database.referrals.push(attribution);
+  return attribution;
+}
+
+function completeReferralReward(database, { referredUserId, projectId }) {
+  ensureCreditCollections(database);
+  const attribution = database.referrals.find((entry) => entry.kind === "attribution" && entry.referredUserId === referredUserId);
+  if (!attribution || attribution.status === "rewarded") return { rewarded: false, duplicate: Boolean(attribution?.status === "rewarded") };
+  const project = database.projects?.find((entry) => entry.id === projectId && entry.ownerId === referredUserId && !entry.deletedAt);
+  if (!project || !project.draft?.trim() || !project.clientSnapshot?.firstPageCreated) return { rewarded: false, eligible: false };
+  grantPackage(database, {
+    userId: attribution.referrerUserId,
+    packageId: "referral-scene-gift",
+    source: "earned-referral",
+    referenceId: attribution.id,
+    idempotencyKey: `referral:${attribution.id}:referrer`,
+    createdBy: "referral-system"
+  });
+  grantPackage(database, {
+    userId: referredUserId,
+    packageId: "referral-scene-gift",
+    source: "earned-referral",
+    referenceId: attribution.id,
+    idempotencyKey: `referral:${attribution.id}:new-creator`,
+    createdBy: "referral-system"
+  });
+  Object.assign(attribution, { status: "rewarded", projectId, rewardedAt: nowIso() });
+  return { rewarded: true, attribution };
+}
+
+function freeGiftProgress(database, userId) {
+  ensureCreditCollections(database);
+  const packageIds = new Set(database.creditTransactions.filter((entry) => entry.userId === userId && entry.type === "grant").map((entry) => entry.packageId));
+  const referrals = database.referrals.filter((entry) => entry.kind === "attribution" && entry.referrerUserId === userId);
+  return {
+    firstIllustration: packageIds.has("free-preview"),
+    revisionReading: packageIds.has("revision-read-gift"),
+    referralCreation: packageIds.has("referral-scene-gift"),
+    completedReferrals: referrals.filter((entry) => entry.status === "rewarded").length,
+    pendingReferrals: referrals.filter((entry) => entry.status !== "rewarded").length
+  };
 }
 
 function expireStaleReservations(database, timestamp = Date.now()) {
   ensureCreditCollections(database);
   database.creditReservations.forEach((reservation) => {
     const created = new Date(reservation.createdAt).getTime();
-    if (reservation.status === "reserved" && Number.isFinite(created) && timestamp - created > ACTIVE_RESERVATION_MAX_AGE_MS) {
+    if (reservation.status === "reserved" && reservation.referenceType !== "payment-dispute" && Number.isFinite(created) && timestamp - created > ACTIVE_RESERVATION_MAX_AGE_MS) {
       reservation.status = "released";
       reservation.releaseReason = "automatic-timeout";
       reservation.releasedAt = nowIso();
@@ -167,20 +262,22 @@ function walletFor(database, userId) {
     ...CREDIT_RESOURCES[resource],
     granted: 0,
     consumed: 0,
+    reversed: 0,
     reserved: 0,
     remaining: 0
   }]));
 
   database.creditTransactions.filter((entry) => entry.userId === userId && resources[entry.resource]).forEach((entry) => {
     const delta = Number(entry.delta) || 0;
-    if (delta > 0) resources[entry.resource].granted += delta;
+    if (entry.type === "reversal") resources[entry.resource].reversed += Math.abs(delta);
+    else if (delta > 0) resources[entry.resource].granted += delta;
     else resources[entry.resource].consumed += Math.abs(delta);
   });
   database.creditReservations.filter((entry) => entry.userId === userId && entry.status === "reserved" && resources[entry.resource]).forEach((entry) => {
     resources[entry.resource].reserved += Math.max(0, Number(entry.units) || 0);
   });
   Object.values(resources).forEach((resource) => {
-    resource.remaining = Math.max(0, resource.granted - resource.consumed - resource.reserved);
+    resource.remaining = Math.max(0, resource.granted - resource.consumed - resource.reversed - resource.reserved);
   });
   return { userId, resources, calculatedAt: nowIso() };
 }
@@ -453,6 +550,10 @@ module.exports = {
   findInvite,
   validateInvite,
   redeemInvite,
+  ensureReferral,
+  attributeReferral,
+  completeReferralReward,
+  freeGiftProgress,
   fingerprintCode,
   normalizeCode
 };

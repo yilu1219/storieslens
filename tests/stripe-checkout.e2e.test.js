@@ -156,6 +156,60 @@ test("a verified Stripe webhook grants the purchased allowance exactly once", { 
     assert.equal(after.payload.purchases.filter((item) => item.packageId === "creator-story").length, 1);
     const status = await jsonRequest(baseUrl, `/api/payments/checkout-status?session_id=${checkout.payload.sessionId}`, { cookie: accountCookie });
     assert.equal(status.payload.order.status, "paid");
+
+    async function sendSignedStripeEvent(stripeEvent) {
+      const body = JSON.stringify(stripeEvent);
+      const signedAt = Math.floor(Date.now() / 1000);
+      const signed = crypto.createHmac("sha256", stripeSigningSecret).update(`${signedAt}.${body}`).digest("hex");
+      return fetch(`${baseUrl}/api/stripe/webhook`, { method: "POST", headers: { "Content-Type": "application/json", "Stripe-Signature": `t=${signedAt},v1=${signed}` }, body });
+    }
+    assert.equal((await sendSignedStripeEvent({
+      id: "evt_test_storieslens_dispute_created_123",
+      type: "charge.dispute.created",
+      data: { object: { id: "dp_test_storieslens_123", payment_intent: "pi_test_storieslens_123", status: "needs_response" } }
+    })).status, 200);
+    const frozen = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    assert.equal(frozen.payload.wallet.resources.storyProjects.remaining, before.payload.wallet.resources.storyProjects.remaining);
+    assert.equal(frozen.payload.wallet.resources.imageGenerations.remaining, before.payload.wallet.resources.imageGenerations.remaining);
+    assert.equal(frozen.payload.wallet.resources.storyProjects.reserved, 1);
+    assert.equal(frozen.payload.wallet.resources.imageGenerations.reserved, 12);
+
+    assert.equal((await sendSignedStripeEvent({
+      id: "evt_test_storieslens_dispute_won_123",
+      type: "charge.dispute.closed",
+      data: { object: { id: "dp_test_storieslens_123", payment_intent: "pi_test_storieslens_123", status: "won" } }
+    })).status, 200);
+    const restored = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    assert.equal(restored.payload.wallet.resources.storyProjects.remaining, before.payload.wallet.resources.storyProjects.remaining + 1);
+    assert.equal(restored.payload.wallet.resources.imageGenerations.remaining, before.payload.wallet.resources.imageGenerations.remaining + 12);
+    assert.equal(restored.payload.wallet.resources.storyProjects.reserved, 0);
+    assert.equal(restored.payload.wallet.resources.imageGenerations.reserved, 0);
+
+    const refundEvent = {
+      id: "evt_test_storieslens_refund_123",
+      type: "charge.refunded",
+      data: { object: {
+        id: "ch_test_storieslens_123",
+        payment_intent: "pi_test_storieslens_123",
+        amount: 1900,
+        amount_refunded: 1900,
+        refunded: true
+      } }
+    };
+    const rawRefund = JSON.stringify(refundEvent);
+    const refundTimestamp = Math.floor(Date.now() / 1000);
+    const refundSignature = crypto.createHmac("sha256", stripeSigningSecret).update(`${refundTimestamp}.${rawRefund}`).digest("hex");
+    const sendRefund = () => fetch(`${baseUrl}/api/stripe/webhook`, { method: "POST", headers: { "Content-Type": "application/json", "Stripe-Signature": `t=${refundTimestamp},v1=${refundSignature}` }, body: rawRefund });
+    assert.equal((await sendRefund()).status, 200);
+    assert.equal((await sendRefund()).status, 200);
+
+    const refunded = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    assert.equal(refunded.payload.wallet.resources.storyProjects.remaining, before.payload.wallet.resources.storyProjects.remaining);
+    assert.equal(refunded.payload.wallet.resources.imageGenerations.remaining, before.payload.wallet.resources.imageGenerations.remaining);
+    assert.equal(refunded.payload.wallet.resources.storyProjects.reversed, 1);
+    assert.equal(refunded.payload.wallet.resources.imageGenerations.reversed, 12);
+    const refundedStatus = await jsonRequest(baseUrl, `/api/payments/checkout-status?session_id=${checkout.payload.sessionId}`, { cookie: accountCookie });
+    assert.equal(refundedStatus.payload.order.status, "refunded");
   } catch (error) {
     error.message += `\nServer output:\n${serverOutput}`;
     throw error;

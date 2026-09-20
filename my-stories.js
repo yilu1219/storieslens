@@ -129,6 +129,26 @@
 
   async function loadCredits() {
     const result = await platform.api("/api/credits");
+    const gift = result.freeGift || {};
+    const renderGiftStep = (selector, unlocked) => {
+      const row = $(selector);
+      if (!row) return;
+      row.classList.toggle("is-unlocked", Boolean(unlocked));
+      const icon = row.querySelector("b");
+      if (icon) icon.textContent = unlocked ? "✓" : "🔒";
+    };
+    renderGiftStep("[data-gift-first]", gift.firstIllustration);
+    renderGiftStep("[data-gift-reading]", gift.revisionReading);
+    renderGiftStep("[data-gift-referral]", gift.referralCreation);
+    const referralWrap = $("[data-referral-share]");
+    if (referralWrap) {
+      referralWrap.hidden = !result.referral;
+      if (result.referral) {
+        const referralUrl = new URL(result.referral.url, location.origin).href;
+        $("[data-referral-link]").value = referralUrl;
+        $("[data-referral-status]").textContent = `${result.referral.completed} completed · ${result.referral.pending} creating now · ${result.referral.completed} 位已完成 · ${result.referral.pending} 位创作中`;
+      }
+    }
     const labels = {
       storyProjects: ["Story projects", "故事项目"],
       imageGenerations: ["AI illustrations", "AI 插图"],
@@ -435,6 +455,18 @@
       await platform.api(`/api/projects/${projectId}/consents/${active.id}`, { method: "DELETE" });
       toast("Approval and active invitations were revoked.");
     } catch (error) { toast(error.message, true); }
+  });
+
+  $("[data-copy-referral]")?.addEventListener("click", async () => {
+    const link = $("[data-referral-link]")?.value || "";
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast("Invitation link copied. The gift unlocks only after your friend completes a first scene. · 邀请链接已复制，朋友完成第一幕后双方才会获得奖励。");
+    } catch (_error) {
+      $("[data-referral-link]")?.select();
+      toast("Select and copy the invitation link. · 请选中并复制邀请链接。");
+    }
   });
 
   $("[data-delete-account]").addEventListener("click", async () => {

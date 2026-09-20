@@ -51,6 +51,10 @@ const SOURCE_CATALOG = Object.freeze({
   renjianCihua: {
     title: "王国维《人间词话》（1926年版）",
     contribution: "公共领域：观察距离、境界、真切、虚构逻辑与词语选择"
+  },
+  photoplayPublicDomain: {
+    title: "Project Gutenberg《Writing the Photoplay》（1913）",
+    contribution: "美国公有领域：只提炼可见行动、场景变化与因果，不采用默片时代格式或市场规则"
   }
 });
 
@@ -215,6 +219,34 @@ const WRITING_METHODS = Object.freeze({
       "Can you now say the idea again without the frame?"
     ]
   },
+  visualActionLight: {
+    id: "visual-action-light",
+    name: "Visual action · light invitation",
+    sources: ["photoplayPublicDomain"],
+    principles: [
+      "For creators ages 8–12, use one plain-language invitation only: ask what the audience can see or hear the character do.",
+      "Treat the invitation as optional; an internal feeling may remain an internal feeling when the creator prefers it.",
+      "Use no screenwriting terminology and never provide a replacement sentence for the creator to paste."
+    ],
+    questions: [
+      "What can we see or hear your character do?"
+    ]
+  },
+  visualAction: {
+    id: "visual-action",
+    name: "Visual action and scene change",
+    sources: ["photoplayPublicDomain"],
+    principles: [
+      "Identify one change that happens during the scene, then test whether an observable action, sound, object change, or purposeful line of dialogue helps reveal it.",
+      "Do not turn every internal feeling into spectacle; quiet behavior, silence, and sound can carry meaning.",
+      "Let the creator decide whether the change preserves the intended feeling and voice."
+    ],
+    questions: [
+      "What is different at the end of this scene?",
+      "Which part can the audience actually see or hear?",
+      "Does this moment change what the character does next?"
+    ]
+  },
   classicalCraft: {
     id: "classical-craft",
     name: "古典文论中的构思与剪裁",
@@ -246,18 +278,23 @@ function selectWritingMethods(input = {}) {
   const action = String(input.action || "").trim();
   const genre = String(input.genre || "story").trim();
   const language = String(input.language || "").trim();
+  const grade = Number(input.grade);
+  const usesLightVisualAction = Number.isFinite(grade) && grade >= 3 && grade <= 6;
   const selected = [];
 
   if (action === "begin") selected.push("ideation", "character");
   if (["continuity", "report"].includes(action)) selected.push("structure", "revision");
-  if (["details", "dialogue", "scene"].includes(action)) selected.push("scene");
+  if (["details", "dialogue", "scene"].includes(action)) selected.push(language === "en" ? (usesLightVisualAction ? "visualActionLight" : "visualAction") : "scene");
   if (action === "check") selected.push("prose", "revision");
   if (action === "hint") selected.push("character", "structure");
 
   // Preserve specialist genre methods before adding a language tradition.
   // This keeps science-fiction and screenplay safeguards from being displaced
   // by a general-purpose curriculum module when the list is capped below.
-  if (genre === "screenplay") selected.push("scene", "microfilm");
+  if (genre === "screenplay") {
+    if (language === "en") selected.push(usesLightVisualAction ? "visualActionLight" : "visualAction");
+    selected.push("scene", "microfilm");
+  }
   else if (genre === "scifi") selected.push("scienceFiction", "structure");
 
   if (language === "en") selected.push(input.creatorLevel === "multilingual" ? "multilingualBridge" : "evidenceCycle");

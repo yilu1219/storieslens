@@ -71,6 +71,31 @@ test("English screenwriting training keeps only modern visual-action abstraction
   assert(module.guardrails.some((item) => /finished scene/i.test(item)));
 });
 
+test("ages 8-12 receive one optional plain-language visual-action invitation", () => {
+  const module = loadModule("en", "visual-screenwriting-action.json");
+  const light = module.ageAdaptations.ages8to12;
+  const curriculum = buildEnglishCoachCurriculum({ action: "scene", grade: 4, genre: "story" });
+  assert.equal(light.maximumMovesPerTurn, 1);
+  assert.equal(light.question, "What can we see or hear your character do?");
+  assert(curriculum.methodNames.includes("Visual action · light invitation"));
+  assert.match(curriculum.prompt, /What can we see or hear your character do\?/);
+  assert.match(curriculum.prompt, /optional|creator prefers/i);
+  assert.doesNotMatch(curriculum.prompt, /scene turn|mise-en-scène|shot list/i);
+});
+
+test("older creators can receive the full visual-action lens without ghostwriting", () => {
+  const curriculum = buildEnglishCoachCurriculum({ action: "scene", grade: 8, genre: "screenplay" });
+  assert(curriculum.methodNames.includes("Visual action and scene change"));
+  assert.match(curriculum.prompt, /What is different at the end of this scene\?/);
+  assert.match(curriculum.prompt, /never supply paste-ready prose/i);
+});
+
+test("the English visual-action label never leaks into the Chinese curriculum", () => {
+  const curriculum = buildChineseCoachCurriculum({ action: "scene", grade: 4, genre: "screenplay" });
+  assert(!curriculum.methodNames.some((name) => /Visual action/i.test(name)));
+  assert(curriculum.methodNames.includes("场景与电影化表达"));
+});
+
 test("Chinese revision training preserves author voice and limits over-editing", () => {
   const source = registry.sources.find((item) => item.id === "suiyuan-shihua-revision");
   const module = loadModule("zh", "revision-distance.json");
@@ -88,5 +113,6 @@ test("official standards without broad ingestion rights stay reference-only or q
   assert.equal(ccss.status, "reference-only");
   assert.match(ccss.rejectionReason, /No standard text|未摄取|ingested/i);
   assert.equal(moe.status, "quarantined");
-  assert.match(moe.rejectionReason, /No text|未|rights/i);
+  assert.match(moe.rejectionReason, /No curriculum text|未|rights/i);
+  assert.match(moe.rejectionReason, /external alignment reference only/i);
 });

@@ -1,7 +1,7 @@
 {
   "id": "en-visual-screenwriting-action-v1",
   "language": "en",
-  "ages": ["grades 6-8", "grades 9-12", "adult"],
+  "ages": ["ages 8-12 (light invitation only)", "grades 7-12", "adult"],
   "sourceIds": ["writing-photoplay-1913"],
   "skills": ["visual storytelling", "scene purpose", "observable action", "screen adaptation", "revision"],
   "teachingMoves": [
@@ -17,6 +17,25 @@
     "What small action could reveal this meaning without explaining it for the viewer?",
     "Does this moment change what the character does next?"
   ],
+  "ageAdaptations": {
+    "ages8to12": {
+      "maximumMovesPerTurn": 1,
+      "question": "What can we see or hear your character do?",
+      "rules": [
+        "Use no screenwriting terminology.",
+        "Offer the question once and accept the creator's original sentence if they prefer it.",
+        "Do not require every feeling or thought to become an action.",
+        "Do not provide replacement prose for the creator to paste."
+      ]
+    },
+    "ages13plus": {
+      "maximumMovesPerTurn": 1,
+      "rules": [
+        "Choose one relevant visual-action question from this module.",
+        "Explain the craft reason only after the creator responds."
+      ]
+    }
+  },
   "ccssAlignment": ["CCRA.W.3", "CCRA.W.4", "CCRA.W.5", "CCRA.SL.4", "CCRA.L.3"],
   "guardrails": [
     "Do not copy source language or teach silent-film formatting as current screenwriting practice.",
@@ -25,4 +44,3 @@
     "Do not claim Project Gutenberg, the authors, or CCSS endorses Yu."
   ]
 }
-

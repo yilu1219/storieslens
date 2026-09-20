@@ -21,7 +21,11 @@ const {
   createInviteBatch,
   findInvite,
   validateInvite,
-  redeemInvite
+  redeemInvite,
+  ensureReferral,
+  attributeReferral,
+  completeReferralReward,
+  freeGiftProgress
 } = require("./credit-system");
 
 const SESSION_DAYS = 30;
@@ -660,8 +664,17 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     const order = database.orders.find((item) => item.paymentProvider === "stripe" && item.stripePaymentIntentId === paymentIntentId);
     if (order) {
       const fullRefund = Number(charge.amount_refunded) >= Number(charge.amount);
-      order.status = fullRefund ? "refunded_review" : "partially_refunded_review";
+      const paidAmount = Math.max(1, Number(charge.amount) || Number(order.amountPaidMinor) || 1);
+      const refundedAmount = Math.max(0, Math.min(paidAmount, Number(charge.amount_refunded) || 0));
+      const creditAdjustment = reverseUnusedOrderCredits(database, order, {
+        fraction: refundedAmount / paidAmount,
+        full: fullRefund,
+        reason: fullRefund ? "full-refund" : "partial-refund",
+        eventId: event.id
+      });
+      order.status = fullRefund ? "refunded" : "partially_refunded";
       order.amountRefundedMinor = Math.max(0, Number(charge.amount_refunded) || 0);
+      order.refundCreditAdjustment = creditAdjustment;
       order.updatedAt = nowIso();
       const sale = database.creditSales.find((item) => item.providerReference === order.stripeCheckoutSessionId);
       if (sale) {
@@ -670,7 +683,106 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         sale.updatedAt = nowIso();
       }
     }
-    database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: order?.id || "", status: order ? "refund-recorded" : "unmatched", createdAt: nowIso() });
+    database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: order?.id || "", status: order ? "refund-applied" : "unmatched", createdAt: nowIso() });
+    return { order };
+  }
+
+  function purchasedGrantEntries(database, order) {
+    return database.creditTransactions.filter((entry) => entry.userId === order.ownerId
+      && entry.type === "grant"
+      && entry.source === "stripe-checkout"
+      && entry.packageId === order.packageId
+      && entry.referenceId === order.stripeCheckoutSessionId);
+  }
+
+  function reverseUnusedOrderCredits(database, order, { fraction = 1, full = false, reason, eventId }) {
+    const grants = purchasedGrantEntries(database, order);
+    const byResource = new Map();
+    grants.forEach((entry) => byResource.set(entry.resource, (byResource.get(entry.resource) || 0) + Math.max(0, Number(entry.delta) || 0)));
+    const adjusted = {};
+    const shortfall = {};
+    byResource.forEach((grantedUnits, resource) => {
+      const targetUnits = full ? grantedUnits : Math.floor(grantedUnits * Math.max(0, Math.min(1, fraction)));
+      const alreadyReversed = database.creditTransactions
+        .filter((entry) => entry.userId === order.ownerId && entry.orderId === order.id && entry.resource === resource && entry.type === "reversal" && entry.reason !== "payment-dispute")
+        .reduce((total, entry) => total + Math.abs(Number(entry.delta) || 0), 0);
+      const unitsNeeded = Math.max(0, targetUnits - alreadyReversed);
+      const units = Math.min(unitsNeeded, walletFor(database, order.ownerId).resources[resource]?.remaining || 0);
+      if (units > 0) {
+        database.creditTransactions.push({
+          id: crypto.randomUUID(),
+          userId: order.ownerId,
+          resource,
+          delta: -units,
+          type: "reversal",
+          source: "stripe-refund",
+          packageId: order.packageId,
+          referenceId: cleanId(eventId),
+          orderId: order.id,
+          reason,
+          idempotencyKey: `stripe-refund:${order.id}:${resource}:${targetUnits}`,
+          createdBy: "stripe-webhook",
+          createdAt: nowIso()
+        });
+      }
+      adjusted[resource] = units;
+      shortfall[resource] = Math.max(0, unitsNeeded - units);
+    });
+    return { adjusted, shortfall, requiresReview: Object.values(shortfall).some((units) => units > 0) };
+  }
+
+  function recordStripeDispute(database, event, dispute) {
+    ensureStripeCollections(database);
+    if (database.stripeEvents.some((item) => item.id === event.id)) return { duplicate: true };
+    const paymentIntentId = cleanId(typeof dispute?.payment_intent === "string" ? dispute.payment_intent : dispute?.payment_intent?.id);
+    const disputeId = cleanId(dispute?.id);
+    const order = database.orders.find((item) => item.paymentProvider === "stripe" && item.stripePaymentIntentId === paymentIntentId);
+    if (order && ["charge.dispute.created", "charge.dispute.funds_withdrawn"].includes(event.type)) {
+      const grants = purchasedGrantEntries(database, order);
+      const resources = new Map();
+      grants.forEach((entry) => resources.set(entry.resource, (resources.get(entry.resource) || 0) + Math.max(0, Number(entry.delta) || 0)));
+      const frozen = {};
+      resources.forEach((grantedUnits, resource) => {
+        const existing = database.creditReservations.find((entry) => entry.referenceType === "payment-dispute" && entry.referenceId === disputeId && entry.resource === resource);
+        if (existing) return;
+        const units = Math.min(grantedUnits, walletFor(database, order.ownerId).resources[resource]?.remaining || 0);
+        if (units < 1) return;
+        reserveCredits(database, {
+          userId: order.ownerId,
+          resource,
+          units,
+          idempotencyKey: `stripe-dispute:${disputeId}:${resource}`,
+          referenceType: "payment-dispute",
+          referenceId: disputeId,
+          metadata: { orderId: order.id }
+        });
+        frozen[resource] = units;
+      });
+      order.status = "disputed_frozen";
+      order.stripeDisputeId = disputeId;
+      order.disputeFrozenCredits = frozen;
+      order.updatedAt = nowIso();
+    } else if (order && ["charge.dispute.closed", "charge.dispute.funds_reinstated"].includes(event.type)) {
+      const won = event.type === "charge.dispute.funds_reinstated" || dispute?.status === "won";
+      const reservations = database.creditReservations.filter((entry) => entry.referenceType === "payment-dispute" && entry.referenceId === disputeId && entry.status === "reserved");
+      reservations.forEach((reservation) => {
+        if (won) {
+          releaseReservation(database, { reservationId: reservation.id, reason: "stripe-dispute-won" });
+        } else {
+          reservation.status = "settled";
+          reservation.settledAt = nowIso();
+          database.creditTransactions.push({
+            id: crypto.randomUUID(), userId: reservation.userId, resource: reservation.resource, delta: -reservation.units,
+            type: "reversal", source: "stripe-dispute", referenceId: disputeId, orderId: order.id, reason: "payment-dispute",
+            reservationId: reservation.id, idempotencyKey: `stripe-dispute-lost:${disputeId}:${reservation.resource}`,
+            createdBy: "stripe-webhook", createdAt: nowIso()
+          });
+        }
+      });
+      order.status = won ? "paid" : "dispute_lost";
+      order.updatedAt = nowIso();
+    }
+    database.stripeEvents.push({ id: cleanId(event.id), type: cleanText(event.type, 80), orderId: order?.id || "", status: order ? "dispute-recorded" : "unmatched", createdAt: nowIso() });
     return { order };
   }
 
@@ -697,6 +809,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           });
         } else if (event.type === "charge.refunded") {
           result = store.mutate((database) => recordStripeRefund(database, event, event.data.object));
+        } else if (["charge.dispute.created", "charge.dispute.funds_withdrawn", "charge.dispute.closed", "charge.dispute.funds_reinstated"].includes(event.type)) {
+          result = store.mutate((database) => recordStripeDispute(database, event, event.data.object));
         } else {
           store.mutate((database) => {
             ensureStripeCollections(database);
@@ -804,6 +918,16 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const summary = usageSummaryFor(database, user.id);
         return {
           wallet,
+          freeGift: freeGiftProgress(database, user.id),
+          referral: user.kind === "account" ? (() => {
+            const referral = ensureReferral(database, user.id);
+            return {
+              code: referral.code,
+              url: `/login.html?ref=${encodeURIComponent(referral.code)}`,
+              completed: database.referrals.filter((entry) => entry.kind === "attribution" && entry.referrerUserId === user.id && entry.status === "rewarded").length,
+              pending: database.referrals.filter((entry) => entry.kind === "attribution" && entry.referrerUserId === user.id && entry.status !== "rewarded").length
+            };
+          })() : null,
           usage: {
             resources: Object.fromEntries(Object.entries(summary.resources).map(([key, item]) => [key, {
               resource: item.resource,
@@ -859,6 +983,32 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         userRegion: user.primaryRegion
       }));
       sendJson(response, 200, { redeemed: !result.duplicate, packageId: result.invite.packageId, wallet: result.wallet });
+      return true;
+    }
+    if (requestUrl.pathname === "/api/credits/unlock-learning-gift" && request.method === "POST") {
+      if (!rateLimiter.consume(request, response, { bucket: "learning-gift", limit: 20, windowMs: 60 * 60 * 1000, sendJson })) return true;
+      const { user } = sessionFor(request, response, { create: false });
+      if (!user) {
+        sendJson(response, 401, { error: "Sign in or start a private creation before unlocking this gift." });
+        return true;
+      }
+      const body = await readJsonBody(request);
+      const projectId = cleanId(body.projectId);
+      const result = store.mutate((database) => {
+        const project = database.projects.find((entry) => entry.id === projectId && entry.ownerId === user.id && !entry.deletedAt);
+        const eligible = Boolean(project?.clientSnapshot?.mentorRevisionCompleted && project?.clientSnapshot?.readingConfirmed && project?.draft?.trim());
+        if (!eligible) return { unlocked: false, eligible: false, wallet: walletFor(database, user.id) };
+        const grant = grantPackage(database, {
+          userId: user.id,
+          packageId: "revision-read-gift",
+          source: "earned-learning",
+          referenceId: project.id,
+          idempotencyKey: `revision-read:${user.id}`,
+          createdBy: "learning-gift-system"
+        });
+        return { unlocked: !grant.duplicate, eligible: true, wallet: grant.wallet, freeGift: freeGiftProgress(database, user.id) };
+      });
+      sendJson(response, 200, result);
       return true;
     }
     return false;
@@ -1366,6 +1516,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           }
         }
         challenge.usedAt = nowIso();
+        const isNewAccount = !account;
         if (!account) {
           account = {
             id: crypto.randomUUID(),
@@ -1399,6 +1550,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           account.updatedAt = nowIso();
         }
         account.countryCode = account.countryCode || countryCode;
+        if (isNewAccount) attributeReferral(database, { referredUserId: account.id, rawCode: body.referralCode });
         database.projects.forEach((project) => {
           if (project.ownerId === current.user.id) project.ownerId = account.id;
         });
@@ -1423,6 +1575,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           database.betaInviteRedemptions.push({ id: crypto.randomUUID(), accountId: account.id, region: requestedRegion.primaryRegion, cohort: inviteAccess.cohort, inviteFingerprint: inviteAccess.inviteFingerprint, redeemedAt: nowIso() });
         }
         ensureFreePreview(database, account.id);
+        const existingFirstScene = database.projects.find((project) => project.ownerId === account.id && !project.deletedAt && project.clientSnapshot?.firstPageCreated && project.draft?.trim());
+        if (existingFirstScene) completeReferralReward(database, { referredUserId: account.id, projectId: existingFirstScene.id });
         const session = database.sessions.find((item) => item.id === current.session.id);
         session.userId = account.id;
         session.expiresAt = addDays(new Date(), SESSION_DAYS);
@@ -1544,6 +1698,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         store.mutate((nextDatabase) => {
           nextDatabase.projects.push(project);
           settleReservation(nextDatabase, { reservationId: reserved.reservation.id });
+          completeReferralReward(nextDatabase, { referredUserId: user.id, projectId: project.id });
         });
         sendJson(response, 201, { project, wallet: walletFor(store.read(), user.id) });
       } catch (error) {
@@ -1652,6 +1807,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         nextProject.updatedAt = nowIso();
         nextProject.version = Number(nextProject.version || 0) + 1;
         nextDatabase.projects[index] = nextProject;
+        completeReferralReward(nextDatabase, { referredUserId: user.id, projectId: nextProject.id });
         return nextProject;
       });
       sendJson(response, 200, { project: updated });
@@ -1823,6 +1979,60 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return publicSquad(database, squad, user.id);
       });
       sendJson(response, 200, { squad: result });
+      return true;
+    }
+
+    const squadPhotoConsentMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/photo-consent$/);
+    if (squadPhotoConsentMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(squadPhotoConsentMatch[1]));
+      const body = await readJsonBody(request);
+      const database = store.read();
+      const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+      if (!squad) {
+        sendJson(response, 404, { error: "Private squad not found." });
+        return true;
+      }
+      if (body.confirmedAdult !== true || body.approvedPrivateMedia !== true || body.approvedPersonalPhoto !== true || body.acknowledgedRegionalProcessing !== true) {
+        sendJson(response, 400, { error: "An adult-owned account must confirm private use of a real-person photo." });
+        return true;
+      }
+      const guardianName = cleanText(body.guardianName, 100);
+      const relationship = cleanText(body.relationship, 80);
+      if (!guardianName || !relationship) {
+        sendJson(response, 400, { error: "Enter the adult name and relationship to the person pictured." });
+        return true;
+      }
+      const consent = {
+        id: crypto.randomUUID(), projectId: "", squadId: squad.id, guardianName, relationship,
+        scopes: ["private_media", "personal_photo_reference", "regional_ai_processing"],
+        verificationStatus: "account-attested", policyVersion: "2026-09-18", createdAt: nowIso(), revokedAt: ""
+      };
+      store.mutate((nextDatabase) => nextDatabase.guardianConsents.push(consent));
+      sendJson(response, 201, { consent, notice: "This photo is private by default and can be permanently removed from the squad." });
+      return true;
+    }
+
+    const squadConsentRevokeMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/consents\/([^/]+)$/);
+    if (squadConsentRevokeMatch && request.method === "DELETE") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(squadConsentRevokeMatch[1]));
+      const consentId = cleanId(decodeURIComponent(squadConsentRevokeMatch[2]));
+      const database = store.read();
+      const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+      const consent = squad ? database.guardianConsents.find((item) => item.id === consentId && item.squadId === squad.id && !item.revokedAt) : null;
+      if (!squad || !consent) {
+        sendJson(response, 404, { error: "Photo permission not found." });
+        return true;
+      }
+      const consentMedia = database.media.filter((item) => item.ownerId === user.id && item.squadId === squad.id && item.personalPhotoConsentId === consent.id);
+      for (const media of consentMedia) await mediaStorage.remove(media);
+      store.mutate((nextDatabase) => {
+        const stored = nextDatabase.guardianConsents.find((item) => item.id === consent.id);
+        if (stored) stored.revokedAt = nowIso();
+        nextDatabase.media = nextDatabase.media.filter((item) => item.personalPhotoConsentId !== consent.id);
+      });
+      sendJson(response, 200, { revoked: true, personalPhotoMediaDeleted: consentMedia.length });
       return true;
     }
 
@@ -2084,7 +2294,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             return true;
           }
           const consentId = cleanId(body.personalPhotoConsentId);
-          const consent = database.guardianConsents.find((item) => item.id === consentId && item.projectId === project?.id && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("private_media") && item.scopes?.includes("regional_ai_processing"));
+          const consent = database.guardianConsents.find((item) => item.id === consentId && (item.projectId === project?.id || item.squadId === squad?.id) && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("private_media") && item.scopes?.includes("regional_ai_processing"));
           if (!consent) {
             sendJson(response, 403, { error: "Adult consent is required before saving a real-person photo." });
             return true;
@@ -2612,10 +2822,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const { database, user } = sessionFor(request, response, { create: false });
       const consent = database.guardianConsents.find((item) => item.id === cleanId(consentId) && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("regional_ai_processing"));
       const project = consent ? database.projects.find((item) => item.id === consent.projectId && item.ownerId === user?.id && !item.deletedAt) : null;
-      if (user?.kind !== "account" || !consent || !project) {
+      const squad = consent ? database.squads?.find((item) => item.id === consent.squadId && item.ownerId === user?.id && !item.deletedAt) : null;
+      if (user?.kind !== "account" || !consent || (!project && !squad)) {
         throw Object.assign(new Error("Adult consent is required before a personal photo can be sent for AI creation."), { statusCode: 403, code: "PERSONAL_PHOTO_CONSENT_REQUIRED" });
       }
-      return { consent, project };
+      return { consent, project, squad };
     },
     squadGenerationContext(request, response, { squadId, cardId, anchor: isAnchor = false }) {
       const { database, user } = sessionFor(request, response, { create: false });

@@ -11,7 +11,11 @@ const {
   settleReservation,
   releaseReservation,
   createInviteBatch,
-  redeemInvite
+  redeemInvite,
+  ensureReferral,
+  attributeReferral,
+  completeReferralReward,
+  freeGiftProgress
 } = require("../credit-system");
 
 function database() {
@@ -19,6 +23,7 @@ function database() {
 }
 
 test("allowance packages describe outcomes instead of opaque points", () => {
+  assert.deepEqual(PACKAGE_CATALOG["free-preview"].grants, { storyProjects: 1, imageGenerations: 1 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].grants, { storyProjects: 1, imageGenerations: 12 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].price, { usd: 19, cny: 129 });
   assert.deepEqual(PACKAGE_CATALOG["invite-cocreate"].grants, { storyProjects: 1, imageGenerations: 18, collaboratorSeats: 5 });
@@ -42,14 +47,14 @@ test("package grants are idempotent and visible in the wallet", () => {
 test("reservations prevent overspend and settle exactly once", () => {
   const data = database();
   ensureFreePreview(data, "user-1");
-  const held = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 2, idempotencyKey: "image-1" });
-  assert.equal(held.wallet.resources.imageGenerations.remaining, 1);
-  assert.throws(() => reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 2, idempotencyKey: "image-2" }), (error) => error.code === "INSUFFICIENT_CREDITS" && error.remaining === 1);
+  const held = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "image-1" });
+  assert.equal(held.wallet.resources.imageGenerations.remaining, 0);
+  assert.throws(() => reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "image-2" }), (error) => error.code === "INSUFFICIENT_CREDITS" && error.remaining === 0);
   const first = settleReservation(data, { reservationId: held.reservation.id, costUsd: 0.42 });
   const second = settleReservation(data, { reservationId: held.reservation.id, costUsd: 0.42 });
   assert.equal(first.duplicate, false);
   assert.equal(second.duplicate, true);
-  assert.equal(walletFor(data, "user-1").resources.imageGenerations.consumed, 2);
+  assert.equal(walletFor(data, "user-1").resources.imageGenerations.consumed, 1);
   assert.equal(data.creditTransactions.filter((entry) => entry.type === "consumption").length, 1);
 });
 
@@ -59,7 +64,7 @@ test("failed generation releases the reservation without consuming allowance", (
   const held = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "failed-image" });
   releaseReservation(data, { reservationId: held.reservation.id, reason: "provider-failed" });
   const wallet = walletFor(data, "user-1");
-  assert.equal(wallet.resources.imageGenerations.remaining, 3);
+  assert.equal(wallet.resources.imageGenerations.remaining, 1);
   assert.equal(wallet.resources.imageGenerations.consumed, 0);
   assert.equal(wallet.resources.imageGenerations.reserved, 0);
 });
@@ -106,6 +111,7 @@ test("paid redemption codes record revenue separately from complimentary credits
 test("usage summaries separate measured cost from operations whose provider cost is missing", () => {
   const data = database();
   ensureFreePreview(data, "user-1");
+  grantPackage(data, { userId: "user-1", packageId: "revision-read-gift", idempotencyKey: "earned-reading" });
   const priced = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "priced" });
   settleReservation(data, { reservationId: priced.reservation.id, costUsd: 0.18 });
   const unpriced = reserveCredits(data, { userId: "user-1", resource: "imageGenerations", units: 1, idempotencyKey: "unpriced" });
@@ -117,4 +123,21 @@ test("usage summaries separate measured cost from operations whose provider cost
   assert.ok(Math.abs(summary.totals.recordedCostUsd - 0.2) < 0.000001);
   assert.equal(summary.totals.unpricedOperations, 2);
   assert.equal(summary.totals.modelOperations, 2);
+});
+
+test("free gifts unlock once and referral rewards require a completed first scene", () => {
+  const data = database();
+  data.projects = [];
+  ensureFreePreview(data, "parent-1");
+  ensureFreePreview(data, "friend-1");
+  const code = ensureReferral(data, "parent-1").code;
+  attributeReferral(data, { referredUserId: "friend-1", rawCode: code });
+  assert.equal(completeReferralReward(data, { referredUserId: "friend-1", projectId: "missing" }).rewarded, false);
+  data.projects.push({ id: "scene-1", ownerId: "friend-1", draft: "A real first scene.", clientSnapshot: { firstPageCreated: true }, deletedAt: "" });
+  assert.equal(completeReferralReward(data, { referredUserId: "friend-1", projectId: "scene-1" }).rewarded, true);
+  assert.equal(completeReferralReward(data, { referredUserId: "friend-1", projectId: "scene-1" }).duplicate, true);
+  assert.equal(freeGiftProgress(data, "parent-1").referralCreation, true);
+  assert.equal(freeGiftProgress(data, "friend-1").referralCreation, true);
+  assert.equal(walletFor(data, "parent-1").resources.imageGenerations.remaining, 2);
+  assert.equal(walletFor(data, "friend-1").resources.imageGenerations.remaining, 2);
 });

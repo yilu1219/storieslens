@@ -2,7 +2,9 @@
   "use strict";
 
   const platform = window.StoriesLensPlatform;
-  const requestedReturn = new URLSearchParams(location.search).get("return") || "";
+  const pageParams = new URLSearchParams(location.search);
+  const requestedReturn = pageParams.get("return") || "";
+  const referralCode = (pageParams.get("ref") || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100);
   const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio)\.html(?:[?#].*)?$/.test(requestedReturn) ? requestedReturn : "my-stories.html";
   const $ = (selector) => document.querySelector(selector);
   const startForm = $("[data-email-start]");
@@ -158,6 +160,7 @@
           primaryRegion: selectedRegion(),
           countryCode: countryCode(),
           betaInviteCode: $("[data-beta-invite-code]").value.trim(),
+          referralCode,
           locale: selectedRegion() === "cn" ? "zh" : "en"
         })
       });

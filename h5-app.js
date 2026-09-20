@@ -28,6 +28,8 @@
   let mentorRevisionItems = [];
   let mentorRevisionIndex = 0;
   let mentorReviewedDraft = "";
+  let mentorRevisionCompleted = false;
+  let mentorReadingConfirmed = false;
   let questionIndex = 0;
   let answers = [];
   let languageTouched = false;
@@ -141,9 +143,9 @@
       "yu-suggestion": "YU’S MINIMAL REVISION",
       "yes-my-meaning": "Yes—this is what I mean",
       "change-my-words": "Not quite—I’ll change the words",
-      "read-it-aloud": "NOW READ IT ALOUD",
-      "hear-and-follow": "Hear it, then read it",
-      "i-read-it": "I read it aloud",
+      "read-it-aloud": "READ IT IN YOUR WAY",
+      "hear-and-follow": "Hear Yu, then read it",
+      "i-read-it": "I read and checked it",
       "mentor-authorship-note": "Yu teaches and suggests. Nothing changes until you approve it.",
       "journey-idea": "STORY IDEA",
       "journey-setting": "BUILD THE SETTING",
@@ -287,9 +289,9 @@
       "yu-suggestion": "羽大师的最小修改",
       "yes-my-meaning": "是，这就是我的意思",
       "change-my-words": "不完全是，我自己改一改",
-      "read-it-aloud": "现在跟着读一遍",
-      "hear-and-follow": "先听，再自己朗读",
-      "i-read-it": "我已经读过了",
+      "read-it-aloud": "用你喜欢的方式读一遍",
+      "hear-and-follow": "先听羽大师，再自己读",
+      "i-read-it": "我已经读过并确认",
       "mentor-authorship-note": "羽大师只负责教学和建议；没有你的确认，一个字也不会替换。",
       "journey-idea": "故事想法",
       "journey-setting": "写出场景",
@@ -564,11 +566,13 @@
     const voices = window.speechSynthesis.getVoices();
     const prefix = lang.toLowerCase().split("-")[0];
     const languageVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(prefix));
-    if (prefix === "zh") {
-      const sageVoiceNames = [/yunxi/i, /yunjian/i, /kangkang/i, /yong/i, /li-mu/i, /male/i, /普通话.*男/i];
-      const sageVoice = languageVoices.find((voice) => sageVoiceNames.some((pattern) => pattern.test(`${voice.name} ${voice.voiceURI}`)));
-      if (sageVoice) return sageVoice;
-    }
+    const sageVoiceNames = prefix === "zh"
+      ? [/yunxi/i, /yunjian/i, /yunyang/i, /kangkang/i, /yong/i, /li-mu/i, /male/i, /普通话.*男/i]
+      : [/daniel/i, /alex/i, /aaron/i, /arthur/i, /fred/i, /reed/i, /eddy/i, /rocko/i, /evan/i, /lee/i, /rishi/i, /male/i];
+    const sageVoice = languageVoices.find((voice) => sageVoiceNames.some((pattern) => pattern.test(`${voice.name} ${voice.voiceURI}`)));
+    if (sageVoice) return sageVoice;
+    const premiumVoice = languageVoices.find((voice) => /premium|enhanced|natural/i.test(`${voice.name} ${voice.voiceURI}`));
+    if (premiumVoice) return premiumVoice;
     return languageVoices.find((voice) => voice.lang.toLowerCase() === lang.toLowerCase())
       || languageVoices[0]
       || null;
@@ -587,8 +591,8 @@
     const lang = locale === "zh" ? "zh-CN" : "en-US";
     questionUtterance = new window.SpeechSynthesisUtterance(question);
     questionUtterance.lang = lang;
-    questionUtterance.rate = locale === "zh" ? 0.82 : 0.9;
-    questionUtterance.pitch = locale === "zh" ? 0.84 : 1.04;
+    questionUtterance.rate = locale === "zh" ? 0.8 : 0.86;
+    questionUtterance.pitch = locale === "zh" ? 0.72 : 0.78;
     const voice = preferredVoice(lang);
     if (voice) questionUtterance.voice = voice;
     questionUtterance.onstart = () => updateReadQuestionButton(true);
@@ -991,7 +995,15 @@
           storyDna: dna,
           scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), imageUrl: selectedArtwork?.mediaUrl || "", duration: 6 }],
           coverImageUrl: selectedArtwork?.mediaUrl || "",
-          clientSnapshot: { from: "h5", firstPageCreated: true, learningProfile, chineseCreativeProfile, outputFormat: selectedOutputFormat || "book" }
+          clientSnapshot: {
+            from: "h5",
+            firstPageCreated: true,
+            mentorRevisionCompleted,
+            readingConfirmed: mentorReadingConfirmed,
+            learningProfile,
+            chineseCreativeProfile,
+            outputFormat: selectedOutputFormat || "book"
+          }
       };
       const result = await platform.api(savedProjectId ? `/api/projects/${savedProjectId}` : "/api/projects", {
         method: savedProjectId ? "PATCH" : "POST",
@@ -1008,6 +1020,15 @@
             scenes: [{ id: "scene-1", title, text: draft, caption: draft.slice(0, 500), imageUrl: selectedArtwork.mediaUrl, duration: 6 }]
           })
         });
+      }
+      if (mentorRevisionCompleted && mentorReadingConfirmed) {
+        try {
+          const gift = await platform.api("/api/credits/unlock-learning-gift", {
+            method: "POST",
+            body: JSON.stringify({ projectId: savedProjectId })
+          });
+          if (gift.unlocked) toast(locale === "zh" ? "完成修改与朗读确认，第二张免费插图已解锁！" : "Revision and reading confirmed—your second free illustration is unlocked!");
+        } catch (_error) { /* Gift status can refresh later without blocking the saved story. */ }
       }
       status.textContent = selectedArtwork?.privateOnly
         ? (locale === "zh" ? "故事已保存；这张图片按安全规则只留在本机。" : "Story saved; this image remains on this device under the safety policy.")
@@ -1032,8 +1053,8 @@
     const lang = locale === "zh" ? "zh-CN" : "en-US";
     mentorUtterance = new window.SpeechSynthesisUtterance(text);
     mentorUtterance.lang = lang;
-    mentorUtterance.rate = locale === "zh" ? 0.88 : 0.9;
-    mentorUtterance.pitch = locale === "zh" ? 0.94 : 1.02;
+    mentorUtterance.rate = locale === "zh" ? 0.8 : 0.86;
+    mentorUtterance.pitch = locale === "zh" ? 0.72 : 0.78;
     mentorUtterance.volume = 1;
     const voice = preferredVoice(lang);
     if (voice) mentorUtterance.voice = voice;
@@ -1148,6 +1169,7 @@
 
   function finishMentorReview() {
     mentorReviewedDraft = assembleMentorDraft();
+    mentorRevisionCompleted = true;
     stopMentorSpeech();
     window.StoriesLensAnalytics?.track("mentor_revision_completed", { language: locale, sentenceCount: mentorRevisionItems.length, mode: "solo" });
     showStoryPathStage();
@@ -1416,6 +1438,7 @@
   $("[data-revision-next]")?.addEventListener("click", () => {
     const item = mentorRevisionItems[mentorRevisionIndex];
     if (!item?.accepted) return;
+    mentorReadingConfirmed = true;
     stopMentorSpeech();
     if (mentorRevisionIndex >= mentorRevisionItems.length - 1) {
       finishMentorReview();

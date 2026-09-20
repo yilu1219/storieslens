@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-09-18",
+  "lastReviewed": "2026-09-19",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -129,7 +129,7 @@
       "retrieved": "2026-09-18",
       "url": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
       "rights": "Official and publicly downloadable, but this review did not locate an explicit commercial reuse or AI-training permission for the attached curriculum-standard text.",
-      "rejectionReason": "Authoritative but rights basis is not explicit enough for ingestion under the Yu training policy. No text was added; retain only the official link for future human rights review."
+      "rejectionReason": "Human decision recorded 2026-09-19: keep this source as an external alignment reference only unless written commercial knowledge-extraction permission is obtained. No curriculum text, examples, or assessment language may enter Yu's runtime knowledge base, and no endorsement may be claimed."
     },
     {
       "id": "naep-writing-framework-2017",

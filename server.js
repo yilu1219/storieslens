@@ -882,10 +882,12 @@ async function handleGenerateImage(request, response) {
       squadContext.referenceImageUrls.length ? "The supplied approved images are canonical references. Preserve their character identity and art direction; change only the action, pose, camera, and setting required by this scene." : "This is the owner-created visual anchor. Establish clear, repeatable character designs and a stable palette for every later scene.",
       "Do not redesign recurring characters. Do not add readable text, logos, or watermarks."
     ].filter(Boolean).join("\n\n") : body.prompt;
+    const requestedReferenceImageUrls = Array.isArray(body.referenceImageUrls) ? body.referenceImageUrls : [];
+    const canonicalReferenceImageUrls = squadContext?.referenceImageUrls || [];
     const imageRequest = createImageGenerationRequest({
       ...body,
       prompt: consistencyPrompt,
-      referenceImageUrls: squadContext?.referenceImageUrls || body.referenceImageUrls
+      referenceImageUrls: [...new Set([...canonicalReferenceImageUrls, ...requestedReferenceImageUrls])]
     });
     await enforceTextSafety(imageRequest.prompt, { media: true });
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {

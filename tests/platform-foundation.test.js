@@ -79,7 +79,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(appJs.includes('answerSpeechMaxSeconds = 90'), "voice answers should allow up to 90 seconds while remaining bounded");
   assert(appJs.includes("beginAnswerSpeech") && appJs.includes("startAnswerRecognitionCycle") && appJs.includes("answerRecognition"), "press-and-hold voice answering should be wired to the reusable question card for questions one through three");
   assert(appJs.includes("SpeechSynthesisUtterance") && appJs.includes("storieslens_auto_read_questions"), "question read-aloud should use device speech and remember the family's opt-in preference");
-  assert(appJs.includes("sageVoiceNames") && appJs.includes('pitch = locale === "zh" ? 0.84'), "Chinese read-aloud should prefer a calm lower-pitched available Mandarin voice");
+  assert(appJs.includes("sageVoiceNames") && appJs.includes('pitch = locale === "zh" ? 0.72 : 0.78'), "Yu read-aloud should prefer a warm lower-pitched male voice in both Mandarin and English");
   const englishStoryLanguage = app.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   const chineseStoryLanguage = chineseStudio.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");
@@ -110,6 +110,9 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(appJs.includes('from: "h5"'), "formal H5 should continue directly into the guided creation path");
   assert(read("squad-board.html").includes("data-create-and-generate") && read("squad-board.html").includes("data-visual-candidate"), "squad owners should generate a visual anchor beside the character lock and every creator should review candidates before saving");
   assert(read("squad-board.js").includes("acceptPendingVisual") && read("squad-board.html").includes("Not yet—regenerate"), "squad image generation should debit each attempt but attach only the creator-approved candidate");
+  assert(read("start.html").includes("data-character-speak") && read("start.html").includes("data-character-file") && read("start.html").includes("data-character-generate"), "squad setup should let young creators describe, speak, or add a character reference before generating the visual anchor");
+  assert(read("squad-board.js").includes("storieslens_character_reference") && api.includes("squadPhotoConsentMatch"), "a consented character reference should carry into owner-paid anchor generation without a second upload");
+  assert(read("start.html").includes("data-style-reference-file") && read("start.js").includes("storieslens_style_reference") && read("squad-board.js").includes("STYLE REFERENCE"), "a rights-confirmed style reference should influence only high-level visual traits during anchor generation");
   assert(api.includes("visual-anchor") && api.includes("SQUAD_ANCHOR_OWNER_REQUIRED"), "only the squad owner should be able to lock the shared visual anchor");
   assert(read("my-stories.js").includes("project-report.html?project=") && read("project-report.html").includes("data-book-grid"), "every saved project should open a visible growth report and one-book reading path");
   assert(api.includes("projectReports") && api.includes("createGrowthReport"), "growth reports should be owner-only persisted project records");

@@ -121,10 +121,19 @@
     window.speechSynthesis.cancel();
     const utterance = new window.SpeechSynthesisUtterance(text);
     utterance.lang = activeSquad?.language === "zh" ? "zh-CN" : "en-US";
-    utterance.rate = activeSquad?.language === "zh" ? 0.86 : 0.92;
-    utterance.pitch = activeSquad?.language === "zh" ? 0.9 : 1.04;
+    utterance.rate = activeSquad?.language === "zh" ? 0.8 : 0.86;
+    utterance.pitch = activeSquad?.language === "zh" ? 0.72 : 0.78;
+    utterance.volume = 1;
     const voices = window.speechSynthesis.getVoices();
-    utterance.voice = voices.find((voice) => voice.lang.toLowerCase().startsWith(activeSquad?.language === "zh" ? "zh" : "en")) || null;
+    const prefix = activeSquad?.language === "zh" ? "zh" : "en";
+    const maleNames = prefix === "zh"
+      ? /yunxi|yunjian|yunyang|kangkang|yong|li-mu|male|普通话.*男/i
+      : /daniel|alex|aaron|arthur|fred|reed|eddy|rocko|evan|lee|rishi|male/i;
+    const languageVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(prefix));
+    utterance.voice = languageVoices.find((voice) => maleNames.test(`${voice.name} ${voice.voiceURI}`))
+      || languageVoices.find((voice) => /premium|enhanced|natural/i.test(`${voice.name} ${voice.voiceURI}`))
+      || languageVoices[0]
+      || null;
     window.speechSynthesis.speak(utterance);
   }
 
@@ -174,6 +183,27 @@
     return { squad: updatedSquad, personalPhotoPending };
   }
 
+  async function prepareCharacterReference(squad) {
+    const reference = readStoredJson(sessionStorage, "storieslens_character_reference");
+    if (!reference?.dataUrl) return null;
+    let consentId = "";
+    if (reference.personalPhoto === true) {
+      if (!reference.consent) throw new Error("Adult photo permission is required before using this personal photo.");
+      const consentResult = await platform.api(`/api/squads/${encodeURIComponent(squad.id)}/photo-consent`, {
+        method: "POST",
+        body: JSON.stringify(reference.consent)
+      });
+      consentId = consentResult.consent.id;
+    }
+    return { imageUrl: reference.dataUrl, personalPhoto: reference.personalPhoto === true, personalPhotoConsentId: consentId };
+  }
+
+  function prepareStyleReference() {
+    const reference = readStoredJson(sessionStorage, "storieslens_style_reference");
+    if (!reference?.dataUrl) return null;
+    return { imageUrl: reference.dataUrl };
+  }
+
   async function resumeSquadSetup() {
     if (params.get("resume") !== "1") return false;
     const setup = readStoredJson(localStorage, "storieslens_creator_setup");
@@ -217,6 +247,22 @@
     const carried = await carryStartingMaterial(created.squad, setup);
     activeSquad = carried.squad;
     renderBoard(activeSquad);
+    if (setup.squadGenerateAnchor === true) {
+      try {
+        const reference = await prepareCharacterReference(activeSquad);
+        const styleReference = prepareStyleReference();
+        pendingVisual = {
+          kind: "anchor", cardId: "", card: null, imageUrl: "",
+          characterReferenceImageUrls: reference?.imageUrl ? [reference.imageUrl] : [],
+          styleReferenceImageUrls: styleReference?.imageUrl ? [styleReference.imageUrl] : [],
+          personalPhoto: reference?.personalPhoto === true,
+          personalPhotoConsentId: reference?.personalPhotoConsentId || ""
+        };
+        await generatePendingVisual();
+      } catch (referenceError) {
+        showNotice(referenceError.message, true);
+      }
+    }
     showNotice(carried.personalPhotoPending
       ? "Your squad and first text are ready. The personal photo remains safely on this device until adult photo consent is confirmed. · 小组和首段文字已创建；真人照片会留在本机，待完成照片授权后再保存。"
       : "Your squad and starting material are ready—nothing needs to be uploaded again. · 小组与起始素材已就绪，无需再次上传。"
@@ -338,13 +384,24 @@
           cardId: candidate.cardId || "",
           squadAnchor: candidate.kind === "anchor",
           projectId: activeSquad.id,
-          prompt: candidate.kind === "anchor" ? anchorPrompt(activeSquad) : cardPrompt(activeSquad, candidate.card),
+          prompt: candidate.kind === "anchor"
+            ? `${anchorPrompt(activeSquad)}${candidate.styleReferenceImageUrls?.length ? "\n\nA user-provided STYLE REFERENCE is included. Borrow only high-level palette, lighting, texture, brushwork and mood. Do not copy its characters, logos, readable text, exact composition, or any artist signature." : ""}`
+            : cardPrompt(activeSquad, candidate.card),
           aspectRatio: "16:9",
-          assetType: candidate.kind === "anchor" ? "SQUAD_VISUAL_ANCHOR" : "SQUAD_CONTRIBUTION_IMAGE"
+          assetType: candidate.kind === "anchor" ? "SQUAD_VISUAL_ANCHOR" : "SQUAD_CONTRIBUTION_IMAGE",
+          referenceImageUrls: [...(candidate.characterReferenceImageUrls || []), ...(candidate.styleReferenceImageUrls || [])],
+          personalPhoto: candidate.personalPhoto === true,
+          personalPhotoConsentId: candidate.personalPhotoConsentId || ""
         })
       });
       if (pendingVisual !== candidate) return;
       candidate.imageUrl = result.imageUrl || result.downloadUrl;
+      if (candidate.kind === "anchor") {
+        candidate.characterReferenceImageUrls = [];
+        candidate.styleReferenceImageUrls = [];
+        sessionStorage.removeItem("storieslens_character_reference");
+        sessionStorage.removeItem("storieslens_style_reference");
+      }
       const image = $("[data-candidate-image]");
       image.src = candidate.imageUrl;
       image.hidden = false;

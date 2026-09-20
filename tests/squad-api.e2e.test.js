@@ -91,6 +91,18 @@ test("private squad supports approval, shared contributions and credited assembl
     assert.match(created.payload.squad.joinCode, /^SQ[A-F0-9]{10}$/);
     const squadId = created.payload.squad.id;
 
+    const incompletePhotoConsent = await request(baseUrl, `/api/squads/${squadId}/photo-consent`, {
+      method: "POST", origin: true, cookies: [ownerCookie], body: { confirmedAdult: true }
+    });
+    assert.equal(incompletePhotoConsent.response.status, 400);
+    const photoConsent = await request(baseUrl, `/api/squads/${squadId}/photo-consent`, {
+      method: "POST", origin: true, cookies: [ownerCookie],
+      body: { guardianName: "Parent Owner", relationship: "parent", confirmedAdult: true, approvedPrivateMedia: true, approvedPersonalPhoto: true, acknowledgedRegionalProcessing: true }
+    });
+    assert.equal(photoConsent.response.status, 201);
+    assert.equal(photoConsent.payload.consent.squadId, squadId);
+    assert(photoConsent.payload.consent.scopes.includes("regional_ai_processing"));
+
     const joined = await request(baseUrl, "/api/squads/join", {
       method: "POST", cookies: [memberCookie],
       body: { code: created.payload.squad.joinCode, displayName: "Leo", youngCreator: true, guardianConfirmed: true }
