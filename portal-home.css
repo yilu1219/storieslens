@@ -44,6 +44,7 @@ button, textarea { color: inherit; font: inherit; }
 .portal-header,
 .magic-hero,
 .portal-spaces,
+.founder-story,
 .company-family,
 .portal-footer { width: min(1240px, calc(100% - 64px)); margin-inline: auto; }
 .portal-header { display: flex; align-items: center; justify-content: space-between; min-height: 100px; border-bottom: 1px solid var(--line); }
@@ -177,6 +178,21 @@ button, textarea { color: inherit; font: inherit; }
 .portal-card-case b { font-size: 18px; transition: transform 180ms ease; }
 .portal-card-case:hover b { transform: translate(3px,-3px); }
 
+.founder-story { position: relative; overflow: hidden; margin-bottom: 90px; padding: clamp(34px,5vw,65px); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 30px; background: radial-gradient(circle at 94% 6%,rgba(244,203,112,.2),transparent 21rem),radial-gradient(circle at 5% 112%,rgba(105,205,153,.2),transparent 25rem),linear-gradient(135deg,#0b2521,#164536 58%,#0e332a); box-shadow: 0 35px 80px rgba(20,55,43,.2); isolation: isolate; }
+.founder-story::before { position: absolute; inset: 0; z-index: -1; content: ""; pointer-events: none; opacity: .13; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E"); }
+.founder-identity { display: flex; align-items: center; gap: 18px; }
+.founder-portrait { width: 112px; aspect-ratio: 1; flex: 0 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,.28); border-radius: 16px; background: #e9dfcc; box-shadow: 0 14px 32px rgba(0,0,0,.22); }
+.founder-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+.founder-copy { max-width: 990px; min-width: 0; font-family: var(--sans); }
+.founder-copy .portal-kicker { color: #a9dfbf; }
+.founder-copy h2 { max-width: 760px; margin: 14px 0 22px; color: #fff; font-family: var(--serif); font-size: clamp(40px,4.5vw,62px); line-height: .97; letter-spacing: -.045em; }
+.founder-copy > p { max-width: 770px; margin: 0 0 14px; color: rgba(255,255,255,.78); font-size: clamp(15px,1.25vw,17px); line-height: 1.58; }
+.founder-copy .founder-credentials { color: #fff2cf; font-size: 15px; font-weight: 700; line-height: 1.52; }
+.founder-promise { display: inline; max-width: 760px; margin-top: 9px; padding: 0 0 5px; color: #fff2cf; border: 0; border-bottom: 1px solid rgba(244,203,112,.78); background: transparent; font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: .012em; line-height: 1.65; text-align: left; cursor: pointer; }
+.founder-promise span { color: var(--gold); white-space: nowrap; }
+.founder-promise:hover { color: #fff; border-bottom-color: var(--gold); }
+.founder-promise:focus-visible { outline: 3px solid var(--gold); outline-offset: 5px; }
+
 .company-family { padding: clamp(84px, 10vw, 130px) 0 90px; border-top: 1px solid var(--line); }
 .company-family-intro { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(280px, .62fr); align-items: end; gap: clamp(34px, 7vw, 96px); margin-bottom: 40px; }
 .company-family-intro .portal-kicker { grid-column: 1 / -1; }
@@ -222,12 +238,14 @@ button, textarea { color: inherit; font: inherit; }
   .portal-choices { grid-template-columns: 1fr 1fr; }
   .portal-card.portal-card-teacher { grid-column: 1 / -1; min-height: 650px; background-position: right top; background-size: 58% auto; }
   .portal-card-teacher .portal-card-main { min-height: 575px; }
+  .founder-portrait { width: 100px; }
 }
 
 @media (max-width: 700px) {
   .portal-header,
   .magic-hero,
   .portal-spaces,
+  .founder-story,
   .company-family,
   .portal-footer { width: min(100% - 32px, 1240px); }
   .portal-header { min-height: 80px; }
@@ -276,6 +294,13 @@ button, textarea { color: inherit; font: inherit; }
   .lightyear-cta { grid-column: 1; grid-row: 3; justify-self: start; }
   .brand-bridge { grid-template-columns: 1fr; gap: 15px; padding: 22px; }
   .brand-bridge i { transform: rotate(45deg); }
+  .founder-story { margin-bottom: 58px; padding: 24px; border-radius: 23px; }
+  .founder-identity { gap: 13px; }
+  .founder-identity .portal-kicker { max-width: 180px; line-height: 1.45; }
+  .founder-portrait { width: 82px; border-radius: 13px; }
+  .founder-portrait img { object-position: center 16%; }
+  .founder-copy h2 { font-size: clamp(39px,11vw,52px); }
+  .founder-copy > p { font-size: 15px; }
   .portal-footer { flex-direction: column; }
 }
 

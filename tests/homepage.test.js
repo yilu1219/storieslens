@@ -76,6 +76,18 @@ assert((indexHtml.match(/class="portal-card-case"/g) || []).length === 3, "Each 
 assert((indexHtml.match(/href="showcase\.html#work"/g) || []).length === 3, "Each creation mode should link to the independent showcase");
 
 [
+  "MEET THE FOUNDER · YI LU",
+  "Children already have stories. They deserve the words to tell them.",
+  "a journalist, Columbia Journalism and International Affairs graduate",
+  "Student Television Network",
+  "Master Yu continually learns from carefully reviewed teaching resources and guides. Children imagine, choose and remain the authors.",
+  "assets/founder-storieslens-comic-v2.jpg"
+].forEach((token) => assert(indexHtml.includes(token), `Homepage should present the founder story: ${token}`));
+
+assert(indexHtml.indexOf("company-family") < indexHtml.indexOf("founder-story"), "Founder story should appear after the Lightyear Story section");
+assert(indexHtml.includes('class="founder-promise" type="button" data-yu-profile-open'), "Founder promise should open the existing Master Yu profile");
+
+[
   "STORIESLENS ORIGINALS",
   'data-format-filter="book"',
   'data-format-filter="film"',
