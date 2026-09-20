@@ -34,7 +34,7 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, renderWorkerRe
   const configuredInviteRegions = inviteRegions(env.BETA_INVITE_CODE_HASHES);
   const intlCountries = csv(env.ALLOWED_INTL_COUNTRY_CODES).map((country) => country.toUpperCase());
   const publicOrigin = env.PUBLIC_BASE_URL || env.OPENROUTER_SITE_URL;
-  const legalFiles = ["privacy-policy.html", "terms-of-use.html", "child-safety-notice.html"];
+  const legalFiles = ["privacy-policy.html", "terms-of-use.html", "child-safety-notice.html", "refund-policy.html"];
   const hasLegalFiles = Boolean(root) && legalFiles.every((file) => fs.existsSync(path.join(root, file)));
   const hasSafetyKey = Boolean(env.OPENAI_MODERATION_API_KEY || env.OPENAI_API_KEY || env.OPENROUTER_API_KEY);
   const hasArtworkReviewKey = Boolean(env.OPENAI_API_KEY || env.OPENROUTER_API_KEY);
@@ -65,7 +65,7 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, renderWorkerRe
     gate("external-safety", "Fail-closed text and media safety", enabled(env.REQUIRE_EXTERNAL_TEXT_MODERATION) && enabled(env.REQUIRE_EXTERNAL_MEDIA_MODERATION) && hasSafetyKey && hasArtworkReviewKey, "Connect external text, image and artwork review keys and keep both required flags true."),
     gate("rate-limits", "Abuse and cost rate limits", enabled(env.BETA_RATE_LIMIT_ENABLED) && Boolean(env.RATE_LIMIT_SECRET), "Enable beta rate limits and add a long random server secret."),
     gate("account-deletion", "Account and media deletion", enabled(env.ACCOUNT_DELETION_ENABLED), "Enable the tested account deletion endpoint before inviting families."),
-    gate("legal-review", "Privacy, child-safety and terms review", hasLegalFiles && enabled(env.LEGAL_REVIEW_APPROVED) && Boolean(env.LEGAL_CONTACT_EMAIL), "Review the three beta notices with qualified counsel, add a contact email, then record approval."),
+    gate("legal-review", "Privacy, child-safety, terms and refund review", hasLegalFiles && enabled(env.LEGAL_REVIEW_APPROVED) && Boolean(env.LEGAL_CONTACT_EMAIL), "Review the four beta notices with qualified counsel, add a contact email, then record approval."),
     gate("launch-enforcement", "Server launch lock enabled", enabled(env.ENFORCE_LAUNCH_GATES), "Set ENFORCE_LAUNCH_GATES=true so a failing production configuration cannot start.")
   ];
 

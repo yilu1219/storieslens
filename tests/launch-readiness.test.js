@@ -46,7 +46,7 @@ test("launch gate blocks an unconfigured local environment", () => {
 test("launch gate passes only when every required beta control is configured", (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "storieslens-launch-"));
   context.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  ["privacy-policy.html", "terms-of-use.html", "child-safety-notice.html"].forEach((name) => fs.writeFileSync(path.join(root, name), "reviewed"));
+  ["privacy-policy.html", "terms-of-use.html", "child-safety-notice.html", "refund-policy.html"].forEach((name) => fs.writeFileSync(path.join(root, name), "reviewed"));
   const report = assertLaunchReady({ root, mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env: readyEnvironment() });
   assert.strictEqual(report.ready, true);
   assert.strictEqual(report.summary.requiredPassed, report.summary.requiredTotal);

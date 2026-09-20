@@ -49,7 +49,7 @@
         showPaid(result.order);
         return;
       }
-      if (response.ok && ["payment_verification_failed", "payment_failed", "expired", "refunded_review"].includes(result.order?.status)) {
+      if (response.ok && ["payment_verification_failed", "payment_failed", "expired", "refunded", "partially_refunded", "disputed_frozen", "dispute_lost"].includes(result.order?.status)) {
         showNotFound("This purchase needs review. Please contact support@storieslens.com and include the Stripe receipt number.");
         return;
       }
