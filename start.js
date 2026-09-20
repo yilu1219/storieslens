@@ -60,6 +60,9 @@
   const yuReadButtons = [...document.querySelectorAll("[data-yu-read]")];
   const yuReadPageButton = document.querySelector("[data-yu-read-page]");
   const error = document.querySelector("[data-form-error]");
+  const carriedSpark = document.querySelector("[data-carried-spark]");
+  const carriedSparkImage = document.querySelector("[data-carried-spark-image]");
+  const carriedSparkNote = document.querySelector("[data-carried-spark-note]");
   const t = (text) => window.StoriesLensI18n?.t(text) || text;
 
   const renderAgeGate = () => {
@@ -91,6 +94,7 @@
   let characterRestartTimer = null;
   let characterReference = null;
   let styleReference = null;
+  let homepageSpark = null;
   let storyLanguageTouched = ["en", "zh"].includes(requestedStoryLanguage);
   let squadStyleTouched = false;
 
@@ -197,6 +201,42 @@
     if (active && styleSummaryImage) styleSummaryImage.src = active.dataset.styleImage;
     if (active && styleSummaryLabel) styleSummaryLabel.textContent = active.dataset.styleLabel;
   };
+
+  async function restoreHomepageSpark() {
+    if (startParams.get("from") !== "homepage-magic") return;
+    try {
+      homepageSpark = window.StoriesLensSparkHandoff
+        ? await window.StoriesLensSparkHandoff.load()
+        : JSON.parse(sessionStorage.getItem("storieslens_home_spark") || "null");
+    } catch (_error) {
+      homepageSpark = null;
+    }
+    if (!homepageSpark) return;
+    if (["en", "zh"].includes(homepageSpark.storyLanguage) && storyLanguage) {
+      storyLanguage.value = homepageSpark.storyLanguage;
+      storyLanguageTouched = true;
+    }
+    if (homepageSpark.seed && storySeed) storySeed.value = String(homepageSpark.seed).slice(0, storySeed.maxLength || 280);
+    if (homepageSpark.dataUrl && /^data:image\/(?:webp|png|jpeg);base64,/.test(homepageSpark.dataUrl)) {
+      origin = "picture";
+      importedWork = {
+        name: String(homepageSpark.name || "homepage-photo.webp").slice(0, 180),
+        type: String(homepageSpark.dataUrl.match(/^data:([^;,]+)/)?.[1] || "image/webp"),
+        kind: "image",
+        content: homepageSpark.dataUrl,
+        safetyReviewed: !homepageSpark.privateOnly,
+        metadataRemoved: true,
+        personalPhoto: homepageSpark.personalPhoto === true,
+        convertedFromHeic: homepageSpark.convertedFromHeic === true
+      };
+      try { sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork)); } catch (_error) { /* IndexedDB handoff remains available. */ }
+      if (carriedSparkImage) carriedSparkImage.src = homepageSpark.dataUrl;
+      if (carriedSpark) carriedSpark.hidden = false;
+      if (workFileStatus) workFileStatus.textContent = t("Your homepage photo is ready. You do not need to upload it again.");
+      if (carriedSparkNote) carriedSparkNote.textContent = t("Choose Solo Story or Story Squad. You will not upload it again.");
+    }
+    render();
+  }
   squadStyle?.addEventListener("change", () => { squadStyleTouched = true; renderStylePicker(); });
   styleCards.forEach((card) => card.addEventListener("click", () => {
     if (!squadStyle) return;
@@ -662,7 +702,9 @@
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}`;
 
     if (mode === "solo") {
-      window.location.href = `visual-write.html?mode=free&from=start&${languageQuery}`;
+      window.location.href = homepageSpark
+        ? (setup.storyLanguage === "zh" ? "chinese-studio.html?from=homepage-magic" : "app.html?locale=en&from=homepage-magic")
+        : `visual-write.html?mode=free&from=start&${languageQuery}`;
       return;
     }
 
@@ -677,4 +719,5 @@
   renderAgeGate();
   renderStylePicker();
   render();
+  void restoreHomepageSpark();
 })();

@@ -147,7 +147,25 @@
   }
 
   async function carryStartingMaterial(squad, setup) {
-    const imported = readStoredJson(sessionStorage, "storieslens_imported_work");
+    let imported = readStoredJson(sessionStorage, "storieslens_imported_work");
+    if (!imported && window.StoriesLensSparkHandoff) {
+      try {
+        const spark = await window.StoriesLensSparkHandoff.load();
+        if (spark?.dataUrl && /^data:image\/(?:webp|png|jpeg);base64,/.test(spark.dataUrl)) {
+          imported = {
+            name: String(spark.name || "homepage-photo.webp").slice(0, 180),
+            type: String(spark.dataUrl.match(/^data:([^;,]+)/)?.[1] || "image/webp"),
+            kind: "image",
+            content: spark.dataUrl,
+            safetyReviewed: !spark.privateOnly,
+            metadataRemoved: true,
+            personalPhoto: spark.personalPhoto === true
+          };
+        }
+      } catch (_error) {
+        imported = null;
+      }
+    }
     const importedText = imported?.kind === "text" ? String(imported.content || "").trim() : "";
     const starterText = (importedText || setup.seed || (imported?.kind === "image"
       ? (setup.storyLanguage === "zh" ? "这是我们的故事起点。" : "This is our story starting point.")

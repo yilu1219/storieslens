@@ -336,6 +336,8 @@
     "Your story starts here": "你的故事从这里开始",
     "How do you want to create?": "你想怎样创作？",
     "Choose one path now. You can invite other creators later.": "现在选择一种方式，以后随时可以邀请其他创作者。",
+    "Your homepage photo is ready. You do not need to upload it again.": "首页上传的照片已经带过来了，不需要再次上传。",
+    "Choose Solo Story or Story Squad. You will not upload it again.": "请选择个人创作或小组共创，这张照片会继续跟随你的项目。",
     "Choose a creation mode": "选择创作模式",
     "My idea. My voice.": "我的想法，我的声音。",
     "Write fiction, a memory, or your first personal story with a gentle AI coach.": "在温和的 AI 教练引导下，写小说、回忆或你的第一个个人故事。",

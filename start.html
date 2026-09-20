@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20260918-7" />
+    <link rel="stylesheet" href="start.css?v=20260920-8" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -46,6 +46,12 @@
         <p class="eyebrow"><span></span> Your story starts here</p>
         <h1 id="start-title" data-step-title tabindex="-1">How do you want to create?</h1>
         <p class="start-lede" data-step-lede>Choose one path now. You can invite other creators later.</p>
+
+        <aside class="carried-spark" data-carried-spark hidden aria-live="polite">
+          <img data-carried-spark-image alt="Your uploaded story starting image" />
+          <div><strong>Your photo is coming with you</strong><small data-carried-spark-note>Choose Solo Story or Story Squad. You will not upload it again.</small></div>
+          <span aria-hidden="true">✓</span>
+        </aside>
 
         <form data-start-form novalidate>
           <fieldset class="choice-fieldset step-panel" data-step-panel="1">
@@ -256,9 +262,10 @@
     <script src="safety-client.js"></script>
     <script src="artwork-upload-safety.js?v=20260913-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>
+    <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="i18n.js"></script>
     <script src="analytics.js"></script>
-    <script src="start.js?v=20260918-10"></script>
+    <script src="start.js?v=20260920-11"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

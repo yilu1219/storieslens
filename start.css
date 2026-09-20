@@ -120,6 +120,13 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .start-panel h1 { max-width: 720px; margin: 0 0 15px; color: var(--start-ink); font-family: var(--start-serif); font-size: clamp(50px, 5.2vw, 74px); line-height: 0.96; letter-spacing: -0.05em; }
 .start-panel h1:focus { outline: 0; }
 .start-lede { max-width: 650px; margin: 0 0 34px; color: #454b47; font-size: clamp(20px, 1.65vw, 24px); line-height: 1.45; }
+.carried-spark { display: grid; grid-template-columns: 82px 1fr auto; align-items: center; gap: 15px; margin: -10px 0 28px; padding: 12px 15px 12px 12px; color: var(--start-leaf-deep); border: 1px solid rgba(22,132,91,.3); border-radius: 18px; background: linear-gradient(135deg,#edf7ef,#fffaf0); box-shadow: 0 12px 28px rgba(24,74,55,.08); }
+.carried-spark[hidden] { display: none; }
+.carried-spark img { display: block; width: 82px; height: 68px; object-fit: cover; border-radius: 12px; background: #e9e3d7; }
+.carried-spark div { display: grid; gap: 4px; min-width: 0; font-family: var(--start-sans); }
+.carried-spark strong { color: var(--start-ink); font-size: 17px; }
+.carried-spark small { color: var(--start-muted); font-size: 14px; line-height: 1.4; }
+.carried-spark > span { display: grid; width: 34px; height: 34px; place-items: center; color: #fff; border-radius: 50%; background: var(--start-leaf); font-family: var(--start-sans); font-weight: 800; }
 
 .choice-fieldset { margin: 0 0 28px; padding: 0; border: 0; }
 .step-panel { animation: step-in 220ms ease both; }
@@ -314,6 +321,9 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
   .start-progress > div { align-items: flex-start; flex-direction: column; gap: 5px; }
   .start-panel h1 { font-size: clamp(45px, 13vw, 60px); }
   .start-lede { font-size: 20px; }
+  .carried-spark { grid-template-columns: 68px 1fr; }
+  .carried-spark img { width: 68px; height: 62px; }
+  .carried-spark > span { display: none; }
   .story-spark-box textarea { min-height: 150px; padding-right: 15px; padding-top: 64px; }
   .spark-speak { left: 12px; right: auto; }
   .yu-listen-intro { grid-template-columns: auto 1fr; }

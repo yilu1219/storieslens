@@ -62,7 +62,7 @@
       "language-question": "What language would you like to create in today?",
       "language-en": "Create in English",
       "language-zh": "Create in Chinese",
-      "continue-yu": "Let Yu ask me three questions",
+      "continue-yu": "Choose solo or group creation",
       "metadata-removed": "Location and camera details removed",
       "private-default": "Private by default",
       "type-link": "Prefer to type? Start with words →",
@@ -157,7 +157,7 @@
       "language-question": "今天想用什么语言创作？",
       "language-en": "用英文创作",
       "language-zh": "用中文创作",
-      "continue-yu": "回答 Yu 导师的三个问题",
+      "continue-yu": "选择个人创作或小组共创",
       "metadata-removed": "删除位置和拍摄设备信息",
       "private-default": "默认私密",
       "type-link": "更喜欢打字？从文字开始 →",
@@ -314,9 +314,7 @@
         ? "image_and_voice"
         : (preparedImage ? "image" : (payload.seed ? "voice" : "language_only")))
     });
-    location.href = preparedStoryLanguage === "zh"
-      ? "chinese-studio.html?from=homepage-magic"
-      : "app.html?locale=en&from=homepage-magic";
+    location.href = `start.html?from=homepage-magic&storyLang=${encodeURIComponent(preparedStoryLanguage)}`;
   };
 
   uploadInput?.addEventListener("change", async (event) => {

@@ -387,6 +387,7 @@ assert(indexHtml.includes("assets/lightyear-three-generations-family-watercolor-
 assert(indexHtml.indexOf('class="portal-spaces"') < indexHtml.indexOf('class="company-family"'), "Homepage should present creation modes before the sister product");
 assert(portalHomeJs.includes("storyLanguage: preparedStoryLanguage"), "Homepage should carry the selected writing language into the three-question flow");
 assert(portalHomeJs.includes("StoriesLensSparkHandoff.save(payload)"), "Homepage should save one complete creative spark before routing");
+assert(portalHomeJs.includes("start.html?from=homepage-magic&storyLang="), "Homepage should route an uploaded photo through the solo-or-group choice without losing the handoff");
 assert(indexHtml.includes('data-home-existing'), "Homepage should offer a direct entry for an existing child essay");
 assert(indexHtml.includes('data-home-existing-file'), "Existing-writing entry should accept a locally read writing file");
 assert(read("writing-import.js").includes('word/document.xml'), "DOCX writing should be read on the device rather than uploaded first");
@@ -397,7 +398,10 @@ assert(sparkHandoffJs.includes("24 * 60 * 60 * 1000"), "A homepage creative spar
 assert(h5AppJs.includes("StoriesLensSparkHandoff.load()"), "Both language studios should restore the same homepage creative spark");
 assert(h5AppJs.includes("Your image is already here"), "The destination studio should visibly confirm that the homepage image arrived");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
-assert(portalHomeJs.includes('chinese-studio.html?from=homepage-magic'), "Chinese creation should route into its own studio rather than a translated English flow");
+assert(startHtml.includes('data-carried-spark') && startJs.includes("restoreHomepageSpark"), "Solo-or-group setup should visibly restore the homepage photo instead of asking for it again");
+assert(startJs.includes('sessionStorage.setItem("storieslens_imported_work"') && startJs.includes('origin = "picture"'), "The carried homepage photo should become the selected starting picture for either creation mode");
+assert(startJs.includes('chinese-studio.html?from=homepage-magic') && startJs.includes('app.html?locale=en&from=homepage-magic'), "A solo creator should continue with the same photo into the matching language studio");
+assert(read("squad-board.js").includes("StoriesLensSparkHandoff.load()"), "A Story Squad should recover a large homepage photo from IndexedDB when session storage is too small");
 assert.match(
   portalHomeJs,
   /homepage_story_language_selected[\s\S]*?storeAndContinue\(\)/,
