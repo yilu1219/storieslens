@@ -28,10 +28,11 @@ test("does not block ordinary safe story ideas", () => {
   ].forEach((sample) => assert.strictEqual(localSafetyCheck(sample).safe, true, sample));
 });
 
-test("ordinary portrait noise is tolerated while flagged and child-sexual signals stay blocked", () => {
+test("ordinary adult and minor portrait noise is tolerated while flagged and material child-sexual signals stay blocked", () => {
   assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { sexual: 0.04 } }), false);
+  assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { "sexual/minors": 0.01 } }), false);
   assert.strictEqual(isModerationResultBlocked({ flagged: true, category_scores: { sexual: 0.001 } }), true);
-  assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { "sexual/minors": 0.002 } }), true);
+  assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { "sexual/minors": 0.04 } }), true);
 });
 
 test("parses a JSON safety verdict from OpenRouter-compatible output", () => {

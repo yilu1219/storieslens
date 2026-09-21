@@ -3,7 +3,10 @@ const STRICT_SCORE_THRESHOLDS = {
   // vision moderation. The provider's own `flagged` decision still blocks
   // unsafe imagery; this supplemental threshold catches only a strong signal.
   sexual: 0.12,
-  "sexual/minors": 0.001,
+  // A tiny model score must not turn an ordinary child portrait into sexual
+  // content. Provider-flagged content is always blocked; this remains a
+  // cautious supplemental threshold for a material unflagged signal.
+  "sexual/minors": 0.03,
   violence: 0.05,
   "violence/graphic": 0.005,
   "self-harm": 0.01,

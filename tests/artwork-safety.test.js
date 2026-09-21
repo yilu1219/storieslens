@@ -60,3 +60,17 @@ test("safe real-person photos are accepted while protected information remains b
   assert.equal(identityDocument.approved, false);
   assert.equal(identityDocument.reasonCode, "identity_document");
 });
+
+test("a safe minor portrait is treated like any other private personal photo", () => {
+  const safeMinorPortrait = evaluateArtworkSignals({
+    is_artwork: false,
+    has_real_person: true,
+    has_identity_document: false,
+    has_personal_name: false,
+    has_school_information: false,
+    has_contact_information: false,
+    reason_code: "real_person"
+  });
+  assert.equal(safeMinorPortrait.approved, true);
+  assert.equal(safeMinorPortrait.reasonCode, "approved");
+});
