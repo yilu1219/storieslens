@@ -171,7 +171,7 @@
 
   function uploadedReferencePreview() {
     const urls = uploadedReferenceUrls();
-    if (!urls.length) return '<div class="real-life-empty" aria-hidden="true"><span>＋</span><b>Your photos</b></div>';
+    if (!urls.length) return '<div class="real-life-example"><img src="assets/real-life-block-world-poster-v1.jpg" alt="Two real children entering a cinematic block-built fantasy world" /><b>Movie-style example</b></div>';
     return '<div class="real-life-photo-grid count-' + Math.min(3, urls.length) + '">' + urls.map(function (url, index) {
       return '<img src="' + escapeHtml(url) + '" alt="Uploaded protagonist ' + (index + 1) + '" />';
     }).join('') + '</div>';

@@ -110,6 +110,8 @@ test("picture results are square, text stays outside the artwork, and real-life 
   assert.match(preview, /result-origin/);
   assert.doesNotMatch(preview, /result-badge/);
   assert.match(preview, /Real-life story/);
+  assert.match(preview, /real-life-block-world-poster-v1\.jpg/);
+  assert.match(preview, /Movie-style example/);
   assert.match(preview, /Upload a photo first/);
   assert.match(preview, /state\.userUploadedReference/);
   assert.match(server, /"real-life-story"/);
