@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v86-archive-green-20260920";
+const VERSION = "storieslens-pwa-v87-yu-owl-20260921";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -27,7 +27,7 @@ const APP_SHELL = [
   "/h5-app.js?v=20260920-personal-photo-2",
   "/spark-handoff.js?v=20260917-story-reference-1",
   "/writing-import.js?v=20260916-2",
-  "/yu-profile.css?v=20260915-3",
+  "/yu-profile.css?v=20260921-owl-orbit-1",
   "/yu-profile.js?v=20260915-3",
   "/showcase.html",
   "/showcase.css?v=20260909-1",

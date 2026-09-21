@@ -20,6 +20,19 @@
 .yu-profile-trigger span { display: grid; gap: 2px; }
 .yu-profile-trigger strong { font-size: 14px; line-height: 1.15; }
 .yu-profile-trigger small { color: #646964; font-size: 11px; line-height: 1.25; }
+.yu-profile-invite { display: flex; max-width: 100%; align-items: center; gap: 8px; margin-top: 14px; }
+.yu-profile-invite .yu-profile-trigger { margin-top: 0; }
+.yu-profile-invite .yu-profile-trigger > .yu-profile-feather { width: 39px; height: 39px; }
+.yu-orbit-mascot { position: relative; display: grid; width: 94px; height: 94px; flex: 0 0 94px; place-items: center; isolation: isolate; animation: yu-mascot-float 4.8s ease-in-out infinite; filter: drop-shadow(0 12px 13px rgba(15, 98, 68, .18)); }
+.yu-orbit-mascot::before { position: absolute; z-index: -1; inset: 7px; border: 2px dashed rgba(207, 157, 53, .54); border-radius: 50%; background: radial-gradient(circle, rgba(239, 248, 241, .9) 0 53%, transparent 55%); content: ""; animation: yu-mascot-ring 8s linear infinite; }
+.yu-orbit-mascot::after { position: absolute; z-index: 2; top: 10px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #f4cb70; box-shadow: -68px 45px 0 -2px rgba(22, 132, 91, .75), -5px 68px 0 -1px rgba(244, 203, 112, .68), 0 0 12px rgba(244, 203, 112, .9); content: ""; animation: yu-mascot-spark 2.6s ease-in-out infinite; }
+.yu-orbit-mascot img { width: 88px; height: 88px; padding: 0; object-fit: contain; border-radius: 0; background: transparent; transform-origin: 50% 72%; animation: yu-mascot-turn 4.8s ease-in-out infinite; }
+.yu-profile-invite:hover .yu-orbit-mascot { animation-duration: 2.8s; }
+.yu-profile-invite:hover .yu-orbit-mascot img { animation-duration: 2.8s; }
+@keyframes yu-mascot-ring { to { transform: rotate(360deg); } }
+@keyframes yu-mascot-float { 0%, 100% { transform: translate3d(0, 2px, 0); } 25% { transform: translate3d(5px, -4px, 0); } 55% { transform: translate3d(0, -8px, 0); } 78% { transform: translate3d(-4px, -2px, 0); } }
+@keyframes yu-mascot-turn { 0%, 100% { transform: rotate(-4deg) scale(1); } 35% { transform: rotate(3deg) scale(1.025); } 68% { transform: rotate(-2deg) scale(.985); } }
+@keyframes yu-mascot-spark { 0%, 100% { opacity: .55; transform: scale(.72); } 50% { opacity: 1; transform: scale(1.12); } }
 .bard-yu-trigger { position: relative; padding-right: 12px; border-color: rgba(179, 132, 32, .28); background: linear-gradient(115deg, rgba(255, 253, 248, .92), rgba(237, 247, 239, .88)); }
 .bard-yu-trigger > img { width: 49px; height: 49px; padding: 0; object-fit: contain; background: radial-gradient(circle at 50% 75%, #f5d784, #e7f3e9 65%); }
 .persona-chip { align-self: center; margin-left: 5px; padding: 6px 8px; border-radius: 999px; color: #0f6244; background: #e4f2e8; font: 800 9px/1 Arial, sans-serif; letter-spacing: .1em; white-space: nowrap; }
@@ -91,6 +104,11 @@
 .learning-profile-intro > div > span img { width: 34px; height: 34px; }
 
 @media (max-width: 640px) {
+  .yu-profile-invite { gap: 2px; }
+  .yu-profile-invite .yu-profile-trigger { min-width: 0; padding-right: 12px; }
+  .yu-orbit-mascot { width: 76px; height: 76px; flex-basis: 76px; }
+  .yu-orbit-mascot img { width: 72px; height: 72px; }
+  .yu-orbit-mascot::before { inset: 5px; }
   .yu-profile-dialog { border-radius: 22px; }
   .yu-profile-dialog-shell { padding: 24px 19px 26px; }
   .yu-profile-hero { grid-template-columns: 72px 1fr; gap: 16px; padding-right: 31px; }
@@ -116,5 +134,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .yu-profile-trigger { transition: none; }
+  .yu-orbit-mascot,
+  .yu-orbit-mascot::before,
+  .yu-orbit-mascot::after,
+  .yu-orbit-mascot img { animation: none; }
   .yu-daily-pulse::after { animation: none; }
 }
