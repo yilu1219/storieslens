@@ -116,6 +116,20 @@ test("picture results are square, text stays outside the artwork, and real-life 
   assert.match(server, /preserve the exact people, facial identity, age, skin tone, hairstyle, clothing/);
 });
 
+test("real-life SOLO converts HEIC, requires adult consent, and calls the real image API", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(html, /artwork-upload-safety\.js/);
+  assert.match(script, /StoriesLensArtworkSafety\.processArtwork/);
+  assert.match(script, /convertedFromHeic/);
+  assert.match(script, /data-photo-permission/);
+  assert.match(script, /data-photo-processing/);
+  assert.match(script, /\/photo-consent/);
+  assert.match(script, /\/api\/generate-image/);
+  assert.match(script, /referenceImageUrls: referenceImage \? \[referenceImage\] : \[\]/);
+  assert.match(script, /personalPhotoConsentId/);
+});
+
 test("the finished picture replaces the progress card and always has a visible fallback", () => {
   const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(preview, /showResult\(drawing\)/);

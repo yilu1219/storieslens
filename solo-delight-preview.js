@@ -38,6 +38,10 @@
     voiceMood: 'theatrical',
     imageUrl: '',
     userUploadedReference: false,
+    uploadContainsRealPerson: false,
+    uploadConvertedFromHeic: false,
+    projectId: '',
+    personalPhotoConsentId: '',
     characterImageUrl: '',
     characterPreviewIndex: 0,
     characterPreviewMade: false,
@@ -123,6 +127,112 @@
     return String(value).replace(/[&<>'"]/g, function (char) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char];
     });
+  }
+
+  async function apiJson(path, options) {
+    const requestOptions = options || {};
+    const response = await fetch(path, {
+      ...requestOptions,
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', ...(requestOptions.headers || {}) }
+    });
+    const result = await response.json().catch(function () { return {}; });
+    if (!response.ok) {
+      const error = new Error(result.error || 'StoriesLens could not finish this step.');
+      error.code = result.code || '';
+      error.status = response.status;
+      throw error;
+    }
+    return result;
+  }
+
+  function selectedStylePrompt() {
+    const styles = {
+      'Storybook watercolor': 'premium luminous watercolor storybook illustration',
+      'Graphic novel': 'polished graphic-novel illustration with clean readable staging',
+      'Block world': 'original colorful voxel block-world story art with cubic environments and friendly block-built characters',
+      'Cyber future': 'ultra-modern optimistic future-world cinematic concept art with luminous architecture, floating transit, sky gardens, and child-friendly wonder',
+      'Cinematic fantasy': 'cinematic fantasy story art with dramatic magical light',
+      'Real-life story': 'photorealistic, family-friendly cinematic story scene that preserves the exact people in the approved personal photo'
+    };
+    return styles[state.selectedStyle] || 'premium child-friendly story illustration';
+  }
+
+  async function ensurePersonalPhotoConsent(consentPanel) {
+    if (state.personalPhotoConsentId && state.projectId) return state.personalPhotoConsentId;
+    const session = await apiJson('/api/auth/session');
+    if (!session.authenticated || session.user?.kind !== 'account') {
+      throw new Error('Please sign in with an adult-owned account before sending a real-person photo to Yu.');
+    }
+    if (!state.projectId) {
+      const projectResult = await apiJson('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: state.storyTitle || 'My first StoriesLens scene',
+          language: 'en',
+          ageGroup: 'under18',
+          mode: 'solo',
+          visibility: 'private',
+          sourceType: 'personal-photo',
+          sourceText: state.originalScene,
+          draft: state.revisedScene,
+          storyDna: { source: 'solo-delight', createdAt: new Date().toISOString() },
+          scenes: [],
+          clientSnapshot: { from: 'solo-delight', personalPhotoDraft: true }
+        })
+      });
+      state.projectId = projectResult.project.id;
+    }
+    const adultName = consentPanel.querySelector('[data-photo-adult-name]').value.trim();
+    const relationship = consentPanel.querySelector('[data-photo-relationship]').value;
+    const consentResult = await apiJson('/api/projects/' + encodeURIComponent(state.projectId) + '/photo-consent', {
+      method: 'POST',
+      body: JSON.stringify({
+        confirmedAdult: true,
+        approvedPrivateMedia: true,
+        approvedPersonalPhoto: true,
+        acknowledgedRegionalProcessing: true,
+        guardianName: adultName,
+        relationship: relationship
+      })
+    });
+    state.personalPhotoConsentId = consentResult.consent.id;
+    return state.personalPhotoConsentId;
+  }
+
+  async function generateStoryPicture(consentPanel) {
+    const referenceImage = state.selectedStyle === 'Real-life story'
+      ? state.imageUrl
+      : (state.characterImageUrl || state.imageUrl);
+    const needsPersonalPhotoConsent = Boolean(referenceImage) && (state.selectedStyle === 'Real-life story' || state.uploadContainsRealPerson);
+    const consentId = needsPersonalPhotoConsent ? await ensurePersonalPhotoConsent(consentPanel) : '';
+    const storyPrompt = [
+      'Create one finished square story scene from the child’s own writing.',
+      'Story: ' + state.revisedScene,
+      'Visual direction: ' + selectedStylePrompt() + '.',
+      state.pictureChangeRequest ? 'Change only this requested detail: ' + state.pictureChangeRequest + '.' : '',
+      referenceImage ? 'Use the attached approved image as the primary identity and character reference. Preserve the same people, faces, ages, skin tones, hairstyles, clothing, body proportions, and number of people.' : '',
+      'Do not add text, captions, logos, watermarks, UI, arrows, or play icons.'
+    ].filter(Boolean).join('\n');
+    const result = await apiJson('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': 'solo-' + Date.now() + '-' + Math.random().toString(36).slice(2) },
+      body: JSON.stringify({
+        projectId: state.projectId || 'solo-preview',
+        partId: 'first-scene',
+        submissionId: 'solo-' + Date.now(),
+        prompt: storyPrompt,
+        studentWriting: state.revisedScene,
+        style: selectedStylePrompt(),
+        aspectRatio: '1:1',
+        referenceImageUrls: referenceImage ? [referenceImage] : [],
+        personalPhoto: needsPersonalPhotoConsent,
+        personalPhotoConsentId: consentId
+      })
+    });
+    if (!result.imageUrl) throw new Error('Yu finished drawing, but the new picture did not arrive. Please try again.');
+    state.resultImage = result.imageUrl;
+    return result.imageUrl;
   }
 
   function setJourney(active) {
@@ -433,15 +543,41 @@
         '<button class="style-card" type="button" data-style="Cyber future"><img src="assets/style-cyber-future-ultramodern-v1.png" alt="An ultra-modern future city with floating transit, luminous towers, and sky gardens" /><span><b>Future world</b><small>Ultra-modern city adventure</small></span></button>' +
         '<button class="style-card" type="button" data-style="Cinematic fantasy"><img src="assets/original-garden-door-hd-v2.png" alt="Cinematic fantasy example" /><span><b>Movie magic</b><small>Dramatic cinematic light</small></span></button>' +
         '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="' + (state.userUploadedReference ? 'false' : 'true') + '">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses your uploaded photo' : 'Upload a photo first') + '</small></span></button>' +
-      '</div><button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button></section>');
+      '</div>' +
+      '<section class="real-life-consent" data-real-life-consent hidden><div><small>PRIVATE REAL-PERSON PHOTO</small><h3>A grown-up confirms before Yu creates</h3><p>The prepared photo is sent only when you press the green create button. It stays private and can be permanently deleted with the project.</p></div><label><span>Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Parent, guardian, or adult pictured" /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>I am 18 or older and I am the person pictured or have permission from the child’s parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>I agree that this prepared copy may be processed by the regional image model to create this private story scene.</span></label></section>' +
+      '<button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button></section>');
     const styleStage = message.querySelector('[data-style-stage]');
     const makeButton = message.querySelector('[data-make-picture]');
+    const consentPanel = message.querySelector('[data-real-life-consent]');
+    function realLifeConsentReady() {
+      if (state.selectedStyle !== 'Real-life story') return true;
+      return Boolean(consentPanel.querySelector('[data-photo-adult-name]').value.trim())
+        && Boolean(consentPanel.querySelector('[data-photo-relationship]').value)
+        && consentPanel.querySelector('[data-photo-permission]').checked
+        && consentPanel.querySelector('[data-photo-processing]').checked;
+    }
+    function refreshMakeButton() {
+      if (!state.selectedStyle) {
+        makeButton.disabled = true;
+        makeButton.textContent = 'Choose a style first';
+        return;
+      }
+      makeButton.disabled = !realLifeConsentReady();
+      if (state.selectedStyle === 'Real-life story' && !realLifeConsentReady()) {
+        makeButton.textContent = 'Complete the grown-up confirmation';
+        return;
+      }
+      makeButton.textContent = state.selectedStyle === 'Real-life story'
+        ? (state.outputType === 'film' ? '✦ Put me in my first movie frame' : '✦ Put me in my story picture')
+        : (state.outputType === 'film' ? '✦ Make my first movie frame' : '✦ Make my free first picture');
+    }
     message.querySelectorAll('[data-output-type]').forEach(function (card) {
       card.addEventListener('click', function () {
         message.querySelectorAll('[data-output-type]').forEach(function (item) { item.classList.remove('is-selected'); });
         card.classList.add('is-selected');
         state.outputType = card.dataset.outputType;
         state.selectedStyle = '';
+        consentPanel.hidden = true;
         message.querySelectorAll('[data-style]').forEach(function (item) { item.classList.remove('is-selected'); });
         styleStage.hidden = false;
         message.querySelector('[data-style-title]').textContent = state.outputType === 'film' ? 'Choose the look of your film' : 'Choose the look of your book';
@@ -460,17 +596,20 @@
         message.querySelectorAll('[data-style]').forEach(function (item) { item.classList.remove('is-selected'); });
         card.classList.add('is-selected');
         state.selectedStyle = card.dataset.style;
-        makeButton.disabled = false;
-        makeButton.textContent = state.selectedStyle === 'Real-life story'
-          ? (state.outputType === 'film' ? '✦ Put me in my first movie frame' : '✦ Put me in my story picture')
-          : (state.outputType === 'film' ? '✦ Make my first movie frame' : '✦ Make my free first picture');
+        consentPanel.hidden = state.selectedStyle !== 'Real-life story';
+        refreshMakeButton();
+        if (!consentPanel.hidden) consentPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         speakText(card.dataset.style + ' selected!', 'celebration');
       });
     });
-    makeButton.addEventListener('click', showDrawing);
+    consentPanel.querySelectorAll('input,select').forEach(function (field) {
+      field.addEventListener('input', refreshMakeButton);
+      field.addEventListener('change', refreshMakeButton);
+    });
+    makeButton.addEventListener('click', function () { showDrawing(consentPanel); });
   }
 
-  function showDrawing() {
+  async function showDrawing(consentPanel) {
     const hasReference = Boolean(state.characterImageUrl || state.imageUrl);
     const realLifeMode = state.selectedStyle === 'Real-life story';
     const referenceNotice = realLifeMode
@@ -483,16 +622,33 @@
     const stages = [
       [34, 'Building the place from your words'],
       [62, 'Adding the people and story problem'],
-      [86, 'Painting the last little details'],
-      [100, 'Your picture is ready!']
+      [86, 'Painting the last little details']
     ];
-    stages.forEach(function (stage, index) {
-      setTimeout(function () {
+    let stageIndex = 0;
+    const progressTimer = setInterval(function () {
+      if (stageIndex < stages.length) {
+        const stage = stages[stageIndex];
         progress.style.width = stage[0] + '%';
         title.textContent = stage[1];
-        if (index === stages.length - 1) setTimeout(function () { showResult(drawing); }, 140);
-      }, 650 + index * 620);
-    });
+        stageIndex += 1;
+      }
+    }, 900);
+    try {
+      await generateStoryPicture(consentPanel);
+      clearInterval(progressTimer);
+      progress.style.width = '100%';
+      title.textContent = 'Your picture is ready!';
+      setTimeout(function () { showResult(drawing); }, 220);
+    } catch (error) {
+      clearInterval(progressTimer);
+      drawing.remove();
+      const message = error.code === 'PERSONAL_PHOTO_CONSENT_REQUIRED'
+        ? 'A grown-up needs to confirm the private photo permission again.'
+        : error.message;
+      yuMessage('<small>YU KEPT YOUR WORK SAFE</small><h2>The new picture was not charged.</h2><p>' + escapeHtml(message) + '</p><button class="why-button" type="button" data-picture-retry>← Return to picture choices</button>');
+      showToast(message);
+      thread.lastElementChild.querySelector('[data-picture-retry]').addEventListener('click', showStyles);
+    }
   }
 
   function showResult(progressMessage) {
@@ -501,14 +657,14 @@
     pictureStep.classList.add('is-done');
     pictureStep.querySelector('span').textContent = '✓';
     celebrate();
-    const resultImage = state.resultImage || 'assets/original-garden-door-hd-v2.png';
+    const resultImage = state.resultImage || (state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png');
     const result = yuMessage('<div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>' + escapeHtml(state.storyTitle) + '</h2><p>' + escapeHtml(state.revisedScene) + '</p><div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">Try again · 1 gift</button></div></div></div>');
     if (progressMessage) progressMessage.remove();
     const image = result.querySelector('[data-result-image]');
     image.addEventListener('error', function handleResultImageError() {
       image.removeEventListener('error', handleResultImageError);
-      image.src = 'assets/original-garden-door-hd-v2.png';
-      showToast('Yu restored the picture preview. Your story is still saved.');
+      image.src = state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png';
+      showToast(state.selectedStyle === 'Real-life story' ? 'Yu restored your prepared photo. Your story is still saved.' : 'Yu restored the picture preview. Your story is still saved.');
     });
     window.requestAnimationFrame(function () { result.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'your first story page is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
@@ -695,17 +851,35 @@
   document.querySelector('[data-parent-toggle]').addEventListener('click', function () { parentPanel.classList.add('is-open'); });
   document.querySelector('[data-parent-close]').addEventListener('click', function () { parentPanel.classList.remove('is-open'); });
 
-  upload.addEventListener('change', function () {
+  upload.addEventListener('change', async function () {
     const file = upload.files && upload.files[0];
     if (!file) return;
-    if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
-    state.imageUrl = URL.createObjectURL(file);
-    state.userUploadedReference = true;
-    if (state.step === 1) state.characterImageUrl = state.imageUrl;
-    if (!input.value && state.step === 0) input.value = 'This picture gave me a story idea.';
-    uploadEntry.querySelector('strong').textContent = 'Picture ready: ' + file.name;
-    uploadEntry.querySelector('small').textContent = 'It will stay with this story—you will not upload it again.';
-    showToast(state.step === 1 ? 'Character picture saved for this story.' : 'Picture added once for the whole story.');
+    uploadEntry.querySelector('strong').textContent = 'Preparing your picture privately…';
+    uploadEntry.querySelector('small').textContent = 'Removing location and camera information on this device.';
+    try {
+      if (!window.StoriesLensArtworkSafety) throw new Error('The private picture preparation tool did not load. Refresh and try again.');
+      const prepared = await window.StoriesLensArtworkSafety.processArtwork(file);
+      if (state.imageUrl && state.imageUrl.startsWith('blob:')) URL.revokeObjectURL(state.imageUrl);
+      state.imageUrl = prepared.dataUrl;
+      state.resultImage = prepared.dataUrl;
+      state.userUploadedReference = true;
+      state.uploadContainsRealPerson = Boolean(prepared.review?.checks?.realPerson);
+      state.uploadConvertedFromHeic = Boolean(prepared.convertedFromHeic);
+      state.personalPhotoConsentId = '';
+      if (state.step === 1) state.characterImageUrl = state.imageUrl;
+      if (!input.value && state.step === 0) input.value = 'This picture gave me a story idea.';
+      uploadEntry.querySelector('strong').textContent = 'Picture ready: ' + file.name;
+      uploadEntry.querySelector('small').textContent = prepared.convertedFromHeic
+        ? 'HEIC converted privately on this device—Yu will use this prepared copy.'
+        : 'Location and camera information removed—Yu will use this prepared copy.';
+      showToast(state.step === 1 ? 'Character picture saved for this story.' : 'Picture added once for the whole story.');
+    } catch (error) {
+      state.imageUrl = '';
+      state.userUploadedReference = false;
+      uploadEntry.querySelector('strong').textContent = 'This picture could not be prepared';
+      uploadEntry.querySelector('small').textContent = error.message || 'Try a JPG, PNG, WEBP, HEIC, or HEIF photo.';
+      showToast(uploadEntry.querySelector('small').textContent);
+    }
   });
 
   function beginSpeech() {
