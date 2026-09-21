@@ -24,13 +24,13 @@ test("the character question supports words, a private upload, and a free visual
   const html = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.html"), "utf8");
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(html, /data-character-maker/);
-  assert.match(html, /Add my main character/);
-  assert.match(html, /Use a picture/);
-  assert.match(html, /Upload a photo or drawing/);
+  assert.match(html, /Add my story characters/);
+  assert.match(html, /Use 1–3 pictures/);
+  assert.match(html, /Upload each protagonist separately/);
   assert.match(html, /Describe my hero/);
   assert.match(html, /Make a character picture from my description/);
-  assert.match(html, /Start with one hero/);
-  assert.match(html, /add up to two helpers later/i);
+  assert.match(html, /up to three protagonists/);
+  assert.match(html, /upload up to three protagonists together/i);
   assert.match(html, /Name &amp; age/);
   assert.match(html, /How they look/);
   assert.match(html, /What they are like/);
@@ -126,8 +126,12 @@ test("real-life SOLO converts HEIC, requires adult consent, and calls the real i
   assert.match(script, /data-photo-processing/);
   assert.match(script, /\/photo-consent/);
   assert.match(script, /\/api\/generate-image/);
-  assert.match(script, /referenceImageUrls: referenceImage \? \[referenceImage\] : \[\]/);
+  assert.match(script, /referenceImageUrls: referenceImages/);
   assert.match(script, /personalPhotoConsentId/);
+  assert.match(html, /data-upload multiple/);
+  assert.match(script, /files\.length > 3/);
+  assert.match(script, /Promise\.all\(files\.map/);
+  assert.match(script, /do not blend or swap faces/);
 });
 
 test("the finished picture replaces the progress card and always has a visible fallback", () => {

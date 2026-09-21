@@ -620,6 +620,7 @@ function buildImagePrompt(body) {
     "",
     "REFERENCE-LED CREATION — HIGHEST VISUAL PRIORITY:",
     `- ${referenceCount} user-approved reference image${referenceCount === 1 ? " is" : "s are"} attached. Treat the first image as the primary visual anchor, not as loose inspiration.`,
+    referenceCount > 1 ? "- Multiple references may represent different protagonists. Keep every identity separate: never blend or swap faces, include every referenced protagonist exactly once, omit nobody, and add no extra people." : "",
     "- Preserve the same person or character identity: facial structure, skin tone, age, hairstyle, body proportions, clothing colors, distinctive accessories, and other recognizable features.",
     "- If the reference is a child’s drawing, preserve its character design, shapes, color relationships, and imaginative details instead of replacing them with a generic character.",
     "- Apply the selected visual style to the reference while changing only the pose, action, camera, and story setting needed for this scene.",

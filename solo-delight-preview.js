@@ -37,6 +37,7 @@
     currentPrompt: 'Show or tell me one tiny idea. It can be a drawing, a photo, or just a few words.',
     voiceMood: 'theatrical',
     imageUrl: '',
+    referenceImages: [],
     userUploadedReference: false,
     uploadContainsRealPerson: false,
     uploadConvertedFromHeic: false,
@@ -117,8 +118,12 @@
 
   function userMessage(text, imageUrl, label) {
     const item = document.createElement('article');
+    const pictureUrls = (Array.isArray(imageUrl) ? imageUrl : [imageUrl]).filter(Boolean);
+    const pictureHtml = pictureUrls.length
+      ? '<div class="inline-picture-grid count-' + Math.min(3, pictureUrls.length) + '">' + pictureUrls.map(function (url, index) { return '<img class="inline-picture" src="' + escapeHtml(url) + '" alt="Uploaded story character ' + (index + 1) + '" />'; }).join('') + '</div>'
+      : '';
     item.className = 'message user';
-    item.innerHTML = userAvatar() + '<div class="bubble"><small>' + escapeHtml(label || (possessiveName().toUpperCase() + ' IDEA')) + '</small><p>' + escapeHtml(text) + '</p>' + (imageUrl ? '<img class="inline-picture" src="' + imageUrl + '" alt="Uploaded story spark" />' : '') + '</div>';
+    item.innerHTML = userAvatar() + '<div class="bubble"><small>' + escapeHtml(label || (possessiveName().toUpperCase() + ' IDEA')) + '</small><p>' + escapeHtml(text) + '</p>' + pictureHtml + '</div>';
     thread.appendChild(item);
     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -156,6 +161,20 @@
       'Real-life story': 'photorealistic, family-friendly cinematic story scene that preserves the exact people in the approved personal photo'
     };
     return styles[state.selectedStyle] || 'premium child-friendly story illustration';
+  }
+
+  function uploadedReferenceUrls() {
+    const urls = state.referenceImages.map(function (item) { return item.dataUrl; }).filter(Boolean);
+    if (urls.length) return urls;
+    return [state.characterImageUrl || state.imageUrl].filter(Boolean);
+  }
+
+  function uploadedReferencePreview() {
+    const urls = uploadedReferenceUrls();
+    if (!urls.length) return '<div class="real-life-empty" aria-hidden="true"><span>＋</span><b>Your photos</b></div>';
+    return '<div class="real-life-photo-grid count-' + Math.min(3, urls.length) + '">' + urls.map(function (url, index) {
+      return '<img src="' + escapeHtml(url) + '" alt="Uploaded protagonist ' + (index + 1) + '" />';
+    }).join('') + '</div>';
   }
 
   async function ensurePersonalPhotoConsent(consentPanel) {
@@ -201,17 +220,15 @@
   }
 
   async function generateStoryPicture(consentPanel) {
-    const referenceImage = state.selectedStyle === 'Real-life story'
-      ? state.imageUrl
-      : (state.characterImageUrl || state.imageUrl);
-    const needsPersonalPhotoConsent = Boolean(referenceImage) && (state.selectedStyle === 'Real-life story' || state.uploadContainsRealPerson);
+    const referenceImages = uploadedReferenceUrls().slice(0, 3);
+    const needsPersonalPhotoConsent = referenceImages.length > 0 && (state.selectedStyle === 'Real-life story' || state.uploadContainsRealPerson);
     const consentId = needsPersonalPhotoConsent ? await ensurePersonalPhotoConsent(consentPanel) : '';
     const storyPrompt = [
       'Create one finished square story scene from the child’s own writing.',
       'Story: ' + state.revisedScene,
       'Visual direction: ' + selectedStylePrompt() + '.',
       state.pictureChangeRequest ? 'Change only this requested detail: ' + state.pictureChangeRequest + '.' : '',
-      referenceImage ? 'Use the attached approved image as the primary identity and character reference. Preserve the same people, faces, ages, skin tones, hairstyles, clothing, body proportions, and number of people.' : '',
+      referenceImages.length ? 'Use all ' + referenceImages.length + ' attached approved reference ' + (referenceImages.length === 1 ? 'image' : 'images') + '. Each reference is a separate protagonist. Preserve each person’s own face, age, skin tone, hairstyle, clothing, and body proportions. Keep the identities separate: do not blend or swap faces, do not omit anyone, include each protagonist exactly once, and do not add extra people.' : '',
       'Do not add text, captions, logos, watermarks, UI, arrows, or play icons.'
     ].filter(Boolean).join('\n');
     const result = await apiJson('/api/generate-image', {
@@ -225,7 +242,7 @@
         studentWriting: state.revisedScene,
         style: selectedStylePrompt(),
         aspectRatio: '1:1',
-        referenceImageUrls: referenceImage ? [referenceImage] : [],
+        referenceImageUrls: referenceImages,
         personalPhoto: needsPersonalPhotoConsent,
         personalPhotoConsentId: consentId
       })
@@ -390,7 +407,7 @@
       captureName();
       const first = typed || 'A tiny dragon is lost in a giant library.';
       state.answers.push(first);
-      userMessage(first, state.imageUrl);
+      userMessage(first, uploadedReferenceUrls());
       reward('Story spark', 'You began with your own idea.', 1);
       input.value = '';
       namePrompt.hidden = true;
@@ -403,7 +420,7 @@
       const qIndex = state.step - 1;
       const answer = typed || (qIndex === 0 && (state.characterImageUrl || state.imageUrl) ? 'This picture shows who is in my story.' : questions[qIndex].fallback);
       state.answers.push(answer);
-      userMessage(answer, qIndex === 0 ? (state.characterImageUrl || state.imageUrl) : '');
+      userMessage(answer, qIndex === 0 ? uploadedReferenceUrls() : '');
       setLearning(questions[qIndex].skill, answer, questions[qIndex].reward[1]);
       reward(questions[qIndex].reward[0], questions[qIndex].reward[1], 2);
       input.value = '';
@@ -527,9 +544,8 @@
     composer.hidden = true;
     state.currentPrompt = 'First choose what you want to make: an illustrated book or a story film. Then choose how your story world should look.';
     state.voiceMood = 'theatrical';
-    const realLifePreview = state.userUploadedReference && state.imageUrl
-      ? '<img src="' + escapeHtml(state.imageUrl) + '" alt="Your uploaded photo as the identity reference" />'
-      : '<div class="real-life-empty" aria-hidden="true"><span>＋</span><b>Your photo</b></div>';
+    const realLifePreview = uploadedReferencePreview();
+    const referenceCount = uploadedReferenceUrls().length;
     const message = yuMessage('<small>PICTURE SURPRISE</small><h2>What shall your story become?</h2><p>Choose a book or a film first. Then pick the look of your story world.</p>' +
       '<div class="output-choice-grid" role="group" aria-label="Choose a book or film">' +
         '<button class="output-choice" type="button" data-output-type="book"><img src="assets/storybook-image.png" alt="An illustrated storybook" /><span><strong>Illustrated book</strong><small>Pages to read and print</small></span></button>' +
@@ -542,9 +558,9 @@
         '<button class="style-card" type="button" data-style="Block world"><img src="assets/showcase-block-castle.png" alt="A colorful block-built adventure world" /><span><b>Block world</b><small>Colorful cubic adventure</small></span></button>' +
         '<button class="style-card" type="button" data-style="Cyber future"><img src="assets/style-cyber-future-ultramodern-v1.png" alt="An ultra-modern future city with floating transit, luminous towers, and sky gardens" /><span><b>Future world</b><small>Ultra-modern city adventure</small></span></button>' +
         '<button class="style-card" type="button" data-style="Cinematic fantasy"><img src="assets/original-garden-door-hd-v2.png" alt="Cinematic fantasy example" /><span><b>Movie magic</b><small>Dramatic cinematic light</small></span></button>' +
-        '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="' + (state.userUploadedReference ? 'false' : 'true') + '">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses your uploaded photo' : 'Upload a photo first') + '</small></span></button>' +
+        '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="' + (state.userUploadedReference ? 'false' : 'true') + '">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses all ' + referenceCount + ' uploaded ' + (referenceCount === 1 ? 'character' : 'characters') : 'Upload 1–3 characters first') + '</small></span></button>' +
       '</div>' +
-      '<section class="real-life-consent" data-real-life-consent hidden><div><small>PRIVATE REAL-PERSON PHOTO</small><h3>A grown-up confirms before Yu creates</h3><p>The prepared photo is sent only when you press the green create button. It stays private and can be permanently deleted with the project.</p></div><label><span>Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Parent, guardian, or adult pictured" /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>I am 18 or older and I am the person pictured or have permission from the child’s parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>I agree that this prepared copy may be processed by the regional image model to create this private story scene.</span></label></section>' +
+      '<section class="real-life-consent" data-real-life-consent hidden><div><small>PRIVATE REAL-PERSON PHOTOS</small><h3>A grown-up confirms before Yu creates</h3><p>The ' + referenceCount + ' prepared ' + (referenceCount === 1 ? 'photo is' : 'photos are') + ' sent only when you press the green create button. They stay private and can be permanently deleted with the project.</p></div><label><span>Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Parent, guardian, or adult with permission" /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>I am 18 or older and I am pictured or have permission for every person shown from their parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>I agree that these prepared copies may be processed by the regional image model to create this private story scene.</span></label></section>' +
       '<button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button></section>');
     const styleStage = message.querySelector('[data-style-stage]');
     const makeButton = message.querySelector('[data-make-picture]');
@@ -610,7 +626,7 @@
   }
 
   async function showDrawing(consentPanel) {
-    const hasReference = Boolean(state.characterImageUrl || state.imageUrl);
+    const hasReference = uploadedReferenceUrls().length > 0;
     const realLifeMode = state.selectedStyle === 'Real-life story';
     const referenceNotice = realLifeMode
       ? '<div class="reference-lock-note"><span>✓</span><div><strong>Real-life version uses your uploaded photo</strong><small>Yu keeps the same face, age, hairstyle, clothes, and number of people while placing them inside the story scene.</small></div></div>'
@@ -852,29 +868,38 @@
   document.querySelector('[data-parent-close]').addEventListener('click', function () { parentPanel.classList.remove('is-open'); });
 
   upload.addEventListener('change', async function () {
-    const file = upload.files && upload.files[0];
-    if (!file) return;
-    uploadEntry.querySelector('strong').textContent = 'Preparing your picture privately…';
-    uploadEntry.querySelector('small').textContent = 'Removing location and camera information on this device.';
+    const files = Array.from(upload.files || []);
+    if (!files.length) return;
+    if (files.length > 3) {
+      upload.value = '';
+      showToast('Choose up to three character pictures at one time.');
+      return;
+    }
+    uploadEntry.querySelector('strong').textContent = 'Preparing ' + files.length + ' ' + (files.length === 1 ? 'picture' : 'pictures') + ' privately…';
+    uploadEntry.querySelector('small').textContent = 'Removing location and camera information from every picture on this device.';
     try {
       if (!window.StoriesLensArtworkSafety) throw new Error('The private picture preparation tool did not load. Refresh and try again.');
-      const prepared = await window.StoriesLensArtworkSafety.processArtwork(file);
+      const preparedImages = await Promise.all(files.map(function (file) { return window.StoriesLensArtworkSafety.processArtwork(file); }));
       if (state.imageUrl && state.imageUrl.startsWith('blob:')) URL.revokeObjectURL(state.imageUrl);
-      state.imageUrl = prepared.dataUrl;
-      state.resultImage = prepared.dataUrl;
+      state.referenceImages = preparedImages.map(function (prepared, index) {
+        return { dataUrl: prepared.dataUrl, name: files[index].name, containsRealPerson: Boolean(prepared.review?.checks?.realPerson), convertedFromHeic: Boolean(prepared.convertedFromHeic) };
+      });
+      state.imageUrl = state.referenceImages[0].dataUrl;
+      state.resultImage = state.imageUrl;
       state.userUploadedReference = true;
-      state.uploadContainsRealPerson = Boolean(prepared.review?.checks?.realPerson);
-      state.uploadConvertedFromHeic = Boolean(prepared.convertedFromHeic);
+      state.uploadContainsRealPerson = state.referenceImages.some(function (item) { return item.containsRealPerson; });
+      state.uploadConvertedFromHeic = state.referenceImages.some(function (item) { return item.convertedFromHeic; });
       state.personalPhotoConsentId = '';
       if (state.step === 1) state.characterImageUrl = state.imageUrl;
       if (!input.value && state.step === 0) input.value = 'This picture gave me a story idea.';
-      uploadEntry.querySelector('strong').textContent = 'Picture ready: ' + file.name;
-      uploadEntry.querySelector('small').textContent = prepared.convertedFromHeic
-        ? 'HEIC converted privately on this device—Yu will use this prepared copy.'
-        : 'Location and camera information removed—Yu will use this prepared copy.';
-      showToast(state.step === 1 ? 'Character picture saved for this story.' : 'Picture added once for the whole story.');
+      uploadEntry.querySelector('strong').textContent = files.length + ' ' + (files.length === 1 ? 'character picture is' : 'character pictures are') + ' ready';
+      uploadEntry.querySelector('small').textContent = state.uploadConvertedFromHeic
+        ? 'HEIC converted privately—Yu will keep all ' + files.length + ' prepared characters separate.'
+        : 'Private preparation complete—Yu will keep all ' + files.length + ' characters separate.';
+      showToast(files.length + ' ' + (files.length === 1 ? 'character is' : 'characters are') + ' ready for this story.');
     } catch (error) {
       state.imageUrl = '';
+      state.referenceImages = [];
       state.userUploadedReference = false;
       uploadEntry.querySelector('strong').textContent = 'This picture could not be prepared';
       uploadEntry.querySelector('small').textContent = error.message || 'Try a JPG, PNG, WEBP, HEIC, or HEIF photo.';

@@ -45,18 +45,18 @@
           </label>
           <label class="upload-entry" for="solo-upload" data-upload-entry>
             <span aria-hidden="true">＋</span>
-            <div><strong>Upload a drawing, photo, or picture of you</strong><small>Upload once—Yu keeps it with this story all the way through.</small></div>
+            <div><strong>Upload 1–3 characters, drawings, or photos</strong><small>Choose up to three pictures at once—Yu keeps every main character with this story.</small></div>
             <b aria-hidden="true">→</b>
           </label>
           <section class="character-maker" data-character-maker hidden aria-label="Choose how to show the story character">
             <div class="character-count-guide">
               <span aria-hidden="true">1</span>
-              <div><strong>＋ Add my main character</strong><small>Start with one hero. You can add up to two helpers later.</small></div>
+              <div><strong>＋ Add my story characters</strong><small>Choose one main hero, or upload up to three protagonists together.</small></div>
             </div>
             <div class="character-paths" aria-label="Ways to add the main character">
               <label for="solo-upload">
                 <span aria-hidden="true">▣</span>
-                <div><strong>Use a picture</strong><small>Upload a photo or drawing</small></div>
+                <div><strong>Use 1–3 pictures</strong><small>Upload each protagonist separately so Yu can keep every face clear</small></div>
               </label>
               <button type="button" data-character-describe>
                 <span aria-hidden="true">●</span>
@@ -79,8 +79,8 @@
           <div class="composer-box">
             <textarea rows="3" maxlength="900" data-answer placeholder="Type here, or hold the green button to speak…"></textarea>
             <div class="composer-tools">
-              <input id="solo-upload" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" data-upload hidden />
-              <label class="upload-button" for="solo-upload" title="Upload a drawing, photo, or picture of you">
+              <input id="solo-upload" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" data-upload multiple hidden />
+              <label class="upload-button" for="solo-upload" title="Upload up to three character pictures">
                 <span aria-hidden="true">＋</span><b>Picture</b>
               </label>
               <button class="speak-button" type="button" data-speak><span aria-hidden="true">●</span><b>Hold to talk</b><time data-speak-time>0:00</time></button>

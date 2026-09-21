@@ -75,7 +75,10 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .bubble .tiny-note { margin-top: 13px; color: #727b75; font-size: 13px; }
 .yu-greeting { position: relative; overflow: hidden; padding-right: 106px; }
 .yu-greeting:after { position: absolute; right: -3px; bottom: -22px; width: 114px; height: 138px; content: ""; background: url("assets/yu-mascot-v1.png") center top / cover no-repeat; filter: drop-shadow(0 12px 18px rgba(23,84,60,.15)); }
-.inline-picture { width: min(330px, 100%); aspect-ratio: 1; margin-top: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,.24); object-fit: cover; }
+.inline-picture-grid { display: grid; grid-template-columns: repeat(var(--picture-count,1),minmax(0,1fr)); gap: 7px; width: min(430px,100%); margin-top: 14px; }
+.inline-picture-grid.count-2 { --picture-count: 2; }
+.inline-picture-grid.count-3 { --picture-count: 3; }
+.inline-picture { width: 100%; aspect-ratio: 1; border-radius: 14px; border: 1px solid rgba(255,255,255,.24); object-fit: cover; }
 
 .learning-pop { display: flex; align-items: center; gap: 12px; width: fit-content; margin-left: 64px; padding: 11px 15px; color: #5b4718; border: 1px solid rgba(184,131,24,.18); border-radius: 16px; background: var(--gold-soft); animation: reward-pop .55s cubic-bezier(.16,1.3,.3,1) both; }
 .learning-pop span { font-size: 23px; }
@@ -122,7 +125,12 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .style-choice-heading p { margin: 5px 0 0; font-size: 12px; }
 .style-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
 .style-card { display: grid; grid-template-rows: auto minmax(61px,auto); padding: 0; overflow: hidden; color: var(--ink); border: 2px solid transparent; background: #fff; box-shadow: 0 7px 20px rgba(30,50,40,.08); }
-.style-card img, .real-life-empty { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.style-card > img, .real-life-empty, .real-life-photo-grid { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.real-life-photo-grid { display: grid; grid-template-columns: repeat(var(--photo-count,1),minmax(0,1fr)); gap: 3px; padding: 3px; background: var(--mint); }
+.real-life-photo-grid.count-2 { --photo-count: 2; }
+.real-life-photo-grid.count-3 { --photo-count: 3; }
+.real-life-photo-grid img { width: 100%; height: 100%; min-height: 0; object-fit: cover; }
+.real-life-photo-grid.count-3 img:first-child { grid-row: 1 / span 2; }
 .style-card span { display: grid; align-content: center; gap: 3px; padding: 9px; text-align: left; }
 .style-card span b { font-size: 12px; }
 .style-card span small { color: var(--muted); font-size: 9px; line-height: 1.3; }
