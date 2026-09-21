@@ -60,9 +60,11 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(app.includes("data-create-form") && app.includes("data-artwork") && app.includes("data-seed") && app.includes("data-speech"), "formal H5 should begin with artwork, words, or voice");
   assert(app.includes('data-stage="coach"') && app.includes('data-stage="result"'), "formal H5 should keep the three questions and first story page in one flow");
   assert(app.includes('data-stage="mentor-review"') && chineseStudio.includes('data-stage="mentor-review"'), "both solo flows should reveal a visible mentor revision stage after the three questions");
+  assert(app.includes("data-revision-grammar") && app.includes("data-revision-writing") && chineseStudio.includes("data-revision-grammar") && chineseStudio.includes("data-revision-writing"), "Yu should separate grammar feedback from writing-craft feedback in both languages");
+  assert(app.includes('data-stage="grammar-lab"') && chineseStudio.includes('data-stage="grammar-lab"') && appJs.includes("buildGrammarSummary") && appJs.includes("slice(0, 3)"), "both solo flows should turn sentence feedback into a bounded one-to-three-goal Grammar Lab");
   assert(app.includes("data-revision-confirm") && app.includes("data-revision-read") && appJs.includes("beginMentorReview"), "Yu should require creator confirmation and read-aloud rehearsal for every reviewed sentence");
   assert(appJs.includes('/api/writing-assistant') && appJs.includes('action: "check"'), "the Solo mentor stage should use Yu's trained writing assistant instead of decorative feedback");
-  assert(server.includes("minimally corrected version") && server.includes("preserve every story fact"), "sentence review should correct language without ghostwriting the child's story");
+  assert(server.includes("Apply ORIGINAL LOCK") && server.includes("Never add, remove, replace, combine, reinterpret, or infer any character") && server.includes("grammarChanges") && server.includes("grammarCategory"), "sentence review should correct language, explain every grammar change, and avoid ghostwriting the child's story");
   assert(app.includes('data-stage="story-path"') && chineseStudio.includes('data-stage="story-path"'), "both Solo flows should ask for the final form only after the opening setting is complete");
   assert(app.includes('name="story-output" value="book"') && app.includes('name="story-output" value="film"'), "the post-setting decision should offer an illustrated book or story film");
   assert(!chineseStudio.includes('class="chinese-format-picker"') && appJs.includes("showStoryPathStage"), "Chinese creators should not choose an output before Yu helps them finish the first paragraph");
@@ -81,7 +83,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(appJs.includes('answerSpeechMaxSeconds = 90'), "voice answers should allow up to 90 seconds while remaining bounded");
   assert(appJs.includes("beginAnswerSpeech") && appJs.includes("startAnswerRecognitionCycle") && appJs.includes("answerRecognition"), "press-and-hold voice answering should be wired to the reusable question card for questions one through three");
   assert(appJs.includes("SpeechSynthesisUtterance") && appJs.includes("storieslens_auto_read_questions"), "question read-aloud should use device speech and remember the family's opt-in preference");
-  assert(appJs.includes("sageVoiceNames") && appJs.includes('pitch = locale === "zh" ? 0.72 : 0.78'), "Yu read-aloud should prefer a warm lower-pitched male voice in both Mandarin and English");
+  assert(appJs.includes("StoriesLensNaturalVoice") && app.includes("natural-voice.js") && chineseStudio.includes("natural-voice.js"), "Yu read-aloud should prefer the shared natural voice selector in both Mandarin and English");
   const englishStoryLanguage = app.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   const chineseStoryLanguage = chineseStudio.match(/<select data-language[^>]*>[\s\S]*?<\/select>/)?.[0] || "";
   assert(englishStoryLanguage.includes('value="en"') && !englishStoryLanguage.includes('value="zh"'), "English studio should keep its creation language fixed to English");

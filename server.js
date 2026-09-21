@@ -580,19 +580,17 @@ async function handleGetVideoJob(request, response, jobId) {
 }
 
 function buildImagePrompt(body) {
-  if (String(body.prompt || "").trim()) {
-    return String(body.prompt).trim();
-  }
-
+  const suppliedPrompt = String(body.prompt || "").trim();
   const partTitle = String(body.partTitle || body.chapterTitle || body.sceneTitle || "Student scene").trim();
   const sceneGoal = String(body.sceneGoal || body.goal || "Show the main action from this student writing.").trim();
   const studentWriting = String(body.studentWriting || body.content || body.draft || "").trim();
   const mood = String(body.mood || "mysterious").trim();
   const style = String(body.style || "Warm storybook illustration").trim();
   const characterRules = String(body.characterRules || body.approvedCharacters || "").trim();
+  const referenceCount = Array.isArray(body.referenceImageUrls) ? body.referenceImageUrls.filter(Boolean).length : 0;
 
-  return [
-    "Create a classroom-friendly storybook illustration.",
+  const storyPrompt = suppliedPrompt ? [suppliedPrompt] : [
+    "Create a classroom-friendly story illustration.",
     "",
     "Scene / Chapter:",
     partTitle,
@@ -614,9 +612,33 @@ function buildImagePrompt(body) {
     "Requirements:",
     "- Show the main action of this scene.",
     "- Keep it appropriate for school use.",
-    "- Do not include readable text, logos, brands, or real student names.",
     "- Use a consistent illustration style for the class project.",
     "- Aspect ratio: 16:9."
+  ];
+
+  const referenceRules = referenceCount ? [
+    "",
+    "REFERENCE-LED CREATION — HIGHEST VISUAL PRIORITY:",
+    `- ${referenceCount} user-approved reference image${referenceCount === 1 ? " is" : "s are"} attached. Treat the first image as the primary visual anchor, not as loose inspiration.`,
+    "- Preserve the same person or character identity: facial structure, skin tone, age, hairstyle, body proportions, clothing colors, distinctive accessories, and other recognizable features.",
+    "- If the reference is a child’s drawing, preserve its character design, shapes, color relationships, and imaginative details instead of replacing them with a generic character.",
+    "- Apply the selected visual style to the reference while changing only the pose, action, camera, and story setting needed for this scene.",
+    "- Do not beautify, age up or down, change ethnicity, swap gender presentation, redesign clothing, or add/remove people unless the creator explicitly requested it.",
+    "- When any requested change conflicts with identity preservation, preserve the reference identity."
+  ] : [
+    "",
+    "No reference image is attached. Build the characters only from the creator’s written description and keep every stated feature."
+  ];
+
+  return [
+    ...storyPrompt,
+    ...referenceRules,
+    "",
+    "CLEAN FINAL ARTWORK REQUIREMENTS:",
+    "- Return only the finished story artwork.",
+    "- Do not include a play triangle, play button, video controls, pause icon, progress bar, cursor, app frame, phone frame, browser chrome, UI card, badge, sticker, caption, speech bubble, readable text, signature, logo, brand mark, or watermark.",
+    "- Do not place decorative interface symbols over the artwork, especially in the center or corners.",
+    "- Keep the scene classroom-safe and compositionally clear."
   ].filter(Boolean).join("\n");
 }
 
@@ -872,7 +894,9 @@ async function handleGenerateImage(request, response) {
       "ink-watercolor": "refined Chinese ink-and-watercolor story illustration",
       cinematic: "cinematic animated-feature concept art",
       comic: "polished graphic-novel illustration with clean readable staging",
-      "block-world": "original colorful voxel block-world story art with cubic environments and friendly block-built characters; do not copy Minecraft branding, characters, textures, logos, or protected game assets"
+      "block-world": "original colorful voxel block-world story art with cubic environments and friendly block-built characters; do not copy Minecraft branding, characters, textures, logos, or protected game assets",
+      "cyber-future": "ultra-modern optimistic future-world cinematic concept art with monumental luminous architecture, floating transit, transparent sky bridges, vertical gardens, clean-energy technology, grand depth and wonder, and clearly readable child-friendly characters; bright and welcoming, never dystopian, ruined, threatening, or violent",
+      "real-life-story": "photorealistic, family-friendly story scene led by the approved personal photo; preserve the exact people, facial identity, age, skin tone, hairstyle, clothing, body proportions, and number of people; use natural skin texture and cinematic light without beautifying, aging, face reshaping, identity swapping, or adding people"
     };
     const consistencyPrompt = squadContext ? [
       String(body.prompt || "").trim(),
@@ -1165,7 +1189,7 @@ async function handleWritingAssistant(request, response) {
     const actionInstructions = {
       begin: "Ask exactly one vivid question that helps the creator imagine and write their own first sentence from the Story DNA. Do not provide a sentence, sample prose, or plot answer. For an expression-stage creator only, you may offer two short direction words, never two finished sentences. Set suggestion, strength, priority, and microLesson to empty strings.",
       hint: "Ask one useful question or give one short hint. Do not write the answer for the student.",
-      check: "Review only the current sentence. Name one specific strength. Teach at most one grammar, usage, punctuation, sentence-clarity, or high-leverage craft move. Put a minimally corrected version of that same sentence in suggestion; preserve every story fact, image, relationship, tone, and intended meaning. If no correction is needed, copy the current sentence exactly into suggestion. Ask whether this is what the creator meant. Do not expand the sentence or add new story prose.",
+      check: "Apply ORIGINAL LOCK and review only the current sentence. In suggestion, make only grammar corrections: grammar, usage, spelling, capitalization, punctuation, and word order strictly required for grammatical clarity. Never improve style or vocabulary inside suggestion. Never add, remove, replace, combine, reinterpret, or infer any character, name, relationship, setting, place, time, object, action, feeling, conflict, outcome, plot event, point of view, or cultural detail. Do not change tense unless the original grammar makes the intended tense unambiguous; otherwise ask the creator. Do not turn fragments into invented prose. If the meaning is ambiguous, keep suggestion identical to the original and ask one short clarification question. If the sentence is already grammatically correct, return it unchanged. Set grammarNote to a child-friendly summary. Set grammarCategory to exactly one of: clear, punctuation, sentence-structure, tense, agreement, spelling, word-choice, articles, plurality, word-order, connectors, repetition, de-di-de, other. Return grammarChanges as an array with one object for every actual correction, using exact keys before, after, skill, explanation. before and after must quote the smallest exact changed phrases; skill names the grammar rule; explanation uses language a seven-year-old can understand. If nothing changes, grammarChanges must be an empty array. Keep writingNote as advice only: name at most one optional craft idea without changing suggestion. Name one specific strength, then ask whether the corrected sentence still means what the creator intended. Do not expand the sentence or add new story prose.",
       details: "Name two categories of sensory or setting detail the creator may explore, then ask the creator to supply the actual detail. Do not invent story facts.",
       dialogue: "Diagnose the purpose or naturalness of the dialogue. Offer a fill-in-the-blank pattern or an unrelated neutral micro-example only; never write dialogue for the creator's characters.",
       continuity: "Check whether this chapter connects logically to the surrounding chapters. Identify one strong connection and one specific continuity fix without rewriting the chapter.",
@@ -1181,7 +1205,7 @@ async function handleWritingAssistant(request, response) {
       "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Respect the teacher task, skill focus, approved characters, and source text context.",
       actionInstructions[action] || actionInstructions.hint,
-      "Return strict JSON with keys reply, strength, priority, microLesson, question, task, suggestion, readyForVisual, visualBrief, authorshipCheck.",
+      "Return strict JSON with keys reply, strength, grammarNote, grammarCategory, grammarChanges, writingNote, priority, microLesson, question, task, suggestion, readyForVisual, visualBrief, authorshipCheck.",
       "authorshipCheck must be 'pass' only when the response teaches or asks without supplying finished story prose, or when suggestion is solely a minimal correction of the creator's current sentence that preserves all meaning and story decisions."
     ].join(" ");
     const userPrompt = [
@@ -1223,9 +1247,21 @@ async function handleWritingAssistant(request, response) {
     try { result = JSON.parse(content); }
     catch { result = { reply: content, suggestion: "", readyForVisual: false, visualBrief: "" }; }
     const limit = (value, max) => String(value || "").trim().slice(0, max);
+    const grammarCategories = new Set(["clear", "punctuation", "sentence-structure", "tense", "agreement", "spelling", "word-choice", "articles", "plurality", "word-order", "connectors", "repetition", "de-di-de", "other"]);
+    const grammarCategory = grammarCategories.has(String(result.grammarCategory || "").trim()) ? String(result.grammarCategory).trim() : "other";
+    const grammarChanges = Array.isArray(result.grammarChanges) ? result.grammarChanges.slice(0, 6).map((change) => ({
+      before: limit(change?.before, 100),
+      after: limit(change?.after, 100),
+      skill: limit(change?.skill, 80),
+      explanation: limit(change?.explanation, 180)
+    })).filter((change) => change.before && change.after && change.skill && change.explanation) : [];
     const safeResult = {
       reply: limit(result.reply, 420),
       strength: limit(result.strength, 240),
+      grammarNote: limit(result.grammarNote, 240),
+      grammarCategory,
+      grammarChanges,
+      writingNote: limit(result.writingNote, 240),
       priority: limit(result.priority, 240),
       microLesson: limit(result.microLesson, 280),
       question: limit(result.question, 180),

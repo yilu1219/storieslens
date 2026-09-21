@@ -18,3 +18,21 @@
 .free-gift-card{margin:18px 0;padding:18px;border:1px solid rgba(29,112,81,.22);border-radius:20px;background:linear-gradient(145deg,#f1f8f3,#fffaf0)}.free-gift-card h4{margin:5px 0 13px;font-size:17px}.gift-steps{display:grid;gap:9px}.gift-steps>div{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:10px;border-radius:13px;background:rgba(255,255,255,.75)}.gift-steps b{color:var(--h5-green);font-size:16px}.gift-steps span{font-size:13px;line-height:1.45}.gift-share{display:grid;gap:9px;margin-top:13px}.gift-share label{display:grid;gap:6px;font-size:12px;font-weight:800}.gift-share input{width:100%;padding:10px;border:1px solid var(--h5-line);border-radius:11px;background:#fff}.gift-share small{color:#68736c}
 @media(min-width:760px){.h5-body{padding-bottom:30px}.h5-header{padding-inline:clamp(24px,5vw,70px)}.h5-main{padding-top:62px}.h5-bottom-nav{left:50%;right:auto;bottom:18px;width:430px;transform:translateX(-50%);border:1px solid var(--h5-line);border-radius:23px;box-shadow:0 16px 50px rgba(28,24,18,.15)}.h5-project-list{grid-auto-columns:330px}}
 @media(max-width:460px){.h5-language button{min-width:34px;padding:0 5px}.h5-avatar{display:none}.h5-create-options{grid-template-columns:1fr}.h5-teacher-card{grid-template-columns:1fr 92px}.h5-teacher-card img{min-height:160px}.h5-create-card form{padding:16px}.h5-welcome>p:last-child{font-size:16px}.usage-overview{grid-template-columns:1fr 1fr}.usage-overview>span:last-child{grid-column:1/-1}}
+.mentor-grammar-changes {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mentor-grammar-changes li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.8rem;
+  background: rgba(20, 111, 79, 0.08);
+}
+
+.mentor-grammar-changes strong,
+.mentor-grammar-changes span { display: block; }

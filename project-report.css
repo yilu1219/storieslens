@@ -20,7 +20,8 @@
 .report-yu small { color: #f7cd70; font-size: 11px; font-weight: 900; letter-spacing: .15em; }
 .report-yu strong { margin-top: 8px; font: 700 20px/1.35 Times New Roman, "Songti SC", serif; }
 
-.growth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0 clamp(54px, 8vw, 100px); }
+.growth-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 24px 0 clamp(54px, 8vw, 100px); }
+.growth-grid.has-grammar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .growth-card { min-height: 250px; padding: clamp(26px, 4.5vw, 48px); border: 1px solid var(--line); border-radius: 30px; background: rgba(255,253,247,.88); box-shadow: 0 20px 55px rgba(38,31,20,.08); }
 .growth-card small { color: #1d7358; font-size: 12px; font-weight: 900; letter-spacing: .14em; }
 .growth-card h2 { margin: 28px 0 18px; font-size: clamp(29px, 4vw, 48px); }

@@ -2648,8 +2648,9 @@ function buildFreeCreateImagePrompt(page = document) {
     `Grade level: Grade ${grade}.`,
     `Writing skill focus: ${skillFocus}.`,
     `Art style: ${style}.`,
+    "If a user-approved photo or drawing is attached, use it as the primary visual anchor and preserve the same identity, face, skin tone, age, hairstyle, clothing colors, proportions, accessories, and original drawing details.",
     "Use a warm children's storybook composition with consistent characters and clear action.",
-    "Do not include readable text, logos, watermarks, scary violence, or unsafe content.",
+    "Return only clean finished artwork. Do not include readable text, signatures, logos, watermarks, play triangles, play buttons, video controls, app frames, UI elements, badges, scary violence, or unsafe content.",
     "Student story draft:",
     draft.slice(0, 1400)
   ].join("\n");

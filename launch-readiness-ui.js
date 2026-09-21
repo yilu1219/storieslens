@@ -16,7 +16,7 @@
       </section>
       <div class="regions">${regions}<span class="pill">INTL: ${escape(countries)}</span></div>
       <section class="section"><div class="section-head"><div><span class="kicker">Must pass</span><h2>Required gates</h2></div><span>Any red item blocks production startup when enforcement is enabled.</span></div><div class="gates">${report.required.map(renderGate).join("")}</div></section>
-      <section class="section"><div class="section-head"><div><span class="kicker">May follow</span><h2>Advisory gates</h2></div><span>These do not block a free invitation-only beta.</span></div><div class="gates">${report.advisory.map(renderGate).join("")}</div></section>`;
+      <section class="section"><div class="section-head"><div><span class="kicker">May follow</span><h2>Advisory gates</h2></div><span>These do not block the verified early release.</span></div><div class="gates">${report.advisory.map(renderGate).join("")}</div></section>`;
   } catch (error) {
     root.innerHTML = `<div class="card loading"><strong>The launch gate could not be read.</strong><br>${escape(error.message)}<br>Open this page through the StoriesLens server, not as a local file.</div>`;
   }

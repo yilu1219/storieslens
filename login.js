@@ -3,9 +3,10 @@
 
   const platform = window.StoriesLensPlatform;
   const pageParams = new URLSearchParams(location.search);
-  const requestedReturn = pageParams.get("return") || "";
+  const requestedReturn = pageParams.get("returnTo") || pageParams.get("return") || "";
+  const normalizedReturn = requestedReturn.replace(/^\/+/, "");
   const referralCode = (pageParams.get("ref") || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100);
-  const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio)\.html(?:[?#].*)?$/.test(requestedReturn) ? requestedReturn : "my-stories.html";
+  const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio|checkout|payment-success)\.html(?:[?#].*)?$/.test(normalizedReturn) ? normalizedReturn : "my-stories.html";
   const $ = (selector) => document.querySelector(selector);
   const startForm = $("[data-email-start]");
   const verifyForm = $("[data-email-verify]");
@@ -50,7 +51,7 @@
     select.replaceChildren();
     const placeholder = document.createElement("option");
     placeholder.value = "";
-    placeholder.textContent = codes.length ? "Choose country · 请选择" : "International beta opening soon · 国际区域即将开放";
+    placeholder.textContent = codes.length ? "Choose country · 请选择" : "International registration is not available yet · 国际区域暂未开放";
     select.append(placeholder);
     codes.forEach((code) => {
       const option = document.createElement("option");
@@ -78,9 +79,9 @@
     populateCountries(platformStatus);
     const inviteField = $("[data-beta-invite]");
     const inviteInput = $("[data-beta-invite-code]");
-    inviteField.hidden = !platformStatus.beta?.inviteOnly;
-    // Returning accounts already carry beta access. The server asks only a new
-    // account for an invitation, so the browser must not block returning users.
+    inviteField.hidden = false;
+    // Reward codes are optional. Registration itself stays open to verified
+    // adult-owned accounts, while a valid code may add its allowance once.
     inviteInput.required = false;
   }
 
@@ -166,7 +167,7 @@
       });
       $("[data-login-form-wrap]").hidden = true;
       $("[data-login-success]").hidden = false;
-      $("[data-success-copy]").textContent = `${result.user.displayName}, your private library is ready. · 私人作品库已经准备好。`;
+      $("[data-success-copy]").textContent = `${result.user.displayName}, your private library and free first-scene illustration are ready. · 私人作品库与首张免费插图额度已经准备好。`;
       const successLink = $("[data-login-success] a");
       if (successLink) successLink.href = returnAfterLogin;
       window.setTimeout(() => { location.href = returnAfterLogin; }, 900);

@@ -75,6 +75,10 @@ test("a mobile guest can create a private project, store approved artwork, and r
   assert.strictEqual(libraryResponse.payload.projects.length, 1);
   assert.strictEqual(libraryResponse.payload.projects[0].title, "The Star Keeper");
 
+  const guestCredits = await request("GET", "/api/credits");
+  assert.strictEqual(guestCredits.payload.wallet.resources.imageGenerations.remaining, 0);
+  assert.strictEqual(guestCredits.payload.freeGift.firstIllustration, false);
+
   const privateMediaResponse = await request("GET", mediaResponse.payload.media.url);
   assert.strictEqual(privateMediaResponse.statusCode, 200);
   assert.deepStrictEqual(privateMediaResponse.body, Buffer.from("RIFF\0\0\0\0"));
@@ -153,6 +157,10 @@ test("an adult can consent to a personal photo and revocation or permanent delet
   });
   assert.strictEqual(verified.statusCode, 200);
   assert.strictEqual(verified.payload.authenticated, true);
+
+  const registeredCredits = await request("GET", "/api/credits");
+  assert.strictEqual(registeredCredits.payload.wallet.resources.imageGenerations.remaining, 1);
+  assert.strictEqual(registeredCredits.payload.freeGift.firstIllustration, true);
 
   const created = await request("POST", "/api/projects", {
     title: "Private family story",

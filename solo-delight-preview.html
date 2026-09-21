@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f1e5" />
+    <title>SOLO Delight Preview · StoriesLens</title>
+    <link rel="stylesheet" href="solo-delight-preview.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="StoriesLens home">
+        <img src="assets/storieslens-logo.png" alt="" />
+        <span><strong>StoriesLens</strong><small>SOLO · CHILD PREVIEW</small></span>
+      </a>
+      <div class="top-actions">
+        <div class="star-pill" aria-label="Learning stars"><span>★</span><b data-star-count>0</b><small>stars</small></div>
+        <div class="gift-pill" aria-label="Free creation gifts"><span>✦</span><b data-gift-count>1</b> free picture</div>
+        <button class="parent-button" type="button" data-parent-toggle>For grown-ups</button>
+      </div>
+    </header>
+
+    <main class="experience-shell">
+      <section class="child-stage" aria-label="Solo story creation">
+        <nav class="journey" aria-label="Story progress">
+          <button class="is-active" type="button" data-step-dot="idea"><span>1</span><b>Tell</b></button>
+          <i></i>
+          <button type="button" data-step-dot="ask"><span>2</span><b>Imagine</b></button>
+          <i></i>
+          <button type="button" data-step-dot="polish"><span>3</span><b>Make it better</b></button>
+          <i></i>
+          <button type="button" data-step-dot="picture"><span>4</span><b>See it!</b></button>
+        </nav>
+
+        <div class="story-thread" data-story-thread aria-live="polite"></div>
+
+        <section class="composer-card" data-composer>
+          <div class="composer-label">
+            <span data-composer-hint>Tell Yu one idea. A few words are enough.</span>
+            <button class="hear-button" type="button" data-hear-current aria-label="Hear Yu perform"><span>▶</span> Hear Yu perform</button>
+          </div>
+          <label class="name-prompt" data-name-prompt>
+            <span>What should Yu call you?</span>
+            <input type="text" maxlength="30" autocomplete="nickname" data-creator-name placeholder="First name or nickname · optional" />
+          </label>
+          <label class="upload-entry" for="solo-upload" data-upload-entry>
+            <span aria-hidden="true">＋</span>
+            <div><strong>Upload a drawing, photo, or picture of you</strong><small>Upload once—Yu keeps it with this story all the way through.</small></div>
+            <b aria-hidden="true">→</b>
+          </label>
+          <section class="character-maker" data-character-maker hidden aria-label="Choose how to show the story character">
+            <div class="character-count-guide">
+              <span aria-hidden="true">1</span>
+              <div><strong>＋ Add my main character</strong><small>Start with one hero. You can add up to two helpers later.</small></div>
+            </div>
+            <div class="character-paths" aria-label="Ways to add the main character">
+              <label for="solo-upload">
+                <span aria-hidden="true">▣</span>
+                <div><strong>Use a picture</strong><small>Upload a photo or drawing</small></div>
+              </label>
+              <button type="button" data-character-describe>
+                <span aria-hidden="true">●</span>
+                <div><strong>Describe my hero</strong><small>Type or hold to talk</small></div>
+              </button>
+            </div>
+            <div class="character-description-guide" data-character-description hidden>
+              <strong>Tell Yu four tiny things</strong>
+              <small>Tap a clue, finish the sentence, or hold the green button and say it.</small>
+              <div class="character-clues" aria-label="Character description sentence starters">
+                <button type="button" data-character-clue="Their name is ___, and they are about ___ years old."><span>①</span> Name &amp; age</button>
+                <button type="button" data-character-clue="They have ___ hair and wear ___."><span>②</span> How they look</button>
+                <button type="button" data-character-clue="They are ___ and always ___."><span>③</span> What they are like</button>
+                <button type="button" data-character-clue="More than anything, they want ___."><span>④</span> What they want</button>
+              </div>
+              <button class="character-generate" type="button" data-character-generate><span aria-hidden="true">✦</span> Make a character picture from my description</button>
+            </div>
+            <p>One main-character preview is included. Trying another look uses 1 picture credit.</p>
+          </section>
+          <div class="composer-box">
+            <textarea rows="3" maxlength="900" data-answer placeholder="Type here, or hold the green button to speak…"></textarea>
+            <div class="composer-tools">
+              <input id="solo-upload" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" data-upload hidden />
+              <label class="upload-button" for="solo-upload" title="Upload a drawing, photo, or picture of you">
+                <span aria-hidden="true">＋</span><b>Picture</b>
+              </label>
+              <button class="speak-button" type="button" data-speak><span aria-hidden="true">●</span><b>Hold to talk</b><time data-speak-time>0:00</time></button>
+              <button class="send-button" type="button" data-send><span data-send-label>Tell Yu</span><b aria-hidden="true">→</b></button>
+            </div>
+          </div>
+          <div class="quick-ideas" data-quick-ideas>
+            <span>Need a start?</span>
+            <button type="button" data-quick="A tiny dragon is lost in a giant library.">🐉 A lost dragon</button>
+            <button type="button" data-quick="My drawing shows a moon fox with silver wings.">🦊 A moon fox</button>
+          </div>
+          <p class="micro-trust">Your voice becomes editable words. Live audio is not saved.</p>
+        </section>
+      </section>
+
+      <aside class="parent-panel" data-parent-panel aria-label="Learning snapshot">
+        <div class="parent-panel-head">
+          <div><small>LIVE LEARNING SNAPSHOT</small><h2>What <span data-child-name>your child</span> is learning</h2></div>
+          <button type="button" data-parent-close aria-label="Close parent report">×</button>
+        </div>
+        <p class="parent-intro">This grows from the child’s real choices—not a generic score.</p>
+
+        <div class="learning-ring" style="--progress: 18deg">
+          <div><strong data-learning-count>1</strong><span>skill noticed</span></div>
+        </div>
+
+        <div class="learning-list" data-learning-list>
+          <article class="is-earned">
+            <span>✓</span><div><strong>Original voice</strong><p>Started from the creator’s own idea.</p></div>
+          </article>
+          <article data-learning="character">
+            <span>2</span><div><strong>Character &amp; motivation</strong><p>Who is here, and what do they want?</p></div>
+          </article>
+          <article data-learning="challenge">
+            <span>3</span><div><strong>Story challenge</strong><p>What is hard right now?</p></div>
+          </article>
+          <article data-learning="sequence">
+            <span>4</span><div><strong>Sequence &amp; detail</strong><p>What happens first?</p></div>
+          </article>
+          <article data-learning="revision">
+            <span>5</span><div><strong>Revision decision</strong><p>Understands and approves a clearer sentence.</p></div>
+          </article>
+        </div>
+
+        <section class="parent-evidence">
+          <small>TODAY’S EVIDENCE</small>
+          <blockquote data-parent-evidence>“A tiny dragon…”</blockquote>
+          <p data-parent-note>Yu is listening for the child’s own idea first.</p>
+        </section>
+        <button class="report-button" type="button" disabled>Full parent report unlocks after the first scene</button>
+      </aside>
+    </main>
+
+    <div class="celebration" data-celebration hidden aria-hidden="true"></div>
+    <div class="toast" data-toast role="status" hidden></div>
+
+    <script src="natural-voice.js"></script>
+    <script src="solo-delight-preview.js"></script>
+  </body>
+</html>

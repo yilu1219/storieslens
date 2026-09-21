@@ -1,0 +1,127 @@
+"use strict";
+
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+
+test("live Yu prompt locks the original story and requires teachable grammar changes", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  assert.match(source, /Apply ORIGINAL LOCK/);
+  assert.match(source, /Never add, remove, replace, combine, reinterpret, or infer any character/);
+  assert.match(source, /exact keys before, after, skill, explanation/);
+  assert.match(source, /If the meaning is ambiguous, keep suggestion identical to the original/);
+});
+
+test("seven-year-old preview preserves the ancient Egypt story instead of substituting a new plot", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(source, /My mom, my brother Leo, and I can't find our way back/);
+  assert.match(source, /Metropolitan Museum in New York City/);
+  assert.doesNotMatch(source.match(/function buildRevision[\s\S]*?function finishRevision/)?.[0] || "", /tiny dragon|giant library|secret map/i);
+});
+
+test("the character question supports words, a private upload, and a free visual preview", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(html, /data-character-maker/);
+  assert.match(html, /Add my main character/);
+  assert.match(html, /Use a picture/);
+  assert.match(html, /Upload a photo or drawing/);
+  assert.match(html, /Describe my hero/);
+  assert.match(html, /Make a character picture from my description/);
+  assert.match(html, /Start with one hero/);
+  assert.match(html, /add up to two helpers later/i);
+  assert.match(html, /Name &amp; age/);
+  assert.match(html, /How they look/);
+  assert.match(html, /What they are like/);
+  assert.match(html, /What they want/);
+  assert.match(script, /data-character-clue/);
+  assert.match(script, /data-character-describe/);
+  assert.match(script, /FREE CHARACTER PREVIEW/);
+  assert.match(html, /One main-character preview is included/);
+  assert.match(script, /Try another · 1 credit/);
+  assert.match(script, /state\.characterImageUrl/);
+});
+
+test("Yu teaches one child-friendly grammar point after showing the corrections", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(script, /YU TEACHES ONE GRAMMAR POINT/);
+  assert.match(script, /data-hear-grammar/);
+  assert.match(script, /Use “I” when you are doing the action/);
+  assert.match(script, /Yu found.*grammar/);
+});
+
+test("picture surprise chooses book or film before a six-style visual direction", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(script, /data-output-type="book"/);
+  assert.match(script, /data-output-type="film"/);
+  assert.match(script, /Block world/);
+  assert.match(script, /Cyber future/);
+  assert.match(script, /style-cyber-future-ultramodern-v1\.png/);
+  assert.match(script, /Future world/);
+  assert.doesNotMatch(script, /showcase-robot-friend\.png/);
+  assert.match(script, /Real-life story/);
+  assert.match(script, /Choose a style first/);
+  assert.match(script, /YOUR FIRST MOVIE FRAME/);
+});
+
+test("image creation is reference-led and forbids embedded playback or brand overlays", () => {
+  const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(server, /Treat the first image as the primary visual anchor/);
+  assert.match(server, /Preserve the same person or character identity/);
+  assert.match(server, /play triangle, play button, video controls/);
+  assert.match(server, /cyber-future/);
+  assert.match(server, /ultra-modern optimistic future-world/);
+  assert.doesNotMatch(preview, /showcase-(?:dragon-movie|time-train)\.png/);
+});
+
+test("Change something opens a type-or-speak edit and confirms cost before regenerating", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(script, /function startPictureChange/);
+  assert.match(script, /picture-change/);
+  assert.match(script, /Type your change or hold the green button/);
+  assert.match(script, /Use 1 gift &amp; update/);
+  assert.match(script, /same characters, faces, clothes, story facts, and selected style/);
+});
+
+test("Yu uses an expressive musical-story voice profile without losing lesson clarity", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.html"), "utf8");
+  const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const voice = fs.readFileSync(path.join(__dirname, "..", "natural-voice.js"), "utf8");
+  assert.match(html, /Hear Yu perform/);
+  assert.match(html, /natural-voice\.js/);
+  assert.match(preview, /performanceChunks/);
+  assert.match(preview, /'celebration'/);
+  assert.match(preview, /'lesson'/);
+  assert.match(voice, /theatrical/);
+  assert.match(voice, /question/);
+  assert.match(voice, /story/);
+  assert.match(voice, /lesson/);
+  assert.match(voice, /celebration/);
+});
+
+test("picture results are square, text stays outside the artwork, and real-life mode requires an upload", () => {
+  const css = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.css"), "utf8");
+  const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  assert.match(css, /\.result-picture-wrap[^}]*aspect-ratio:\s*1/);
+  assert.match(css, /\.drawing-stage[^}]*aspect-ratio:\s*1/);
+  assert.match(preview, /result-origin/);
+  assert.doesNotMatch(preview, /result-badge/);
+  assert.match(preview, /Real-life story/);
+  assert.match(preview, /Upload a photo first/);
+  assert.match(preview, /state\.userUploadedReference/);
+  assert.match(server, /"real-life-story"/);
+  assert.match(server, /preserve the exact people, facial identity, age, skin tone, hairstyle, clothing/);
+});
+
+test("the finished picture replaces the progress card and always has a visible fallback", () => {
+  const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(preview, /showResult\(drawing\)/);
+  assert.match(preview, /progressMessage\.remove\(\)/);
+  assert.match(preview, /data-result-image/);
+  assert.match(preview, /handleResultImageError/);
+  assert.match(preview, /original-garden-door-hd-v2\.png/);
+  assert.match(preview, /result\.scrollIntoView\(\{ behavior: 'smooth', block: 'start' \}\)/);
+});

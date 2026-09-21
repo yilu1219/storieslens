@@ -300,14 +300,16 @@
   };
 
   const findYuVoice = (language) => {
+    const naturalVoice = window.StoriesLensNaturalVoice?.preferredVoice?.(language === "zh" ? "zh-CN" : "en-US");
+    if (naturalVoice) return naturalVoice;
     const voices = window.speechSynthesis?.getVoices?.() || [];
     const prefix = language === "zh" ? "zh" : "en";
     const languageVoices = voices.filter((voice) => voice.lang?.toLowerCase().startsWith(prefix));
     const magneticMaleNames = language === "zh"
       ? /yunxi|yunjian|yunyang|kangkang|yong|li-mu|male|普通话.*男/i
       : /daniel|alex|aaron|arthur|fred|reed|eddy|rocko|evan|lee|rishi|male/i;
-    return languageVoices.find((voice) => magneticMaleNames.test(`${voice.name} ${voice.voiceURI}`))
-      || languageVoices.find((voice) => /premium|enhanced|natural/i.test(`${voice.name} ${voice.voiceURI}`))
+    return languageVoices.find((voice) => /natural|neural|online|premium|enhanced/i.test(`${voice.name} ${voice.voiceURI}`))
+      || languageVoices.find((voice) => magneticMaleNames.test(`${voice.name} ${voice.voiceURI}`))
       || languageVoices[0]
       || null;
   };
@@ -322,11 +324,15 @@
     // must not silently switch Yu's interface narration to Chinese.
     const language = "en";
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === "zh" ? "zh-CN" : "en-US";
-    utterance.rate = language === "zh" ? 0.8 : 0.86;
-    utterance.pitch = language === "zh" ? 0.72 : 0.78;
-    utterance.volume = 1;
-    utterance.voice = findYuVoice(language);
+    const lang = language === "zh" ? "zh-CN" : "en-US";
+    if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(utterance, lang);
+    else {
+      utterance.lang = lang;
+      utterance.rate = language === "zh" ? 0.92 : 0.93;
+      utterance.pitch = language === "zh" ? 0.96 : 0.97;
+      utterance.volume = 1;
+      utterance.voice = findYuVoice(language);
+    }
     button?.classList.add("is-speaking");
     utterance.onend = () => button?.classList.remove("is-speaking");
     utterance.onerror = () => button?.classList.remove("is-speaking");

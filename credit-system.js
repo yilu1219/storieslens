@@ -16,7 +16,16 @@ const PACKAGE_CATALOG = Object.freeze({
     price: { usd: 0, cny: 0 },
     costGuardUsd: 0.15,
     saleMode: "automatic-trial",
-    grants: { storyProjects: 1, imageGenerations: 1 }
+    grants: { imageGenerations: 1 }
+  },
+  "guest-story-start": {
+    name: "Guest Story Start",
+    nameZh: "访客故事草稿",
+    price: { usd: 0, cny: 0 },
+    costGuardUsd: 0,
+    saleMode: "local-draft",
+    internal: true,
+    grants: { storyProjects: 1 }
   },
   "revision-read-gift": {
     name: "Revision and Reading Gift",
@@ -325,9 +334,20 @@ function ensureFreePreview(database, userId) {
   }).wallet;
 }
 
+function ensureGuestStoryStart(database, userId) {
+  const alreadyGranted = database.creditTransactions?.some((entry) => entry.userId === userId && entry.packageId === "guest-story-start");
+  if (alreadyGranted) return walletFor(database, userId);
+  return grantPackage(database, {
+    userId,
+    packageId: "guest-story-start",
+    source: "local-draft",
+    idempotencyKey: `guest-story-start:${userId}`,
+    createdBy: "system"
+  }).wallet;
+}
+
 function reserveCredits(database, { userId, resource, units = 1, idempotencyKey, referenceType = "generation", referenceId = "", metadata = {} }) {
   ensureCreditCollections(database);
-  ensureFreePreview(database, userId);
   expireStaleReservations(database);
   if (!CREDIT_RESOURCES[resource]) throw Object.assign(new Error("Unknown allowance type."), { statusCode: 400, code: "INVALID_CREDIT_RESOURCE" });
   const safeUnits = Number(units);
@@ -543,6 +563,7 @@ module.exports = {
   usageSummaryFor,
   grantPackage,
   ensureFreePreview,
+  ensureGuestStoryStart,
   reserveCredits,
   settleReservation,
   releaseReservation,

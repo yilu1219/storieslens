@@ -23,7 +23,8 @@ function database() {
 }
 
 test("allowance packages describe outcomes instead of opaque points", () => {
-  assert.deepEqual(PACKAGE_CATALOG["free-preview"].grants, { storyProjects: 1, imageGenerations: 1 });
+  assert.deepEqual(PACKAGE_CATALOG["free-preview"].grants, { imageGenerations: 1 });
+  assert.deepEqual(PACKAGE_CATALOG["guest-story-start"].grants, { storyProjects: 1 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].grants, { storyProjects: 1, imageGenerations: 12 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].price, { usd: 19, cny: 129 });
   assert.deepEqual(PACKAGE_CATALOG["invite-cocreate"].grants, { storyProjects: 1, imageGenerations: 18, collaboratorSeats: 5 });

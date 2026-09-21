@@ -111,6 +111,12 @@ test("production email authentication sends and verifies a real provider code", 
     assert.equal(verifyResponse.status, 200);
     assert.equal(verified.authenticated, true);
     assert.equal(verified.user.displayName, "Test Creator");
+    const accountCookie = (verifyResponse.headers.get("set-cookie") || "").split(";")[0];
+    const creditsResponse = await fetch(`${baseUrl}/api/credits`, { headers: { Cookie: accountCookie } });
+    const credits = await creditsResponse.json();
+    assert.equal(creditsResponse.status, 200);
+    assert.equal(credits.wallet.resources.imageGenerations.remaining, 1);
+    assert.equal(credits.freeGift.firstIllustration, true);
 
     const adminLoginResponse = await fetch(`${baseUrl}/api/admin/session`, {
       method: "POST",

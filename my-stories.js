@@ -228,8 +228,8 @@
     $("[data-email-auth]").hidden = !result.features?.emailPhoneAuth;
     const inviteField = $("[data-beta-invite]");
     const inviteInput = $("[data-beta-invite-code]");
-    inviteField.hidden = !result.beta?.inviteOnly;
-    inviteInput.required = Boolean(result.beta?.inviteOnly);
+    inviteField.hidden = false;
+    inviteInput.required = false;
     const ageSelect = $("[data-account-age]");
     const minorOption = ageSelect.querySelector('option[value="under18"]');
     if (result.beta?.adultAccountOwnerOnly && minorOption) {

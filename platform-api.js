@@ -15,6 +15,7 @@ const {
   usageSummaryFor,
   grantPackage,
   ensureFreePreview,
+  ensureGuestStoryStart,
   reserveCredits,
   settleReservation,
   releaseReservation,
@@ -42,11 +43,15 @@ const ADMIN_SESSION_HOURS = 12;
 const offerCatalog = Object.fromEntries(Object.entries(STRIPE_OFFERS).map(([id, offer]) => [id, {
   ...offer,
   price: `$${(offer.amountMinor / 100).toFixed(0)}`,
-  fallbackUrl: `/beta-interest.html?offer=${id}`
+  fallbackUrl: `mailto:support@storieslens.com?subject=${encodeURIComponent(`Checkout help: ${offer.name}`)}`
 }]));
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function registrationInviteRequired() {
+  return process.env.REGISTRATION_INVITE_REQUIRED === "true";
 }
 
 function addDays(date, days) {
@@ -452,7 +457,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     let session = database.sessions.find((item) => item.id === cookieId && new Date(item.expiresAt) > new Date());
     let user = session ? database.users.find((item) => item.id === session.userId) : null;
     if (session && user) {
-      if (create && !database.creditTransactions?.some((entry) => entry.userId === user.id && entry.packageId === "free-preview")) {
+      if (create && user.kind === "account" && !database.creditTransactions?.some((entry) => entry.userId === user.id && entry.packageId === "free-preview")) {
         return store.mutate((nextDatabase) => {
           ensureCreditCollections(nextDatabase);
           ensureFreePreview(nextDatabase, user.id);
@@ -470,7 +475,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       session = { id: crypto.randomBytes(24).toString("hex"), userId: user.id, createdAt, expiresAt: addDays(new Date(), SESSION_DAYS) };
       nextDatabase.users.push(user);
       nextDatabase.sessions.push(session);
-      ensureFreePreview(nextDatabase, user.id);
+      ensureGuestStoryStart(nextDatabase, user.id);
       setSessionCookie(request, response, session.id, session.expiresAt);
       return { database: nextDatabase, session, user };
     });
@@ -913,7 +918,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const { user } = sessionFor(request, response);
       const result = store.mutate((database) => {
         ensureCreditCollections(database);
-        ensureFreePreview(database, user.id);
+        if (user.kind === "account") ensureFreePreview(database, user.id);
         const wallet = walletFor(database, user.id);
         const summary = usageSummaryFor(database, user.id);
         return {
@@ -1330,7 +1335,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const rawInviteCode = normalizeInviteCode(body.betaInviteCode);
       const requestedRegion = regionProfile(body.primaryRegion);
       if (!requestedRegion || !configuredRegistrationRegions().includes(requestedRegion.primaryRegion)) {
-        sendJson(response, 403, { error: "This region is not open in the current invitation-only beta." });
+        sendJson(response, 403, { error: "Registration is not currently available in this region." });
         return true;
       }
       const countryCode = countryForRegion(requestedRegion.primaryRegion, body.countryCode);
@@ -1339,11 +1344,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return true;
       }
       if (requestedRegion.primaryRegion === "intl" && !allowedInternationalCountries().includes(countryCode)) {
-        sendJson(response, 403, { error: "This country is not open in the current invitation-only beta." });
+        sendJson(response, 403, { error: "Registration is not currently available in this country or region." });
         return true;
       }
       if (process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" && body.ageGroup !== "adult") {
-        sendJson(response, 403, { error: "During the founding beta, a parent or guardian must own the account." });
+        sendJson(response, 403, { error: "A parent or guardian must own the account for a young creator." });
         return true;
       }
       const current = sessionFor(request, response);
@@ -1474,11 +1479,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return true;
       }
       if (requestedRegion.primaryRegion === "intl" && !allowedInternationalCountries().includes(countryCode)) {
-        sendJson(response, 403, { error: "This country is not open in the current invitation-only beta." });
+        sendJson(response, 403, { error: "Registration is not currently available in this country or region." });
         return true;
       }
       if (process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" && body.ageGroup !== "adult") {
-        sendJson(response, 403, { error: "During the founding beta, a parent or guardian must own the account. Young creators can create inside that adult-owned account." });
+        sendJson(response, 403, { error: "A parent or guardian must own the account. Young creators can create inside that adult-owned account." });
         return true;
       }
       const current = sessionFor(request, response);
@@ -1495,7 +1500,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const rawInviteCode = normalizeInviteCode(body.betaInviteCode);
         const databaseInvite = rawInviteCode ? findInvite(database, rawInviteCode) : null;
         let inviteAccess = account?.betaAccess || null;
-        if (process.env.BETA_INVITE_ONLY === "true" && !inviteAccess) {
+        if (registrationInviteRequired() && !inviteAccess) {
           if (databaseInvite) {
             const batch = database.inviteBatches.find((item) => item.id === databaseInvite.batchId);
             inviteAccess = {
@@ -2757,7 +2762,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         registrationRegions: configuredRegistrationRegions(),
         allowedInternationalCountries: allowedInternationalCountries(),
         authDelivery: { email: emailDelivery.provider, phone: phoneDelivery.provider },
-        beta: { inviteOnly: process.env.BETA_INVITE_ONLY === "true", inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true", adultAccountOwnerOnly: process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" },
+        beta: { inviteOnly: registrationInviteRequired(), inviteCodeAuth: process.env.INVITE_CODE_AUTH_ENABLED === "true", adultAccountOwnerOnly: process.env.BETA_ADULT_ACCOUNT_OWNER_ONLY === "true" },
         region: process.env.STORIESLENS_REGION || "local",
         dataMode: process.env.NODE_ENV === "production" ? "production" : "local-development"
       });

@@ -307,6 +307,9 @@ function createGrowthReport(project) {
   const zh = selected.language === "zh";
   const strengthName = labels(selected.language, selected.analysis.strength);
   const nextName = labels(selected.language, selected.analysis.nextSkill);
+  const grammarGoals = Array.isArray(project?.clientSnapshot?.grammarSummary?.goals)
+    ? project.clientSnapshot.grammarSummary.goals.slice(0, 3).map((goal) => ({ category: String(goal.category || "other"), label: String(goal.label || ""), note: String(goal.note || ""), count: Number(goal.count || 0) }))
+    : [];
   return {
     reportVersion: REPORT_VERSION,
     catalogVersion: CATALOG_VERSION,
@@ -316,6 +319,13 @@ function createGrowthReport(project) {
     celebration: zh ? "你完成了一次从灵感到作品的创作旅程。" : "You completed a creative journey from first spark to finished project.",
     strength: zh ? `这次作品最明显的优势是${strengthName}。` : `A clear strength in this project is ${strengthName}.`,
     nextGoal: zh ? `下一次创作，羽大师建议重点练习${nextName}。` : `For the next project, Yu recommends focusing on ${nextName}.`,
+    grammarGrowth: grammarGoals.length ? {
+      title: grammarGoals[0].label,
+      note: grammarGoals[0].category === "clear"
+        ? (zh ? "本次作品的基本语法已经清楚；继续保持，并在新章节中再次检查。" : "The basic grammar in this piece is clear; keep it going and check again in the next chapter.")
+        : grammarGoals[0].note,
+      goals: grammarGoals
+    } : null,
     familyPrompt: zh ? "一起读这一本推荐书，只讨论一个你最喜欢的写作方法，再把这个方法用进新故事。" : "Read this one recommended book together, discuss one craft move you enjoyed, and try that move in a new story.",
     recommendationBasis: {
       ageBand: selected.analysis.ageBand,

@@ -86,7 +86,7 @@
   window.StoriesLensI18n?.setLocale(window.StoriesLensI18n.locale);
 
   const fallback = document.querySelector("[data-fallback]");
-  fallback.href = `beta-interest.html?offer=${encodeURIComponent(offerId)}`;
+  fallback.href = `mailto:support@storieslens.com?subject=${encodeURIComponent(`Checkout help: ${offer.name}`)}`;
 
   const checkoutButton = document.querySelector("[data-checkout]");
   const status = document.querySelector("[data-checkout-status]");

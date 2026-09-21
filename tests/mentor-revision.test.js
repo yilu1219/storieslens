@@ -10,6 +10,8 @@ test("Yu revision splits creator writing into bounded review turns", () => {
     "then the door opens"
   ]);
   assert(items.every((item) => item.source === "pending"));
+  assert(items.every((item) => item.grammarNote === "" && item.grammarCategory === "clear" && item.writingNote === ""));
+  assert(items.every((item) => Array.isArray(item.grammarChanges) && item.grammarChanges.length === 0));
 });
 
 test("basic fallback changes only capitalization, spacing and end punctuation", () => {

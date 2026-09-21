@@ -51,6 +51,8 @@ test("bilingual Yu teaches both traditions without mechanical translation", () =
 test("Yu constitution protects authorship, evidence, safety, and adaptive teaching", () => {
   const rules = YU_MENTOR_CONSTITUTION.join(" ");
   assert.match(rules, /Teach, do not ghostwrite/);
+  assert.match(rules, /Original lock for revision/);
+  assert.match(rules, /exact before-and-after words/);
   assert.match(rules, /Use evidence/);
   assert.match(rules, /Adapt by age/);
   assert.match(rules, /minors private and safe/);

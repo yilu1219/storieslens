@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v88-question-flow-20260921";
+const VERSION = "storieslens-pwa-v89-open-registration-20260921";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -37,9 +37,9 @@ const APP_SHELL = [
   "/pwa.css",
   "/platform-client.js",
   "/login.css?v=20260915-1",
-  "/login.js?v=20260915-2",
+  "/login.js?v=20260921-1",
   "/payment-success.js?v=20260917-1",
-  "/my-stories.js?v=20260917-photo-governance-1",
+  "/my-stories.js?v=20260921-open-registration-1",
   "/safety-client.js",
   "/artwork-upload-safety.js?v=20260913-1",
   "/pwa.js",

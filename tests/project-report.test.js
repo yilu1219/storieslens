@@ -35,6 +35,20 @@ test("reviewed catalog recommendations include real cover links and project-spec
   assert.ok(report.familyPrompt);
 });
 
+test("project reports preserve the Grammar Lab's primary learning goal", () => {
+  const report = createGrowthReport({
+    title: "The Clock Door",
+    language: "en",
+    ageGroup: "under18",
+    draft: "The clock door opened and the child ran inside.",
+    scenes: [],
+    clientSnapshot: { grammarSummary: { goals: [{ category: "tense", label: "Consistent verb tense", note: "Keep the action in the same time frame.", count: 2 }] } },
+    version: 1
+  });
+  assert.equal(report.grammarGrowth.title, "Consistent verb tense");
+  assert.match(report.grammarGrowth.note, /same time frame/);
+});
+
 test("Chinese reports stay Chinese and use only reviewed Chinese titles", () => {
   const report = createGrowthReport({
     title: "会发光的种子",

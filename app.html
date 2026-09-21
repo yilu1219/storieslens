@@ -202,7 +202,7 @@
           <div class="mentor-review-progress"><span data-t="sentence-review">SENTENCE REVIEW</span><strong><b data-revision-number>1</b> / <span data-revision-total>1</span></strong></div>
           <article class="mentor-original-card"><small data-t="your-words">YOUR WORDS</small><p data-revision-original></p></article>
           <div class="mentor-thinking" data-revision-loading role="status"><i aria-hidden="true"></i><span data-t="yu-is-thinking">Bard Yu is looking closely at your sentence…</span></div>
-          <div class="mentor-feedback" data-revision-feedback hidden><div><small data-t="one-strength">WHAT WORKS</small><p data-revision-strength></p></div><div><small data-t="one-focus">ONE FOCUS</small><p data-revision-priority></p></div><div><small data-t="mini-lesson">MINI LESSON</small><p data-revision-lesson></p></div></div>
+          <div class="mentor-feedback" data-revision-feedback hidden><div><small data-t="one-strength">WHAT WORKS</small><p data-revision-strength></p></div><div><small data-t="grammar-check">GRAMMAR &amp; CLARITY</small><p data-revision-grammar></p><ul class="mentor-grammar-changes" data-revision-grammar-changes hidden></ul></div><div><small data-t="writing-craft">WRITING CRAFT</small><p data-revision-writing></p></div><div><small data-t="mini-lesson">MINI LESSON</small><p data-revision-lesson></p></div></div>
           <label class="mentor-suggestion"><span data-t="yu-suggestion">YU’S MINIMAL REVISION</span><textarea rows="3" maxlength="500" data-revision-suggestion></textarea></label>
           <p class="mentor-meaning-question" data-revision-question>Is this what you mean?</p>
           <div class="mentor-confirm-actions" data-revision-actions><button class="primary-action" type="button" data-revision-confirm><span data-t="yes-my-meaning">Yes—this is what I mean</span><b aria-hidden="true">✓</b></button><button class="secondary-action" type="button" data-revision-edit data-t="change-my-words">Not quite—I’ll change the words</button></div>
@@ -214,6 +214,18 @@
           <div><small data-t="setting-being-built">YOUR OPENING · SETTING</small><strong data-t="setting-build-title">Your first paragraph is taking shape.</strong></div>
           <p data-setting-preview data-t="setting-build-empty">Each sentence you approve will appear here.</p>
         </aside>
+      </section>
+
+      <section class="flow-stage grammar-lab-stage" data-stage="grammar-lab" aria-labelledby="grammar-lab-title" hidden>
+        <div class="grammar-lab-intro">
+          <p class="flow-kicker" data-t="grammar-lab-kicker">YOUR GRAMMAR LAB</p>
+          <h1 id="grammar-lab-title" data-t="grammar-lab-title">One small language goal from your own story.</h1>
+          <p data-t="grammar-lab-intro">Yu noticed patterns across the sentences you just reviewed. Practice the most useful one now; this is not a score.</p>
+        </div>
+        <div class="grammar-goals" data-grammar-goals></div>
+        <article class="grammar-example-card"><small data-t="grammar-example">ONE SENTENCE YOU IMPROVED</small><p data-grammar-example></p></article>
+        <p class="grammar-practice" data-t="grammar-practice">Read the sentence once more and check today’s language goal. Then carry the same skill into your next page.</p>
+        <button class="primary-action grammar-confirm" type="button" data-grammar-confirm><span data-t="grammar-checked">I checked it—continue</span><b aria-hidden="true">→</b></button>
       </section>
 
       <section class="flow-stage story-path-stage" data-stage="story-path" aria-labelledby="story-path-title" hidden>
@@ -287,6 +299,7 @@
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>
     <script src="mentor-revision.js?v=20260915-1"></script>
-    <script src="h5-app.js?v=20260921-question-flow-1"></script>
+    <script src="natural-voice.js?v=20260921-1"></script>
+    <script src="h5-app.js?v=20260921-natural-voice-1"></script>
   </body>
 </html>

@@ -120,9 +120,15 @@
     if (!text || !("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") return;
     window.speechSynthesis.cancel();
     const utterance = new window.SpeechSynthesisUtterance(text);
-    utterance.lang = activeSquad?.language === "zh" ? "zh-CN" : "en-US";
-    utterance.rate = activeSquad?.language === "zh" ? 0.8 : 0.86;
-    utterance.pitch = activeSquad?.language === "zh" ? 0.72 : 0.78;
+    const lang = activeSquad?.language === "zh" ? "zh-CN" : "en-US";
+    if (window.StoriesLensNaturalVoice) {
+      window.StoriesLensNaturalVoice.configureUtterance(utterance, lang);
+      window.speechSynthesis.speak(utterance);
+      return;
+    }
+    utterance.lang = lang;
+    utterance.rate = activeSquad?.language === "zh" ? 0.92 : 0.93;
+    utterance.pitch = activeSquad?.language === "zh" ? 0.96 : 0.97;
     utterance.volume = 1;
     const voices = window.speechSynthesis.getVoices();
     const prefix = activeSquad?.language === "zh" ? "zh" : "en";
@@ -130,8 +136,8 @@
       ? /yunxi|yunjian|yunyang|kangkang|yong|li-mu|male|普通话.*男/i
       : /daniel|alex|aaron|arthur|fred|reed|eddy|rocko|evan|lee|rishi|male/i;
     const languageVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(prefix));
-    utterance.voice = languageVoices.find((voice) => maleNames.test(`${voice.name} ${voice.voiceURI}`))
-      || languageVoices.find((voice) => /premium|enhanced|natural/i.test(`${voice.name} ${voice.voiceURI}`))
+    utterance.voice = languageVoices.find((voice) => /natural|neural|online|premium|enhanced/i.test(`${voice.name} ${voice.voiceURI}`))
+      || languageVoices.find((voice) => maleNames.test(`${voice.name} ${voice.voiceURI}`))
       || languageVoices[0]
       || null;
     window.speechSynthesis.speak(utterance);

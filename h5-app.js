@@ -30,6 +30,7 @@
   let mentorReviewedDraft = "";
   let mentorRevisionCompleted = false;
   let mentorReadingConfirmed = false;
+  let grammarSummary = { goals: [], checked: false };
   let questionIndex = 0;
   let answers = [];
   let languageTouched = false;
@@ -138,7 +139,8 @@
       "your-words": "YOUR WORDS",
       "yu-is-thinking": "Bard Yu is looking closely at your sentence…",
       "one-strength": "WHAT WORKS",
-      "one-focus": "ONE FOCUS",
+      "grammar-check": "GRAMMAR & CLARITY",
+      "writing-craft": "WRITING CRAFT",
       "mini-lesson": "MINI LESSON",
       "yu-suggestion": "YU’S MINIMAL REVISION",
       "yes-my-meaning": "Yes—this is what I mean",
@@ -147,6 +149,13 @@
       "hear-and-follow": "Hear Yu, then read it",
       "i-read-it": "I read and checked it",
       "mentor-authorship-note": "Yu teaches and suggests. Nothing changes until you approve it.",
+      "grammar-lab-kicker": "YOUR GRAMMAR LAB",
+      "grammar-lab-title": "One small language goal from your own story.",
+      "grammar-lab-intro": "Yu noticed patterns across the sentences you just reviewed. Practice the most useful one now; this is not a score.",
+      "grammar-primary": "TRY THIS FIRST",
+      "grammar-example": "ONE SENTENCE YOU IMPROVED",
+      "grammar-practice": "Read the sentence once more and check today’s language goal. Then carry the same skill into your next page.",
+      "grammar-checked": "I checked it—continue",
       "journey-idea": "STORY IDEA",
       "journey-setting": "BUILD THE SETTING",
       "journey-revise": "REVISE WITH YU",
@@ -284,7 +293,8 @@
       "your-words": "你的原句",
       "yu-is-thinking": "羽大师正在仔细读这一句……",
       "one-strength": "写得好的地方",
-      "one-focus": "这次只改一件事",
+      "grammar-check": "语法与句子",
+      "writing-craft": "写作表达",
       "mini-lesson": "一个写作小技巧",
       "yu-suggestion": "羽大师的最小修改",
       "yes-my-meaning": "是，这就是我的意思",
@@ -293,6 +303,13 @@
       "hear-and-follow": "先听羽大师，再自己读",
       "i-read-it": "我已经读过并确认",
       "mentor-authorship-note": "羽大师只负责教学和建议；没有你的确认，一个字也不会替换。",
+      "grammar-lab-kicker": "你的语法小课堂",
+      "grammar-lab-title": "从自己的故事里，真正学会一个语言目标。",
+      "grammar-lab-intro": "羽大师整理了刚才逐句修改中反复出现的特点。现在只练最有用的一项；这不是分数，也不给孩子贴标签。",
+      "grammar-primary": "这次先学这一项",
+      "grammar-example": "你刚刚改好的一句话",
+      "grammar-practice": "再读一遍这句话，检查今天的语法目标；写下一页时，也试着使用同一个方法。",
+      "grammar-checked": "我检查过了，继续创作",
       "journey-idea": "故事想法",
       "journey-setting": "写出场景",
       "journey-revise": "与羽大师修改",
@@ -562,6 +579,8 @@
   }
 
   function preferredVoice(lang) {
+    const naturalVoice = window.StoriesLensNaturalVoice?.preferredVoice?.(lang);
+    if (naturalVoice) return naturalVoice;
     if (!("speechSynthesis" in window)) return null;
     const voices = window.speechSynthesis.getVoices();
     const prefix = lang.toLowerCase().split("-")[0];
@@ -569,10 +588,10 @@
     const sageVoiceNames = prefix === "zh"
       ? [/yunxi/i, /yunjian/i, /yunyang/i, /kangkang/i, /yong/i, /li-mu/i, /male/i, /普通话.*男/i]
       : [/daniel/i, /alex/i, /aaron/i, /arthur/i, /fred/i, /reed/i, /eddy/i, /rocko/i, /evan/i, /lee/i, /rishi/i, /male/i];
+    const premiumVoice = languageVoices.find((voice) => /natural|neural|online|premium|enhanced/i.test(`${voice.name} ${voice.voiceURI}`));
+    if (premiumVoice) return premiumVoice;
     const sageVoice = languageVoices.find((voice) => sageVoiceNames.some((pattern) => pattern.test(`${voice.name} ${voice.voiceURI}`)));
     if (sageVoice) return sageVoice;
-    const premiumVoice = languageVoices.find((voice) => /premium|enhanced|natural/i.test(`${voice.name} ${voice.voiceURI}`));
-    if (premiumVoice) return premiumVoice;
     return languageVoices.find((voice) => voice.lang.toLowerCase() === lang.toLowerCase())
       || languageVoices[0]
       || null;
@@ -590,11 +609,14 @@
     stopQuestionSpeech();
     const lang = locale === "zh" ? "zh-CN" : "en-US";
     questionUtterance = new window.SpeechSynthesisUtterance(question);
-    questionUtterance.lang = lang;
-    questionUtterance.rate = locale === "zh" ? 0.8 : 0.86;
-    questionUtterance.pitch = locale === "zh" ? 0.72 : 0.78;
-    const voice = preferredVoice(lang);
-    if (voice) questionUtterance.voice = voice;
+    if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(questionUtterance, lang, "question");
+    else {
+      questionUtterance.lang = lang;
+      questionUtterance.rate = locale === "zh" ? 0.92 : 0.93;
+      questionUtterance.pitch = locale === "zh" ? 0.96 : 0.97;
+      const voice = preferredVoice(lang);
+      if (voice) questionUtterance.voice = voice;
+    }
     questionUtterance.onstart = () => updateReadQuestionButton(true);
     questionUtterance.onend = () => {
       questionUtterance = null;
@@ -1000,6 +1022,7 @@
             firstPageCreated: true,
             mentorRevisionCompleted,
             readingConfirmed: mentorReadingConfirmed,
+            grammarSummary,
             learningProfile,
             chineseCreativeProfile,
             outputFormat: selectedOutputFormat || "book"
@@ -1052,12 +1075,15 @@
     stopMentorSpeech();
     const lang = locale === "zh" ? "zh-CN" : "en-US";
     mentorUtterance = new window.SpeechSynthesisUtterance(text);
-    mentorUtterance.lang = lang;
-    mentorUtterance.rate = locale === "zh" ? 0.8 : 0.86;
-    mentorUtterance.pitch = locale === "zh" ? 0.72 : 0.78;
-    mentorUtterance.volume = 1;
-    const voice = preferredVoice(lang);
-    if (voice) mentorUtterance.voice = voice;
+    if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(mentorUtterance, lang, source === "arrival" ? "theatrical" : source === "rehearsal" ? "story" : "warm");
+    else {
+      mentorUtterance.lang = lang;
+      mentorUtterance.rate = locale === "zh" ? 0.92 : 0.93;
+      mentorUtterance.pitch = locale === "zh" ? 0.96 : 0.97;
+      mentorUtterance.volume = 1;
+      const voice = preferredVoice(lang);
+      if (voice) mentorUtterance.voice = voice;
+    }
     mentorUtterance.onstart = () => {
       if (source === "arrival") $("[data-mentor-arrival]")?.classList.add("is-speaking");
       if (source === "rehearsal") $("[data-revision-read]")?.classList.add("is-reading");
@@ -1068,19 +1094,38 @@
 
   function fallbackMentorResult(item) {
     const checked = window.StoriesLensMentorRevision.basicCheck(item.original, locale);
-    if (locale === "zh") return { suggestion: checked.suggestion, strength: "你已经写出了一个完整、可以继续发展的想法。", priority: checked.changed ? "先让开头、空格和句末标点更清楚。" : "这一句的基本书写已经清楚，先保留你的原意。", microLesson: "标点像朗读时的呼吸。先把一句话读完，再决定在哪里停下来。", question: "这是你原来想表达的意思吗？", source: "on-device" };
-    return { suggestion: checked.suggestion, strength: "You have expressed one complete idea that the story can build on.", priority: checked.changed ? "Start with a capital letter and give the sentence a clear ending." : "The sentence is already clear, so keep your meaning and voice.", microLesson: "Punctuation shows a reader where your voice begins, pauses, and finishes.", question: "Is this what you mean?", source: "on-device" };
+    if (locale === "zh") return { suggestion: checked.suggestion, strength: "你已经写出了一个完整、可以继续发展的想法。", grammarNote: checked.changed ? "先让空格和句末标点更清楚。" : "这一句的基本语法和标点已经清楚。", grammarCategory: checked.changed ? "punctuation" : "clear", writingNote: "先保留你的原意；联网后羽大师会再检查画面、行动和表达。", priority: checked.changed ? "先让句末停顿更清楚。" : "先保留你的声音。", microLesson: "标点像朗读时的呼吸。先把一句话读完，再决定在哪里停下来。", question: "这是你原来想表达的意思吗？", source: "on-device" };
+    return { suggestion: checked.suggestion, strength: "You have expressed one complete idea that the story can build on.", grammarNote: checked.changed ? "Begin with a capital letter and give the sentence a clear ending." : "The sentence is grammatically clear as written.", grammarCategory: checked.changed ? "punctuation" : "clear", writingNote: "Keep your meaning and voice; Yu will check imagery, action, and organization when the live coach is available.", priority: checked.changed ? "Give the sentence a clear beginning and ending." : "Keep your voice.", microLesson: "Punctuation shows a reader where your voice begins, pauses, and finishes.", question: "Is this what you mean?", source: "on-device" };
   }
 
   function renderMentorResult(item, result) {
     item.suggestion = String(result.suggestion || item.original).trim() || item.original;
     item.strength = String(result.strength || fallbackMentorResult(item).strength).trim();
+    item.grammarNote = String(result.grammarNote || fallbackMentorResult(item).grammarNote).trim();
+    item.grammarCategory = String(result.grammarCategory || fallbackMentorResult(item).grammarCategory || "other").trim();
+    item.grammarChanges = Array.isArray(result.grammarChanges) ? result.grammarChanges.filter((change) => change && change.before && change.after && change.skill && change.explanation).slice(0, 6) : [];
+    item.writingNote = String(result.writingNote || result.priority || fallbackMentorResult(item).writingNote).trim();
     item.priority = String(result.priority || fallbackMentorResult(item).priority).trim();
     item.microLesson = String(result.microLesson || result.reply || fallbackMentorResult(item).microLesson).trim();
     item.question = String(result.question || fallbackMentorResult(item).question).trim();
     item.source = result.source || "yu-live";
     $("[data-revision-strength]").textContent = item.strength;
-    $("[data-revision-priority]").textContent = item.priority;
+    $("[data-revision-grammar]").textContent = item.grammarNote;
+    const grammarChanges = $("[data-revision-grammar-changes]");
+    if (grammarChanges) {
+      grammarChanges.replaceChildren();
+      item.grammarChanges.forEach((change) => {
+        const row = document.createElement("li");
+        const edit = document.createElement("strong");
+        edit.textContent = `“${change.before}” → “${change.after}” · ${change.skill}`;
+        const reason = document.createElement("span");
+        reason.textContent = change.explanation;
+        row.append(edit, reason);
+        grammarChanges.append(row);
+      });
+      grammarChanges.hidden = item.grammarChanges.length === 0;
+    }
+    $("[data-revision-writing]").textContent = item.writingNote;
     $("[data-revision-lesson]").textContent = item.microLesson;
     $("[data-revision-suggestion]").value = item.suggestion;
     $("[data-revision-suggestion]").disabled = false;
@@ -1099,6 +1144,11 @@
     $("[data-revision-original]").textContent = item.original;
     $("[data-revision-suggestion]").value = item.original;
     $("[data-revision-suggestion]").disabled = true;
+    const grammarChanges = $("[data-revision-grammar-changes]");
+    if (grammarChanges) {
+      grammarChanges.replaceChildren();
+      grammarChanges.hidden = true;
+    }
     $("[data-revision-loading]").hidden = false;
     $("[data-revision-feedback]").hidden = true;
     $("[data-revision-actions]").hidden = true;
@@ -1167,12 +1217,58 @@
     window.StoriesLensAnalytics?.track("story_form_choice_shown", { language: locale, mode: "solo" });
   }
 
+  const grammarCategoryLabels = {
+    en: { clear: "Grammar is already clear", punctuation: "Punctuation and sentence endings", "sentence-structure": "Complete and clear sentences", tense: "Consistent verb tense", agreement: "Subject–verb agreement", spelling: "Spelling", "word-choice": "Precise word choice", articles: "A, an, and the", plurality: "Singular and plural forms", "word-order": "Natural word order", connectors: "Connecting ideas", repetition: "Avoiding unnecessary repetition", "de-di-de": "的、地、得", other: "Sentence clarity" },
+    zh: { clear: "基本语法已经清楚", punctuation: "标点与句末停顿", "sentence-structure": "完整、清楚的句子", tense: "时间表达的一致", agreement: "句子成分的搭配", spelling: "字词书写", "word-choice": "更准确的用词", articles: "英文冠词", plurality: "单复数表达", "word-order": "自然清楚的语序", connectors: "用关联词连接想法", repetition: "减少不必要的重复", "de-di-de": "的、地、得", other: "句子是否清楚" }
+  };
+
+  function buildGrammarSummary() {
+    const counts = new Map();
+    mentorRevisionItems.forEach((item) => {
+      const category = item.grammarCategory || "other";
+      if (category === "clear") return;
+      if (!counts.has(category)) counts.set(category, { category, count: 0, note: item.grammarNote, sentence: item.accepted || item.suggestion || item.original });
+      counts.get(category).count += 1;
+    });
+    let goals = Array.from(counts.values()).sort((left, right) => right.count - left.count).slice(0, 3);
+    if (!goals.length) {
+      const item = mentorRevisionItems[0];
+      goals = [{ category: "clear", count: mentorRevisionItems.length, note: locale === "zh" ? "这次作品的基本语法和标点已经清楚。继续保持自己的表达声音。" : "The basic grammar and punctuation in this piece are clear. Keep writing in your own voice.", sentence: item?.accepted || item?.suggestion || item?.original || "" }];
+    }
+    grammarSummary = {
+      goals: goals.map((goal) => ({ ...goal, label: grammarCategoryLabels[locale][goal.category] || grammarCategoryLabels[locale].other })),
+      checked: false,
+      completedAt: new Date().toISOString()
+    };
+    return grammarSummary;
+  }
+
+  function showGrammarLabStage() {
+    const summary = buildGrammarSummary();
+    const list = $("[data-grammar-goals]");
+    list.replaceChildren(...summary.goals.map((goal, index) => {
+      const card = document.createElement("article");
+      card.className = `grammar-goal-card${index === 0 ? " is-primary" : ""}`;
+      const small = document.createElement("small");
+      small.textContent = index === 0 ? t("grammar-primary") : `${locale === "zh" ? "还可以留意" : "ALSO NOTICE"} ${index + 1}`;
+      const title = document.createElement("h2");
+      title.textContent = goal.label;
+      const note = document.createElement("p");
+      note.textContent = goal.note;
+      card.append(small, title, note);
+      return card;
+    }));
+    $("[data-grammar-example]").textContent = summary.goals[0]?.sentence || mentorReviewedDraft;
+    showStage("grammar-lab");
+    window.StoriesLensAnalytics?.track("grammar_lab_shown", { language: locale, goals: summary.goals.map((goal) => goal.category) });
+  }
+
   function finishMentorReview() {
     mentorReviewedDraft = assembleMentorDraft();
     mentorRevisionCompleted = true;
     stopMentorSpeech();
     window.StoriesLensAnalytics?.track("mentor_revision_completed", { language: locale, sentenceCount: mentorRevisionItems.length, mode: "solo" });
-    showStoryPathStage();
+    showGrammarLabStage();
   }
 
   function buildFirstPage(reviewedDraft = "") {
@@ -1454,6 +1550,12 @@
     }
     mentorRevisionIndex += 1;
     void loadMentorRevisionItem();
+  });
+
+  $("[data-grammar-confirm]")?.addEventListener("click", () => {
+    grammarSummary.checked = true;
+    window.StoriesLensAnalytics?.track("grammar_lab_checked", { language: locale, primaryGoal: grammarSummary.goals[0]?.category || "clear" });
+    showStoryPathStage();
   });
 
   $$('[name="story-output"]').forEach((input) => input.addEventListener("change", (event) => {

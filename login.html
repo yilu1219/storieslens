@@ -29,6 +29,7 @@
         <p>Sign in once to keep your stories and creation allowance together across devices.</p>
         <ul>
           <li>Private by default · 默认私密</li>
+          <li>One free first-scene illustration after registration · 注册即送一张首幕插图</li>
           <li>Your region is chosen by you · 地区由你选择</li>
           <li>No password to remember · 无需设置密码</li>
         </ul>
@@ -54,7 +55,7 @@
             <label class="country-field" data-country-field hidden>
               <span>Country or region · 具体国家或地区</span>
               <select data-country-code disabled required></select>
-              <small data-country-help>Only approved beta countries are available.</small>
+              <small data-country-help>Only countries with a configured private data route are available.</small>
             </label>
 
             <label class="email-field">
@@ -76,8 +77,9 @@
               <input data-display-name autocomplete="nickname" maxlength="40" placeholder="Creator" />
             </label>
             <label data-beta-invite hidden>
-              <span>Founding beta invitation code · 内测邀请码</span>
+              <span>Invitation reward code (optional) · 邀请奖励码（选填）</span>
               <input data-beta-invite-code autocomplete="one-time-code" maxlength="120" placeholder="STORIESLENS-…" />
+              <small>A valid code adds its creation allowance; no code is needed to register. · 有效代码可领取创作额度，无代码也能注册。</small>
             </label>
             <label class="adult-confirm"><input data-adult-confirm type="checkbox" required /><span>I am 18 or older and own this account.<small>我已满18岁，并由我本人持有此账户；孩子可在我的陪同下创作。</small></span></label>
             <button class="login-primary" type="submit">Open my story library <span>进入我的作品 →</span></button>
@@ -90,14 +92,14 @@
         <div class="login-success" data-login-success hidden>
           <span aria-hidden="true">✓</span>
           <h2>Welcome back.</h2>
-          <p data-success-copy>Your private library is ready.</p>
+          <p data-success-copy>Your private library and free first-scene illustration are ready.</p>
           <a class="login-primary" href="my-stories.html">Open My Stories <b>进入我的作品 →</b></a>
         </div>
       </section>
     </main>
 
     <script src="platform-client.js"></script>
-    <script src="login.js?v=20260915-2"></script>
+    <script src="login.js?v=20260921-1"></script>
     <script src="pwa.js"></script>
   </body>
 </html>

@@ -614,6 +614,10 @@ assert(indexHtml.includes('href="app.html"'), "Homepage family entrance should l
 assert(checkoutHtml.includes("Creator or guardian checkout"), "Checkout should support adult creators and guardian purchases for minors");
 assert(checkoutHtml.includes("No subscription"), "Checkout should clarify that Story Pass is not a subscription");
 assert(checkoutJs.includes('fetch("/api/checkout-link"'), "Checkout should request a server-created Stripe Checkout Session");
+assert(checkoutJs.includes("returnTo="), "Checkout should preserve its return path through sign-in");
+assert(read("login.js").includes('pageParams.get("returnTo")') && read("login.js").includes("checkout|payment-success"), "Email sign-in should return a verified purchaser to checkout");
+assert(read("login.html").includes("Invitation reward code (optional)"), "Registration should present invitation codes as optional rewards rather than a purchase gate");
+assert(read("login.html").includes("One free first-scene illustration after registration"), "Registration should clearly promise exactly one first-scene illustration");
 assert(read("payment-success.js").includes("/api/payments/checkout-status"), "The return page should verify server-side fulfillment instead of trusting its URL");
 assert(ycDemoHtml.includes("90-second founder demo"), "Founder demo should provide a timed pitch route");
 assert(ycDemoHtml.includes("fictional demonstration data"), "Founder demo should clearly disclose fictional demo data");

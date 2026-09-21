@@ -1834,9 +1834,11 @@
             `Skill focus: ${skill}`,
             `Mood: ${selectedMood}`,
             characterRules,
+            "If a user-approved photo or drawing is attached, use it as the primary visual anchor. Preserve the same face, skin tone, age, hairstyle, clothing colors, proportions, accessories, and character identity. Transform the reference into the selected art style; do not replace it with a generic person.",
+            "If the reference is the child’s own drawing, preserve its original shapes, colors, character design, and imaginative details.",
             "Visual style: warm cinematic storybook illustration, classroom-safe, expressive lighting, clear setting, no horror, no violence.",
             "Composition: one clear scene, strong focal point, suitable for a class book or class movie storyboard.",
-            "Do not include readable text, captions, logos, watermarks, UI elements, or speech bubbles."
+            "Return only clean finished artwork. Do not include readable text, captions, signatures, logos, watermarks, play triangles, play buttons, video controls, app frames, UI elements, badges, or speech bubbles."
           ].join("\n");
         }
 

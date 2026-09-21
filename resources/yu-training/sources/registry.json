@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-09-19",
+  "lastReviewed": "2026-09-21",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -177,6 +177,56 @@
       "url": null,
       "rights": "Unverified in the current repository.",
       "rejectionReason": "Keep only independently authored method summaries already in code; do not copy, redistribute, or add source text until rights and editions are verified."
+    },
+    {
+      "id": "cowles-storytelling-1914",
+      "status": "deferred",
+      "language": "en",
+      "title": "The Art of Story-Telling",
+      "authorOrInstitution": "Julia Darrow Cowles; rights record hosted by Project Gutenberg",
+      "published": "1914; Project Gutenberg eBook released 2021 and updated 2024",
+      "retrieved": "2026-09-20",
+      "url": "https://www.gutenberg.org/ebooks/66303",
+      "rights": "Project Gutenberg marks eBook 66303 public domain in the USA.",
+      "rejectionReason": "Rights are acceptable, but the historical child-directed moral framing and oral-storytelling guidance overlap current IES oral-to-written support. Deferred until a narrow, modern, non-prescriptive listening-and-retelling module is justified."
+    },
+    {
+      "id": "xianqing-ouji-drama-craft",
+      "status": "deferred",
+      "language": "zh",
+      "title": "《闲情偶寄·词曲部》：结构、宾白与格局",
+      "authorOrInstitution": "李渔（1611—1680）；核查版本为中文维基文库",
+      "published": "1671；网页版本持续维护",
+      "retrieved": "2026-09-20",
+      "url": "https://zh.wikisource.org/zh-hans/闲情偶寄/词曲部",
+      "rights": "Underlying work is public domain worldwide because the author died more than 100 years ago; Wikisource page text is available under CC BY-SA 4.0.",
+      "rejectionReason": "Potentially useful for Chinese drama structure and dialogue, but its historical prescriptions require a bounded modern transfer review. Deferred rather than adding overlapping or culturally dated rules to Yu."
+    },
+    {
+      "id": "ies-writing-toolkit-grades-2-4-2025",
+      "status": "deferred",
+      "language": "en",
+      "title": "Toolkit to Support Evidence-Based Writing Instruction in Grades 2 Through 4",
+      "authorOrInstitution": "Regional Educational Laboratory program, Institute of Education Sciences, U.S. Department of Education",
+      "published": "2025",
+      "retrieved": "2026-09-21",
+      "url": "https://ies.ed.gov/ncee/rel/writing-grades-2-4/intro",
+      "rights": "Officially published and freely accessible through IES; the reviewed page describes the toolkit as derived from the already adopted public-domain WWC elementary writing practice guide. No toolkit files or templates were copied into this repository.",
+      "credibility": "high; current U.S. federal implementation toolkit grounded in the adopted WWC evidence practice guide",
+      "rejectionReason": "Deferred because its writing-time, writing-process, gradual-release, choice, feedback, collaboration, and publishing practices substantially overlap the adopted IES modules. No new runtime module was justified by this review."
+    },
+    {
+      "id": "moe-cn-life-language-curriculum-2016",
+      "status": "quarantined",
+      "language": "zh",
+      "title": "《培智学校义务教育生活语文课程标准（2016年版）》",
+      "authorOrInstitution": "中华人民共和国教育部",
+      "published": "2016",
+      "retrieved": "2026-09-21",
+      "url": "https://www.moe.gov.cn/srcsite/A06/s3331/201612/W020161213303084709835.pdf",
+      "rights": "Official and publicly downloadable, but this review did not locate an explicit commercial reuse or AI-training permission for the curriculum-standard text.",
+      "credibility": "high for its intended special-education context; official Ministry of Education curriculum standard",
+      "rejectionReason": "Potentially relevant to accessible oral-to-written support and individualized participation, but it applies to a specific special-education context and lacks explicit reuse permission. No text, examples, or assessment language entered Yu's runtime knowledge base."
     }
   ]
 }

@@ -53,6 +53,22 @@ test("launch gate passes only when every required beta control is configured", (
   assert.deepStrictEqual(report.intlCountries, ["CA", "GB", "AU", "SG"]);
 });
 
+test("verified public registration does not require invitation hashes", () => {
+  const env = readyEnvironment();
+  env.REGISTRATION_INVITE_REQUIRED = "false";
+  env.BETA_INVITE_CODE_HASHES = "";
+  const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(report.required.some((item) => item.id === "registration-access" && item.ready));
+});
+
+test("a deliberately closed registration cohort still requires regional codes", () => {
+  const env = readyEnvironment();
+  env.REGISTRATION_INVITE_REQUIRED = "true";
+  env.BETA_INVITE_CODE_HASHES = "";
+  const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(report.required.some((item) => item.id === "registration-access" && !item.ready));
+});
+
 test("international launch cannot silently mean every country", () => {
   const env = readyEnvironment();
   env.ALLOWED_INTL_COUNTRY_CODES = "";

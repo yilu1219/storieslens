@@ -75,6 +75,13 @@
     text("[data-strength-note]", zh ? "这是对本次作品的具体观察，不是分数，也不会给创作者贴标签。" : "This is a specific observation about the project—not a score or a label for the creator.");
     text("[data-next-goal]", report.nextGoal);
     text("[data-next-note]", zh ? "下一次只专注一个写作动作，孩子更容易真正掌握并保留自己的声音。" : "Focusing on one writing move at a time helps the creator grow while keeping their own voice.");
+    const grammarCard = $("[data-grammar-growth]");
+    grammarCard.hidden = !report.grammarGrowth;
+    $(".growth-grid")?.classList.toggle("has-grammar", Boolean(report.grammarGrowth));
+    if (report.grammarGrowth) {
+      text("[data-grammar-goal]", report.grammarGrowth.title);
+      text("[data-grammar-note]", report.grammarGrowth.note);
+    }
     text("#reading-path-title", zh ? "一本书，一个清楚的下一步。" : "One book, one clear next step.");
     text("[data-reading-intro]", zh ? "所有书名都来自 StoriesLens 审核书库。羽大师根据这次作品进行匹配，不会用 AI 编造书名。" : "Every title comes from the StoriesLens reviewed catalog. Yu matches books to this project and never invents a title with AI.");
     text("[data-family-title]", zh ? "把阅读重新带回创作。" : "Turn reading back into creating.");

@@ -173,7 +173,7 @@
           <div class="mentor-review-progress"><span data-t="sentence-review">逐句修改</span><strong>第 <b data-revision-number>1</b> / <span data-revision-total>1</span> 句</strong></div>
           <article class="mentor-original-card"><small data-t="your-words">你的原句</small><p data-revision-original></p></article>
           <div class="mentor-thinking" data-revision-loading role="status"><i aria-hidden="true"></i><span data-t="yu-is-thinking">羽大师正在仔细读这一句……</span></div>
-          <div class="mentor-feedback" data-revision-feedback hidden><div><small data-t="one-strength">写得好的地方</small><p data-revision-strength></p></div><div><small data-t="one-focus">这次只改一件事</small><p data-revision-priority></p></div><div><small data-t="mini-lesson">一个写作小技巧</small><p data-revision-lesson></p></div></div>
+          <div class="mentor-feedback" data-revision-feedback hidden><div><small data-t="one-strength">写得好的地方</small><p data-revision-strength></p></div><div><small data-t="grammar-check">语法与句子</small><p data-revision-grammar></p></div><div><small data-t="writing-craft">写作表达</small><p data-revision-writing></p></div><div><small data-t="mini-lesson">一个写作小技巧</small><p data-revision-lesson></p></div></div>
           <label class="mentor-suggestion"><span data-t="yu-suggestion">羽大师的最小修改</span><textarea rows="3" maxlength="500" data-revision-suggestion></textarea></label>
           <p class="mentor-meaning-question" data-revision-question>这是你原来想表达的意思吗？</p>
           <div class="mentor-confirm-actions" data-revision-actions><button class="primary-action" type="button" data-revision-confirm><span data-t="yes-my-meaning">是，这就是我的意思</span><b aria-hidden="true">✓</b></button><button class="secondary-action" type="button" data-revision-edit data-t="change-my-words">不完全是，我自己改一改</button></div>
@@ -185,6 +185,18 @@
           <div><small>故事开篇 · 场景设定</small><strong>你的第一段正在一句句长出来。</strong></div>
           <p data-setting-preview>你确认的句子会依次出现在这里。</p>
         </aside>
+      </section>
+
+      <section class="flow-stage grammar-lab-stage" data-stage="grammar-lab" aria-labelledby="grammar-lab-title" hidden>
+        <div class="grammar-lab-intro">
+          <p class="flow-kicker" data-t="grammar-lab-kicker">你的语法小课堂</p>
+          <h1 id="grammar-lab-title" data-t="grammar-lab-title">从自己的故事里，真正学会一个语言目标。</h1>
+          <p data-t="grammar-lab-intro">羽大师整理了刚才逐句修改中反复出现的特点。现在只练最有用的一项；这不是分数，也不给孩子贴标签。</p>
+        </div>
+        <div class="grammar-goals" data-grammar-goals></div>
+        <article class="grammar-example-card"><small data-t="grammar-example">你刚刚改好的一句话</small><p data-grammar-example></p></article>
+        <p class="grammar-practice" data-t="grammar-practice">再读一遍这句话，检查今天的语法目标；写下一页时，也试着使用同一个方法。</p>
+        <button class="primary-action grammar-confirm" type="button" data-grammar-confirm><span data-t="grammar-checked">我检查过了，继续创作</span><b aria-hidden="true">→</b></button>
       </section>
 
       <section class="flow-stage story-path-stage chinese-story-path" data-stage="story-path" aria-labelledby="story-path-title" hidden>
@@ -277,6 +289,7 @@
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>
     <script src="mentor-revision.js?v=20260915-1"></script>
-    <script src="h5-app.js?v=20260918-yu-voice-1"></script>
+    <script src="natural-voice.js?v=20260921-1"></script>
+    <script src="h5-app.js?v=20260921-natural-voice-1"></script>
   </body>
 </html>
