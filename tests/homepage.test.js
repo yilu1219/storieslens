@@ -398,6 +398,8 @@ assert(sparkHandoffJs.includes("24 * 60 * 60 * 1000"), "A homepage creative spar
 assert(h5AppJs.includes("StoriesLensSparkHandoff.load()"), "Both language studios should restore the same homepage creative spark");
 assert(h5AppJs.includes("Your image is already here"), "The destination studio should visibly confirm that the homepage image arrived");
 assert(h5AppJs.includes('spark.storyLanguage'), "Story flow should restore the writing language selected on the homepage");
+assert(h5AppJs.includes("What problem are they facing right now?"), "English question two should use child-friendly language");
+assert(h5AppJs.includes("他现在遇到了什么困难或麻烦？"), "Chinese question two should use child-friendly language");
 assert(startHtml.includes('data-carried-spark') && startJs.includes("restoreHomepageSpark"), "Solo-or-group setup should visibly restore the homepage photo instead of asking for it again");
 assert(startJs.includes('sessionStorage.setItem("storieslens_imported_work"') && startJs.includes('origin = "picture"'), "The carried homepage photo should become the selected starting picture for either creation mode");
 assert(startJs.includes('const language = "en"') && startJs.includes("speakAsYu(button.dataset.readEn, button)"), "The shared solo-or-group route should keep Yu's interface narration in English even when the destination story language is Chinese");

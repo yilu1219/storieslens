@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v87-yu-owl-20260921";
+const VERSION = "storieslens-pwa-v88-question-flow-20260921";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -24,7 +24,7 @@ const APP_SHELL = [
   "/portal-home.js?v=20260916-43",
   "/family-flow.css?v=20260916-6",
   "/chinese-studio.css?v=20260916-5",
-  "/h5-app.js?v=20260920-personal-photo-2",
+  "/h5-app.js?v=20260921-question-flow-1",
   "/spark-handoff.js?v=20260917-story-reference-1",
   "/writing-import.js?v=20260916-2",
   "/yu-profile.css?v=20260921-owl-orbit-1",

@@ -183,7 +183,7 @@
       "saved-device": "Saved on this device. Sign in later to sync it.",
       questions: [
         "Who is in this story, and what do they want?",
-        "What stands in their way?",
+        "What problem are they facing right now?",
         "What happens in the very first moment?"
       ]
     },
@@ -329,7 +329,7 @@
       "saved-device": "已保存在本设备，之后登录可以同步。",
       questions: [
         "这个故事里有谁？他最想得到什么？",
-        "什么事情挡住了他？",
+        "他现在遇到了什么困难或麻烦？",
         "故事发生的第一个瞬间是什么？"
       ]
     }
@@ -752,7 +752,7 @@
     stopQuestionSpeech();
     $("[data-question-number]").textContent = String(questionIndex + 1);
     const chineseQuestions = {
-      "ink-story": ["画面中最重要的人是谁？他此刻最想做什么？", "什么阻碍正在逼他作出选择？", "请写下故事真正发生变化的第一个瞬间。"],
+      "ink-story": ["画面中最重要的人是谁？他此刻最想做什么？", "他现在遇到了什么困难或麻烦？", "请写下故事真正发生变化的第一个瞬间。"],
       comic: ["如果这是连环画第一格，我们最先看见谁在做什么？", "第二格出现了什么意外或阻碍？", "下一格里，人物会作出什么行动？"],
       picturebook: ["翻开第一页，读者最先看见谁和什么地方？", "这个人物心里藏着怎样的愿望？", "第一页结束前，发生了哪件让人想继续翻页的事？"],
       film: ["电影的第一个镜头里，观众看见什么？", "这个场景里最重要的动作或声音是什么？", "镜头结束时，什么已经和开始时不同？"]
