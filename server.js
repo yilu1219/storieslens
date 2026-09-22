@@ -1382,6 +1382,9 @@ async function handleWritingAssistant(request, response) {
       skill: limit(change?.skill, 80),
       explanation: limit(change?.explanation, 180)
     })).filter((change) => change.before && change.after && change.skill && change.explanation) : [];
+    const originalLockedSuggestion = action === "check" && (grammarCategory === "clear" || grammarChanges.length === 0)
+      ? limit(selectedText || draft, 240)
+      : limit(result.suggestion, 240);
     const safeResult = {
       reply: limit(result.reply, 420),
       strength: limit(result.strength, 240),
@@ -1393,7 +1396,7 @@ async function handleWritingAssistant(request, response) {
       microLesson: limit(result.microLesson, 280),
       question: limit(result.question, 180),
       task: limit(result.task, 180),
-      suggestion: action === "begin" ? "" : limit(result.suggestion, 240),
+      suggestion: action === "begin" ? "" : originalLockedSuggestion,
       readyForVisual: result.readyForVisual === true,
       visualBrief: limit(result.visualBrief, 500),
       authorshipCheck: result.authorshipCheck === "pass" ? "pass" : "review",

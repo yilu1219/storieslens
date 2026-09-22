@@ -13,6 +13,8 @@ test("live Yu prompt locks the original story and requires teachable grammar cha
   assert.match(source, /If the meaning is ambiguous, keep suggestion identical to the original/);
   assert.match(source, /creatorSafetyText/);
   assert.match(source, /coachSafetyText/);
+  assert.match(source, /originalLockedSuggestion/);
+  assert.match(source, /grammarCategory === "clear" \|\| grammarChanges\.length === 0/);
   assert.doesNotMatch(source, /enforceTextSafety\(userPrompt\)/);
 });
 
