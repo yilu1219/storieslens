@@ -141,7 +141,7 @@ async function callOpenRouterSafety(input, { image = false } = {}) {
         "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_SAFETY_MODEL || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+        model: process.env.OPENROUTER_SAFETY_MODEL || "openai/gpt-4o-mini",
         temperature: 0,
         max_tokens: 40,
         response_format: { type: "json_object" },

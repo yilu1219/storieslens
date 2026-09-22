@@ -64,6 +64,7 @@ test("uses the configured OpenRouter vision model when OpenAI moderation is unav
   global.fetch = async (url, options) => {
     assert.match(String(url), /openrouter\.ai\/api\/v1\/chat\/completions$/);
     assert.match(String(options.headers.Authorization), /^Bearer test-key$/);
+    assert.strictEqual(JSON.parse(options.body).model, process.env.OPENROUTER_SAFETY_MODEL || "openai/gpt-4o-mini");
     return { ok: true, json: async () => ({ choices: [{ message: { content: '{"safe":true}' } }] }) };
   };
   const result = await checkImageSafety("data:image/webp;base64,AAAA", { requireExternal: true });
