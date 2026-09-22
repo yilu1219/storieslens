@@ -398,7 +398,7 @@
         document.querySelector("[data-action-row]").innerHTML = workspace.actions
           .map((action, index) => {
             const className = index === 0 ? "primary-button" : "secondary-button";
-            const href = type === "individual-writing" && index === 0 ? "visual-write.html?mode=free" : "#";
+            const href = type === "individual-writing" && index === 0 ? "solo-story?mode=solo" : "#";
             return `<a class="${className}" href="${href}">${action}</a>`;
           })
           .join("");

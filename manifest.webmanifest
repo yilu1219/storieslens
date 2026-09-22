@@ -2,8 +2,8 @@
   "name": "StoriesLens · 语镜故事",
   "short_name": "StoriesLens",
   "description": "Turn artwork, words and voice into stories, books and films with a thoughtful AI mentor.",
-  "id": "/app.html",
-  "start_url": "/app.html?source=pwa",
+  "id": "/solo-story",
+  "start_url": "/solo-story?mode=solo&source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -19,7 +19,7 @@
     { "src": "/assets/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Start a story", "short_name": "Create", "description": "Begin with artwork, words or voice", "url": "/app.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
+    { "name": "Start a story", "short_name": "Create", "description": "Begin with artwork, words or voice", "url": "/solo-story?mode=solo&source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
     { "name": "My stories", "short_name": "Library", "description": "Return to private drafts and finished work", "url": "/my-stories.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
     { "name": "Teacher Studio", "short_name": "Class", "description": "Open the teacher publishing workspace", "url": "/teacher-dashboard.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] }
   ]

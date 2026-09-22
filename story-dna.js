@@ -90,7 +90,7 @@
     document.querySelector("[data-result-shift]").textContent = t(shiftNames[shift]);
     const base = { source, inspiration, storyLang: storyLanguage, dna: dnaSeed };
     document.querySelector("[data-result-solo]").href = fromH5
-      ? `visual-write.html?${new URLSearchParams({ mode: "free", from: "h5", storyLang: storyLanguage })}`
+      ? `solo-story?${new URLSearchParams({ mode: "solo", from: "h5", storyLang: storyLanguage })}`
       : `start.html?${new URLSearchParams({ ...base, mode: "solo" })}`;
     if (fromH5) document.querySelector("[data-result-solo]").textContent = t("Continue writing →");
     document.querySelector("[data-result-squad]").href = `start.html?${new URLSearchParams({ ...base, mode: "squad" })}`;

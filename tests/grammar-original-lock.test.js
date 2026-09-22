@@ -31,7 +31,7 @@ test("seven-year-old preview preserves the ancient Egypt story instead of substi
   assert.doesNotMatch(source.match(/function buildRevision[\s\S]*?function finishRevision/)?.[0] || "", /tiny dragon|giant library|secret map/i);
 });
 
-test("the character question supports words, a private upload, and a free visual preview", () => {
+test("the character question supports words, a private upload, and a real credit-backed visual preview", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.html"), "utf8");
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(html, /data-character-maker/);
@@ -48,8 +48,8 @@ test("the character question supports words, a private upload, and a free visual
   assert.match(html, /What they want/);
   assert.match(script, /data-character-clue/);
   assert.match(script, /data-character-describe/);
-  assert.match(script, /FREE CHARACTER PREVIEW/);
-  assert.match(html, /One main-character preview is included/);
+  assert.match(script, /\/api\/generate-image/);
+  assert.match(html, /Making a character picture uses 1 picture credit/);
   assert.match(script, /Try another · 1 credit/);
   assert.match(script, /state\.characterImageUrl/);
 });

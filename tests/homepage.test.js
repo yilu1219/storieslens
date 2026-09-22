@@ -345,7 +345,7 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "CREATE YOUR WAY",
   'data-home-t="solo-label"',
   "Build a story world that is entirely yours.",
-  "href=\"app.html\"",
+  "href=\"solo-story?mode=solo&amp;storyLang=en\"",
   'data-home-t="group-label"',
   "Create with family or friends you invite.",
   "Invite 2–6 people by private link or Story Code. Every contribution keeps its author’s name.",
@@ -409,7 +409,7 @@ assert(h5AppJs.includes("他现在遇到了什么困难或麻烦？"), "Chinese 
 assert(startHtml.includes('data-carried-spark') && startJs.includes("restoreHomepageSpark"), "Solo-or-group setup should visibly restore the homepage photo instead of asking for it again");
 assert(startJs.includes('sessionStorage.setItem("storieslens_imported_work"') && startJs.includes('origin = "picture"'), "The carried homepage photo should become the selected starting picture for either creation mode");
 assert(startJs.includes('const language = "en"') && startJs.includes("speakAsYu(button.dataset.readEn, button)"), "The shared solo-or-group route should keep Yu's interface narration in English even when the destination story language is Chinese");
-assert(startJs.includes('chinese-studio.html?from=homepage-magic') && startJs.includes('app.html?locale=en&from=homepage-magic'), "A solo creator should continue with the same photo into the matching language studio");
+assert(startJs.includes('solo-story?mode=solo&from=homepage-magic'), "A solo creator should continue with the same photo into the canonical new Story Studio");
 assert(read("squad-board.js").includes("StoriesLensSparkHandoff.load()"), "A Story Squad should recover a large homepage photo from IndexedDB when session storage is too small");
 assert.match(
   portalHomeJs,
@@ -639,7 +639,7 @@ assert(founderLabHtml.includes("Local validation only"), "Founder dashboard shou
 assert(founderLabHtml.includes("Three experiments before building more"), "Founder dashboard should prioritize evidence-building experiments");
 assert(betaInterestHtml.includes("it does not create an account or charge money"), "Pricing test should clearly disclose that it is not a live checkout");
 assert(betaInterestHtml.includes("pricing_intent_recorded"), "Pricing test should record an explicit, non-revenue intent event");
-assert(indexHtml.includes('href="app.html"'), "Homepage family entrance should lead directly to the mobile creation flow");
+assert(indexHtml.includes('href="solo-story?mode=solo&amp;storyLang=en"'), "Homepage family entrance should lead directly to the canonical new Solo flow");
 assert(checkoutHtml.includes("Creator or guardian checkout"), "Checkout should support adult creators and guardian purchases for minors");
 assert(checkoutHtml.includes("No subscription"), "Checkout should clarify that Story Pass is not a subscription");
 assert(checkoutJs.includes('fetch("/api/checkout-link"'), "Checkout should request a server-created Stripe Checkout Session");

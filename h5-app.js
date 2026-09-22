@@ -1303,7 +1303,7 @@
     const profile = collectChineseCreativeProfile();
     const continueParams = { mode: "free", from: "h5", storyLang: $("[data-language]").value, output: selectedOutputFormat || "book" };
     if (profile?.comicTemplate) continueParams.comicTemplate = profile.comicTemplate;
-    $("[data-continue]").href = `visual-write.html?${new URLSearchParams(continueParams)}`;
+    $("[data-continue]").href = `solo-story?${new URLSearchParams(continueParams)}`;
     const formatNote = $("[data-result-format-note]");
     if (formatNote) {
       const template = comicTemplates[profile?.comicTemplate];

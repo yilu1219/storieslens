@@ -108,6 +108,8 @@ function resolveRequestPath(urlPathname) {
 const pageAliases = Object.freeze({
   "/app": "/app.html",
   "/create": "/app.html",
+  "/solo-story": "/solo-delight-preview.html",
+  "/solo-story.html": "/solo-delight-preview.html",
   "/stories": "/my-stories.html",
   "/admin-allowances": "/admin-credits.html",
   "/studio": "/movie-studio.html",

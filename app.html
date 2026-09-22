@@ -3,6 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      (function () {
+        const params = new URLSearchParams(location.search);
+        if (params.get("legacy") !== "1") {
+          params.delete("legacy");
+          params.set("mode", "solo");
+          location.replace(`solo-story?${params.toString()}`);
+        }
+      }());
+    </script>
     <meta name="theme-color" content="#f5efe4" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -281,7 +291,7 @@
           <aside class="result-actions">
             <div class="authorship-card"><span aria-hidden="true">✓</span><div><strong data-t="creator-authored">Creator authored</strong><p data-t="creator-authored-copy">Yu asked the questions. The page uses the creator’s own answers and remains editable.</p></div></div>
             <p class="save-status" data-save-status aria-live="polite"></p>
-            <a class="primary-action" href="visual-write.html?mode=free&amp;from=h5" data-continue><span data-t="continue-writing">Continue writing</span><b aria-hidden="true">→</b></a>
+            <a class="primary-action" href="solo-story?from=h5" data-continue><span data-t="continue-writing">Continue writing</span><b aria-hidden="true">→</b></a>
             <a class="secondary-action" href="checkout.html?offer=story-pass" data-checkout><span data-t="keep-story">Finish the full story · $19</span><b aria-hidden="true">→</b></a>
             <button class="text-action" type="button" data-start-over data-t="start-over">Start another story</button>
           </aside>

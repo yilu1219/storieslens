@@ -57,7 +57,12 @@
     revisedScene: '',
     revisionReason: '',
     storyTitle: '',
-    resultImage: 'assets/original-garden-door-hd-v2.png'
+    resultImage: 'assets/original-garden-door-hd-v2.png',
+    session: null,
+    wallet: null,
+    imageCredits: 0,
+    readingConfirmed: false,
+    pictureConsentPanel: null
   };
   let pendingHeicFiles = [];
 
@@ -154,6 +159,180 @@
     return result;
   }
 
+  function walletImageCredits(wallet) {
+    return Math.max(0, Number(wallet?.resources?.imageGenerations?.remaining) || 0);
+  }
+
+  async function refreshAccountState() {
+    try {
+      state.session = await apiJson('/api/auth/session');
+      if (!state.session.authenticated || state.session.user?.kind !== 'account') {
+        state.wallet = null;
+        state.imageCredits = 0;
+        giftCount.textContent = '0';
+        return state.session;
+      }
+      const credits = await apiJson('/api/credits');
+      state.wallet = credits.wallet;
+      state.imageCredits = walletImageCredits(credits.wallet);
+      giftCount.textContent = String(state.imageCredits);
+      return state.session;
+    } catch (_error) {
+      state.session = null;
+      state.wallet = null;
+      state.imageCredits = 0;
+      giftCount.textContent = '0';
+      return null;
+    }
+  }
+
+  async function requireAccount() {
+    const session = state.session?.authenticated ? state.session : await refreshAccountState();
+    if (!session?.authenticated || session.user?.kind !== 'account') {
+      const error = new Error('Sign in first to save this story and use your free picture.');
+      error.code = 'AUTH_REQUIRED';
+      throw error;
+    }
+    return session.user;
+  }
+
+  function projectPayload(extraSnapshot) {
+    const params = new URLSearchParams(location.search);
+    const language = ['zh', 'bilingual'].includes(params.get('storyLang')) ? params.get('storyLang') : 'en';
+    return {
+      title: state.storyTitle || state.answers[0]?.slice(0, 80) || 'My StoriesLens story',
+      language,
+      ageGroup: 'under18',
+      mode: 'solo',
+      visibility: 'private',
+      sourceType: state.userUploadedReference ? 'personal-photo' : 'text',
+      sourceText: state.answers[0] || '',
+      draft: state.revisedScene || state.originalScene || state.answers.join(' '),
+      coverImageUrl: /^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : '',
+      scenes: state.revisedScene ? [{
+        id: 'scene-1',
+        title: 'First scene',
+        text: state.revisedScene,
+        caption: state.revisedScene.slice(0, 500),
+        imageUrl: /^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : '',
+        duration: 6,
+        transition: 'fade'
+      }] : [],
+      storyDna: { source: 'solo-story', answers: state.answers.slice(0, 4), outputType: state.outputType, selectedStyle: state.selectedStyle },
+      clientSnapshot: {
+        from: 'solo-story',
+        mentorRevisionCompleted: Boolean(state.revisedScene),
+        readingConfirmed: state.readingConfirmed,
+        stars: state.stars,
+        outputType: state.outputType,
+        selectedStyle: state.selectedStyle,
+        ...(extraSnapshot || {})
+      }
+    };
+  }
+
+  async function saveProject(extraSnapshot) {
+    await requireAccount();
+    let result;
+    try {
+      const creationKey = localStorage.getItem('storieslens_solo_project_creation_key') || ('solo-project-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+      localStorage.setItem('storieslens_solo_project_creation_key', creationKey);
+      result = await apiJson(state.projectId ? '/api/projects/' + encodeURIComponent(state.projectId) : '/api/projects', {
+        method: state.projectId ? 'PATCH' : 'POST',
+        headers: state.projectId ? {} : { 'Idempotency-Key': creationKey },
+        body: JSON.stringify(projectPayload(extraSnapshot))
+      });
+    } catch (error) {
+      if (!state.projectId || error.status !== 404) throw error;
+      state.projectId = '';
+      localStorage.removeItem('storieslens_cloud_project_id');
+      localStorage.removeItem('storieslens_solo_story_project_id');
+      return saveProject(extraSnapshot);
+    }
+    state.projectId = result.project.id;
+    try {
+      localStorage.setItem('storieslens_solo_story_project_id', state.projectId);
+      localStorage.setItem('storieslens_cloud_project_id', state.projectId);
+    } catch (_error) { /* no-op */ }
+    return result.project;
+  }
+
+  async function restoreIncomingCreation() {
+    const params = new URLSearchParams(location.search);
+    try {
+      const shouldResume = params.has('project') || params.get('from') === 'h5' || params.get('resume') === '1';
+      state.projectId = params.get('project') || (shouldResume ? (localStorage.getItem('storieslens_cloud_project_id') || localStorage.getItem('storieslens_solo_story_project_id') || '') : '');
+      if (!shouldResume) localStorage.removeItem('storieslens_solo_project_creation_key');
+      const setup = JSON.parse(localStorage.getItem('storieslens_creator_setup') || 'null');
+      const draft = JSON.parse(localStorage.getItem('storieslens_student_visual_write') || 'null');
+      const dna = JSON.parse(localStorage.getItem('storieslens_story_dna') || 'null');
+      state.name = setup?.displayName || draft?.creatorName || localStorage.getItem('storieslens-preview-creator-name') || '';
+      if (draft?.outputFormat === 'film' || setup?.outputFormat === 'film') state.outputType = 'film';
+      const incomingWords = String(draft?.draft || dna?.seed || setup?.seed || '').trim();
+      if (incomingWords) input.value = incomingWords.slice(0, Number(input.maxLength) || 7000);
+    } catch (_error) {
+      state.projectId = '';
+      state.name = '';
+    }
+
+    try {
+      const spark = window.StoriesLensSparkHandoff ? await window.StoriesLensSparkHandoff.load() : null;
+      if (!spark) return;
+      if (spark.seed && !input.value.trim()) input.value = String(spark.seed).slice(0, Number(input.maxLength) || 7000);
+      if (spark.creatorName && !state.name) state.name = String(spark.creatorName).slice(0, 40);
+      if (spark.dataUrl && /^data:image\/(?:webp|png|jpeg);base64,/.test(spark.dataUrl)) {
+        state.referenceImages = [{
+          dataUrl: spark.dataUrl,
+          name: String(spark.name || 'story-reference.webp').slice(0, 180),
+          containsRealPerson: spark.personalPhoto === true,
+          convertedFromHeic: spark.convertedFromHeic === true,
+          convertedOnServer: spark.convertedOnServer === true
+        }];
+        state.imageUrl = spark.dataUrl;
+        state.resultImage = spark.dataUrl;
+        state.userUploadedReference = true;
+        state.uploadContainsRealPerson = spark.personalPhoto === true;
+        state.uploadConvertedFromHeic = spark.convertedFromHeic === true;
+        uploadEntry.querySelector('strong').textContent = 'Your uploaded picture is ready';
+        uploadEntry.querySelector('small').textContent = 'Carried safely into the new Story Studio—no second upload needed.';
+      }
+    } catch (_error) { /* The child can still begin directly in the new studio. */ }
+  }
+
+  async function requestYuRevision(original) {
+    const result = await apiJson('/api/writing-assistant', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'check',
+        mode: 'free',
+        storyLanguage: 'en',
+        grade: '3',
+        creatorLevel: 'expression',
+        skillFocus: 'narrative writing and grammar',
+        inspiration: state.answers[0] || '',
+        storyDnaContext: state.answers.map(function (answer, index) { return (index + 1) + '. ' + answer; }).join('\n'),
+        selectedText: original,
+        studentDraft: original
+      })
+    });
+    const assistant = result.result || {};
+    const changes = Array.isArray(assistant.grammarChanges) ? assistant.grammarChanges : [];
+    const revised = String(assistant.suggestion || original).trim() || original;
+    const firstChange = changes[0];
+    return {
+      text: revised,
+      reason: assistant.grammarNote || assistant.reply || 'Yu kept every story fact and checked only the grammar.',
+      changes,
+      lesson: {
+        title: firstChange?.skill || (assistant.grammarCategory === 'clear' ? 'Your sentence is already clear' : 'One useful grammar check'),
+        explanation: firstChange?.explanation || assistant.microLesson || assistant.writingNote || 'Read the sentence aloud and check that it begins clearly and ends with punctuation.',
+        example: firstChange ? firstChange.before + ' → ' + firstChange.after : revised
+      },
+      title: revised.split(/[.!?。！？\n]/)[0].trim().slice(0, 56) || 'My Story',
+      image: state.characterImageUrl || state.imageUrl || 'assets/original-garden-door-hd-v2.png'
+    };
+  }
+
   function selectedStylePrompt() {
     const styles = {
       'Storybook watercolor': 'premium luminous watercolor storybook illustration',
@@ -182,29 +361,7 @@
 
   async function ensurePersonalPhotoConsent(consentPanel) {
     if (state.personalPhotoConsentId && state.projectId) return state.personalPhotoConsentId;
-    const session = await apiJson('/api/auth/session');
-    if (!session.authenticated || session.user?.kind !== 'account') {
-      throw new Error('Please sign in with an adult-owned account before sending a real-person photo to Yu.');
-    }
-    if (!state.projectId) {
-      const projectResult = await apiJson('/api/projects', {
-        method: 'POST',
-        body: JSON.stringify({
-          title: state.storyTitle || 'My first StoriesLens scene',
-          language: 'en',
-          ageGroup: 'under18',
-          mode: 'solo',
-          visibility: 'private',
-          sourceType: 'personal-photo',
-          sourceText: state.originalScene,
-          draft: state.revisedScene,
-          storyDna: { source: 'solo-delight', createdAt: new Date().toISOString() },
-          scenes: [],
-          clientSnapshot: { from: 'solo-delight', personalPhotoDraft: true }
-        })
-      });
-      state.projectId = projectResult.project.id;
-    }
+    await saveProject({ personalPhotoDraft: true });
     const adultName = consentPanel.querySelector('[data-photo-adult-name]').value.trim();
     const relationship = consentPanel.querySelector('[data-photo-relationship]').value;
     const consentResult = await apiJson('/api/projects/' + encodeURIComponent(state.projectId) + '/photo-consent', {
@@ -223,6 +380,7 @@
   }
 
   async function generateStoryPicture(consentPanel) {
+    await saveProject({ pictureGenerationRequested: true });
     const referenceImages = uploadedReferenceUrls().slice(0, 3);
     const needsPersonalPhotoConsent = referenceImages.length > 0 && (state.selectedStyle === 'Real-life story' || state.uploadContainsRealPerson);
     const consentId = needsPersonalPhotoConsent ? await ensurePersonalPhotoConsent(consentPanel) : '';
@@ -252,6 +410,10 @@
     });
     if (!result.imageUrl) throw new Error('Yu finished drawing, but the new picture did not arrive. Please try again.');
     state.resultImage = result.imageUrl;
+    state.wallet = result.wallet || state.wallet;
+    state.imageCredits = walletImageCredits(state.wallet);
+    giftCount.textContent = String(state.imageCredits);
+    await saveProject({ pictureGenerated: true });
     return result.imageUrl;
   }
 
@@ -374,7 +536,10 @@
 
   function showGreeting() {
     setJourney('idea');
-    yuMessage('<small>YU · YOUR STORY MENTOR</small><h1>Hi! What shall we imagine today?</h1><p>Upload a drawing, photo, or portrait—or tell me one idea. I’ll help with the next step.</p><p class="tiny-note">You make every story choice. I help you find the words.</p>', 'yu-greeting');
+    const accountNote = state.session?.authenticated && state.session.user?.kind === 'account'
+      ? '<p class="tiny-note">✓ Signed in · your private story and picture balance will save automatically.</p>'
+      : '<p class="tiny-note"><a href="login.html?returnTo=%2Fsolo-story">Sign in first</a> to save this story and use your free first picture.</p>';
+    yuMessage('<small>YU · YOUR STORY MENTOR</small><h1>Hi! What shall we imagine today?</h1><p>Upload a drawing, photo, or portrait—or tell me one idea. I’ll help with the next step.</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
     state.currentPrompt = 'Hi! Upload a drawing, photo, or portrait—or tell me one tiny idea. Just three words can be enough.';
     state.voiceMood = 'theatrical';
   }
@@ -434,11 +599,19 @@
     }
   }
 
-  function showRevision() {
+  async function showRevision() {
     setJourney('polish');
     composer.hidden = true;
     const original = state.answers.slice(0,4).join(' ');
-    const revision = buildRevision(original);
+    const checking = yuMessage('<small>YU IS LISTENING</small><h2>I am checking only the grammar—not changing your story.</h2><p>Your characters, places, problem, and ideas stay locked.</p>');
+    let revision;
+    try {
+      revision = await requestYuRevision(original);
+    } catch (error) {
+      revision = buildRevision(original);
+      showToast('Yu used the safe on-device grammar check this time: ' + error.message);
+    }
+    checking.remove();
     const revised = revision.text;
     const lesson = revision.lesson;
     const changeCount = revision.changes.length;
@@ -533,12 +706,28 @@
     };
   }
 
-  function finishRevision(revised) {
+  async function finishRevision(revised) {
+    state.readingConfirmed = true;
     setLearning('revision', revised, creatorLabel() + ' compared the original wording with a clearer version and confirmed the meaning.');
     reward('Story editor', 'You checked that the clearer sentence still means what you wanted.', 3);
-    giftCount.textContent = String(Number(giftCount.textContent || 0) + 1);
+    try {
+      await saveProject({ mentorRevisionCompleted: true, readingConfirmed: true });
+      const gift = await apiJson('/api/credits/unlock-learning-gift', {
+        method: 'POST',
+        body: JSON.stringify({ projectId: state.projectId })
+      });
+      state.wallet = gift.wallet || state.wallet;
+      state.imageCredits = walletImageCredits(state.wallet);
+      giftCount.textContent = String(state.imageCredits);
+    } catch (error) {
+      if (error.code === 'AUTH_REQUIRED' || error.status === 401) {
+        showToast('Your scene is ready. Sign in before making the free picture so it can be saved.');
+      } else {
+        showToast('Your scene is kept on this device. Cloud save will retry before drawing.');
+      }
+    }
     celebrate();
-    showToast('Surprise! Your careful revision unlocked picture #2.');
+    showToast('Surprise! Your careful revision is complete. Your picture balance is now ' + state.imageCredits + '.');
     setTimeout(showStyles, 900);
   }
 
@@ -629,6 +818,7 @@
   }
 
   async function showDrawing(consentPanel) {
+    state.pictureConsentPanel = consentPanel || state.pictureConsentPanel;
     const hasReference = uploadedReferenceUrls().length > 0;
     const realLifeMode = state.selectedStyle === 'Real-life story';
     const referenceNotice = realLifeMode
@@ -653,7 +843,7 @@
       }
     }, 900);
     try {
-      await generateStoryPicture(consentPanel);
+      await generateStoryPicture(state.pictureConsentPanel);
       clearInterval(progressTimer);
       progress.style.width = '100%';
       title.textContent = 'Your picture is ready!';
@@ -664,7 +854,10 @@
       const message = error.code === 'PERSONAL_PHOTO_CONSENT_REQUIRED'
         ? 'A grown-up needs to confirm the private photo permission again.'
         : error.message;
-      yuMessage('<small>YU KEPT YOUR WORK SAFE</small><h2>The new picture was not charged.</h2><p>' + escapeHtml(message) + '</p><button class="why-button" type="button" data-picture-retry>← Return to picture choices</button>');
+      const signIn = error.code === 'AUTH_REQUIRED' || error.status === 401
+        ? '<a class="why-button" href="login.html?returnTo=%2Fsolo-story">Sign in to save &amp; create</a>'
+        : '';
+      yuMessage('<small>YU KEPT YOUR WORK SAFE</small><h2>The new picture was not charged.</h2><p>' + escapeHtml(message) + '</p>' + signIn + '<button class="why-button" type="button" data-picture-retry>← Return to picture choices</button>');
       showToast(message);
       thread.lastElementChild.querySelector('[data-picture-retry]').addEventListener('click', showStyles);
     }
@@ -688,16 +881,31 @@
     window.requestAnimationFrame(function () { result.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'your first story page is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
     result.querySelectorAll('[data-result]').forEach(function (button) {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', async function () {
         if (button.dataset.result === 'keep') {
-          showToast('Saved! Chapter 1 is ready for the next adventure.');
-          reportButton.disabled = false;
-          reportButton.textContent = 'Open ' + (state.name ? state.name + '’s' : 'the creator’s') + ' full learning report';
-          setTimeout(showAuthorCard, 420);
+          button.disabled = true;
+          button.textContent = 'Saving…';
+          try {
+            await saveProject({ completedFirstScene: true, acceptedPicture: true });
+            showToast('Saved! Chapter 1 is ready for the next adventure.');
+            reportButton.disabled = false;
+            reportButton.textContent = 'Open ' + (state.name ? state.name + '’s' : 'the creator’s') + ' full learning report';
+            button.textContent = '✓ Saved';
+            setTimeout(showAuthorCard, 420);
+          } catch (error) {
+            button.disabled = false;
+            button.textContent = 'I love it';
+            showToast(error.message);
+          }
         } else if (button.dataset.result === 'change') {
           startPictureChange();
         } else {
-          showToast('Preview only: a real retry would confirm the gift before drawing.');
+          if (state.imageCredits < 1) {
+            showToast('No picture gifts left. Your current picture is still saved.');
+            return;
+          }
+          state.pictureChangeRequest = '';
+          showDrawing(state.pictureConsentPanel);
         }
       });
     });
@@ -729,7 +937,6 @@
         showToast('No picture gifts left. Your current picture is still saved.');
         return;
       }
-      giftCount.textContent = String(gifts - 1);
       state.pictureChangeRequest = request;
       showToast('Yu is changing only the part you named.');
       setTimeout(showDrawing, 350);
@@ -798,37 +1005,48 @@
     showToast('A grown-up must review before anything becomes public.');
   }
 
-  function characterPreviewAsset(words) {
-    const lower = String(words || '').toLowerCase();
-    if (lower.includes('egypt') || lower.includes('time')) return 'assets/outcome-film-hd-v2.png';
-    if (lower.includes('fox') || lower.includes('wing')) return 'assets/portal-solo-watercolor-v4.jpg';
-    const choices = ['assets/original-garden-door-hd-v2.png', 'assets/outcome-comic-hd-v2.png', 'assets/portal-solo-watercolor-v4.jpg'];
-    const selected = choices[state.characterPreviewIndex % choices.length];
-    state.characterPreviewIndex += 1;
-    return selected;
-  }
-
-  function showCharacterPreview(chargeRetry) {
+  async function showCharacterPreview() {
     const words = input.value.trim();
     if (!words) {
       showToast('First tell Yu who the character is—even three words are enough.');
       input.focus();
       return;
     }
-    if (chargeRetry === true) {
-      const remaining = Number(giftCount.textContent || 0);
-      if (remaining < 1) {
-        showToast('No picture gifts left. You can keep the current look or upload your own picture.');
-        return;
-      }
-      giftCount.textContent = String(remaining - 1);
+    if (state.imageCredits < 1) {
+      showToast('No picture gifts left. You can describe the character or upload your own picture.');
+      return;
     }
     characterGenerate.classList.add('is-making');
+    characterGenerate.disabled = true;
     characterGenerate.innerHTML = '<span aria-hidden="true">✦</span> Sketching your character…';
-    setTimeout(function () {
-      const previewUrl = characterPreviewAsset(words);
+    try {
+      await saveProject({ characterPreviewRequested: true });
+      const generated = await apiJson('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': 'solo-character-' + Date.now() + '-' + Math.random().toString(36).slice(2) },
+        body: JSON.stringify({
+          projectId: state.projectId,
+          partId: 'character-reference',
+          submissionId: 'solo-character-' + Date.now(),
+          prompt: [
+            'Create one clean square character reference for a child-authored story.',
+            'The child described the character this way: ' + words,
+            'Preserve every stated age, appearance, clothing, personality, and goal.',
+            'One clear full-body character, warm neutral background, child-friendly, no readable text, no logo, no watermark, no interface, no play icon.'
+          ].join('\n'),
+          studentWriting: words,
+          style: 'premium luminous storybook character design',
+          aspectRatio: '1:1',
+          referenceImageUrls: []
+        })
+      });
+      const previewUrl = generated.imageUrl;
+      if (!previewUrl) throw new Error('The character picture did not arrive. Your credit was not charged.');
+      state.wallet = generated.wallet || state.wallet;
+      state.imageCredits = walletImageCredits(state.wallet);
+      giftCount.textContent = String(state.imageCredits);
       state.characterPreviewMade = true;
-      const card = yuMessage('<small>FREE CHARACTER PREVIEW</small><h2>Is this how you imagine them?</h2><p>This is only a look-check. It does not use a picture credit.</p><div class="character-preview"><img src="' + previewUrl + '" alt="Character preview based on the child’s words" /><div class="character-preview-actions"><button type="button" data-keep-character>Yes, keep this character</button><button type="button" data-try-character>Try another look</button></div></div>');
+      const card = yuMessage('<small>YOUR CHARACTER PICTURE</small><h2>Is this how you imagine them?</h2><p>Yu made this from your own description. One picture credit was used.</p><div class="character-preview"><img src="' + escapeHtml(previewUrl) + '" alt="Character preview based on the child’s words" /><div class="character-preview-actions"><button type="button" data-keep-character>Yes, keep this character</button><button type="button" data-try-character>Try another look</button></div></div>');
       card.querySelector('[data-keep-character]').addEventListener('click', function () {
         state.characterImageUrl = previewUrl;
         showToast('Character look saved for this story.');
@@ -836,10 +1054,14 @@
       });
       const retry = card.querySelector('[data-try-character]');
       retry.textContent = 'Try another · 1 credit';
-      retry.addEventListener('click', function () { showCharacterPreview(true); });
+      retry.addEventListener('click', showCharacterPreview);
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      characterGenerate.disabled = false;
       characterGenerate.classList.remove('is-making');
-      characterGenerate.innerHTML = '<span aria-hidden="true">✦</span> Make another · 1 credit';
-    }, 650);
+      characterGenerate.innerHTML = '<span aria-hidden="true">✦</span> Make a character picture · 1 credit';
+    }
   }
 
   document.querySelectorAll('[data-quick]').forEach(function (button) {
@@ -866,7 +1088,11 @@
     input.focus();
     characterDescription.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
-  characterGenerate.addEventListener('click', function () { showCharacterPreview(state.characterPreviewMade); });
+  characterGenerate.addEventListener('click', showCharacterPreview);
+  reportButton.addEventListener('click', function () {
+    if (!state.projectId) return;
+    location.href = 'project-report.html?project=' + encodeURIComponent(state.projectId);
+  });
   document.querySelector('[data-parent-toggle]').addEventListener('click', function () { parentPanel.classList.add('is-open'); });
   document.querySelector('[data-parent-close]').addEventListener('click', function () { parentPanel.classList.remove('is-open'); });
 
@@ -1009,12 +1235,9 @@
     if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); endSpeech(); }
   });
 
-  try {
-    state.name = localStorage.getItem('storieslens-preview-creator-name') || '';
-  } catch (error) {
-    state.name = '';
-  }
-  creatorName.value = state.name;
-  if (state.name) document.querySelector('[data-child-name]').textContent = state.name;
-  showGreeting();
+  restoreIncomingCreation().finally(function () {
+    creatorName.value = state.name;
+    if (state.name) document.querySelector('[data-child-name]').textContent = state.name;
+    refreshAccountState().finally(showGreeting);
+  });
 }());

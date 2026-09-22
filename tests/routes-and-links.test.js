@@ -16,6 +16,8 @@ test("all inline scripts parse", () => {
 });
 test("all static local page links and assets resolve", () => {
   const missing = [];
+  const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
+  const routeAliases = new Set([...server.matchAll(/^\s*"([^"]+)":\s*"[^"]+",?$/gm)].map((match) => match[1].replace(/^\//, "")));
   htmlFiles.forEach((file) => {
     const html = fs.readFileSync(path.join(root, file), "utf8");
     const staticMarkup = html.split(/<script\b/i)[0];
@@ -24,7 +26,7 @@ test("all static local page links and assets resolve", () => {
       if (!raw || raw.startsWith("#") || /^(?:https?:|data:|blob:|mailto:|tel:)/i.test(raw)) continue;
       const clean = raw.split(/[?#]/)[0];
       const target = clean === "/" ? path.join(root, "index.html") : path.resolve(root, clean.replace(/^\//, ""));
-      if (!target.startsWith(root) || !fs.existsSync(target)) missing.push(`${file} -> ${raw}`);
+      if (!target.startsWith(root) || (!fs.existsSync(target) && !routeAliases.has(clean.replace(/^\//, "")))) missing.push(`${file} -> ${raw}`);
     }
   });
   assert.deepStrictEqual(missing, [], `Missing static links:\n${missing.join("\n")}`);

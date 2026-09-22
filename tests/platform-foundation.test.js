@@ -135,7 +135,7 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(read("visual-write.html").includes("story-reference") && read("visual-write.html").includes("personalPhotoConsentId"), "the sanitized reference should carry into illustration generation without asking for a second upload");
   assert(library.includes("never change it from your IP alone") && !api.includes("cf-ipcountry"), "IP geolocation must not silently choose a data region");
   assert.strictEqual(manifest.display, "standalone", "PWA should install in standalone mode");
-  assert.strictEqual(manifest.start_url, "/app.html?source=pwa", "installed PWA should open the formal H5 product");
+  assert.strictEqual(manifest.start_url, "/solo-story?mode=solo&source=pwa", "installed PWA should open the canonical new Solo product");
   assert.deepStrictEqual(manifest.icons.map((icon) => icon.sizes), ["192x192", "512x512"], "PWA icons should declare real installable sizes");
   assert(fs.existsSync(path.join(root, "assets/app-icon-192.png")) && fs.existsSync(path.join(root, "assets/app-icon-512.png")), "PWA install icons should exist");
   assert(worker.includes("/api/") && worker.includes("offline.html"), "service worker should preserve offline pages without caching private APIs");

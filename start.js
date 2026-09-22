@@ -810,8 +810,8 @@
 
     if (mode === "solo") {
       window.location.href = homepageSpark
-        ? (setup.storyLanguage === "zh" ? "chinese-studio.html?from=homepage-magic" : "app.html?locale=en&from=homepage-magic")
-        : `visual-write.html?mode=free&from=start&${languageQuery}`;
+        ? `solo-story?mode=solo&from=homepage-magic&${languageQuery}`
+        : `solo-story?mode=solo&from=start&${languageQuery}`;
       return;
     }
 

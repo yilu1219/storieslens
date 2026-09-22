@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v95-clear-yu-voice-20260922";
+const VERSION = "storieslens-pwa-v96-new-solo-20260922";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -7,6 +7,10 @@ const APP_SHELL = [
   "/install-app.html",
   "/install-app.css",
   "/app.html",
+  "/solo-story",
+  "/solo-delight-preview.html",
+  "/solo-delight-preview.css",
+  "/solo-delight-preview.js",
   "/chinese-studio.html",
   "/index.html",
   "/login.html",
