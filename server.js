@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { checkImageSafety, checkTextSafety } = require("./content-safety");
 const { reviewArtworkImage, isSupportedSanitizedArtwork } = require("./artwork-safety-server");
+const { convertHeicBuffer, parseHeicDataUrl } = require("./heic-conversion");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
 const { createPlatformApi } = require("./platform-api");
 
@@ -180,6 +181,31 @@ async function handleArtworkReview(request, response) {
     });
   } catch (error) {
     sendJson(response, 400, { approved: false, reasonCode: "invalid_request", error: error.message || "Artwork review failed" });
+  }
+}
+
+async function handleHeicConversion(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const body = await readJsonBody(request, 18_000_000);
+    const source = parseHeicDataUrl(body.imageDataUrl);
+    const jpeg = await convertHeicBuffer(source);
+    sendJson(response, 200, {
+      imageDataUrl: `data:image/jpeg;base64,${jpeg.toString("base64")}`,
+      convertedOnServer: true,
+      originalDiscarded: true,
+      persisted: false
+    });
+  } catch (error) {
+    const reasonCode = String(error?.message || "heic_conversion_failed");
+    sendJson(response, error?.statusCode || 422, {
+      error: "This iPhone HEIC could not be converted.",
+      reasonCode
+    });
   }
 }
 
@@ -1378,6 +1404,12 @@ const server = http.createServer(async (request, response) => {
 
   if (requestUrl.pathname === "/api/review-artwork") {
     handleArtworkReview(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/convert-heic") {
+    if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "heic-conversion", limit: 6, windowMs: 60 * 60 * 1000 })) return;
+    handleHeicConversion(request, response);
     return;
   }
 

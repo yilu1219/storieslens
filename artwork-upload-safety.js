@@ -43,6 +43,34 @@
     }
   }
 
+  const readAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("heic_read_failed"));
+    reader.readAsDataURL(file);
+  });
+
+  async function convertHeicOnServer(file) {
+    const rawDataUrl = await readAsDataUrl(file);
+    const mime = /^data:image\/(?:heic|heif|heic-sequence|heif-sequence);base64,/i.test(rawDataUrl)
+      ? rawDataUrl
+      : rawDataUrl.replace(/^data:[^;,]*;base64,/i, "data:image/heic;base64,");
+    const response = await fetch("/api/convert-heic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageDataUrl: mime })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !/^data:image\/jpeg;base64,/i.test(String(result.imageDataUrl || ""))) {
+      const error = new Error(result.reasonCode || "heic_server_conversion_failed");
+      error.reasonCode = result.reasonCode || "heic_server_conversion_failed";
+      throw error;
+    }
+    const converted = await fetch(result.imageDataUrl).then((item) => item.blob());
+    const sanitized = await removeMetadata(new File([converted], `${String(file.name || "photo").replace(/\.(heic|heif)$/i, "")}.jpg`, { type: "image/jpeg" }));
+    return { ...sanitized, convertedFromHeic: true, convertedOnServer: true, originalNotStored: result.originalDiscarded === true };
+  }
+
   const loadImage = (file) => new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const image = new Image();
@@ -115,5 +143,12 @@
     return { ...sanitized, review };
   }
 
-  window.StoriesLensArtworkSafety = { processArtwork, removeMetadata, reviewSanitizedArtwork, isSupportedImage, isHeicFile, convertHeic };
+  async function processArtworkWithServerFallback(file) {
+    if (!isHeicFile(file)) throw new Error("invalid_heic");
+    const sanitized = await convertHeicOnServer(file);
+    const review = await reviewSanitizedArtwork(sanitized.dataUrl);
+    return { ...sanitized, review };
+  }
+
+  window.StoriesLensArtworkSafety = { processArtwork, processArtworkWithServerFallback, removeMetadata, reviewSanitizedArtwork, isSupportedImage, isHeicFile, convertHeic, convertHeicOnServer };
 })();

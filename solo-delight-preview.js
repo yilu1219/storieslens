@@ -26,6 +26,8 @@
   const characterDescribe = document.querySelector('[data-character-describe]');
   const characterDescription = document.querySelector('[data-character-description]');
   const characterGenerate = document.querySelector('[data-character-generate]');
+  const uploadRecovery = document.querySelector('[data-upload-recovery]');
+  const heicAutoConvert = document.querySelector('[data-heic-auto-convert]');
 
   const state = {
     step: 0,
@@ -57,6 +59,7 @@
     storyTitle: '',
     resultImage: 'assets/original-garden-door-hd-v2.png'
   };
+  let pendingHeicFiles = [];
 
   function creatorLabel() {
     return state.name || 'Story creator';
@@ -867,6 +870,67 @@
   document.querySelector('[data-parent-toggle]').addEventListener('click', function () { parentPanel.classList.add('is-open'); });
   document.querySelector('[data-parent-close]').addEventListener('click', function () { parentPanel.classList.remove('is-open'); });
 
+  function applyPreparedPictures(files, preparedImages) {
+    if (state.imageUrl && state.imageUrl.startsWith('blob:')) URL.revokeObjectURL(state.imageUrl);
+    state.referenceImages = preparedImages.map(function (prepared, index) {
+      return { dataUrl: prepared.dataUrl, name: files[index].name, containsRealPerson: Boolean(prepared.review?.checks?.realPerson), convertedFromHeic: Boolean(prepared.convertedFromHeic) };
+    });
+    state.imageUrl = state.referenceImages[0].dataUrl;
+    state.resultImage = state.imageUrl;
+    state.userUploadedReference = true;
+    state.uploadContainsRealPerson = state.referenceImages.some(function (item) { return item.containsRealPerson; });
+    state.uploadConvertedFromHeic = state.referenceImages.some(function (item) { return item.convertedFromHeic; });
+    state.personalPhotoConsentId = '';
+    if (state.step === 1) state.characterImageUrl = state.imageUrl;
+    if (!input.value && state.step === 0) input.value = 'This picture gave me a story idea.';
+    uploadEntry.querySelector('strong').textContent = files.length + ' ' + (files.length === 1 ? 'character picture is' : 'character pictures are') + ' ready';
+    uploadEntry.querySelector('small').textContent = state.uploadConvertedFromHeic
+      ? 'HEIC converted privately—Yu will keep all ' + files.length + ' prepared characters separate.'
+      : 'Private preparation complete—Yu will keep all ' + files.length + ' characters separate.';
+    uploadRecovery.hidden = true;
+    pendingHeicFiles = [];
+    showToast(files.length + ' ' + (files.length === 1 ? 'character is' : 'characters are') + ' ready for this story.');
+  }
+
+  async function preparePictures(files, serverFallback) {
+    uploadEntry.querySelector('strong').textContent = 'Preparing ' + files.length + ' ' + (files.length === 1 ? 'picture' : 'pictures') + ' privately…';
+    uploadEntry.querySelector('small').textContent = serverFallback
+      ? 'Securely converting the HEIC in memory. The original is not saved.'
+      : 'Removing location and camera information from every picture on this device.';
+    try {
+      if (!window.StoriesLensArtworkSafety) throw new Error('The private picture preparation tool did not load. Refresh and try again.');
+      const preparedImages = await Promise.all(files.map(function (file) {
+        if (serverFallback && window.StoriesLensArtworkSafety.isHeicFile(file)) {
+          return window.StoriesLensArtworkSafety.processArtworkWithServerFallback(file);
+        }
+        return window.StoriesLensArtworkSafety.processArtwork(file);
+      }));
+      applyPreparedPictures(files, preparedImages);
+    } catch (error) {
+      state.imageUrl = '';
+      state.referenceImages = [];
+      state.userUploadedReference = false;
+      uploadEntry.querySelector('strong').textContent = 'This picture could not be prepared';
+      const heicFailure = !serverFallback && files.some(function (file) { return window.StoriesLensArtworkSafety?.isHeicFile(file); }) && /heic_(?:conversion_failed|conversion_unavailable)/.test(String(error.message || ''));
+      if (heicFailure) {
+        pendingHeicFiles = files;
+        uploadRecovery.hidden = false;
+        uploadEntry.querySelector('small').textContent = 'This iPhone HEIC needs secure auto-conversion.';
+        showToast('This iPhone HEIC needs auto-conversion. Use the button below.');
+      } else {
+        uploadEntry.querySelector('small').textContent = serverFallback
+          ? 'The secure converter could not read this HEIC. Please choose JPG or PNG.'
+          : (error.message || 'Try a JPG, PNG, WEBP, HEIC, or HEIF photo.');
+        showToast(uploadEntry.querySelector('small').textContent);
+      }
+    } finally {
+      if (serverFallback) {
+        heicAutoConvert.disabled = false;
+        heicAutoConvert.textContent = 'Secure auto-convert · 安全自动转换';
+      }
+    }
+  }
+
   upload.addEventListener('change', async function () {
     const files = Array.from(upload.files || []);
     if (!files.length) return;
@@ -875,36 +939,16 @@
       showToast('Choose up to three character pictures at one time.');
       return;
     }
-    uploadEntry.querySelector('strong').textContent = 'Preparing ' + files.length + ' ' + (files.length === 1 ? 'picture' : 'pictures') + ' privately…';
-    uploadEntry.querySelector('small').textContent = 'Removing location and camera information from every picture on this device.';
-    try {
-      if (!window.StoriesLensArtworkSafety) throw new Error('The private picture preparation tool did not load. Refresh and try again.');
-      const preparedImages = await Promise.all(files.map(function (file) { return window.StoriesLensArtworkSafety.processArtwork(file); }));
-      if (state.imageUrl && state.imageUrl.startsWith('blob:')) URL.revokeObjectURL(state.imageUrl);
-      state.referenceImages = preparedImages.map(function (prepared, index) {
-        return { dataUrl: prepared.dataUrl, name: files[index].name, containsRealPerson: Boolean(prepared.review?.checks?.realPerson), convertedFromHeic: Boolean(prepared.convertedFromHeic) };
-      });
-      state.imageUrl = state.referenceImages[0].dataUrl;
-      state.resultImage = state.imageUrl;
-      state.userUploadedReference = true;
-      state.uploadContainsRealPerson = state.referenceImages.some(function (item) { return item.containsRealPerson; });
-      state.uploadConvertedFromHeic = state.referenceImages.some(function (item) { return item.convertedFromHeic; });
-      state.personalPhotoConsentId = '';
-      if (state.step === 1) state.characterImageUrl = state.imageUrl;
-      if (!input.value && state.step === 0) input.value = 'This picture gave me a story idea.';
-      uploadEntry.querySelector('strong').textContent = files.length + ' ' + (files.length === 1 ? 'character picture is' : 'character pictures are') + ' ready';
-      uploadEntry.querySelector('small').textContent = state.uploadConvertedFromHeic
-        ? 'HEIC converted privately—Yu will keep all ' + files.length + ' prepared characters separate.'
-        : 'Private preparation complete—Yu will keep all ' + files.length + ' characters separate.';
-      showToast(files.length + ' ' + (files.length === 1 ? 'character is' : 'characters are') + ' ready for this story.');
-    } catch (error) {
-      state.imageUrl = '';
-      state.referenceImages = [];
-      state.userUploadedReference = false;
-      uploadEntry.querySelector('strong').textContent = 'This picture could not be prepared';
-      uploadEntry.querySelector('small').textContent = error.message || 'Try a JPG, PNG, WEBP, HEIC, or HEIF photo.';
-      showToast(uploadEntry.querySelector('small').textContent);
-    }
+    uploadRecovery.hidden = true;
+    pendingHeicFiles = [];
+    await preparePictures(files, false);
+  });
+
+  heicAutoConvert.addEventListener('click', async function () {
+    if (!pendingHeicFiles.length) return;
+    heicAutoConvert.disabled = true;
+    heicAutoConvert.textContent = 'Converting securely…';
+    await preparePictures(pendingHeicFiles, true);
   });
 
   function beginSpeech() {

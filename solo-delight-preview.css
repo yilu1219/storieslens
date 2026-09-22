@@ -155,6 +155,13 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .real-life-consent input:focus, .real-life-consent select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(8,122,84,.1); }
 .real-life-consent .consent-check { display: grid; grid-template-columns: 19px 1fr; align-items: start; gap: 8px; color: var(--ink); font-size: 10px; font-weight: 650; line-height: 1.4; }
 .real-life-consent .consent-check input { width: 17px; height: 17px; margin: 0; accent-color: var(--green); }
+.upload-recovery { display: grid; gap: 10px; margin: 10px 0 2px; padding: 13px; color: var(--green-dark); border: 1px solid rgba(184,131,24,.35); border-radius: 15px; background: var(--gold-soft); }
+.upload-recovery[hidden] { display: none; }
+.upload-recovery strong, .upload-recovery p, .upload-recovery small { display: block; margin: 0; }
+.upload-recovery p { margin-top: 3px; color: var(--ink); font-size: 12px; line-height: 1.4; }
+.upload-recovery small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.upload-recovery button { min-height: 44px; padding: 9px 13px; color: #fff; border: 0; border-radius: 12px; background: var(--green); font-weight: 900; cursor: pointer; }
+.upload-recovery button:disabled { opacity: .65; cursor: wait; }
 
 .drawing-card { text-align: center; }
 .reference-lock-note { display: flex; align-items: center; gap: 10px; margin-top: 13px; padding: 11px 13px; color: var(--green-dark); text-align: left; border: 1px solid rgba(8,122,84,.16); border-radius: 14px; background: var(--mint); }
