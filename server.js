@@ -1376,7 +1376,47 @@ async function handleWritingAssistant(request, response) {
       result.visualBrief,
       ...(Array.isArray(result.grammarChanges) ? result.grammarChanges.flatMap((change) => [change?.before, change?.after, change?.skill, change?.explanation]) : [])
     ].map((value) => String(value || "").trim()).filter(Boolean).join("\n");
-    await enforceTextSafety(coachSafetyText, { stage: "coach-output" });
+    try {
+      await enforceTextSafety(coachSafetyText, { stage: "coach-output" });
+    } catch (error) {
+      if (error.code !== "CONTENT_POLICY_BLOCKED" || error.safetyStage !== "coach-output") throw error;
+      const originalSentence = selectedText || draft;
+      result = storyLanguage === "zh"
+        ? {
+            reply: "这次详细反馈没有通过安全复核，所以羽大师没有显示或采用它。你的原句已完整保留，可以稍后再试一次详细检查。",
+            strength: "你已经把自己的想法写出来了。",
+            grammarNote: "本次安全备用检查没有改动原句。",
+            grammarCategory: "other",
+            grammarChanges: [],
+            writingNote: "",
+            priority: "",
+            microLesson: "",
+            question: "这句话表达的是你真正想说的意思吗？",
+            task: "",
+            suggestion: originalSentence,
+            readyForVisual: false,
+            visualBrief: "",
+            authorshipCheck: "pass",
+            reviewFallback: true
+          }
+        : {
+            reply: "The detailed coaching response did not pass its safety review, so Yu did not show or use it. Your original sentence is preserved and you can try the detailed review again.",
+            strength: "You put your own idea into words.",
+            grammarNote: "This safe fallback review made no changes to your sentence.",
+            grammarCategory: "other",
+            grammarChanges: [],
+            writingNote: "",
+            priority: "",
+            microLesson: "",
+            question: "Does this sentence say exactly what you mean?",
+            task: "",
+            suggestion: originalSentence,
+            readyForVisual: false,
+            visualBrief: "",
+            authorshipCheck: "pass",
+            reviewFallback: true
+          };
+    }
     const limit = (value, max) => String(value || "").trim().slice(0, max);
     const grammarCategories = new Set(["clear", "punctuation", "sentence-structure", "tense", "agreement", "spelling", "word-choice", "articles", "plurality", "word-order", "connectors", "repetition", "de-di-de", "other"]);
     const grammarCategory = grammarCategories.has(String(result.grammarCategory || "").trim()) ? String(result.grammarCategory).trim() : "other";
@@ -1404,6 +1444,7 @@ async function handleWritingAssistant(request, response) {
       readyForVisual: result.readyForVisual === true,
       visualBrief: limit(result.visualBrief, 500),
       authorshipCheck: result.authorshipCheck === "pass" ? "pass" : "review",
+      reviewFallback: result.reviewFallback === true,
       coachMeta: {
         coach: yuCurriculum.coachName,
         language: yuCurriculum.language,

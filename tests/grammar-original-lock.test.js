@@ -18,6 +18,9 @@ test("live Yu prompt locks the original story and requires teachable grammar cha
   assert.match(source, /stage: "creator-input"/);
   assert.match(source, /stage: "coach-output"/);
   assert.match(source, /safetyStage: error\.safetyStage/);
+  assert.match(source, /detailed coaching response did not pass its safety review/);
+  assert.match(source, /suggestion: originalSentence/);
+  assert.match(source, /reviewFallback: true/);
   assert.doesNotMatch(source, /enforceTextSafety\(userPrompt\)/);
 });
 
