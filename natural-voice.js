@@ -6,20 +6,22 @@
 
   const performanceProfiles = {
     en: {
-      warm: { rate: 0.93, pitch: 0.97 },
-      theatrical: { rate: 0.94, pitch: 1.02 },
-      question: { rate: 0.91, pitch: 1.04 },
-      story: { rate: 0.88, pitch: 0.98 },
-      lesson: { rate: 0.84, pitch: 0.95 },
-      celebration: { rate: 0.98, pitch: 1.05 }
+      warm: { rate: 0.92, pitch: 0.98 },
+      guide: { rate: 0.93, pitch: 0.99 },
+      theatrical: { rate: 0.93, pitch: 0.99 },
+      question: { rate: 0.9, pitch: 0.99 },
+      story: { rate: 0.89, pitch: 0.98 },
+      lesson: { rate: 0.87, pitch: 0.97 },
+      celebration: { rate: 0.95, pitch: 1 }
     },
     zh: {
-      warm: { rate: 0.92, pitch: 0.96 },
-      theatrical: { rate: 0.93, pitch: 1.01 },
-      question: { rate: 0.9, pitch: 1.03 },
-      story: { rate: 0.87, pitch: 0.98 },
-      lesson: { rate: 0.83, pitch: 0.95 },
-      celebration: { rate: 0.97, pitch: 1.04 }
+      warm: { rate: 0.9, pitch: 0.98 },
+      guide: { rate: 0.92, pitch: 0.99 },
+      theatrical: { rate: 0.92, pitch: 0.99 },
+      question: { rate: 0.89, pitch: 0.99 },
+      story: { rate: 0.88, pitch: 0.98 },
+      lesson: { rate: 0.86, pitch: 0.97 },
+      celebration: { rate: 0.94, pitch: 1 }
     }
   };
 
@@ -39,11 +41,16 @@
     if (/natural|neural|online/i.test(haystack)) score += 120;
     if (/premium|enhanced|high.?quality/i.test(haystack)) score += 90;
 
+    const clearNarrator = prefix === "zh"
+      ? /yunxi|yunjian|yunyang|xiaobei|tingting|meijia|kangkang|普通话.*(?:男|女)/i
+      : /google us english|microsoft (?:andrew|brian|guy)|daniel|alex|aaron|arthur|christopher|eric|samantha/i;
+    if (clearNarrator.test(haystack)) score += 75;
+
     const warmMale = prefix === "zh"
       ? /yunxi|yunjian|yunyang|xiaobei|kangkang|yong|li-mu|male|普通话.*男/i
       : /andrew|brian|guy|ryan|christopher|eric|daniel|aaron|arthur|reed|evan|lee|rishi|male/i;
     if (warmMale.test(haystack)) score += 45;
-    if (/compact|espeak|festival|novelty|whisper|zarvox|bells|bad news|good news/i.test(haystack)) score -= 150;
+    if (/compact|espeak|festival|novelty|whisper|zarvox|bells|bad news|good news|eddy|rocko|grandma|grandpa|flo|sandy|shelley|boing|organ|superstar/i.test(haystack)) score -= 180;
     if (voice.default) score += 3;
     return score;
   }

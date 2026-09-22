@@ -5,6 +5,7 @@
   if (!form) return;
 
   const boardInput = $("[data-board-photo]");
+  const boardUploadInput = $("[data-board-upload]");
   const worksInput = $("[data-work-photos]");
   const selection = $("[data-selection]");
   const selectionTitle = $("[data-selection-title]");
@@ -49,12 +50,12 @@
     capture: "拍摄", captureSmall: "拍照或上传", organize: "整理", organizeSmall: "逐页检查", book: "电子书", bookSmall: "预览与导出",
     stepOne: "第一步", captureTitle: "你想怎样收集这期班级作品？", captureCopy: "先选择最快的方式。如果作品墙照片不够清楚，可以随时改为逐张上传。",
     boardMode: "拍摄一整面作品墙", boardModeSmall: "最快 · 直接调用手机相机", individualMode: "逐张上传学生作品", individualModeSmall: "最清晰 · 一次选择多张",
-    takeBoard: "拍摄完整的课堂作品墙", takeBoardSmall: "手机保持水平 · 拍到四个角 · 只需一张", tipOne: "正对作品墙", tipTwo: "让作品墙充满画面", tipThree: "避免反光",
+    takeBoard: "现在拍一张", takeBoardSmall: "打开相机 · 拍到作品墙四个角", uploadBoard: "上传已有照片", uploadBoardSmall: "从相册或文件选择 · 支持JPG、PNG、HEIC等格式", tipOne: "正对作品墙", tipTwo: "让作品墙充满画面", tipThree: "避免反光",
     uploadWorks: "逐张上传学生作品", uploadWorksSmall: "最多选择30张绘画或作文", clear: "清除",
     collectionTitle: "书名", collectionDate: "作品日期", edition: "版本", editionSingle: "单期作品墙", editionMonthly: "月度作品集", editionQuarterly: "季度作品集", editionYear: "年度作品集",
     boardLayout: "作品墙排列", layoutAuto: "自动判断",
     classLabel: "班级名称", classLabelSmall: "使用班级昵称，不填写学生姓名", coverTheme: "封面颜色", coverInk: "墨蓝", coverCoral: "暖红", coverSage: "青绿色",
-    deviceOnly: "设备优先的私密流程。", deviceOnlyCopy: "图片会在此浏览器内缩小并删除相机元数据。教师主动导出之前，草稿只保留在当前设备。", createDraft: "生成候选页面",
+    deviceOnly: "设备优先的私密流程。", deviceOnlyCopy: "图片会在此浏览器内缩小并删除相机元数据。教师主动导出之前，草稿只保留在当前设备。", createDraft: "下一步：整理页面", nextHint: "书名和封面可以现在修改，也可以稍后再调整。",
     whatHappens: "接下来会发生什么", findWorks: "生成可调整的页面裁切", findWorksSmall: "选择作品墙排列，再逐页微调裁切后保存。", buildCover: "生成封面", buildCoverSmall: "自动加入书名、班级名称和日期。", teacherReview: "教师逐页审核", teacherReviewSmall: "检查裁切、匿名署名和可见个人信息。", exportBook: "导出电子书", exportBookSmall: "下载私密电子书或打印样张。", freeTeacher: "教师可以免费开始。", freeTeacherCopy: "无需囤货；之后由家庭自主决定是否购买实体纪念书。",
     stepTwo: "第二步 · 教师审核", reviewTitle: "把每一份作品放到正确的位置。", reviewCopy: "一张作品墙照片会生成多个候选裁切；逐张上传的作品会直接成为完整页面。生成书之前，可以改名、排序或删除。", dragHelp: "使用箭头调整顺序",
     approval: "教师确认", checksTitle: "生成电子书前需要完成三项检查", checkCrops: "我已检查每一个裁切。", checkCropsSmall: "没有作品遗漏或被错误截断。", checkPrivacy: "我已检查姓名、人脸和学校信息。", checkPrivacySmall: "只保留已经获得允许的身份信息。", checkPermission: "我拥有所需授权。", checkPermissionSmall: "向家庭分享或印刷前必须获得相应许可。", makeBook: "生成我的私密电子书",
@@ -238,9 +239,9 @@
       const usedServerFallback = state.sources.some((source) => source.convertedOnServer);
       setStatus(convertedHeic
         ? (usedServerFallback
-          ? say("Ready. HEIC was securely converted; originals were not stored.", "处理完成。HEIC 已安全转换，原始照片未保存。")
-          : say("Ready. HEIC was converted on this device; originals were not uploaded.", "处理完成。HEIC 已在本机转换，原始照片没有上传。"))
-        : say("Ready. Original camera metadata is not included in this draft.", "处理完成。候选页面不包含原始相机元数据。"));
+          ? say("Ready. HEIC was securely converted; tap Next to arrange the pages.", "处理完成。HEIC 已安全转换，请点击“下一步”整理页面。")
+          : say("Ready. HEIC was converted on this device; tap Next to arrange the pages.", "处理完成。HEIC 已在本机转换，请点击“下一步”整理页面。"))
+        : say("Photo ready. Tap the green Next button to arrange the pages.", "照片已准备好，请点击绿色“下一步”按钮整理页面。"));
       window.StoriesLensAnalytics?.track("classroom_capture_ready", { mode, count: state.sources.length });
     } catch (uploadError) {
       state.sources = [];
@@ -296,6 +297,7 @@
     $$('[data-mode-panel]').forEach((panel) => { panel.hidden = panel.dataset.modePanel !== state.mode; });
     state.sources = [];
     boardInput.value = "";
+    boardUploadInput.value = "";
     worksInput.value = "";
     setStatus();
     showError();
@@ -884,6 +886,7 @@
 
   $$('[data-capture-mode]').forEach((button) => button.addEventListener("click", () => setMode(button.dataset.captureMode)));
   boardInput.addEventListener("change", () => acceptFiles(boardInput.files, "board"));
+  boardUploadInput.addEventListener("change", () => acceptFiles(boardUploadInput.files, "board"));
   worksInput.addEventListener("change", () => acceptFiles(worksInput.files, "individual"));
   $("[data-clear-selection]").addEventListener("click", () => setMode(state.mode));
   approvalChecks.forEach((check) => check.addEventListener("change", updateApproval));

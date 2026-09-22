@@ -6,6 +6,19 @@ const test = require("node:test");
 
 const { createPlatformApi } = require("../platform-api");
 
+test("teacher board intake offers both camera capture and direct file upload", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "classroom-archive.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "..", "classroom-archive.js"), "utf8");
+  const cameraTag = html.match(/<input[^>]*data-board-photo[^>]*>/)?.[0] || "";
+  const uploadTag = html.match(/<input[^>]*data-board-upload[^>]*>/)?.[0] || "";
+  assert.match(cameraTag, /capture="environment"/);
+  assert(uploadTag);
+  assert.doesNotMatch(uploadTag, /capture=/);
+  assert.match(script, /boardUploadInput\.addEventListener\("change"/);
+  assert(html.indexOf("data-create-proof") < html.indexOf("archive-fields"));
+  assert.match(html, /Next: arrange my pages/);
+});
+
 function responseHarness() {
   return {
     headers: {},

@@ -33,7 +33,7 @@ test("all phone-photo entry points inherit automatic HEIC fallback and fresh PWA
   assert.match(browserSafety, /return convertHeicOnServer\(file\)/);
   assert.match(browserSafety, /processArtworkLocalOnly/);
   assert.match(browserSafety, /image\/avif/);
-  assert.match(serviceWorker, /v93-teacher-email-20260922/);
+  assert.match(serviceWorker, /v95-clear-yu-voice-20260922/);
   assert.match(serviceWorker, /artwork-upload-safety\.js\?v=20260922-mobile-heic-1/);
 
   for (const filename of ["index.html", "app.html", "chinese-studio.html", "start.html", "classroom-archive.html", "movie-studio.html", "solo-delight-preview.html"]) {

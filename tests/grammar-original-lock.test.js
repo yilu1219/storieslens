@@ -85,7 +85,7 @@ test("Change something opens a type-or-speak edit and confirms cost before regen
   assert.match(script, /same characters, faces, clothes, story facts, and selected style/);
 });
 
-test("Yu uses an expressive musical-story voice profile without losing lesson clarity", () => {
+test("Yu uses an energetic but clear child-friendly voice profile", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.html"), "utf8");
   const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   const voice = fs.readFileSync(path.join(__dirname, "..", "natural-voice.js"), "utf8");
@@ -95,6 +95,9 @@ test("Yu uses an expressive musical-story voice profile without losing lesson cl
   assert.match(preview, /'celebration'/);
   assert.match(preview, /'lesson'/);
   assert.match(voice, /theatrical/);
+  assert.match(voice, /guide/);
+  assert.match(voice, /clearNarrator/);
+  assert.match(voice, /eddy\|rocko\|grandma\|grandpa/);
   assert.match(voice, /question/);
   assert.match(voice, /story/);
   assert.match(voice, /lesson/);

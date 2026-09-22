@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { checkImageSafety, extractOpenRouterJson, isModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, extractOpenRouterJson, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -33,6 +33,12 @@ test("ordinary adult and minor portrait noise is tolerated while flagged and mat
   assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { "sexual/minors": 0.01 } }), false);
   assert.strictEqual(isModerationResultBlocked({ flagged: true, category_scores: { sexual: 0.001 } }), true);
   assert.strictEqual(isModerationResultBlocked({ flagged: false, category_scores: { "sexual/minors": 0.04 } }), true);
+});
+
+test("ordinary story text is not blocked by tiny moderation scores", () => {
+  assert.strictEqual(isTextModerationResultBlocked({ flagged: false, categories: {}, category_scores: { violence: 0.08, "sexual/minors": 0.04 } }), false);
+  assert.strictEqual(isTextModerationResultBlocked({ flagged: true, categories: { violence: true }, category_scores: { violence: 0.08 } }), true);
+  assert.strictEqual(isTextModerationResultBlocked({ flagged: false, categories: { "self-harm": true } }), true);
 });
 
 test("parses a JSON safety verdict from OpenRouter-compatible output", () => {

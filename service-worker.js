@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v93-teacher-email-20260922";
+const VERSION = "storieslens-pwa-v95-clear-yu-voice-20260922";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -19,8 +19,8 @@ const APP_SHELL = [
   "/styles.css",
   "/teacher-dashboard.css",
   "/teacher-login.css?v=20260922-1",
-  "/classroom-archive.css?v=20260922-author-2",
-  "/classroom-archive.js?v=20260922-author-2",
+  "/classroom-archive.css?v=20260922-upload-1",
+  "/classroom-archive.js?v=20260922-upload-1",
   "/teacher-dashboard.js?v=20260922-teacher-1",
   "/analytics.js",
   "/i18n.js?v=20260908-1",
@@ -28,7 +28,8 @@ const APP_SHELL = [
   "/portal-home.js?v=20260916-43",
   "/family-flow.css?v=20260916-6",
   "/chinese-studio.css?v=20260916-5",
-  "/h5-app.js?v=20260921-question-flow-1",
+  "/natural-voice.js?v=20260922-clear-energy-1",
+  "/h5-app.js?v=20260922-clear-energy-1",
   "/spark-handoff.js?v=20260917-story-reference-1",
   "/writing-import.js?v=20260916-2",
   "/yu-profile.css?v=20260921-owl-orbit-1",

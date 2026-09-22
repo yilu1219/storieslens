@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="teacher-dashboard.css" />
-    <link rel="stylesheet" href="classroom-archive.css?v=20260922-author-2" />
+    <link rel="stylesheet" href="classroom-archive.css?v=20260922-upload-1" />
     <link rel="stylesheet" href="pwa.css" />
     <link rel="stylesheet" href="h5-app.css" />
   </head>
@@ -61,12 +61,20 @@
           </div>
 
           <div class="archive-capture-panel" data-mode-panel="board">
-            <label class="archive-dropzone" for="board-photo" data-dropzone="board">
-              <input id="board-photo" type="file" accept="image/*,.heic,.heif,.avif" capture="environment" data-board-photo />
-              <span class="archive-camera" aria-hidden="true"><i></i></span>
-              <strong data-archive-copy="takeBoard">Photograph the entire bulletin board</strong>
-              <small data-archive-copy="takeBoardSmall">Hold the phone straight · include all four corners · one image</small>
-            </label>
+            <div class="archive-board-source-grid">
+              <label class="archive-board-source" for="board-photo">
+                <input id="board-photo" type="file" accept="image/*,.heic,.heif,.avif" capture="environment" data-board-photo />
+                <span class="archive-camera" aria-hidden="true"><i></i></span>
+                <strong data-archive-copy="takeBoard">Take a photo now</strong>
+                <small data-archive-copy="takeBoardSmall">Open the camera · include all four corners</small>
+              </label>
+              <label class="archive-board-source archive-board-source-upload" for="board-upload">
+                <input id="board-upload" type="file" accept="image/*,.heic,.heif,.avif" data-board-upload />
+                <span class="archive-upload-icon" aria-hidden="true">↑</span>
+                <strong data-archive-copy="uploadBoard">Upload an existing photo</strong>
+                <small data-archive-copy="uploadBoardSmall">Choose from Photos or Files · JPG, PNG, HEIC and more</small>
+              </label>
+            </div>
             <div class="archive-photo-guide" aria-label="Photo tips">
               <span><b>1</b><small data-archive-copy="tipOne">Stand directly in front</small></span>
               <span><b>2</b><small data-archive-copy="tipTwo">Fill the frame</small></span>
@@ -83,6 +91,7 @@
             </label>
           </div>
 
+          <p class="archive-error" role="alert" data-archive-error></p>
           <section class="archive-selection" hidden data-selection>
             <div class="archive-selection-heading">
               <strong data-selection-title>1 image ready</strong>
@@ -91,6 +100,8 @@
             <div class="archive-file-strip" data-file-list></div>
             <p data-processing-status role="status" aria-live="polite"></p>
           </section>
+          <button class="archive-primary-button archive-next-button" type="submit" disabled data-create-proof><span data-archive-copy="createDraft">Next: arrange my pages</span> <span aria-hidden="true">→</span></button>
+          <p class="archive-next-hint" data-archive-copy="nextHint">Your book title and cover can be changed now or later.</p>
 
           <div class="archive-fields">
             <label><span data-archive-copy="collectionTitle">Book title</span><input type="text" maxlength="70" value="Our Classroom Stories" data-collection-title /></label>
@@ -102,8 +113,6 @@
           </div>
 
           <div class="archive-local-note"><span aria-hidden="true">⌁</span><p><strong data-archive-copy="deviceOnly">Device-first private workflow.</strong> <span data-archive-copy="deviceOnlyCopy">Photos are resized and stripped of camera metadata in this browser. The draft stays on this device until the teacher chooses to export it.</span></p></div>
-          <p class="archive-error" role="alert" data-archive-error></p>
-          <button class="archive-primary-button" type="submit" disabled data-create-proof><span data-archive-copy="createDraft">Create the page draft</span> <span aria-hidden="true">→</span></button>
         </form>
 
         <aside class="archive-explainer">
@@ -212,7 +221,7 @@
     <script src="analytics.js"></script>
     <script src="i18n.js?v=20260908-1"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="classroom-archive.js?v=20260922-author-2"></script>
+    <script src="classroom-archive.js?v=20260922-upload-1"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

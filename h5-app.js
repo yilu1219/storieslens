@@ -1075,7 +1075,7 @@
     stopMentorSpeech();
     const lang = locale === "zh" ? "zh-CN" : "en-US";
     mentorUtterance = new window.SpeechSynthesisUtterance(text);
-    if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(mentorUtterance, lang, source === "arrival" ? "theatrical" : source === "rehearsal" ? "story" : "warm");
+    if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(mentorUtterance, lang, source === "arrival" ? "guide" : source === "rehearsal" ? "story" : "warm");
     else {
       mentorUtterance.lang = lang;
       mentorUtterance.rate = locale === "zh" ? 0.92 : 0.93;
@@ -1169,7 +1169,24 @@
     } catch (_error) {
       if (requestedIndex !== mentorRevisionIndex) return;
       renderMentorResult(item, fallbackMentorResult(item));
-      $("[data-revision-error]").textContent = locale === "zh" ? "当前使用本机基础检查；联网后羽大师会加入更完整的语法与写作指导。" : "Using the basic on-device check. Yu’s fuller grammar and writing guidance returns when the live coach is available.";
+      const errorCode = _error?.payload?.code || "";
+      if (errorCode === "CHINA_AI_ROUTE_UNAVAILABLE") {
+        $("[data-revision-error]").textContent = locale === "zh"
+          ? "中国区在线羽大师尚未完成国内模型连接。本次先使用本机基础检查；你的文字不会转到海外模型。"
+          : "Yu’s Mainland China model connection is not ready yet. This review stays on the basic on-device check and your writing is not routed overseas.";
+      } else if (errorCode === "CONTENT_POLICY_BLOCKED") {
+        $("[data-revision-error]").textContent = locale === "zh"
+          ? "安全检查暂时无法确认这句话。请检查是否包含血腥、暴力、色情或危险内容；如果没有，请稍后重试。"
+          : "The safety check could not confirm this sentence. Check for graphic, sexual, violent, or dangerous content; if none is present, try again shortly.";
+      } else if (_error?.status === 429) {
+        $("[data-revision-error]").textContent = locale === "zh"
+          ? "羽大师现在收到的问题较多。本次先使用本机基础检查，请稍后再试。"
+          : "Yu is answering many creators right now. This sentence uses the basic on-device check; try the live review again shortly.";
+      } else {
+        $("[data-revision-error]").textContent = locale === "zh"
+          ? "在线羽大师暂时没有连接成功，本次先使用本机基础检查。请检查网络或稍后再试。"
+          : "The live Yu connection did not complete, so this sentence uses the basic on-device check. Check the connection or try again shortly.";
+      }
     }
   }
 
