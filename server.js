@@ -1327,7 +1327,17 @@ async function handleWritingAssistant(request, response) {
       selectedText ? `Current sentence: ${selectedText}` : draft ? "Current sentence: Use the most relevant sentence in the draft." : "Current sentence: The creator has not written one yet.",
       draft ? `Full creator draft: ${draft.slice(0, 6000)}` : "Full creator draft: Not started. Ask one question that unlocks the creator's own first sentence."
     ].filter(Boolean).join("\n");
-    await enforceTextSafety(userPrompt);
+    const creatorSafetyText = [
+      draft,
+      selectedText,
+      storyDnaContext,
+      inspiration,
+      body.revisionHistory,
+      body.teacherInstructions,
+      body.characterRules,
+      body.learningGoal
+    ].map((value) => String(value || "").trim()).filter(Boolean).join("\n");
+    await enforceTextSafety(creatorSafetyText);
     const provider = textProviderForRequest(request, response);
     const { baseUrl, model } = provider;
     const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
@@ -1346,10 +1356,23 @@ async function handleWritingAssistant(request, response) {
       return;
     }
     const content = upstreamData?.choices?.[0]?.message?.content || "{}";
-    await enforceTextSafety(content);
     let result;
     try { result = JSON.parse(content); }
     catch { result = { reply: content, suggestion: "", readyForVisual: false, visualBrief: "" }; }
+    const coachSafetyText = [
+      result.reply,
+      result.strength,
+      result.grammarNote,
+      result.writingNote,
+      result.priority,
+      result.microLesson,
+      result.question,
+      result.task,
+      result.suggestion,
+      result.visualBrief,
+      ...(Array.isArray(result.grammarChanges) ? result.grammarChanges.flatMap((change) => [change?.before, change?.after, change?.skill, change?.explanation]) : [])
+    ].map((value) => String(value || "").trim()).filter(Boolean).join("\n");
+    await enforceTextSafety(coachSafetyText);
     const limit = (value, max) => String(value || "").trim().slice(0, max);
     const grammarCategories = new Set(["clear", "punctuation", "sentence-structure", "tense", "agreement", "spelling", "word-choice", "articles", "plurality", "word-order", "connectors", "repetition", "de-di-de", "other"]);
     const grammarCategory = grammarCategories.has(String(result.grammarCategory || "").trim()) ? String(result.grammarCategory).trim() : "other";

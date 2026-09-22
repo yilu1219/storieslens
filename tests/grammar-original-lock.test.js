@@ -11,6 +11,9 @@ test("live Yu prompt locks the original story and requires teachable grammar cha
   assert.match(source, /Never add, remove, replace, combine, reinterpret, or infer any character/);
   assert.match(source, /exact keys before, after, skill, explanation/);
   assert.match(source, /If the meaning is ambiguous, keep suggestion identical to the original/);
+  assert.match(source, /creatorSafetyText/);
+  assert.match(source, /coachSafetyText/);
+  assert.doesNotMatch(source, /enforceTextSafety\(userPrompt\)/);
 });
 
 test("seven-year-old preview preserves the ancient Egypt story instead of substituting a new plot", () => {
