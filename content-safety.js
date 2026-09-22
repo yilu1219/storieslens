@@ -23,7 +23,7 @@ function isModerationResultBlocked(result = {}) {
 }
 
 function isTextModerationResultBlocked(result = {}) {
-  if (result.flagged === true) return true;
+  if (typeof result.flagged === "boolean") return result.flagged;
   return Object.entries(result.categories || {}).some(([category, blocked]) => blocked === true && Object.hasOwn(STRICT_SCORE_THRESHOLDS, category));
 }
 

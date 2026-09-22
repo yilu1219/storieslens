@@ -38,7 +38,8 @@ test("ordinary adult and minor portrait noise is tolerated while flagged and mat
 test("ordinary story text is not blocked by tiny moderation scores", () => {
   assert.strictEqual(isTextModerationResultBlocked({ flagged: false, categories: {}, category_scores: { violence: 0.08, "sexual/minors": 0.04 } }), false);
   assert.strictEqual(isTextModerationResultBlocked({ flagged: true, categories: { violence: true }, category_scores: { violence: 0.08 } }), true);
-  assert.strictEqual(isTextModerationResultBlocked({ flagged: false, categories: { "self-harm": true } }), true);
+  assert.strictEqual(isTextModerationResultBlocked({ flagged: false, categories: { violence: true }, category_scores: { violence: 0.0001 } }), false);
+  assert.strictEqual(isTextModerationResultBlocked({ categories: { "self-harm": true } }), true);
 });
 
 test("parses a JSON safety verdict from OpenRouter-compatible output", () => {
