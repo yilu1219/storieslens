@@ -2865,7 +2865,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           mediaGeneration: Boolean(process.env.OPENROUTER_API_KEY || (process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL)),
           chinaTextRoute: Boolean(process.env.CHINA_ARK_BASE_URL && process.env.CHINA_ARK_API_KEY && process.env.CHINA_ARK_TEXT_MODEL),
           chinaImageRoute: Boolean(
-            cleanText(process.env.CHINA_ARK_IMAGE_API_KEY, 300)
+            cleanText(process.env.CHINA_ARK_API_KEY, 300)
             && cleanText(process.env.CHINA_ARK_IMAGE_MODEL, 200)
           ),
           chinaVideoRoute: process.env.CHINA_ARK_VIDEO_ENABLED === "true",
