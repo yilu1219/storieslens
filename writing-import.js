@@ -2,7 +2,7 @@
   "use strict";
 
   const MAX_FILE_BYTES = 7 * 1024 * 1024;
-  const IMAGE_ACCEPT_HINT = ".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif";
+  const IMAGE_ACCEPT_HINT = ".jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif,image/*";
 
   const readDocx = async (file) => {
     const bytes = new Uint8Array(await file.arrayBuffer());

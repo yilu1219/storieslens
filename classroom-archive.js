@@ -109,7 +109,7 @@
     if (!window.StoriesLensArtworkSafety?.isSupportedImage(file)) throw new Error("unsupported_type");
     if (file.size > 25 * 1024 * 1024) throw new Error("too_large");
     const sanitized = await window.StoriesLensArtworkSafety.removeMetadata(file);
-    return { name: file.name.slice(0, 120), dataUrl: sanitized.dataUrl, width: sanitized.width, height: sanitized.height, convertedFromHeic: Boolean(sanitized.convertedFromHeic) };
+    return { name: file.name.slice(0, 120), dataUrl: sanitized.dataUrl, width: sanitized.width, height: sanitized.height, convertedFromHeic: Boolean(sanitized.convertedFromHeic), convertedOnServer: Boolean(sanitized.convertedOnServer) };
   }
 
   async function cropBoard(source) {
@@ -172,8 +172,11 @@
         state.sources.push(await sanitizeFile(files[index]));
       }
       const convertedHeic = state.sources.some((source) => source.convertedFromHeic);
+      const usedServerFallback = state.sources.some((source) => source.convertedOnServer);
       setStatus(convertedHeic
-        ? say("Ready. HEIC was converted on this device; originals were not uploaded.", "处理完成。HEIC 已在本机转换，原始照片没有上传。")
+        ? (usedServerFallback
+          ? say("Ready. HEIC was securely converted; originals were not stored.", "处理完成。HEIC 已安全转换，原始照片未保存。")
+          : say("Ready. HEIC was converted on this device; originals were not uploaded.", "处理完成。HEIC 已在本机转换，原始照片没有上传。"))
         : say("Ready. Original camera metadata is not included in this draft.", "处理完成。候选页面不包含原始相机元数据。"));
       window.StoriesLensAnalytics?.track("classroom_capture_ready", { mode, count: state.sources.length });
     } catch (uploadError) {

@@ -69,7 +69,7 @@
 
           <div class="magic-actions">
             <label class="magic-action magic-action-upload" data-home-upload-label>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" data-home-upload hidden />
+              <input type="file" accept="image/*,.heic,.heif,.avif" data-home-upload hidden />
               <span class="magic-action-icon magic-upload-icon" aria-hidden="true">
                 <svg viewBox="0 0 32 32" focusable="false">
                   <path d="M16 20V5" />
@@ -118,7 +118,7 @@
           <div class="existing-writing-capture" data-home-existing-wrap hidden>
             <div class="existing-writing-heading"><span data-home-t="existing-kicker">ALREADY WRITTEN</span><strong data-home-t="existing-title">Bring your essay to Yu</strong></div>
             <label class="existing-writing-file">
-              <input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,image/heic,image/heif" data-home-existing-file hidden />
+              <input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" data-home-existing-file hidden />
               <span aria-hidden="true">↥</span><b data-home-t="existing-file">Choose a document or a clear photo of the writing</b>
             </label>
             <p class="existing-writing-file-name" data-home-existing-name aria-live="polite"></p>
@@ -259,7 +259,7 @@
 
     <script src="analytics.js"></script>
     <script src="pwa.js"></script>
-    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>

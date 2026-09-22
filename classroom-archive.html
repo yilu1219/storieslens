@@ -62,7 +62,7 @@
 
           <div class="archive-capture-panel" data-mode-panel="board">
             <label class="archive-dropzone" for="board-photo" data-dropzone="board">
-              <input id="board-photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" capture="environment" data-board-photo />
+              <input id="board-photo" type="file" accept="image/*,.heic,.heif,.avif" capture="environment" data-board-photo />
               <span class="archive-camera" aria-hidden="true"><i></i></span>
               <strong data-archive-copy="takeBoard">Photograph the entire bulletin board</strong>
               <small data-archive-copy="takeBoardSmall">Hold the phone straight · include all four corners · one image</small>
@@ -76,7 +76,7 @@
 
           <div class="archive-capture-panel" data-mode-panel="individual" hidden>
             <label class="archive-dropzone" for="work-photos" data-dropzone="individual">
-              <input id="work-photos" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple data-work-photos />
+              <input id="work-photos" type="file" accept="image/*,.heic,.heif,.avif" multiple data-work-photos />
               <span class="archive-pages-icon" aria-hidden="true">＋</span>
               <strong data-archive-copy="uploadWorks">Upload each student work</strong>
               <small data-archive-copy="uploadWorksSmall">Choose up to 30 drawings or writing pages</small>
@@ -190,7 +190,7 @@
 
     <script src="analytics.js"></script>
     <script src="i18n.js?v=20260908-1"></script>
-    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
     <script src="classroom-archive.js?v=20260913-4"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>

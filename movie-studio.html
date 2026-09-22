@@ -92,7 +92,7 @@
           <label>Scene title<input data-scene-title maxlength="120" /></label>
           <label>Seconds<input data-scene-duration type="number" min="2" max="12" value="5" /></label>
           <label class="wide">Caption / narration<textarea data-scene-text maxlength="6000"></textarea></label>
-          <label class="wide">Artwork<input data-scene-image type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" /><small>JPG, PNG, WEBP and HEIC are rewritten on this device to remove GPS/device information before upload. All imagery is reviewed.</small></label>
+          <label class="wide">Artwork<input data-scene-image type="file" accept="image/*,.heic,.heif,.avif" /><small>Common iPhone and Android photos are rewritten to remove GPS/device information before upload. All imagery is reviewed.</small></label>
           <div class="scene-preview wide" data-scene-preview><span>No artwork yet</span></div>
           <div class="project-actions wide">
             <button class="app-secondary" type="button" data-record>● Record voice</button>
@@ -123,7 +123,7 @@
     </dialog>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
-    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
     <script src="movie-studio.js?v=20260916-1"></script>
   </body>
 </html>

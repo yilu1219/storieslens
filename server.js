@@ -191,7 +191,7 @@ async function handleHeicConversion(request, response) {
   }
 
   try {
-    const body = await readJsonBody(request, 18_000_000);
+    const body = await readJsonBody(request, 22_000_000);
     const source = parseHeicDataUrl(body.imageDataUrl);
     const jpeg = await convertHeicBuffer(source);
     sendJson(response, 200, {

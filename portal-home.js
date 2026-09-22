@@ -342,13 +342,15 @@
         privateOnly = true;
       }
       personalPhoto = Boolean(result.review?.checks?.realPerson);
-      preparedImage = { dataUrl: result.dataUrl, name: file.name, privateOnly, personalPhoto, convertedFromHeic: Boolean(result.convertedFromHeic) };
+      preparedImage = { dataUrl: result.dataUrl, name: file.name, privateOnly, personalPhoto, convertedFromHeic: Boolean(result.convertedFromHeic), convertedOnServer: Boolean(result.convertedOnServer) };
       imagePreview.src = result.dataUrl;
       imageName.textContent = file.name;
       imageWrap.hidden = false;
       uploadLabel.classList.add("has-selection");
       setStatus(result.convertedFromHeic
-        ? (homeLocale === "zh" ? "HEIC 已在本机安全转换；原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.")
+        ? (result.convertedOnServer
+          ? (homeLocale === "zh" ? "HEIC 已安全转换；原文件仅临时用于转换且未保存。" : "HEIC converted securely. The original was used only for conversion and was not stored.")
+          : (homeLocale === "zh" ? "HEIC 已在本机安全转换；原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded."))
         : (privateOnly ? t("private-ready") : t("image-ready")));
       showContinue();
       window.StoriesLensAnalytics?.track("homepage_image_prepared", { privateOnly, personalPhoto });

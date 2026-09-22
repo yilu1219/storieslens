@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v89-open-registration-20260921";
+const VERSION = "storieslens-pwa-v90-mobile-photo-20260922";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -41,7 +41,7 @@ const APP_SHELL = [
   "/payment-success.js?v=20260917-1",
   "/my-stories.js?v=20260921-open-registration-1",
   "/safety-client.js",
-  "/artwork-upload-safety.js?v=20260913-1",
+  "/artwork-upload-safety.js?v=20260922-mobile-heic-1",
   "/pwa.js",
   "/offline.js",
   "/assets/storieslens-logo.png",

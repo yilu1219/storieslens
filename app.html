@@ -47,7 +47,7 @@
           </div>
 
           <label class="spark-upload" data-upload-label>
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" data-artwork hidden />
+            <input type="file" accept="image/*,.heic,.heif,.avif" data-artwork hidden />
             <span class="spark-upload-icon" aria-hidden="true">＋</span>
             <strong data-t="upload-title">Upload your artwork or photo</strong>
             <small data-t="upload-help">JPG, PNG, WEBP or HEIC · converted privately on this device</small>
@@ -58,7 +58,7 @@
           <section class="personal-photo-consent" data-personal-photo-consent hidden aria-live="polite">
             <p>PERSONAL PHOTO · PRIVATE BETA</p>
             <h3>Before this photo is saved</h3>
-            <span>The original file stays on this device. After you consent, a metadata-stripped working copy is sent to your selected regional private service for safety review and AI creation. It is never published automatically and can be permanently deleted.</span>
+            <span>Whenever possible, conversion happens on this device. If an iPhone HEIC needs server conversion, the original is used in memory and immediately discarded. A metadata-stripped working copy is safety reviewed, never published automatically, and can be permanently deleted.</span>
             <label class="photo-consent-check"><input type="checkbox" data-photo-consent-adult /> <b>I am the person pictured, or their parent / legal guardian, and I permit this private story use.</b></label>
             <label class="photo-consent-check"><input type="checkbox" data-photo-consent-processing /> <b>I understand that a processed copy will leave this device and be handled by the selected regional storage, safety and AI services.</b></label>
             <div class="photo-consent-fields"><label><span>Adult name</span><input data-photo-guardian-name maxlength="100" autocomplete="name" /></label><label><span>Relationship to the person pictured</span><input data-photo-guardian-relationship maxlength="80" placeholder="e.g. parent, self" /></label></div>
@@ -72,7 +72,7 @@
           </button>
           <section class="existing-writing-panel" data-existing-writing-panel hidden aria-label="Bring existing writing">
             <div><span data-t="existing-writing-kicker">EXISTING WRITING</span><strong data-t="existing-writing-panel-title">Bring the child’s writing to Yu</strong></div>
-            <label class="existing-writing-file-control"><input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,image/heic,image/heif" data-existing-writing-file hidden /><span aria-hidden="true">↥</span><b data-t="existing-writing-file">Choose a document or a clear photo</b></label>
+            <label class="existing-writing-file-control"><input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" data-existing-writing-file hidden /><span aria-hidden="true">↥</span><b data-t="existing-writing-file">Choose a document or a clear photo</b></label>
             <p data-existing-writing-file-name aria-live="polite"></p>
             <label><span data-t="existing-writing-paste">Or paste the writing</span><textarea data-existing-writing maxlength="7000" rows="9" data-placeholder-t="existing-writing-placeholder" placeholder="Paste an existing essay. Yu will keep the child’s meaning and review it one sentence at a time."></textarea></label>
             <small data-t="existing-writing-note">Read on this device first · private by default · long writing is reviewed in clear sections.</small>
@@ -294,7 +294,7 @@
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
     <script src="safety-client.js"></script>
-    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>

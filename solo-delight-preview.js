@@ -744,7 +744,7 @@
     const displayName = state.name || 'Young Storymaker';
     const initial = state.name ? state.name.charAt(0).toUpperCase() : '✦';
     const card = yuMessage('<small>AUTHOR UNLOCKED</small><h2>You did not just make a picture—you became an author.</h2><p>Add your own photo if you want, then choose how to spend the stars you earned by writing.</p>' +
-      '<div class="author-card" data-author-card><div class="author-card-top"><div class="author-photo" data-author-photo-preview>' + escapeHtml(initial) + '</div><div class="author-info"><small>STORIESLENS YOUNG AUTHOR</small><h2>' + escapeHtml(displayName) + '</h2><p>Author of <i>' + escapeHtml(state.storyTitle) + '</i></p></div></div><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" data-author-photo hidden /><label class="author-photo-action">＋ Add my author photo</label><p class="author-photo-note">Optional · private by default · a grown-up controls sharing.</p><div class="author-badges"><span>✦ Original Voice</span><span>✦ Character Builder</span><span>✦ Story Editor</span></div></div>' +
+      '<div class="author-card" data-author-card><div class="author-card-top"><div class="author-photo" data-author-photo-preview>' + escapeHtml(initial) + '</div><div class="author-info"><small>STORIESLENS YOUNG AUTHOR</small><h2>' + escapeHtml(displayName) + '</h2><p>Author of <i>' + escapeHtml(state.storyTitle) + '</i></p></div></div><input type="file" accept="image/*,.heic,.heif,.avif" data-author-photo hidden /><label class="author-photo-action">＋ Add my author photo</label><p class="author-photo-note">Optional · private by default · a grown-up controls sharing.</p><div class="author-badges"><span>✦ Original Voice</span><span>✦ Character Builder</span><span>✦ Story Editor</span></div></div>' +
       '<section class="star-bank"><div class="star-bank-head"><h3>My star bank</h3><span class="star-balance" data-star-balance>★ ' + state.stars + '</span></div><p>Stars come from real creating—not screen time.</p><div class="reward-shop"><button type="button" data-redeem="5"><span>Choose a special book-cover frame</span><b>5 ★</b></button><button type="button" data-redeem="10"><span>Add a gold author seal</span><b>10 ★</b></button><button type="button" data-redeem="20" disabled><span>Unlock one extra illustration</span><b>20 ★</b></button></div><p class="reward-principle">Learning stars stay private. No public ranking and no lost streaks.</p></section>' +
       '<section class="showcase-box"><div class="showcase-head"><div><small>MONTHLY YOUNG AUTHORS FESTIVAL</small><h3>Secret Worlds</h3></div><span class="private-chip">PRIVATE UNTIL APPROVED</span></div><p>A grown-up can submit this story to the monthly showcase. Readers respond with encouragement, not dislikes.</p><div class="warm-reactions"><span>❤️ I love this character</span><span>✨ So imaginative</span><span>📖 What happens next?</span><span>🎨 Beautiful story world</span></div><div class="showcase-rules"><span><b>✓</b> No live popularity ranking</span><span><b>✓</b> Reader’s Choice announced after the month ends</span><span><b>✓</b> Learning stars never depend on votes</span></div><button class="showcase-request" type="button" data-showcase-request>Ask a grown-up to enter my story</button></section>');
 
@@ -873,7 +873,7 @@
   function applyPreparedPictures(files, preparedImages) {
     if (state.imageUrl && state.imageUrl.startsWith('blob:')) URL.revokeObjectURL(state.imageUrl);
     state.referenceImages = preparedImages.map(function (prepared, index) {
-      return { dataUrl: prepared.dataUrl, name: files[index].name, containsRealPerson: Boolean(prepared.review?.checks?.realPerson), convertedFromHeic: Boolean(prepared.convertedFromHeic) };
+      return { dataUrl: prepared.dataUrl, name: files[index].name, containsRealPerson: Boolean(prepared.review?.checks?.realPerson), convertedFromHeic: Boolean(prepared.convertedFromHeic), convertedOnServer: Boolean(prepared.convertedOnServer) };
     });
     state.imageUrl = state.referenceImages[0].dataUrl;
     state.resultImage = state.imageUrl;
@@ -903,7 +903,9 @@
         if (serverFallback && window.StoriesLensArtworkSafety.isHeicFile(file)) {
           return window.StoriesLensArtworkSafety.processArtworkWithServerFallback(file);
         }
-        return window.StoriesLensArtworkSafety.processArtwork(file);
+        return serverFallback
+          ? window.StoriesLensArtworkSafety.processArtwork(file)
+          : window.StoriesLensArtworkSafety.processArtworkLocalOnly(file);
       }));
       applyPreparedPictures(files, preparedImages);
     } catch (error) {

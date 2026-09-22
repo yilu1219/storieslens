@@ -183,7 +183,7 @@
                 </details>
                 <section class="style-reference-upload" data-style-reference-upload>
                   <div class="style-reference-copy"><strong>Have a style you love?</strong><small>Add one image. Yu will borrow only its colors, light, texture and mood—not its characters or exact composition.</small></div>
-                  <label class="style-reference-button"><span>＋ Add a style reference</span><input type="file" data-style-reference-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" /></label>
+                  <label class="style-reference-button"><span>＋ Add a style reference</span><input type="file" data-style-reference-file accept="image/*,.heic,.heif,.avif" /></label>
                   <div class="style-reference-preview" data-style-reference-preview hidden>
                     <img data-style-reference-image alt="Uploaded picture style reference" />
                     <div><strong data-style-reference-name>Style reference ready</strong><small data-style-reference-status>Metadata removed on this device.</small><label><input type="checkbox" data-style-reference-permission /> <span>I made this image or have permission to use it as a private style reference.</span></label></div>
@@ -201,7 +201,7 @@
                   <small data-character-voice-status>Type or hold to speak. Everyone’s later images will follow these shared rules.</small>
                   <label class="character-upload">
                     <span>＋ Add a drawing or photo</span>
-                    <input type="file" data-character-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" />
+                    <input type="file" data-character-file accept="image/*,.heic,.heif,.avif" />
                   </label>
                   <small data-character-file-status>The original stays on this device while Yu removes location and camera information.</small>
                   <section class="character-photo-consent" data-character-photo-consent hidden>
@@ -234,7 +234,7 @@
             </label>
             <label class="wide work-file-field" data-work-file-field hidden>
               <span class="field-title"><span>Already made something?</span><button type="button" class="yu-read-button" data-yu-read data-read-en="You can add writing you already made, or upload artwork or a photo to begin from." data-read-zh="你可以上传已经写好的文字，也可以上传画作或照片作为故事起点。" aria-label="Hear Yu explain file upload">▶ Ask Yu</button></span>
-              <input type="file" data-work-file accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,text/plain,text/markdown,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" />
+              <input type="file" data-work-file accept="image/*,.heic,.heif,.avif,text/plain,text/markdown,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" />
               <small data-work-file-status>Choose DOCX, TXT, MD, JPG, PNG, WEBP, or HEIC. Files are prepared privately before the next step.</small>
             </label>
             <label class="wide" data-code-field hidden>
@@ -264,7 +264,7 @@
     </main>
 
     <script src="safety-client.js"></script>
-    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="i18n.js"></script>

@@ -25,3 +25,19 @@ test("SOLO exposes an explicit, opt-in server fallback without weakening safety 
   assert.match(server, /\/api\/convert-heic/);
   assert.match(server, /heic-conversion.*limit: 6/);
 });
+
+test("all phone-photo entry points inherit automatic HEIC fallback and fresh PWA assets", () => {
+  const browserSafety = fs.readFileSync(path.join(__dirname, "..", "artwork-upload-safety.js"), "utf8");
+  const serviceWorker = fs.readFileSync(path.join(__dirname, "..", "service-worker.js"), "utf8");
+  assert.match(browserSafety, /options\.allowServerFallback === false/);
+  assert.match(browserSafety, /return convertHeicOnServer\(file\)/);
+  assert.match(browserSafety, /processArtworkLocalOnly/);
+  assert.match(browserSafety, /image\/avif/);
+  assert.match(serviceWorker, /v90-mobile-photo-20260922/);
+  assert.match(serviceWorker, /artwork-upload-safety\.js\?v=20260922-mobile-heic-1/);
+
+  for (const filename of ["index.html", "app.html", "chinese-studio.html", "start.html", "classroom-archive.html", "movie-studio.html", "solo-delight-preview.html"]) {
+    const html = fs.readFileSync(path.join(__dirname, "..", filename), "utf8");
+    assert.match(html, /accept="[^"]*image\/\*/i, `${filename} should accept phone photo libraries`);
+  }
+});

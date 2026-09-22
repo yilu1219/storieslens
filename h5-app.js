@@ -56,7 +56,7 @@
       "bring-one": "Bring one piece of your world.",
       "free": "FREE",
       "upload-title": "Upload your artwork or photo",
-      "upload-help": "JPG, PNG, WEBP or HEIC · converted privately on this device",
+      "upload-help": "iPhone and Android photos supported · metadata removed before use",
       "privacy-note": "Location and camera information are removed before the image is used.",
       "beta-photo-note": "PRIVATE BETA · Personal photos may become a private book or video. Use only photos you have permission to use.",
       "existing-writing-entry-title": "Already wrote an essay?",
@@ -66,7 +66,7 @@
       "existing-writing-file": "Choose a document or a clear photo",
       "existing-writing-paste": "Or paste the writing",
       "existing-writing-placeholder": "Paste an existing essay. Yu will keep the child’s meaning and review it one sentence at a time.",
-      "existing-writing-note": "Documents are read on this device. HEIC/HEIF photos are converted on this device; check extracted text before Yu revises it.",
+      "existing-writing-note": "Documents are read on this device. Phone photos are converted securely; check extracted text before Yu revises it.",
       "or-words": "Or begin with your own words",
       "write-speak": "WRITE · SPEAK",
       "seed-placeholder": "Tell Yu what is happening in the artwork—or begin with one idea.",
@@ -210,7 +210,7 @@
       "bring-one": "带来一份属于你的创作。",
       "free": "免费体验",
       "upload-title": "上传你的画作或照片",
-      "upload-help": "支持 JPG、PNG、WEBP、HEIC · 在本机私密转换",
+      "upload-help": "支持 iPhone 与安卓手机照片 · 使用前删除拍摄元数据",
       "privacy-note": "图片使用前会先删除位置与拍摄设备信息。",
       "beta-photo-note": "内测说明 · 本人或家人的真人照片可以用于制作私密故事书或视频，请先取得本人或监护人同意。",
       "existing-writing-entry-title": "已经写好一篇作文？",
@@ -220,7 +220,7 @@
       "existing-writing-file": "选择文档或清晰的作文照片",
       "existing-writing-paste": "或直接粘贴这篇作文",
       "existing-writing-placeholder": "粘贴已有作文。Yu 会保留孩子原意，一句一句陪他修改。",
-      "existing-writing-note": "文档先在本机读取；HEIC／HEIF 照片先在本机转换。识别出的文字由你确认后，Yu 才会逐句修改。",
+      "existing-writing-note": "文档先在本机读取；手机照片将安全转换。识别出的文字由你确认后，Yu 才会逐句修改。",
       "or-words": "也可以从自己的话开始",
       "write-speak": "写下 · 口述",
       "seed-placeholder": "告诉羽导师画面里正在发生什么，或者先说出一个想法。",
@@ -1312,7 +1312,7 @@
       toast(locale === "zh" ? "正在删除位置与设备信息并进行安全检查……" : "Removing location and device information, then checking safety…");
       const safeArtwork = await window.StoriesLensArtworkSafety.processArtwork(file);
       selectedArtworkData = safeArtwork.dataUrl;
-      selectedArtwork = { name: file.name, privateOnly: false, personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson), convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
+      selectedArtwork = { name: file.name, privateOnly: false, personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson), convertedFromHeic: Boolean(safeArtwork.convertedFromHeic), convertedOnServer: Boolean(safeArtwork.convertedOnServer) };
     } catch (error) {
       const reasonCode = error.reasonCode || error.message;
       if (reasonCode === "review_unavailable" && window.StoriesLensArtworkSafety?.removeMetadata) {
@@ -1343,7 +1343,9 @@
     $("[data-coach-image]").hidden = false;
     const personalPhotoConsent = $("[data-personal-photo-consent]");
     if (personalPhotoConsent) personalPhotoConsent.hidden = !selectedArtwork.personalPhoto;
-    if (selectedArtwork.convertedFromHeic) toast(locale === "zh" ? "HEIC 已在本机安全转换，原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded.");
+    if (selectedArtwork.convertedFromHeic) toast(selectedArtwork.convertedOnServer
+      ? (locale === "zh" ? "HEIC 已安全转换；原始文件未保存。" : "HEIC converted securely; the original file was not stored.")
+      : (locale === "zh" ? "HEIC 已在本机安全转换，原始照片不会上传。" : "HEIC converted safely on this device. The original photo is not uploaded."));
     if (!selectedArtwork.privateOnly && !workshopMode && !selectedArtwork.personalPhoto) {
       try {
         toast(selectedArtwork.personalPhoto
@@ -1358,7 +1360,7 @@
     if (selectedArtwork.personalPhoto && !workshopMode) {
       toast(locale === "zh" ? "真人照片已在本机准备好。完成下方成年人确认并登录账户后，才会保存到私密作品库。" : "Your personal photo is ready on this device. Complete the adult confirmation and sign in before it is saved privately.");
     }
-    window.StoriesLensAnalytics?.track("family_artwork_ready", { privateOnly: Boolean(selectedArtwork.privateOnly), convertedFromHeic: Boolean(selectedArtwork.convertedFromHeic) });
+    window.StoriesLensAnalytics?.track("family_artwork_ready", { privateOnly: Boolean(selectedArtwork.privateOnly), convertedFromHeic: Boolean(selectedArtwork.convertedFromHeic), convertedOnServer: Boolean(selectedArtwork.convertedOnServer) });
   }
 
   $("[data-create-form]").addEventListener("submit", (event) => {
@@ -1627,6 +1629,8 @@
           name: selectedArtwork?.name || "",
           privateOnly: Boolean(selectedArtwork?.privateOnly),
           personalPhoto: Boolean(selectedArtwork?.personalPhoto),
+          convertedFromHeic: Boolean(selectedArtwork?.convertedFromHeic),
+          convertedOnServer: Boolean(selectedArtwork?.convertedOnServer),
           seed: storySeed(),
           creatorName: $("[data-creator-name]").value.trim(),
           ageGroup: $("[data-age]").value,
@@ -1647,6 +1651,8 @@
         name: selectedArtwork?.name || "",
         privateOnly: Boolean(selectedArtwork?.privateOnly),
         personalPhoto: Boolean(selectedArtwork?.personalPhoto),
+        convertedFromHeic: Boolean(selectedArtwork?.convertedFromHeic),
+        convertedOnServer: Boolean(selectedArtwork?.convertedOnServer),
         seed: storySeed(),
         creatorName: $("[data-creator-name]").value.trim(),
         ageGroup: $("[data-age]").value,

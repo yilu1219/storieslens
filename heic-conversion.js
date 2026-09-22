@@ -1,8 +1,8 @@
 const path = require("node:path");
 const { Worker } = require("node:worker_threads");
 
-const MAX_HEIC_BYTES = 12 * 1024 * 1024;
-const MAX_JPEG_BYTES = 16 * 1024 * 1024;
+const MAX_HEIC_BYTES = 15 * 1024 * 1024;
+const MAX_JPEG_BYTES = 24 * 1024 * 1024;
 const CONVERSION_TIMEOUT_MS = 20_000;
 const MAX_CONCURRENT_CONVERSIONS = 2;
 let activeConversions = 0;

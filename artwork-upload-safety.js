@@ -2,14 +2,14 @@
   "use strict";
 
   const MAX_DIMENSION = 1800;
-  const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+  const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
   const HEIC_TYPES = new Set(["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"]);
   const HEIC_CONVERTER_SRC = "vendor/heic2any-0.0.4.min.js";
   let heicConverterPromise = null;
 
   const fileExtensionMatches = (file, pattern) => pattern.test(String(file?.name || ""));
   const isHeicFile = (file) => Boolean(file) && (HEIC_TYPES.has(String(file.type || "").toLowerCase()) || fileExtensionMatches(file, /\.(heic|heif)$/i));
-  const isSupportedImage = (file) => Boolean(file) && (ALLOWED_TYPES.has(String(file.type || "").toLowerCase()) || isHeicFile(file) || fileExtensionMatches(file, /\.(jpe?g|png|webp)$/i));
+  const isSupportedImage = (file) => Boolean(file) && (ALLOWED_TYPES.has(String(file.type || "").toLowerCase()) || isHeicFile(file) || fileExtensionMatches(file, /\.(jpe?g|png|webp|avif|gif)$/i));
 
   function ensureHeicConverter() {
     if (typeof window.heic2any === "function") return Promise.resolve(window.heic2any);
@@ -68,7 +68,7 @@
     }
     const converted = await fetch(result.imageDataUrl).then((item) => item.blob());
     const sanitized = await removeMetadata(new File([converted], `${String(file.name || "photo").replace(/\.(heic|heif)$/i, "")}.jpg`, { type: "image/jpeg" }));
-    return { ...sanitized, convertedFromHeic: true, convertedOnServer: true, originalNotStored: result.originalDiscarded === true };
+    return { ...sanitized, convertedFromHeic: true, convertedOnServer: true, originalNotUploaded: false, originalNotStored: result.originalDiscarded === true };
   }
 
   const loadImage = (file) => new Promise((resolve, reject) => {
@@ -82,7 +82,7 @@
     image.src = url;
   });
 
-  async function removeMetadata(file) {
+  async function removeMetadata(file, options = {}) {
     if (!isSupportedImage(file)) throw new Error("invalid_image");
     const convertedFromHeic = isHeicFile(file);
     let preparedFile = file;
@@ -91,7 +91,12 @@
       try {
         loaded = await loadImage(file);
       } catch (_nativeDecodeError) {
-        preparedFile = await convertHeic(file);
+        try {
+          preparedFile = await convertHeic(file);
+        } catch (conversionError) {
+          if (options.allowServerFallback === false) throw conversionError;
+          return convertHeicOnServer(file);
+        }
       }
     }
     const { image, url } = loaded || await loadImage(preparedFile);
@@ -143,6 +148,12 @@
     return { ...sanitized, review };
   }
 
+  async function processArtworkLocalOnly(file) {
+    const sanitized = await removeMetadata(file, { allowServerFallback: false });
+    const review = await reviewSanitizedArtwork(sanitized.dataUrl);
+    return { ...sanitized, review };
+  }
+
   async function processArtworkWithServerFallback(file) {
     if (!isHeicFile(file)) throw new Error("invalid_heic");
     const sanitized = await convertHeicOnServer(file);
@@ -150,5 +161,5 @@
     return { ...sanitized, review };
   }
 
-  window.StoriesLensArtworkSafety = { processArtwork, processArtworkWithServerFallback, removeMetadata, reviewSanitizedArtwork, isSupportedImage, isHeicFile, convertHeic, convertHeicOnServer };
+  window.StoriesLensArtworkSafety = { processArtwork, processArtworkLocalOnly, processArtworkWithServerFallback, removeMetadata, reviewSanitizedArtwork, isSupportedImage, isHeicFile, convertHeic, convertHeicOnServer };
 })();

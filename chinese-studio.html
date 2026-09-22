@@ -51,7 +51,7 @@
 
           <div class="chinese-start-options">
             <label class="spark-upload chinese-upload" data-upload-label>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" data-artwork hidden />
+              <input type="file" accept="image/*,.heic,.heif,.avif" data-artwork hidden />
               <span class="spark-upload-icon" aria-hidden="true">＋</span>
               <strong>上传你的画作或照片</strong>
               <small>支持 JPG、PNG、WEBP、HEIC · 图片先在本机安全处理</small>
@@ -77,7 +77,7 @@
           <section class="personal-photo-consent" data-personal-photo-consent hidden aria-live="polite">
             <p>真人照片 · 内测保护</p>
             <h3>保存这张照片前，请完成监护确认</h3>
-            <span>原始文件留在本机。你同意后，系统只把已删除定位和设备信息的工作副本发送到所选地区的私有存储、安全审核与 AI 服务；不会自动公开，并可永久删除。</span>
+            <span>图片会优先在本机转换；若 iPhone HEIC 必须由服务器转换，原文件只在内存中使用并立即丢弃。去除定位和设备信息的工作副本仍需安全检查，不会自动公开，并可永久删除。</span>
             <label class="photo-consent-check"><input type="checkbox" data-photo-consent-adult /> <b>我是照片中的本人，或其父母／法定监护人，同意将照片用于这份私密故事作品。</b></label>
             <label class="photo-consent-check"><input type="checkbox" data-photo-consent-processing /> <b>我理解处理副本会离开本机，并由所选地区的私有存储、安全审核与 AI 服务处理。</b></label>
             <div class="photo-consent-fields"><label><span>成年人姓名</span><input data-photo-guardian-name maxlength="100" autocomplete="name" /></label><label><span>与照片中人物的关系</span><input data-photo-guardian-relationship maxlength="80" placeholder="例如：本人、母亲、父亲、监护人" /></label></div>
@@ -86,7 +86,7 @@
 
           <section class="existing-writing-panel chinese-existing-writing-panel" data-existing-writing-panel hidden aria-label="上传已有作文">
             <div><span>已有作文</span><strong>把孩子已经写好的作文交给羽大师</strong></div>
-            <label class="existing-writing-file-control"><input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,image/heic,image/heif" data-existing-writing-file hidden /><span aria-hidden="true">↥</span><b>选择文档或清晰的作文照片</b></label>
+            <label class="existing-writing-file-control"><input type="file" accept=".docx,.txt,.md,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" data-existing-writing-file hidden /><span aria-hidden="true">↥</span><b>选择文档或清晰的作文照片</b></label>
             <p data-existing-writing-file-name aria-live="polite"></p>
             <label><span>或直接粘贴孩子已经写好的作文</span><textarea data-existing-writing maxlength="7000" rows="9" placeholder="粘贴已有作文。羽大师会保留孩子原意，一句一句陪他修改。"></textarea></label>
             <small>文档先在本机读取；HEIC／HEIF 会先在本机转换并移除拍摄信息。照片识别后，请先核对文字；默认私密。</small>
@@ -284,7 +284,7 @@
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
     <script src="safety-client.js"></script>
-    <script src="artwork-upload-safety.js?v=20260913-1"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
     <script src="yu-profile.js?v=20260915-3"></script>
     <script src="spark-handoff.js?v=20260914-1"></script>
     <script src="writing-import.js?v=20260916-2"></script>

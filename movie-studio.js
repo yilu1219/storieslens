@@ -93,7 +93,7 @@
       const file = event.target.files?.[0];
       if (!file) return;
       const state = $("[data-voice-state]", card);
-      state.textContent = /\.(heic|heif)$/i.test(file.name) ? "Converting HEIC privately on this device…" : "Reviewing artwork…";
+      state.textContent = /\.(heic|heif)$/i.test(file.name) ? "Preparing HEIC securely…" : "Reviewing artwork…";
       try {
         const rewritten = await rewriteImage(file);
         const media = await uploadMedia(rewritten, true);

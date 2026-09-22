@@ -234,7 +234,8 @@
         safetyReviewed: !homepageSpark.privateOnly,
         metadataRemoved: true,
         personalPhoto: homepageSpark.personalPhoto === true,
-        convertedFromHeic: homepageSpark.convertedFromHeic === true
+        convertedFromHeic: homepageSpark.convertedFromHeic === true,
+        convertedOnServer: homepageSpark.convertedOnServer === true
       };
       try { sessionStorage.setItem("storieslens_imported_work", JSON.stringify(importedWork)); } catch (_error) { /* IndexedDB handoff remains available. */ }
       if (carriedSparkImage) carriedSparkImage.src = homepageSpark.dataUrl;
@@ -285,7 +286,9 @@
       sessionStorage.setItem("storieslens_style_reference", JSON.stringify(styleReference));
       if (styleReferenceImage) styleReferenceImage.src = safeArtwork.dataUrl;
       if (styleReferenceName) styleReferenceName.textContent = file.name;
-      if (styleReferenceStatus) styleReferenceStatus.textContent = safeArtwork.convertedFromHeic ? t("HEIC converted and metadata removed on this device.") : t("Metadata removed on this device. Yu will use only high-level visual traits.");
+      if (styleReferenceStatus) styleReferenceStatus.textContent = safeArtwork.convertedFromHeic
+        ? t(safeArtwork.convertedOnServer ? "HEIC securely converted; the original was not stored." : "HEIC converted and metadata removed on this device.")
+        : t("Metadata removed on this device. Yu will use only high-level visual traits.");
       if (styleReferencePreview) styleReferencePreview.hidden = false;
       error.textContent = "";
     } catch (uploadError) {
@@ -641,7 +644,8 @@
         type: safeArtwork.type,
         metadataRemoved: true,
         personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson),
-        convertedFromHeic: Boolean(safeArtwork.convertedFromHeic)
+        convertedFromHeic: Boolean(safeArtwork.convertedFromHeic),
+        convertedOnServer: Boolean(safeArtwork.convertedOnServer)
       };
       sessionStorage.setItem("storieslens_character_reference", JSON.stringify(characterReference));
       if (characterPreviewImage) {
@@ -651,7 +655,7 @@
       if (characterPreviewEmpty) characterPreviewEmpty.hidden = true;
       if (characterPhotoConsent) characterPhotoConsent.hidden = !characterReference.personalPhoto;
       if (characterFileStatus) characterFileStatus.textContent = characterReference.personalPhoto
-        ? t("Personal photo detected. It remains on this device until the adult permission below is completed and generation begins.")
+        ? t("Personal photo detected. A metadata-free copy passed safety review; it is not saved to the story until adult permission is completed.")
         : t("Reference ready. Metadata was removed on this device.");
       error.textContent = "";
     } catch (uploadError) {
@@ -698,7 +702,7 @@
         content = safeArtwork.dataUrl;
         storedName = safeArtwork.review?.checks?.realPerson ? "personal-photo.webp" : "artwork.webp";
         storedType = safeArtwork.type;
-        artworkReview = { safetyReviewed: true, metadataRemoved: true, personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson), convertedFromHeic: Boolean(safeArtwork.convertedFromHeic) };
+        artworkReview = { safetyReviewed: true, metadataRemoved: true, personalPhoto: Boolean(safeArtwork.review?.checks?.realPerson), convertedFromHeic: Boolean(safeArtwork.convertedFromHeic), convertedOnServer: Boolean(safeArtwork.convertedOnServer) };
       } catch (uploadError) {
         workFile.value = "";
         const message = uploadError.reasonCode === "personal_name" ? "A visible personal name was detected. Please cover or remove it and try again." : uploadError.reasonCode === "school_information" ? "School information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "contact_information" ? "Contact information was detected. Please cover or remove it and try again." : uploadError.reasonCode === "identity_document" ? "Identity documents cannot be uploaded." : uploadError.reasonCode === "unsafe_content" ? "This image did not pass the safe-content review." : "Image upload is paused because the safety review is unavailable. You can still write or speak.";
@@ -721,7 +725,9 @@
     if (isText && !storySeed.value.trim()) storySeed.value = String(content).trim().slice(0, storySeed.maxLength || 280);
     if (workFileStatus) workFileStatus.textContent = isText
       ? `${t("Ready")}: ${file.name}`
-      : (artworkReview?.convertedFromHeic ? t("HEIC converted on this device · original not uploaded · private by default") : t("Safety check passed · personal metadata removed · private by default"));
+      : (artworkReview?.convertedFromHeic
+        ? t(artworkReview.convertedOnServer ? "HEIC securely converted · original not stored · private by default" : "HEIC converted on this device · original not uploaded · private by default")
+        : t("Safety check passed · personal metadata removed · private by default"));
     error.textContent = "";
   });
 
