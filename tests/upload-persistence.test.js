@@ -76,8 +76,8 @@ test("a mobile guest can create a private project, store approved artwork, and r
   assert.strictEqual(libraryResponse.payload.projects[0].title, "The Star Keeper");
 
   const guestCredits = await request("GET", "/api/credits");
-  assert.strictEqual(guestCredits.payload.wallet.resources.imageGenerations.remaining, 0);
-  assert.strictEqual(guestCredits.payload.freeGift.firstIllustration, false);
+  assert.strictEqual(guestCredits.payload.wallet.resources.imageGenerations.remaining, 1);
+  assert.strictEqual(guestCredits.payload.freeGift.firstIllustration, true);
 
   const privateMediaResponse = await request("GET", mediaResponse.payload.media.url);
   assert.strictEqual(privateMediaResponse.statusCode, 200);

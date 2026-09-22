@@ -7,7 +7,7 @@
   const requestedReturn = pageParams.get("returnTo") || pageParams.get("return") || "";
   const normalizedReturn = requestedReturn.replace(/^\/+/, "");
   const referralCode = (pageParams.get("ref") || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100);
-  const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio|checkout|payment-success|teacher-dashboard|classroom-archive)\.html(?:[?#].*)?$/.test(normalizedReturn) ? normalizedReturn : (teacherContext ? "teacher-dashboard.html" : "my-stories.html");
+  const returnAfterLogin = /^(?:(?:squad-board|my-stories|app|chinese-studio|checkout|payment-success|teacher-dashboard|classroom-archive)\.html|solo-story)(?:[?#].*)?$/.test(normalizedReturn) ? normalizedReturn : (teacherContext ? "teacher-dashboard.html" : "my-stories.html");
   const $ = (selector) => document.querySelector(selector);
   const startForm = $("[data-email-start]");
   const verifyForm = $("[data-email-verify]");
@@ -170,7 +170,7 @@
       $("[data-login-success]").hidden = false;
       $("[data-success-copy]").textContent = teacherContext
         ? `${result.user.displayName}, your private teacher workspace is ready. · 教师工作台已经准备好。`
-        : `${result.user.displayName}, your private library and free first-scene illustration are ready. · 私人作品库与首张免费插图额度已经准备好。`;
+        : `${result.user.displayName}, your private library is ready. Any picture or story you made before sign-up is saved here. · 私人作品库已准备好，注册前创作的图片和故事会自动保存。`;
       const successLink = $("[data-login-success] a");
       if (successLink) successLink.href = returnAfterLogin;
       window.setTimeout(() => { location.href = returnAfterLogin; }, 900);

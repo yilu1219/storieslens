@@ -62,7 +62,9 @@
     wallet: null,
     imageCredits: 0,
     readingConfirmed: false,
-    pictureConsentPanel: null
+    pictureConsentPanel: null,
+    resumedGuestCreation: false,
+    postSignupAction: ''
   };
   let pendingHeicFiles = [];
 
@@ -163,6 +165,10 @@
     return Math.max(0, Number(wallet?.resources?.imageGenerations?.remaining) || 0);
   }
 
+  function hasAccount() {
+    return Boolean(state.session?.authenticated && state.session.user?.kind === 'account');
+  }
+
   async function refreshAccountState() {
     try {
       state.session = await apiJson('/api/auth/session');
@@ -232,7 +238,6 @@
   }
 
   async function saveProject(extraSnapshot) {
-    await requireAccount();
     let result;
     try {
       const creationKey = localStorage.getItem('storieslens_solo_project_creation_key') || ('solo-project-' + Date.now() + '-' + Math.random().toString(36).slice(2));
@@ -270,6 +275,22 @@
       if (draft?.outputFormat === 'film' || setup?.outputFormat === 'film') state.outputType = 'film';
       const incomingWords = String(draft?.draft || dna?.seed || setup?.seed || '').trim();
       if (incomingWords) input.value = incomingWords.slice(0, Number(input.maxLength) || 7000);
+      if (params.get('resumeGuest') === '1') {
+        const pending = JSON.parse(localStorage.getItem('storieslens_pending_guest_creation') || 'null');
+        if (pending?.projectId && pending?.resultImage && pending?.revisedScene) {
+          state.projectId = String(pending.projectId);
+          state.name = String(pending.name || state.name || '').slice(0, 80);
+          state.answers = Array.isArray(pending.answers) ? pending.answers.map(String).slice(0, 4) : [];
+          state.originalScene = String(pending.originalScene || '');
+          state.revisedScene = String(pending.revisedScene);
+          state.storyTitle = String(pending.storyTitle || 'My Story');
+          state.resultImage = String(pending.resultImage);
+          state.outputType = pending.outputType === 'film' ? 'film' : 'book';
+          state.selectedStyle = String(pending.selectedStyle || 'Storybook watercolor');
+          state.resumedGuestCreation = true;
+          state.postSignupAction = String(params.get('postSignup') || pending.action || 'continue');
+        }
+      }
     } catch (_error) {
       state.projectId = '';
       state.name = '';
@@ -381,13 +402,17 @@
 
   async function generateStoryPicture(consentPanel) {
     await saveProject({ pictureGenerationRequested: true });
-    const referenceImages = uploadedReferenceUrls().slice(0, 3);
+    const guestPersonalPhotoHeld = !hasAccount() && state.uploadContainsRealPerson;
+    const referenceImages = guestPersonalPhotoHeld ? [] : uploadedReferenceUrls().slice(0, 3);
     const needsPersonalPhotoConsent = referenceImages.length > 0 && (state.selectedStyle === 'Real-life story' || state.uploadContainsRealPerson);
     const consentId = needsPersonalPhotoConsent ? await ensurePersonalPhotoConsent(consentPanel) : '';
+    const visualDirection = guestPersonalPhotoHeld
+      ? 'family-friendly cinematic story art based only on the child’s words; do not reproduce or infer the identity in the held private photo'
+      : selectedStylePrompt();
     const storyPrompt = [
       'Create one finished square story scene from the child’s own writing.',
       'Story: ' + state.revisedScene,
-      'Visual direction: ' + selectedStylePrompt() + '.',
+      'Visual direction: ' + visualDirection + '.',
       state.pictureChangeRequest ? 'Change only this requested detail: ' + state.pictureChangeRequest + '.' : '',
       referenceImages.length ? 'Use all ' + referenceImages.length + ' attached approved reference ' + (referenceImages.length === 1 ? 'image' : 'images') + '. Each reference is a separate protagonist. Preserve each person’s own face, age, skin tone, hairstyle, clothing, and body proportions. Keep the identities separate: do not blend or swap faces, do not omit anyone, include each protagonist exactly once, and do not add extra people.' : '',
       'Do not add text, captions, logos, watermarks, UI, arrows, or play icons.'
@@ -401,7 +426,7 @@
         submissionId: 'solo-' + Date.now(),
         prompt: storyPrompt,
         studentWriting: state.revisedScene,
-        style: selectedStylePrompt(),
+        style: visualDirection,
         aspectRatio: '1:1',
         referenceImageUrls: referenceImages,
         personalPhoto: needsPersonalPhotoConsent,
@@ -536,9 +561,9 @@
 
   function showGreeting() {
     setJourney('idea');
-    const accountNote = state.session?.authenticated && state.session.user?.kind === 'account'
+    const accountNote = hasAccount()
       ? '<p class="tiny-note">✓ Signed in · your private story and picture balance will save automatically.</p>'
-      : '<p class="tiny-note"><a href="login.html?returnTo=%2Fsolo-story">Sign in first</a> to save this story and use your free first picture.</p>';
+      : '<p class="tiny-note"><strong>Your first picture is free—no sign-up needed.</strong> Make it first. Create an account only when you want to continue or download it.</p>';
     yuMessage('<small>YU · YOUR STORY MENTOR</small><h1>Hi! What shall we imagine today?</h1><p>Upload a drawing, photo, or portrait—or tell me one idea. I’ll help with the next step.</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
     state.currentPrompt = 'Hi! Upload a drawing, photo, or portrait—or tell me one tiny idea. Just three words can be enough.';
     state.voiceMood = 'theatrical';
@@ -712,19 +737,17 @@
     reward('Story editor', 'You checked that the clearer sentence still means what you wanted.', 3);
     try {
       await saveProject({ mentorRevisionCompleted: true, readingConfirmed: true });
-      const gift = await apiJson('/api/credits/unlock-learning-gift', {
-        method: 'POST',
-        body: JSON.stringify({ projectId: state.projectId })
-      });
-      state.wallet = gift.wallet || state.wallet;
-      state.imageCredits = walletImageCredits(state.wallet);
-      giftCount.textContent = String(state.imageCredits);
-    } catch (error) {
-      if (error.code === 'AUTH_REQUIRED' || error.status === 401) {
-        showToast('Your scene is ready. Sign in before making the free picture so it can be saved.');
-      } else {
-        showToast('Your scene is kept on this device. Cloud save will retry before drawing.');
+      if (hasAccount()) {
+        const gift = await apiJson('/api/credits/unlock-learning-gift', {
+          method: 'POST',
+          body: JSON.stringify({ projectId: state.projectId })
+        });
+        state.wallet = gift.wallet || state.wallet;
+        state.imageCredits = walletImageCredits(state.wallet);
+        giftCount.textContent = String(state.imageCredits);
       }
+    } catch (error) {
+      showToast('Your scene is kept privately. Yu will retry the save before drawing.');
     }
     celebrate();
     showToast('Surprise! Your careful revision is complete. Your picture balance is now ' + state.imageCredits + '.');
@@ -779,7 +802,7 @@
       }
       makeButton.textContent = state.selectedStyle === 'Real-life story'
         ? (state.outputType === 'film' ? '✦ Put me in my first movie frame' : '✦ Put me in my story picture')
-        : (state.outputType === 'film' ? '✦ Make my first movie frame' : '✦ Make my free first picture');
+        : (state.outputType === 'film' ? '✦ Make my free first movie frame' : '✦ Make my free first picture · no sign-up');
     }
     message.querySelectorAll('[data-output-type]').forEach(function (card) {
       card.addEventListener('click', function () {
@@ -830,8 +853,11 @@
       makeButton.textContent = '✦ Yu is making your free picture…';
     }
     const hasReference = uploadedReferenceUrls().length > 0;
+    const guestPersonalPhotoHeld = !hasAccount() && state.uploadContainsRealPerson;
     const realLifeMode = state.selectedStyle === 'Real-life story';
-    const referenceNotice = realLifeMode
+    const referenceNotice = guestPersonalPhotoHeld
+      ? '<div class="reference-lock-note is-words"><span>✦</span><div><strong>Your first free picture uses your story words</strong><small>Your real-person photo stays private. After a grown-up creates the account, Yu can use it with consent and permanent-delete controls.</small></div></div>'
+      : realLifeMode
       ? '<div class="reference-lock-note"><span>✓</span><div><strong>Real-life version uses your uploaded photo</strong><small>Yu keeps the same face, age, hairstyle, clothes, and number of people while placing them inside the story scene.</small></div></div>'
       : (hasReference ? '<div class="reference-lock-note"><span>✓</span><div><strong>Your uploaded picture is the main reference</strong><small>Yu keeps the same person or character identity and changes only the story scene and chosen style.</small></div></div>' : '<div class="reference-lock-note is-words"><span>✦</span><div><strong>Building from your words</strong><small>No picture was uploaded, so Yu follows the character details you described.</small></div></div>');
     const changeNotice = state.pictureChangeRequest ? '<div class="change-lock-note"><strong>Changing only:</strong> “' + escapeHtml(state.pictureChangeRequest) + '”<small>Everything else stays locked.</small></div>' : '';
@@ -894,6 +920,47 @@
     }
   }
 
+  function preserveGuestCreation(action) {
+    try {
+      localStorage.setItem('storieslens_pending_guest_creation', JSON.stringify({
+        action,
+        projectId: state.projectId,
+        name: state.name || '',
+        answers: state.answers.slice(0, 4),
+        originalScene: state.originalScene,
+        revisedScene: state.revisedScene,
+        storyTitle: state.storyTitle,
+        resultImage: state.resultImage,
+        outputType: state.outputType,
+        selectedStyle: state.selectedStyle
+      }));
+    } catch (_error) { /* The guest project still remains in the private server session. */ }
+  }
+
+  function registerAfterFirstPicture(action) {
+    preserveGuestCreation(action);
+    const returnTo = 'solo-story?resumeGuest=1&postSignup=' + encodeURIComponent(action);
+    location.href = 'login.html?returnTo=' + encodeURIComponent(returnTo);
+  }
+
+  async function downloadFinishedPicture() {
+    try {
+      const response = await fetch(state.resultImage, { credentials: 'same-origin' });
+      if (!response.ok) throw new Error('The picture download is not ready yet.');
+      const blobUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = (state.storyTitle || 'my-storieslens-picture').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '') + '.png';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+      showToast('Your picture is downloading. It is also saved in your private library.');
+    } catch (error) {
+      showToast(error.message || 'Open My Stories to download this picture.');
+    }
+  }
+
   function showResult(progressMessage, makeButton) {
     const pictureStep = document.querySelector('[data-step-dot="picture"]');
     pictureStep.classList.remove('is-active');
@@ -901,7 +968,10 @@
     pictureStep.querySelector('span').textContent = '✓';
     celebrate();
     const resultImage = state.resultImage || (state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png');
-    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p><div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">Try again · 1 gift</button></div></div></div>';
+    const resultActions = hasAccount()
+      ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">Try again · 1 gift</button></div>'
+      : '<div class="guest-next-step"><small>YOUR FREE PICTURE IS READY</small><h3>What would you like to do next?</h3><p>Create a free grown-up account now so this picture and story move with you—nothing needs to be entered again.</p><div class="result-actions"><button class="result-action primary" type="button" data-result="signup-continue">Continue creating with Yu</button><button class="result-action" type="button" data-result="signup-download">Download my picture</button></div><span>Free account · private library · your work stays yours</span></div>';
+    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
     let result;
     if (progressMessage && progressMessage.matches('[data-picture-reveal]')) {
       progressMessage.className = 'picture-reveal-slot is-ready';
@@ -925,7 +995,11 @@
     setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'your first story page is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
     result.querySelectorAll('[data-result]').forEach(function (button) {
       button.addEventListener('click', async function () {
-        if (button.dataset.result === 'keep') {
+        if (button.dataset.result === 'signup-continue') {
+          registerAfterFirstPicture('continue');
+        } else if (button.dataset.result === 'signup-download') {
+          registerAfterFirstPicture('download');
+        } else if (button.dataset.result === 'keep') {
           button.disabled = true;
           button.textContent = 'Saving…';
           try {
@@ -1287,6 +1361,17 @@
   restoreIncomingCreation().finally(function () {
     creatorName.value = state.name;
     if (state.name) document.querySelector('[data-child-name]').textContent = state.name;
-    refreshAccountState().finally(showGreeting);
+    refreshAccountState().finally(function () {
+      showGreeting();
+      if (!state.resumedGuestCreation || !hasAccount()) return;
+      setJourney('picture');
+      composer.hidden = true;
+      setTimeout(function () {
+        showResult(null, null);
+        if (state.postSignupAction === 'download') setTimeout(downloadFinishedPicture, 500);
+        else showToast('Welcome back—your picture and story are here. Keep creating with Yu!');
+        try { localStorage.removeItem('storieslens_pending_guest_creation'); } catch (_error) { /* no-op */ }
+      }, 350);
+    });
   });
 }());

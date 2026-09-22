@@ -162,3 +162,16 @@ test("the finished picture replaces the progress card and always has a visible f
   assert.match(preview, /original-garden-door-hd-v2\.png/);
   assert.match(preview, /result\.scrollIntoView\(\{ behavior: 'smooth', block: 'start' \}\)/);
 });
+
+test("every visitor makes one first picture before registration and registers only to continue or download", () => {
+  const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const credits = fs.readFileSync(path.join(__dirname, "..", "credit-system.js"), "utf8");
+  const login = fs.readFileSync(path.join(__dirname, "..", "login.js"), "utf8");
+  assert.match(credits, /"guest-story-start"[\s\S]*grants: \{ storyProjects: 1, imageGenerations: 1 \}/);
+  assert.match(preview, /Your first picture is free—no sign-up needed/);
+  assert.match(preview, /Continue creating with Yu/);
+  assert.match(preview, /Download my picture/);
+  assert.match(preview, /storieslens_pending_guest_creation/);
+  assert.match(preview, /downloadFinishedPicture/);
+  assert.match(login, /solo-story/);
+});

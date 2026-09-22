@@ -5,6 +5,7 @@ const {
   ensureCreditCollections,
   grantPackage,
   ensureFreePreview,
+  ensureGuestStoryStart,
   walletFor,
   usageSummaryFor,
   reserveCredits,
@@ -24,7 +25,7 @@ function database() {
 
 test("allowance packages describe outcomes instead of opaque points", () => {
   assert.deepEqual(PACKAGE_CATALOG["free-preview"].grants, { imageGenerations: 1 });
-  assert.deepEqual(PACKAGE_CATALOG["guest-story-start"].grants, { storyProjects: 1 });
+  assert.deepEqual(PACKAGE_CATALOG["guest-story-start"].grants, { storyProjects: 1, imageGenerations: 1 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].grants, { storyProjects: 1, imageGenerations: 12 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].price, { usd: 19, cny: 129 });
   assert.deepEqual(PACKAGE_CATALOG["invite-cocreate"].grants, { storyProjects: 1, imageGenerations: 18, collaboratorSeats: 5 });
@@ -43,6 +44,29 @@ test("package grants are idempotent and visible in the wallet", () => {
   assert.equal(second.duplicate, true);
   assert.equal(walletFor(data, "user-1").resources.imageGenerations.remaining, 12);
   assert.equal(data.creditTransactions.filter((entry) => entry.packageId === "creator-story").length, 2);
+});
+
+test("an anonymous first picture is granted once, survives registration, and old guest wallets migrate", () => {
+  const data = database();
+  ensureGuestStoryStart(data, "guest-1");
+  assert.equal(walletFor(data, "guest-1").resources.imageGenerations.remaining, 1);
+  ensureFreePreview(data, "guest-1");
+  assert.equal(walletFor(data, "guest-1").resources.imageGenerations.remaining, 1);
+
+  const legacy = database();
+  legacy.creditTransactions.push({
+    id: "legacy-story",
+    userId: "guest-old",
+    resource: "storyProjects",
+    delta: 1,
+    type: "grant",
+    packageId: "guest-story-start",
+    idempotencyKey: "guest-story-start:guest-old:storyProjects",
+    createdAt: new Date().toISOString()
+  });
+  ensureGuestStoryStart(legacy, "guest-old");
+  assert.equal(walletFor(legacy, "guest-old").resources.storyProjects.remaining, 1);
+  assert.equal(walletFor(legacy, "guest-old").resources.imageGenerations.remaining, 1);
 });
 
 test("reservations prevent overspend and settle exactly once", () => {

@@ -22,10 +22,10 @@ const PACKAGE_CATALOG = Object.freeze({
     name: "Guest Story Start",
     nameZh: "访客故事草稿",
     price: { usd: 0, cny: 0 },
-    costGuardUsd: 0,
-    saleMode: "local-draft",
+    costGuardUsd: 0.15,
+    saleMode: "anonymous-trial",
     internal: true,
-    grants: { storyProjects: 1 }
+    grants: { storyProjects: 1, imageGenerations: 1 }
   },
   "revision-read-gift": {
     name: "Revision and Reading Gift",
@@ -243,7 +243,7 @@ function freeGiftProgress(database, userId) {
   const packageIds = new Set(database.creditTransactions.filter((entry) => entry.userId === userId && entry.type === "grant").map((entry) => entry.packageId));
   const referrals = database.referrals.filter((entry) => entry.kind === "attribution" && entry.referrerUserId === userId);
   return {
-    firstIllustration: packageIds.has("free-preview"),
+    firstIllustration: packageIds.has("free-preview") || packageIds.has("guest-story-start"),
     revisionReading: packageIds.has("revision-read-gift"),
     referralCreation: packageIds.has("referral-scene-gift"),
     completedReferrals: referrals.filter((entry) => entry.status === "rewarded").length,
@@ -297,12 +297,14 @@ function grantPackage(database, { userId, packageId, source = "admin", reference
   if (!packageItem) throw Object.assign(new Error("Choose a valid allowance package."), { statusCode: 400, code: "INVALID_PACKAGE" });
   const safeKey = String(idempotencyKey || "").slice(0, 200);
   if (!safeKey) throw Object.assign(new Error("An idempotency key is required."), { statusCode: 400, code: "IDEMPOTENCY_REQUIRED" });
-  const existing = database.creditTransactions.find((entry) => entry.idempotencyKey === `${safeKey}:${entry.resource}` && entry.userId === userId);
-  if (existing) return { duplicate: true, packageId, wallet: walletFor(database, userId) };
+  const missingGrants = Object.entries(packageItem.grants).filter(([resource, units]) => CREDIT_RESOURCES[resource]
+    && Number.isSafeInteger(units)
+    && units > 0
+    && !database.creditTransactions.some((entry) => entry.idempotencyKey === `${safeKey}:${resource}` && entry.userId === userId));
+  if (!missingGrants.length) return { duplicate: true, packageId, wallet: walletFor(database, userId) };
 
   const groupId = crypto.randomUUID();
-  Object.entries(packageItem.grants).forEach(([resource, units]) => {
-    if (!CREDIT_RESOURCES[resource] || !Number.isSafeInteger(units) || units <= 0) return;
+  missingGrants.forEach(([resource, units]) => {
     database.creditTransactions.push({
       id: crypto.randomUUID(),
       groupId,
@@ -323,7 +325,9 @@ function grantPackage(database, { userId, packageId, source = "admin", reference
 }
 
 function ensureFreePreview(database, userId) {
-  const alreadyGranted = database.creditTransactions?.some((entry) => entry.userId === userId && entry.packageId === "free-preview");
+  const alreadyGranted = database.creditTransactions?.some((entry) => entry.userId === userId
+    && entry.resource === "imageGenerations"
+    && ["free-preview", "guest-story-start"].includes(entry.packageId));
   if (alreadyGranted) return walletFor(database, userId);
   return grantPackage(database, {
     userId,
@@ -335,8 +339,9 @@ function ensureFreePreview(database, userId) {
 }
 
 function ensureGuestStoryStart(database, userId) {
-  const alreadyGranted = database.creditTransactions?.some((entry) => entry.userId === userId && entry.packageId === "guest-story-start");
-  if (alreadyGranted) return walletFor(database, userId);
+  const grantedResources = new Set(database.creditTransactions?.filter((entry) => entry.userId === userId && entry.packageId === "guest-story-start").map((entry) => entry.resource));
+  const fullyGranted = Object.keys(PACKAGE_CATALOG["guest-story-start"].grants).every((resource) => grantedResources.has(resource));
+  if (fullyGranted) return walletFor(database, userId);
   return grantPackage(database, {
     userId,
     packageId: "guest-story-start",
