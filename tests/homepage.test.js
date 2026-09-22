@@ -248,12 +248,16 @@ assert(envExample.includes("OPENROUTER_IMAGE_MODEL=bytedance-seed/seedream-4.5")
 assert(envExample.includes("IMAGE_SIZE=2560x1440"), "Environment example should use the minimum accepted 16:9 image size");
 assert(envExample.includes("OPENROUTER_VIDEO_API_URL=https://openrouter.ai/api/v1/videos"), "Environment example should include the OpenRouter video API URL");
 assert(envExample.includes("OPENROUTER_VIDEO_MODEL=bytedance/seedance-2.0-fast"), "Environment example should include the selected video model");
+assert(envExample.includes("CHINA_ARK_VIDEO_MODEL=doubao-seedance-2-0-mini-260615"), "Environment example should include the cost-first Mainland Seedance Mini model");
+assert(envExample.includes("CHINA_ARK_VIDEO_API_URL=https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks"), "Environment example should include the official Ark async video endpoint");
 assert(envExample.includes("VIDEO_DURATION=5"), "Environment example should default scene videos to five seconds");
 assert(envExample.includes("VIDEO_RESOLUTION=720p"), "Environment example should default scene videos to 720p");
 assert(serverJs.includes("/api/generate-video"), "Static server should expose a real video generation route");
 assert(serverJs.includes("/api/video-jobs/"), "Static server should expose video job polling");
 assert(serverJs.includes("bytedance/seedance-2.0-fast"), "Video generation should default to Seedance 2.0 Fast");
-assert(serverJs.includes("public\", \"generated\", \"videos"), "Completed videos should be persisted under public/generated/videos");
+assert(serverJs.includes("doubao-seedance-2-0-mini-260615"), "Mainland video generation should default to the approved Ark Seedance Mini model");
+assert(serverJs.includes('provider: "VOLCENGINE_ARK"') && serverJs.includes('role: "first_frame"'), "Mainland video should submit the approved source image through the Ark task API");
+assert(serverJs.includes("storeGeneratedVideo"), "Completed videos should be persisted in the signed-in creator's private regional media library");
 assert(visualWriteHtml.includes('fetch("/api/generate-video"'), "Visual Write should submit real video jobs");
 assert(visualWriteHtml.includes('/api/video-jobs/'), "Visual Write should poll real video jobs");
 assert(visualWriteHtml.includes("Generate Image First"), "Video action should require a generated source image");

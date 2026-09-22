@@ -436,6 +436,35 @@ function getVideoConfig() {
   };
 }
 
+function getChinaVideoConfig() {
+  const baseUrl = String(process.env.CHINA_ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3").replace(/\/+$/, "");
+  return {
+    provider: "VOLCENGINE_ARK",
+    model: process.env.CHINA_ARK_VIDEO_MODEL || "doubao-seedance-2-0-mini-260615",
+    duration: Number(process.env.VIDEO_DURATION || 5),
+    aspectRatio: process.env.VIDEO_ASPECT_RATIO || "16:9",
+    resolution: process.env.VIDEO_RESOLUTION || "720p",
+    apiKey: process.env.CHINA_ARK_API_KEY || "",
+    videoTaskApiUrl: process.env.CHINA_ARK_VIDEO_API_URL || `${baseUrl}/contents/generations/tasks`,
+    costCnyPerSecond: Number(process.env.CHINA_ARK_VIDEO_COST_CNY_PER_SECOND || 0),
+    cnyPerUsd: Number(process.env.CHINA_CNY_PER_USD || 7.2),
+    watermark: process.env.CHINA_ARK_VIDEO_WATERMARK !== "false",
+    generateAudio: process.env.CHINA_ARK_VIDEO_GENERATE_AUDIO === "true"
+  };
+}
+
+function createVideoProviderConfig(region = "") {
+  if (region !== "cn") return { ...getVideoConfig(), provider: "OPENROUTER" };
+  const config = getChinaVideoConfig();
+  if (process.env.CHINA_ARK_VIDEO_ENABLED !== "true" || !config.apiKey || !config.model) {
+    throw Object.assign(new Error("China video generation is not configured yet. Enable an approved Ark Seedance model before using this feature."), {
+      statusCode: 503,
+      code: "CHINA_VIDEO_ROUTE_UNAVAILABLE"
+    });
+  }
+  return config;
+}
+
 function openRouterHeaders(config) {
   return {
     Authorization: `Bearer ${config.openRouterApiKey}`,
@@ -485,8 +514,54 @@ function buildVideoPrompt(body) {
 
 function normalizeVideoStatus(status) {
   const value = String(status || "pending").toLowerCase();
+  if (value === "succeeded") return "completed";
+  if (value === "running") return "in_progress";
+  if (value === "queued") return "pending";
   if (["completed", "failed", "cancelled", "expired", "in_progress", "pending"].includes(value)) return value;
   return "pending";
+}
+
+function videoProviderHeaders(config) {
+  if (config.provider === "VOLCENGINE_ARK") {
+    return { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" };
+  }
+  return openRouterHeaders(config);
+}
+
+function buildVideoProviderPayload(config, body, sourceImage, requestedDuration) {
+  const prompt = buildVideoPrompt(body);
+  if (config.provider === "VOLCENGINE_ARK") {
+    return {
+      model: body.model || config.model,
+      content: [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: sourceImage }, role: "first_frame" }
+      ],
+      duration: Math.max(4, Math.min(15, requestedDuration)),
+      ratio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
+      resolution: body.resolution || config.resolution,
+      watermark: config.watermark,
+      generate_audio: config.generateAudio
+    };
+  }
+  return {
+    model: body.model || config.model,
+    prompt,
+    duration: requestedDuration,
+    aspect_ratio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
+    resolution: body.resolution || config.resolution,
+    frame_images: [{
+      type: "image_url",
+      image_url: { url: sourceImage },
+      frame_type: "first_frame"
+    }]
+  };
+}
+
+function videoCostUsd(config, job, upstreamData) {
+  if (config.provider !== "VOLCENGINE_ARK") return costUsdFromUsage(upstreamData.usage);
+  if (!(config.costCnyPerSecond > 0) || !(config.cnyPerUsd > 0)) return null;
+  return Number(((config.costCnyPerSecond * Number(job.duration || 0)) / config.cnyPerUsd).toFixed(6));
 }
 
 function costUsdFromUsage(usage) {
@@ -494,15 +569,6 @@ function costUsdFromUsage(usage) {
   const candidates = [usage.cost, usage.cost_usd, usage.total_cost, usage.total_cost_usd];
   const value = candidates.map(Number).find((candidate) => Number.isFinite(candidate) && candidate >= 0);
   return value === undefined ? null : value;
-}
-
-function saveVideoBuffer(jobId, buffer) {
-  const safeJobId = sanitizePathPart(jobId, `video-${Date.now()}`);
-  const videoDirectory = path.join(root, "public", "generated", "videos");
-  const videoPath = path.join(videoDirectory, `${safeJobId}.mp4`);
-  fs.mkdirSync(videoDirectory, { recursive: true });
-  fs.writeFileSync(videoPath, buffer);
-  return `/${path.relative(root, videoPath).replace(/\\/g, "/")}`;
 }
 
 async function handleGenerateVideo(request, response) {
@@ -524,8 +590,9 @@ async function handleGenerateVideo(request, response) {
       return;
     }
     await enforceTextSafety(buildVideoPrompt(body), { media: true });
-    const config = getVideoConfig();
-    if (!config.openRouterApiKey) {
+    const providerRegion = handlePlatformApi.creditManager.accountRegion(request, response);
+    const config = createVideoProviderConfig(providerRegion);
+    if (config.provider === "OPENROUTER" && !config.openRouterApiKey) {
       sendJson(response, 501, { error: "Video generation is not configured yet." });
       return;
     }
@@ -543,27 +610,17 @@ async function handleGenerateVideo(request, response) {
       metadata: { model: body.model || config.model, duration: requestedDuration, resolution: body.resolution || config.resolution, squadId: body.squadId || "", cardId: body.cardId || "" },
       payerId
     }).reservation;
-    const payload = {
-      model: body.model || config.model,
-      prompt: buildVideoPrompt(body),
-      duration: requestedDuration,
-      aspect_ratio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
-      resolution: body.resolution || config.resolution,
-      frame_images: [{
-        type: "image_url",
-        image_url: { url: sourceImage },
-        frame_type: "first_frame"
-      }]
-    };
+    const payload = buildVideoProviderPayload(config, body, sourceImage, requestedDuration);
+    const submissionUrl = config.provider === "VOLCENGINE_ARK" ? config.videoTaskApiUrl : config.openRouterVideoApiUrl;
 
-    const upstreamResponse = await fetch(config.openRouterVideoApiUrl, {
+    const upstreamResponse = await fetch(submissionUrl, {
       method: "POST",
-      headers: openRouterHeaders(config),
+      headers: videoProviderHeaders(config),
       body: JSON.stringify(payload)
     });
     const upstreamData = await upstreamResponse.json().catch(() => ({}));
     if (!upstreamResponse.ok || !upstreamData.id) {
-      console.error("OpenRouter video submission failed", upstreamResponse.status, upstreamData?.error || "Unknown provider error");
+      console.error(`${config.provider} video submission failed`, upstreamResponse.status, upstreamData?.error || "Unknown provider error");
       handlePlatformApi.creditManager.release(creditReservation.id, "video-submission-failed");
       creditReservation = null;
       sendJson(response, upstreamResponse.status || 502, {
@@ -574,11 +631,17 @@ async function handleGenerateVideo(request, response) {
 
     const job = {
       jobId: String(upstreamData.id),
+      provider: config.provider,
+      providerRegion,
+      model: body.model || config.model,
       ownerId: creditReservation.userId,
       requesterId,
       status: normalizeVideoStatus(upstreamData.status),
-      pollingUrl: upstreamData.polling_url || `${config.openRouterVideoApiUrl}/${encodeURIComponent(upstreamData.id)}`,
+      pollingUrl: upstreamData.polling_url || `${submissionUrl}/${encodeURIComponent(upstreamData.id)}`,
       sourceImageUrl: body.imageUrl,
+      projectId: body.projectId || "",
+      squadId: body.squadId || "",
+      duration: payload.duration,
       creditReservationId: creditReservation.id,
       clipUnits,
       createdAt: new Date().toISOString(),
@@ -598,11 +661,14 @@ async function handleGenerateVideo(request, response) {
   }
 }
 
-async function downloadCompletedVideo(job, config) {
+async function downloadCompletedVideo(request, response, job, config, upstreamData = {}) {
   if (job.localVideoUrl) return job.localVideoUrl;
-  const contentUrl = `${config.openRouterVideoApiUrl}/${encodeURIComponent(job.jobId)}/content?index=0`;
+  const contentUrl = config.provider === "VOLCENGINE_ARK"
+    ? String(upstreamData?.content?.video_url || upstreamData?.video_url || "")
+    : `${config.openRouterVideoApiUrl}/${encodeURIComponent(job.jobId)}/content?index=0`;
+  if (!contentUrl) throw new Error("The completed video job did not return a downloadable video URL.");
   const videoResponse = await fetch(contentUrl, {
-    headers: {
+    headers: config.provider === "VOLCENGINE_ARK" ? {} : {
       Authorization: `Bearer ${config.openRouterApiKey}`,
       "HTTP-Referer": config.siteUrl,
       "X-Title": config.siteTitle
@@ -611,9 +677,14 @@ async function downloadCompletedVideo(job, config) {
   if (!videoResponse.ok) throw new Error(`Video download failed with status ${videoResponse.status}`);
   const contentType = videoResponse.headers.get("content-type") || "";
   if (!contentType.includes("video/") && !contentType.includes("application/octet-stream")) {
-    throw new Error("OpenRouter completed the job without returning video content.");
+    throw new Error("The video provider completed the job without returning video content.");
   }
-  const videoUrl = saveVideoBuffer(job.jobId, Buffer.from(await videoResponse.arrayBuffer()));
+  const storedVideo = await handlePlatformApi.creditManager.storeGeneratedVideo(request, response, {
+    buffer: Buffer.from(await videoResponse.arrayBuffer()),
+    projectId: job.projectId,
+    squadId: job.squadId
+  });
+  const videoUrl = storedVideo.url;
   job.localVideoUrl = videoUrl;
   videoJobs.set(job.jobId, job);
   return videoUrl;
@@ -635,13 +706,9 @@ async function handleGetVideoJob(request, response, jobId) {
   }
 
   try {
-    const config = getVideoConfig();
+    const config = job.provider === "VOLCENGINE_ARK" ? getChinaVideoConfig() : getVideoConfig();
     const upstreamResponse = await fetch(job.pollingUrl, {
-      headers: {
-        Authorization: `Bearer ${config.openRouterApiKey}`,
-        "HTTP-Referer": config.siteUrl,
-        "X-Title": config.siteTitle
-      }
+      headers: videoProviderHeaders(config)
     });
     const upstreamData = await upstreamResponse.json().catch(() => ({}));
     if (!upstreamResponse.ok) throw new Error(`Video status check failed with status ${upstreamResponse.status}`);
@@ -649,9 +716,9 @@ async function handleGetVideoJob(request, response, jobId) {
     job.status = normalizeVideoStatus(upstreamData.status);
     videoJobs.set(job.jobId, job);
     if (job.status === "completed") {
-      const videoUrl = await downloadCompletedVideo(job, config);
+      const videoUrl = await downloadCompletedVideo(request, response, job, config, upstreamData);
       const settled = handlePlatformApi.creditManager.settle(job.creditReservationId, {
-        costUsd: costUsdFromUsage(upstreamData.usage),
+        costUsd: videoCostUsd(config, job, upstreamData),
         providerUsage: upstreamData.usage || null
       });
       sendJson(response, 200, {
@@ -665,7 +732,7 @@ async function handleGetVideoJob(request, response, jobId) {
       return;
     }
     if (["failed", "cancelled", "expired"].includes(job.status)) {
-      console.error("OpenRouter video job failed", job.jobId, upstreamData.error || job.status);
+      console.error(`${config.provider || "OPENROUTER"} video job failed`, job.jobId, upstreamData.error || job.status);
       const released = handlePlatformApi.creditManager.release(job.creditReservationId, `video-${job.status}`);
       sendJson(response, 200, {
         jobId: job.jobId,

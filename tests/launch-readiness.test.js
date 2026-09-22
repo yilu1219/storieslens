@@ -15,6 +15,10 @@ function readyEnvironment() {
     CHINA_ARK_API_KEY: "server-only-ark-key",
     CHINA_ARK_TEXT_MODEL: "doubao-seed-2-0-lite-260215",
     CHINA_ARK_IMAGE_MODEL: "doubao-seedream-5-0-lite-260128",
+    CHINA_ARK_VIDEO_MODEL: "doubao-seedance-2-0-mini-260615",
+    CHINA_ARK_VIDEO_ENABLED: "true",
+    CHINA_ARK_VIDEO_COST_CNY_PER_SECOND: "0.20",
+    SAFE_VIDEO_GENERATION_ENABLED: "true",
     AUTH_DELIVERY_WEBHOOK_URL: "https://delivery.example.test/send",
     AUTH_DELIVERY_WEBHOOK_SECRET: "private-secret",
     BETA_INVITE_ONLY: "true",
@@ -81,6 +85,21 @@ test("China launch requires both the domestic text and image route", () => {
   delete env.CHINA_ARK_IMAGE_MODEL;
   const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
   assert(report.required.some((item) => item.id === "china-ai-route" && !item.ready));
+});
+
+test("China video stays advisory until the domestic Seedance route is explicitly enabled", () => {
+  const env = readyEnvironment();
+  env.CHINA_ARK_VIDEO_ENABLED = "false";
+  const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(report.advisory.some((item) => item.id === "china-video" && !item.ready));
+  assert.strictEqual(report.ready, true);
+});
+
+test("China video cannot appear ready while its provider cost is unknown", () => {
+  const env = readyEnvironment();
+  env.CHINA_ARK_VIDEO_COST_CNY_PER_SECOND = "";
+  const report = evaluateLaunchReadiness({ root: path.resolve(__dirname, ".."), mediaStorageStatus: { cn: "cloud-private", us: "cloud-private", intl: "cloud-private" }, env });
+  assert(report.advisory.some((item) => item.id === "china-video" && !item.ready));
 });
 
 test("OpenRouter can satisfy the external review gate when it is the configured vision provider", () => {

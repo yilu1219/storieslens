@@ -35,6 +35,7 @@ const MAX_PROJECTS_PER_USER = 100;
 const MAX_SCENES = 24;
 const MAX_AUDIO_BYTES = 12 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_GENERATED_VIDEO_BYTES = 100 * 1024 * 1024;
 const DEFAULT_GUEST_MEDIA_QUOTA_BYTES = 20 * 1024 * 1024;
 const DEFAULT_ACCOUNT_MEDIA_QUOTA_BYTES = 250 * 1024 * 1024;
 const REGION_CONSENT_VERSION = "2026-09-14";
@@ -2995,6 +2996,50 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     },
     release(reservationId, reason) {
       return store.mutate((database) => releaseReservation(database, { reservationId, reason }));
+    },
+    async storeGeneratedVideo(request, response, { buffer, projectId = "", squadId = "" } = {}) {
+      if (!Buffer.isBuffer(buffer) || !buffer.length || buffer.length > MAX_GENERATED_VIDEO_BYTES) {
+        throw Object.assign(new Error("The generated video is empty or larger than the private-library limit."), { statusCode: 413, code: "GENERATED_VIDEO_TOO_LARGE" });
+      }
+      const { database, user } = sessionFor(request, response, { create: false });
+      if (!user) throw Object.assign(new Error("Sign in before saving a generated video."), { statusCode: 401, code: "ACCOUNT_REQUIRED" });
+      const cleanProjectId = cleanId(projectId);
+      const cleanSquadId = cleanId(squadId);
+      const project = cleanProjectId ? requireProject(database, user, cleanProjectId) : null;
+      ensureSquadCollections(database);
+      const squad = cleanSquadId
+        ? database.squads.find((item) => item.id === cleanSquadId && !item.deletedAt && squadMembership(database, item.id, user.id)?.status === "approved")
+        : null;
+      const usage = mediaUsageFor(database, user);
+      if (usage.bytesUsed + buffer.length > usage.bytesLimit) {
+        throw Object.assign(new Error("This private library has reached its storage allowance. Remove unused media or upgrade before generating another video."), { statusCode: 413, code: "MEDIA_QUOTA_EXCEEDED" });
+      }
+      const mediaId = crypto.randomUUID();
+      const containerId = project?.id || (squad ? `squad-${squad.id}` : "generated-video");
+      const storageRecord = await mediaStorage.put({
+        user,
+        key: `${user.id}/${containerId}/${mediaId}.mp4`,
+        buffer,
+        contentType: "video/mp4"
+      });
+      const media = {
+        id: mediaId,
+        ownerId: user.id,
+        projectId: project?.id || "",
+        squadId: squad?.id || "",
+        kind: "video",
+        mimeType: "video/mp4",
+        bytes: buffer.length,
+        ...storageRecord,
+        private: true,
+        metadataRemoved: true,
+        createdAt: nowIso()
+      };
+      store.mutate((nextDatabase) => {
+        nextDatabase.media.push(media);
+        return null;
+      });
+      return publicMedia(media);
     },
     recordUsage(request, response, { operation, model, costUsd = null, providerUsage = null }) {
       const { user } = sessionFor(request, response);

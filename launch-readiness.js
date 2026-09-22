@@ -74,6 +74,7 @@ function evaluateLaunchReadiness({ root, mediaStorageStatus = {}, renderWorkerRe
     gate("wechat", "WeChat account connection", Boolean(env.WECHAT_APP_ID && env.WECHAT_APP_SECRET), "Optional for web beta; required for a later Mini Program.", "advisory"),
     gate("monitoring", "Production error alerting", Boolean(env.ERROR_REPORTING_WEBHOOK_URL), "Strongly recommended: send server failures to a private founder alert channel.", "advisory"),
     gate("render-worker", "Private FFmpeg movie assembly", renderWorkerReady || Boolean(env.FFMPEG_BIN), "Required before promising downloadable films. Seedance creates scene clips; FFmpeg joins approved media without another AI video charge.", "advisory"),
+    gate("china-video", "China Ark Seedance video route", !allowedRegions.includes("cn") || (enabled(env.CHINA_ARK_VIDEO_ENABLED) && enabled(env.SAFE_VIDEO_GENERATION_ENABLED) && Boolean(env.CHINA_ARK_API_KEY && env.CHINA_ARK_VIDEO_MODEL) && Number(env.CHINA_ARK_VIDEO_COST_CNY_PER_SECOND) > 0), "Before offering video to Mainland accounts, activate an approved Ark Seedance model, record its current per-second cost, run a real low-value task, complete output-frame safety review and verify failure refunds.", "advisory"),
     gate("pdf-renderer", "A5 PDF book export", pdfRendererReady || Boolean(env.LIBREOFFICE_BIN), "Install the private LibreOffice renderer and CJK fonts before promising downloadable PDFs.", "advisory")
   ];
 
