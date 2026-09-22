@@ -173,5 +173,7 @@ test("every visitor makes one first picture before registration and registers on
   assert.match(preview, /Download my picture/);
   assert.match(preview, /storieslens_pending_guest_creation/);
   assert.match(preview, /downloadFinishedPicture/);
+  assert.match(preview, /const credits = await apiJson\('\/api\/credits'\)/);
+  assert.doesNotMatch(preview, /!state\.session\.authenticated \|\| state\.session\.user\?\.kind !== 'account'/);
   assert.match(login, /solo-story/);
 });

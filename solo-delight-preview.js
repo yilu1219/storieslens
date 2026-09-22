@@ -172,7 +172,7 @@
   async function refreshAccountState() {
     try {
       state.session = await apiJson('/api/auth/session');
-      if (!state.session.authenticated || state.session.user?.kind !== 'account') {
+      if (!state.session.user) {
         state.wallet = null;
         state.imageCredits = 0;
         giftCount.textContent = '0';
