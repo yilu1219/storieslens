@@ -56,16 +56,20 @@ class SafetyPolicyError extends Error {
   }
 }
 
-async function enforceTextSafety(text, { media = false } = {}) {
+async function enforceTextSafety(text, { media = false, stage = "" } = {}) {
   const requireExternal = media
     ? process.env.REQUIRE_EXTERNAL_MEDIA_MODERATION !== "false"
     : process.env.REQUIRE_EXTERNAL_TEXT_MODERATION === "true";
   const result = await checkTextSafety(text, { requireExternal });
   if (result.unavailable) {
-    throw new SafetyPolicyError("Media generation is paused because the safety review service is unavailable.", 503);
+    const error = new SafetyPolicyError("Media generation is paused because the safety review service is unavailable.", 503);
+    error.safetyStage = stage;
+    throw error;
   }
   if (!result.safe) {
-    throw new SafetyPolicyError("This request cannot be used because it may contain unsafe or age-inappropriate content.");
+    const error = new SafetyPolicyError("This request cannot be used because it may contain unsafe or age-inappropriate content.");
+    error.safetyStage = stage;
+    throw error;
   }
 }
 
@@ -1337,7 +1341,7 @@ async function handleWritingAssistant(request, response) {
       body.characterRules,
       body.learningGoal
     ].map((value) => String(value || "").trim()).filter(Boolean).join("\n");
-    await enforceTextSafety(creatorSafetyText);
+    await enforceTextSafety(creatorSafetyText, { stage: "creator-input" });
     const provider = textProviderForRequest(request, response);
     const { baseUrl, model } = provider;
     const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
@@ -1372,7 +1376,7 @@ async function handleWritingAssistant(request, response) {
       result.visualBrief,
       ...(Array.isArray(result.grammarChanges) ? result.grammarChanges.flatMap((change) => [change?.before, change?.after, change?.skill, change?.explanation]) : [])
     ].map((value) => String(value || "").trim()).filter(Boolean).join("\n");
-    await enforceTextSafety(coachSafetyText);
+    await enforceTextSafety(coachSafetyText, { stage: "coach-output" });
     const limit = (value, max) => String(value || "").trim().slice(0, max);
     const grammarCategories = new Set(["clear", "punctuation", "sentence-structure", "tense", "agreement", "spelling", "word-choice", "articles", "plurality", "word-order", "connectors", "repetition", "de-di-de", "other"]);
     const grammarCategory = grammarCategories.has(String(result.grammarCategory || "").trim()) ? String(result.grammarCategory).trim() : "other";
@@ -1434,7 +1438,7 @@ async function handleWritingAssistant(request, response) {
     });
     sendJson(response, 200, { result: safeResult });
   } catch (error) {
-    sendJson(response, error.statusCode || 500, { code: error.code || "WRITING_ASSISTANT_FAILED", error: error.message || "Writing assistant failed." });
+    sendJson(response, error.statusCode || 500, { code: error.code || "WRITING_ASSISTANT_FAILED", error: error.message || "Writing assistant failed.", safetyStage: error.safetyStage || undefined });
   }
 }
 
