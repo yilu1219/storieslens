@@ -116,6 +116,35 @@ body.teacher-hub #star-canvas {
 
 .teacher-button:hover { background: var(--teacher-blue-dark); }
 
+.teacher-account-section { padding-top: 72px; }
+.teacher-account-grid { display: grid; grid-template-columns: 1.15fr .8fr .8fr; gap: 14px; margin-top: 28px; }
+.teacher-account-card { min-height: 220px; padding: 24px; border: 1px solid var(--teacher-line); border-radius: 24px; background: #fff; box-shadow: 0 18px 45px rgba(26, 39, 61, .07); }
+.teacher-account-primary { color: #fff; background: linear-gradient(145deg, #17384f, #0d6b4d); }
+.teacher-account-label { display: block; margin-bottom: 16px; color: var(--teacher-blue); font-size: 12px; font-weight: 900; letter-spacing: .13em; }
+.teacher-account-primary .teacher-account-label { color: #a9e4c8; }
+.teacher-account-card > strong { display: block; margin-bottom: 10px; font-family: Georgia, "Songti SC", serif; font-size: clamp(32px, 4vw, 48px); line-height: 1; }
+.teacher-account-card > p { margin: 0; color: var(--teacher-muted); line-height: 1.5; }
+.teacher-account-primary > p { color: rgba(255,255,255,.76); }
+.teacher-account-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.teacher-account-primary .teacher-button { color: #17384f; background: #fff; box-shadow: none; }
+.teacher-account-primary .teacher-button-secondary,
+.teacher-account-primary .teacher-link-button { color: #fff; border-color: rgba(255,255,255,.28); background: rgba(255,255,255,.08); }
+.teacher-cloud-library { margin-top: 18px; padding: 24px; border: 1px solid var(--teacher-line); border-radius: 24px; background: #fff; }
+.teacher-library-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.teacher-library-head h3 { margin: 7px 0 0; font-family: Georgia, "Songti SC", serif; font-size: 30px; }
+.teacher-library-head a { color: var(--teacher-blue-dark); font-weight: 850; }
+.teacher-project-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.teacher-project-item { display: grid; gap: 8px; padding: 18px; border: 1px solid var(--teacher-line); border-radius: 18px; background: var(--teacher-paper); }
+.teacher-project-item h4 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 22px; }
+.teacher-project-item p { margin: 0; color: var(--teacher-muted); font-size: 14px; line-height: 1.45; }
+.teacher-project-item a { margin-top: 8px; color: var(--teacher-blue-dark); font-weight: 900; }
+
+@media (max-width: 900px) {
+  .teacher-account-grid,
+  .teacher-project-list { grid-template-columns: 1fr; }
+  .teacher-library-head { align-items: flex-start; flex-direction: column; }
+}
+
 .teacher-button-secondary,
 .teacher-link-button {
   border: 1px solid var(--teacher-line);

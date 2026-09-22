@@ -1,0 +1,25 @@
+.teacher-login-page {
+  background:
+    radial-gradient(circle at 10% 12%, rgba(20, 130, 87, .12), transparent 30%),
+    radial-gradient(circle at 88% 82%, rgba(238, 184, 83, .16), transparent 28%),
+    #f4efe6;
+}
+
+.teacher-login-page .login-kicker,
+.teacher-login-page .login-card-heading span { color: #0f6b4d; }
+
+.teacher-login-page .login-intro em { color: #0f7e59; }
+
+.teacher-login-page .login-card { border-color: rgba(15, 107, 77, .22); }
+
+.teacher-login-page .login-primary { background: #0f6b4d; }
+
+.teacher-login-page .region-options input:checked + span {
+  border-color: #0f6b4d;
+  background: #eef8f2;
+}
+
+.teacher-login-page .adult-confirm {
+  border-color: rgba(15, 107, 77, .22);
+  background: rgba(238, 248, 242, .72);
+}

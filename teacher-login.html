@@ -7,44 +7,44 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="StoriesLens" />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="description" content="Sign in to your private StoriesLens library with email." />
+    <meta name="description" content="Teachers sign in to the private StoriesLens classroom publishing workspace with email." />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
     <link rel="stylesheet" href="pwa.css" />
     <link rel="stylesheet" href="login.css?v=20260915-1" />
-    <title>Email sign in · StoriesLens</title>
+    <link rel="stylesheet" href="teacher-login.css?v=20260922-1" />
+    <title>Teacher email sign in · StoriesLens</title>
   </head>
-  <body>
+  <body data-login-context="teacher" class="teacher-login-page">
     <header class="login-header">
-      <a class="login-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" /><span>StoriesLens</span></a>
-      <a class="home-link" href="index.html">Home · 首页</a>
+      <a class="login-brand" href="teacher-dashboard.html"><img src="assets/storieslens-logo.png" alt="" /><span>StoriesLens Teacher</span></a>
+      <a class="home-link" href="teacher-dashboard.html">Teacher Studio · 教师工作台</a>
     </header>
 
     <main class="login-shell">
       <section class="login-intro" aria-labelledby="login-title">
-        <p class="login-kicker">PRIVATE CREATOR ACCOUNT · 私人创作账户</p>
-        <h1 id="login-title">Your story world,<br /><em>waiting for you.</em></h1>
-        <p>Sign in once to keep your stories and creation allowance together across devices.</p>
+        <p class="login-kicker">PRIVATE TEACHER WORKSPACE · 私密教师账户</p>
+        <h1 id="login-title">Your classroom stories,<br /><em>ready to become a book.</em></h1>
+        <p>Use your own adult email account to create, review and privately share class books across devices.</p>
         <ul>
-          <li>Private by default · 默认私密</li>
-          <li>One free first-scene illustration after registration · 注册即送一张首幕插图</li>
-          <li>Your region is chosen by you · 地区由你选择</li>
+          <li>Direct email sign-in · 教师邮箱直接登录</li>
           <li>No password to remember · 无需设置密码</li>
+          <li>Teacher reviews every page and author credit · 每一页与署名均由教师审核</li>
+          <li>Nothing reaches families until you invite them · 未经教师邀请不会发送给家庭</li>
         </ul>
       </section>
 
       <section class="login-card" aria-live="polite">
         <div data-login-form-wrap>
           <div class="login-card-heading">
-            <span>EMAIL SIGN IN</span>
-            <b>邮箱登录</b>
+            <span>TEACHER EMAIL SIGN IN</span>
+            <b>教师邮箱登录</b>
           </div>
 
           <form data-email-start novalidate>
             <fieldset class="region-picker">
-              <legend><b>1</b><span>Where will you use StoriesLens?<small>你将在哪个国家或地区使用？</small></span></legend>
+              <legend><b>1</b><span>Where is your teacher account based?<small>你的教师账户所在地区是？</small></span></legend>
               <div class="region-options">
                 <label><input type="radio" name="login-region" value="cn" /><span><strong>中国大陆</strong><small>China Mainland</small></span></label>
                 <label><input type="radio" name="login-region" value="us" /><span><strong>United States</strong><small>美国</small></span></label>
@@ -59,8 +59,8 @@
             </label>
 
             <label class="email-field">
-              <span><b>2</b> Email address · 邮箱地址</span>
-              <input data-email type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required />
+              <span><b>2</b> Teacher email · 教师邮箱</span>
+              <input data-email type="email" inputmode="email" autocomplete="email" placeholder="teacher@school.org" required />
             </label>
             <button class="login-primary" type="submit" data-send-code>Send a 6-digit code <span>发送验证码 →</span></button>
           </form>
@@ -73,27 +73,27 @@
               <input class="code-input" data-code inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required />
             </label>
             <label>
-              <span>Name or nickname · 姓名或昵称</span>
-              <input data-display-name autocomplete="nickname" maxlength="40" placeholder="Creator" />
+              <span>Teacher name · 教师姓名</span>
+              <input data-display-name autocomplete="name" maxlength="40" placeholder="Ms. Chen / 陈老师" />
             </label>
             <label data-beta-invite hidden>
-              <span>Invitation reward code (optional) · 邀请奖励码（选填）</span>
-              <input data-beta-invite-code autocomplete="one-time-code" maxlength="120" placeholder="STORIESLENS-…" />
-              <small>A valid code adds its creation allowance; no code is needed to register. · 有效代码可领取创作额度，无代码也能注册。</small>
+              <span>Teacher invitation code (optional) · 教师内测码（选填）</span>
+              <input data-beta-invite-code autocomplete="one-time-code" maxlength="120" placeholder="SL-US-TEACHER-…" />
+              <small>A valid teacher code adds one classroom project and up to 30 reviewed student works. · 有效教师码可获得一个班级项目及最多30份审核作品额度。</small>
             </label>
-            <label class="adult-confirm"><input data-adult-confirm type="checkbox" required /><span>I am 18 or older and own this account.<small>我已满18岁，并由我本人持有此账户；孩子可在我的陪同下创作。</small></span></label>
-            <button class="login-primary" type="submit">Open my story library <span>进入我的作品 →</span></button>
+            <label class="adult-confirm"><input data-adult-confirm type="checkbox" required /><span>I am 18 or older and own this teacher account.<small>我已满18岁，并由我本人持有此教师账户。</small></span></label>
+            <button class="login-primary" type="submit">Open teacher workspace <span>进入教师工作台 →</span></button>
           </form>
 
           <p class="login-notice" data-login-notice hidden></p>
-          <p class="login-footnote">Email is used only for secure sign-in and account notices. We never choose your region from your IP address.</p>
+          <p class="login-footnote">Your email is used only for secure sign-in and account notices. Student work stays private until teacher review and invitation.</p>
         </div>
 
         <div class="login-success" data-login-success hidden>
           <span aria-hidden="true">✓</span>
-          <h2>Welcome back.</h2>
-          <p data-success-copy>Your private library and free first-scene illustration are ready.</p>
-          <a class="login-primary" href="my-stories.html">Open My Stories <b>进入我的作品 →</b></a>
+          <h2>Teacher workspace ready.</h2>
+          <p data-success-copy>Your private teacher workspace is ready.</p>
+          <a class="login-primary" href="teacher-dashboard.html">Open Teacher Studio <b>进入教师工作台 →</b></a>
         </div>
       </section>
     </main>

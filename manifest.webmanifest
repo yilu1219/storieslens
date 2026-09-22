@@ -21,6 +21,6 @@
   "shortcuts": [
     { "name": "Start a story", "short_name": "Create", "description": "Begin with artwork, words or voice", "url": "/app.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
     { "name": "My stories", "short_name": "Library", "description": "Return to private drafts and finished work", "url": "/my-stories.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] },
-    { "name": "Teacher archive", "short_name": "Class", "description": "Open the teacher publishing workspace", "url": "/classroom-archive.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] }
+    { "name": "Teacher Studio", "short_name": "Class", "description": "Open the teacher publishing workspace", "url": "/teacher-dashboard.html?source=pwa", "icons": [{ "src": "/assets/app-icon-192.png", "sizes": "192x192" }] }
   ]
 }

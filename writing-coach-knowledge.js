@@ -55,6 +55,14 @@ const SOURCE_CATALOG = Object.freeze({
   photoplayPublicDomain: {
     title: "Project Gutenberg《Writing the Photoplay》（1913）",
     contribution: "美国公有领域：只提炼可见行动、场景变化与因果，不采用默片时代格式或市场规则"
+  },
+  gsaPlainLanguage: {
+    title: "U.S. GSA / Digital.gov《Plain language guide series》",
+    contribution: "CC0：受众、清晰表达、行动主体、直接动词与读者复述测试"
+  },
+  liangComposition: {
+    title: "梁启超《中学以上作文教学法》（节录）",
+    contribution: "公有领域：材料选择、主眼、读者位置、组织与原意确认"
   }
 });
 
@@ -219,6 +227,22 @@ const WRITING_METHODS = Object.freeze({
       "Can you now say the idea again without the frame?"
     ]
   },
+  audienceClarity: {
+    id: "audience-clarity",
+    name: "Audience clarity and paraphrase check",
+    sources: ["gsaPlainLanguage"],
+    principles: [
+      "Name one intended reader and what that reader should understand before changing the sentence.",
+      "Use a who-does-what check when responsibility or action is unclear; active voice is an option, not a universal literary rule.",
+      "Prefer a direct verb only when a noun-heavy phrase hides the creator's intended action.",
+      "Ask a listener to paraphrase a short passage, compare it with the creator's intention, and let the creator choose the repair."
+    ],
+    questions: [
+      "Who is this for, and what do they already know?",
+      "Can your reader tell who does what in this sentence?",
+      "If a reader says this back in their own words, what must stay the same?"
+    ]
+  },
   visualActionLight: {
     id: "visual-action-light",
     name: "Visual action · light invitation",
@@ -267,6 +291,22 @@ const WRITING_METHODS = Object.freeze({
       "这一刻更适合带着人物的感受看，还是让事物自己说话？",
       "这个虚构场景里，哪个细节让它仍然可信？"
     ]
+  },
+  materialFocusReader: {
+    id: "material-focus-reader",
+    name: "材料、主眼与读者复述",
+    sources: ["liangComposition"],
+    principles: [
+      "先说出本次真正想让哪一位读者明白什么，再判断材料是否服务这个目的。",
+      "把候选材料分成必要、可选与偏题三类，但最终取舍由创作者决定。",
+      "为一段确定一个主眼，检查其他内容是在帮助重点，还是与重点争抢注意。",
+      "请读者用自己的话复述一小段；发生偏差时，只选择补背景、调顺序或换一词中的一个动作。"
+    ],
+    questions: [
+      "你最希望哪一位读者读懂什么？",
+      "这条材料是在帮助重点，还是把读者带去了别处？",
+      "如果读者这样复述，和你原来想说的一样吗？"
+    ]
   }
 });
 
@@ -285,7 +325,7 @@ function selectWritingMethods(input = {}) {
   if (action === "begin") selected.push("ideation", "character");
   if (["continuity", "report"].includes(action)) selected.push("structure", "revision");
   if (["details", "dialogue", "scene"].includes(action)) selected.push(language === "en" ? (usesLightVisualAction ? "visualActionLight" : "visualAction") : "scene");
-  if (action === "check") selected.push("prose", "revision");
+  if (action === "check") selected.push("prose", language === "zh" ? "materialFocusReader" : "audienceClarity", "revision");
   if (action === "hint") selected.push("character", "structure");
 
   // Preserve specialist genre methods before adding a language tradition.

@@ -116,3 +116,27 @@ test("official standards without broad ingestion rights stay reference-only or q
   assert.match(moe.rejectionReason, /No curriculum text|未|rights/i);
   assert.match(moe.rejectionReason, /external alignment reference only/i);
 });
+
+test("English clarity coaching uses the CC0 GSA source without making active voice a universal rule", () => {
+  const source = registry.sources.find((item) => item.id === "gsa-plain-language-2025");
+  const module = loadModule("en", "audience-clarity.json");
+  const curriculum = buildEnglishCoachCurriculum({ action: "check", grade: 7, genre: "essay" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /CC0 1\.0/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.guardrails.some((item) => /universal literary rules/i.test(item)));
+  assert(curriculum.methodNames.includes("Audience clarity and paraphrase check"));
+  assert.match(curriculum.prompt, /who-does-what check/i);
+});
+
+test("Chinese clarity coaching uses a public-domain material-focus-reader check", () => {
+  const source = registry.sources.find((item) => item.id === "liang-qichao-composition-method");
+  const module = loadModule("zh", "material-focus-reader.json");
+  const curriculum = buildChineseCoachCurriculum({ action: "check", genre: "essay" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /public domain/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.guardrails.some((item) => /不替创作者/.test(item)));
+  assert(curriculum.methodNames.includes("材料、主眼与读者复述"));
+  assert.match(curriculum.prompt, /必要、可选与偏题/);
+});

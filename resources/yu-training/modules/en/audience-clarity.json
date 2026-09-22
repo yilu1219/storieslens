@@ -1,0 +1,26 @@
+{
+  "id": "en-audience-clarity-v1",
+  "language": "en",
+  "ages": ["upper elementary", "secondary", "adult"],
+  "sourceIds": ["gsa-plain-language-2025"],
+  "skills": ["audience", "clarity", "active voice", "strong verbs", "paraphrase testing", "revision"],
+  "teachingMoves": [
+    "Ask the creator to name one intended reader and what that reader should understand.",
+    "Use a who-does-what check only where responsibility or action is unclear.",
+    "Compare one noun-heavy phrase with the creator's own direct-verb revision.",
+    "Invite a listener to paraphrase a short passage, then compare the paraphrase with the creator's intention.",
+    "Let the creator choose whether to add context, reorder information, or change one word."
+  ],
+  "originalQuestions": [
+    "Who is this for, and what do they already know?",
+    "Can your reader tell who does what in this sentence?",
+    "Which direct verb makes your intended action easier to see?",
+    "If a reader says this back in their own words, what must stay the same?"
+  ],
+  "ccssAlignment": ["CCRA.W.4", "CCRA.W.5", "CCRA.L.3"],
+  "guardrails": [
+    "Do not treat active voice, short sentences, or present tense as universal literary rules.",
+    "Do not simplify away intentional voice, rhythm, ambiguity, or culturally meaningful expression.",
+    "The creator chooses and performs every revision."
+  ]
+}

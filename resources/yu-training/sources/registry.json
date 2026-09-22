@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-09-21",
+  "lastReviewed": "2026-09-22",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -227,6 +227,36 @@
       "rights": "Official and publicly downloadable, but this review did not locate an explicit commercial reuse or AI-training permission for the curriculum-standard text.",
       "credibility": "high for its intended special-education context; official Ministry of Education curriculum standard",
       "rejectionReason": "Potentially relevant to accessible oral-to-written support and individualized participation, but it applies to a specific special-education context and lacks explicit reuse permission. No text, examples, or assessment language entered Yu's runtime knowledge base."
+    },
+    {
+      "id": "gsa-plain-language-2025",
+      "status": "adopted",
+      "language": "en",
+      "title": "Plain language guide series",
+      "authorOrInstitution": "Digital.gov, U.S. General Services Administration; adapted from PlainLanguage.gov",
+      "published": "current guide reviewed 2026; archived source repository read-only since 2025-12-29",
+      "retrieved": "2026-09-22",
+      "url": "https://digital.gov/guides/plain-language",
+      "rights": "The archived GSA PlainLanguage.gov repository states that the project is public domain in the United States and dedicates worldwide copyright and related rights under CC0 1.0. Only original teaching abstractions are stored here.",
+      "ages": ["upper elementary", "secondary", "adult"],
+      "skills": ["audience", "clarity", "active voice", "strong verbs", "paraphrase testing", "revision"],
+      "credibility": "high for audience-centered clear communication; official U.S. General Services Administration guidance, transferred cautiously from government communication to student revision",
+      "localRecord": "sources/en/gsa-plain-language.md"
+    },
+    {
+      "id": "liang-qichao-composition-method",
+      "status": "adopted",
+      "language": "zh",
+      "title": "《中学以上作文教学法》（节录）：材料、主眼与读者",
+      "authorOrInstitution": "梁启超（1873—1929）；核查版本为中文维基文库",
+      "published": "民国时期讲义；网页版本持续维护",
+      "retrieved": "2026-09-22",
+      "url": "https://zh.wikisource.org/zh-hans/中學以上作文教學法",
+      "rights": "Wikisource marks the underlying work public domain in its country of origin and the United States because the author died in 1929; page contributions are available under CC BY-SA 4.0. No source prose is stored, only original pedagogical abstractions and a link.",
+      "ages": ["upper elementary", "secondary", "adult"],
+      "skills": ["材料选择", "主旨", "受众", "组织", "清楚表达", "读者复述"],
+      "credibility": "high as a primary modern Chinese composition-teaching text; historical judgments and examples are excluded from the contemporary teaching transfer",
+      "localRecord": "sources/zh/liang-qichao-composition.md"
     }
   ]
 }

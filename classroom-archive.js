@@ -23,15 +23,25 @@
   const classLabel = $("[data-class-label]");
   const edition = $("[data-edition]");
   const coverTheme = $("[data-cover-theme]");
+  const gridLayout = $("[data-grid-layout]");
+  const gridField = $("[data-grid-field]");
   const resumeLast = $("[data-resume-last]");
-  const state = { mode: "board", sources: [], pages: [], bookIndex: -1, projectId: "" };
+  const cloudStatus = $("[data-cloud-status]");
+  const cloudSave = $("[data-cloud-save]");
+  const cloudShare = $("[data-cloud-share]");
+  const cloudDocx = $("[data-cloud-docx]");
+  const cloudPdf = $("[data-cloud-pdf]");
+  const cloudProduction = $("[data-cloud-production]");
+  const cloudAttester = $("[data-cloud-attester]");
+  const cloudPermission = $("[data-cloud-permission]");
+  const state = { mode: "board", sources: [], pages: [], bookIndex: -1, projectId: "", cloudProjectId: "", cloudConsentId: "", cloudMediaByPage: {} };
   const DB_NAME = "storieslens-teacher-publisher";
   const DB_VERSION = 1;
   const STORE = "classBooks";
   const LAST_PROJECT_KEY = "storieslens_teacher_last_book";
 
   const zh = {
-    home: "← 返回语镜故事首页",
+    home: "← 返回教师工作室",
     heroKicker: "教师出版空间 · 默认私密",
     heroOne: "拍下作品墙，",
     heroTwo: "出版全班的故事。",
@@ -42,13 +52,15 @@
     takeBoard: "拍摄完整的课堂作品墙", takeBoardSmall: "手机保持水平 · 拍到四个角 · 只需一张", tipOne: "正对作品墙", tipTwo: "让作品墙充满画面", tipThree: "避免反光",
     uploadWorks: "逐张上传学生作品", uploadWorksSmall: "最多选择30张绘画或作文", clear: "清除",
     collectionTitle: "书名", collectionDate: "作品日期", edition: "版本", editionSingle: "单期作品墙", editionMonthly: "月度作品集", editionQuarterly: "季度作品集", editionYear: "年度作品集",
+    boardLayout: "作品墙排列", layoutAuto: "自动判断",
     classLabel: "班级名称", classLabelSmall: "使用班级昵称，不填写学生姓名", coverTheme: "封面颜色", coverInk: "墨蓝", coverCoral: "暖红", coverSage: "青绿色",
     deviceOnly: "设备优先的私密流程。", deviceOnlyCopy: "图片会在此浏览器内缩小并删除相机元数据。教师主动导出之前，草稿只保留在当前设备。", createDraft: "生成候选页面",
-    whatHappens: "接下来会发生什么", findWorks: "识别作品区域", findWorksSmall: "把整墙照片拆成可以编辑的候选页面。", buildCover: "生成封面", buildCoverSmall: "自动加入书名、班级名称和日期。", teacherReview: "教师逐页审核", teacherReviewSmall: "检查裁切、匿名署名和可见个人信息。", exportBook: "导出电子书", exportBookSmall: "下载私密电子书或打印样张。", freeTeacher: "教师可以免费开始。", freeTeacherCopy: "无需囤货；之后由家庭自主决定是否购买实体纪念书。",
+    whatHappens: "接下来会发生什么", findWorks: "生成可调整的页面裁切", findWorksSmall: "选择作品墙排列，再逐页微调裁切后保存。", buildCover: "生成封面", buildCoverSmall: "自动加入书名、班级名称和日期。", teacherReview: "教师逐页审核", teacherReviewSmall: "检查裁切、匿名署名和可见个人信息。", exportBook: "导出电子书", exportBookSmall: "下载私密电子书或打印样张。", freeTeacher: "教师可以免费开始。", freeTeacherCopy: "无需囤货；之后由家庭自主决定是否购买实体纪念书。",
     stepTwo: "第二步 · 教师审核", reviewTitle: "把每一份作品放到正确的位置。", reviewCopy: "一张作品墙照片会生成多个候选裁切；逐张上传的作品会直接成为完整页面。生成书之前，可以改名、排序或删除。", dragHelp: "使用箭头调整顺序",
     approval: "教师确认", checksTitle: "生成电子书前需要完成三项检查", checkCrops: "我已检查每一个裁切。", checkCropsSmall: "没有作品遗漏或被错误截断。", checkPrivacy: "我已检查姓名、人脸和学校信息。", checkPrivacySmall: "只保留已经获得允许的身份信息。", checkPermission: "我拥有所需授权。", checkPermissionSmall: "向家庭分享或印刷前必须获得相应许可。", makeBook: "生成我的私密电子书",
     stepThree: "第三步 · 电子书已生成", readyTitle: "课堂作品不再做完就消失。", readyCopy: "私密版本已保存在当前设备。你可以下载独立电子书，也可以打印或保存为PDF样张。", downloadBook: "下载电子书", printBook: "打印／保存PDF",
     familyViewer: "家庭阅读版", familyViewerSmall: "适合手机阅读的私密版本。", printedBook: "实体班级书", printedBookSmall: "收到家庭订单后再制作。", classFilm: "班级电影", classFilmSmall: "未来可把同一组页面制作成配音首映短片。", startAnother: "再创建一本班级作品集",
+    cloudKicker: "教师账户 · 区域私密云端", cloudTitle: "跨设备保存，并邀请家庭阅读。", cloudCopy: "本机预览免费。购买教师班级项目后，可把审核页面保存到所属地区的私密资料库，并导出Word、PDF或创建限时家庭邀请。", attesterName: "教师／教育者姓名", cloudPermission: "我已满18岁，并确认已为所有可识别学生取得所需家长／监护人许可，同意将作品用于区域私密存储、家庭邀请、印刷和班级短片制作。", saveCloud: "保存审核版到云端", shareFamilies: "创建私密家庭链接", exportWord: "下载Word", exportPdf: "下载PDF", productionStudio: "申请印刷或制作班级电影", teacherPack: "教师班级项目 · $79",
     createNav: "创作", storiesNav: "作品", classNav: "班级", accountNav: "账户", footer: "默认私密 · 教师审核 · 按需印刷", resumeLast: "继续编辑最近保存的私密电子书"
   };
 
@@ -114,30 +126,45 @@
 
   async function cropBoard(source) {
     const image = await loadImage(source.dataUrl);
-    const columns = image.naturalWidth >= image.naturalHeight * 1.15 ? 3 : 2;
-    const rows = 2;
+    const requested = gridLayout?.value || "auto";
+    const automatic = image.naturalWidth >= image.naturalHeight * 1.15 ? [3, 2] : [2, 2];
+    const [columns, rows] = requested === "auto" ? automatic : requested.split("x").map(Number);
     const pages = [];
     const overlap = 0.035;
     for (let row = 0; row < rows; row += 1) {
       for (let column = 0; column < columns; column += 1) {
-        const cellWidth = image.naturalWidth / columns;
-        const cellHeight = image.naturalHeight / rows;
-        const sx = Math.max(0, column * cellWidth - cellWidth * overlap);
-        const sy = Math.max(0, row * cellHeight - cellHeight * overlap);
-        const sw = Math.min(image.naturalWidth - sx, cellWidth * (1 + overlap * 2));
-        const sh = Math.min(image.naturalHeight - sy, cellHeight * (1 + overlap * 2));
-        const canvas = document.createElement("canvas");
-        const ratio = Math.min(1, 1000 / Math.max(sw, sh));
-        canvas.width = Math.max(1, Math.round(sw * ratio));
-        canvas.height = Math.max(1, Math.round(sh * ratio));
-        const context = canvas.getContext("2d", { alpha: false });
-        context.fillStyle = "#fff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-        pages.push(makePage(canvasDataUrl(canvas), pages.length));
+        const page = makePage("", pages.length, source.name);
+        page.sourceDataUrl = source.dataUrl;
+        page.crop = {
+          x: Math.max(0, (column / columns) - (overlap / columns)),
+          y: Math.max(0, (row / rows) - (overlap / rows)),
+          w: Math.min(1 - (column / columns), (1 / columns) * (1 + overlap * 2)),
+          h: Math.min(1 - (row / rows), (1 / rows) * (1 + overlap * 2))
+        };
+        await recropPage(page, image);
+        pages.push(page);
       }
     }
     return pages;
+  }
+
+  async function recropPage(page, loadedImage) {
+    if (!page?.sourceDataUrl || !page.crop) return;
+    const image = loadedImage || await loadImage(page.sourceDataUrl);
+    const crop = page.crop;
+    const sx = Math.round(Math.max(0, Math.min(0.98, crop.x)) * image.naturalWidth);
+    const sy = Math.round(Math.max(0, Math.min(0.98, crop.y)) * image.naturalHeight);
+    const sw = Math.max(1, Math.round(Math.min(1 - crop.x, Math.max(0.02, crop.w)) * image.naturalWidth));
+    const sh = Math.max(1, Math.round(Math.min(1 - crop.y, Math.max(0.02, crop.h)) * image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    const ratio = Math.min(1, 1200 / Math.max(sw, sh));
+    canvas.width = Math.max(1, Math.round(sw * ratio));
+    canvas.height = Math.max(1, Math.round(sh * ratio));
+    const context = canvas.getContext("2d", { alpha: false });
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    page.dataUrl = canvasDataUrl(canvas, 0.9);
   }
 
   function makePage(dataUrl, index, sourceName = "") {
@@ -145,9 +172,45 @@
       id: `page-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}`,
       dataUrl,
       title: say(`Student work ${String(index + 1).padStart(2, "0")}`, `学生作品 ${String(index + 1).padStart(2, "0")}`),
-      credit: say("Creator nickname", "创作者昵称"),
+      credit: "",
+      creditConfirmed: false,
+      creditSource: "teacher",
       sourceName
     };
+  }
+
+  function authorsReady() {
+    return state.pages.length > 0 && state.pages.every((page) => page.credit.trim() && page.creditConfirmed === true);
+  }
+
+  async function suggestAuthorFromWork(page, input, confirmInput, button, status) {
+    button.disabled = true;
+    status.textContent = say("Reading the possible author label…", "正在识别可能的作者署名……");
+    try {
+      const session = await window.StoriesLensPlatform?.getSession();
+      if (!session?.authenticated) {
+        status.textContent = say("Sign in with a teacher account to use name recognition, or type the author manually.", "请先登录教师账户使用署名识别，或直接手动填写作者。" );
+        return;
+      }
+      const result = await window.StoriesLensPlatform.api("/api/classroom/recognize-author", {
+        method: "POST",
+        body: JSON.stringify({ imageDataUrl: page.dataUrl, metadataRemoved: true })
+      });
+      input.value = result.candidate;
+      page.credit = result.candidate;
+      page.creditConfirmed = false;
+      page.creditSource = "suggested";
+      confirmInput.checked = false;
+      status.textContent = say(
+        `Suggested “${result.candidate}”. Check the work, edit if needed, then confirm.`,
+        `识别建议：“${result.candidate}”。请对照作品检查、必要时修改，再由老师确认。`
+      );
+      updateApproval();
+    } catch (recognitionError) {
+      status.textContent = recognitionError.message || say("No clear author label was found. Please type a name, nickname, initials, or Anonymous.", "没有识别到清晰署名，请填写姓名、昵称、首字母或“匿名作者”。");
+    } finally {
+      button.disabled = false;
+    }
   }
 
   async function acceptFiles(fileCollection, mode) {
@@ -224,6 +287,7 @@
 
   function setMode(mode) {
     state.mode = mode === "individual" ? "individual" : "board";
+    if (gridField) gridField.hidden = state.mode !== "board";
     $$('[data-capture-mode]').forEach((button) => {
       const active = button.dataset.captureMode === state.mode;
       button.classList.toggle("is-active", active);
@@ -282,11 +346,67 @@
       const creditLabel = document.createElement("label");
       const creditText = document.createElement("span");
       const creditInput = document.createElement("input");
-      creditText.textContent = say("Printed credit", "印刷署名");
+      creditText.textContent = say("Author name or nickname", "作者姓名或昵称");
       creditInput.maxLength = 50;
       creditInput.value = page.credit;
-      creditInput.addEventListener("input", () => { page.credit = creditInput.value; });
+      creditInput.placeholder = say("Nickname, initials, or Anonymous", "昵称、姓名首字母或匿名作者");
+      creditInput.autocomplete = "off";
+      const creditHelp = document.createElement("small");
+      creditHelp.className = "archive-author-help";
+      creditHelp.textContent = say("Prefer a nickname or initials. Use a full name only with family permission.", "建议使用昵称或姓名首字母；只有获得家庭许可后才使用全名。" );
+      const creditStatus = document.createElement("small");
+      creditStatus.className = "archive-author-status";
+      creditStatus.setAttribute("role", "status");
+      const confirmLabel = document.createElement("label");
+      confirmLabel.className = "archive-author-confirm";
+      const confirmInput = document.createElement("input");
+      confirmInput.type = "checkbox";
+      confirmInput.checked = page.creditConfirmed === true;
+      const confirmText = document.createElement("span");
+      confirmText.textContent = say("Teacher checked this author credit", "老师已核对此作者署名");
+      confirmLabel.append(confirmInput, confirmText);
+      creditInput.addEventListener("input", () => {
+        page.credit = creditInput.value;
+        page.creditConfirmed = false;
+        page.creditSource = "teacher";
+        confirmInput.checked = false;
+        creditStatus.textContent = "";
+        updateApproval();
+        renderBook();
+      });
+      confirmInput.addEventListener("change", () => {
+        if (confirmInput.checked && !creditInput.value.trim()) {
+          confirmInput.checked = false;
+          creditStatus.textContent = say("Enter a nickname, initials, or Anonymous first.", "请先填写昵称、姓名首字母或匿名作者。" );
+          creditInput.focus();
+          return;
+        }
+        page.credit = creditInput.value.trim();
+        creditInput.value = page.credit;
+        page.creditConfirmed = confirmInput.checked;
+        updateApproval();
+      });
       creditLabel.append(creditText, creditInput);
+
+      const authorActions = document.createElement("div");
+      authorActions.className = "archive-author-actions";
+      const recognizeAuthor = document.createElement("button");
+      const useAnonymous = document.createElement("button");
+      recognizeAuthor.type = useAnonymous.type = "button";
+      recognizeAuthor.textContent = say("Read name from work", "从作品识别署名");
+      useAnonymous.textContent = say("Use Anonymous", "使用匿名作者");
+      recognizeAuthor.addEventListener("click", () => suggestAuthorFromWork(page, creditInput, confirmInput, recognizeAuthor, creditStatus));
+      useAnonymous.addEventListener("click", () => {
+        page.credit = say("Anonymous young creator", "匿名小作者");
+        page.creditConfirmed = true;
+        page.creditSource = "anonymous";
+        creditInput.value = page.credit;
+        confirmInput.checked = true;
+        creditStatus.textContent = say("Anonymous credit selected.", "已选择匿名署名。" );
+        updateApproval();
+        renderBook();
+      });
+      authorActions.append(recognizeAuthor, useAnonymous);
 
       const actions = document.createElement("div");
       actions.className = "archive-page-actions";
@@ -307,14 +427,64 @@
         renderPageEditor();
       });
       actions.append(up, down, remove);
-      details.append(privacy, titleLabel, creditLabel, actions);
+      details.append(privacy, titleLabel, creditLabel, creditHelp, authorActions, creditStatus, confirmLabel, actions);
+      if (page.crop && page.sourceDataUrl) {
+        const toggleCrop = document.createElement("button");
+        toggleCrop.type = "button";
+        toggleCrop.textContent = say("Adjust crop", "调整裁切");
+        actions.insertBefore(toggleCrop, remove);
+        const cropEditor = document.createElement("div");
+        cropEditor.className = "archive-crop-editor";
+        cropEditor.hidden = true;
+        const cropTitle = document.createElement("strong");
+        cropTitle.textContent = say("Fine-tune this page", "精细调整这一页");
+        cropEditor.append(cropTitle);
+        const controls = [
+          ["x", say("Left", "左侧"), 0, 95],
+          ["y", say("Top", "顶部"), 0, 95],
+          ["w", say("Width", "宽度"), 5, 100],
+          ["h", say("Height", "高度"), 5, 100]
+        ];
+        controls.forEach(([key, labelText, min, max]) => {
+          const label = document.createElement("label");
+          const name = document.createElement("span");
+          const input = document.createElement("input");
+          const output = document.createElement("output");
+          name.textContent = labelText;
+          input.type = "range";
+          input.min = String(min);
+          input.max = String(max);
+          input.value = String(Math.round(page.crop[key] * 100));
+          output.textContent = `${input.value}%`;
+          input.addEventListener("input", async () => {
+            page.crop[key] = Number(input.value) / 100;
+            if (key === "x" && page.crop.x + page.crop.w > 1) page.crop.w = Math.max(0.05, 1 - page.crop.x);
+            if (key === "y" && page.crop.y + page.crop.h > 1) page.crop.h = Math.max(0.05, 1 - page.crop.y);
+            if (key === "w" && page.crop.x + page.crop.w > 1) page.crop.x = Math.max(0, 1 - page.crop.w);
+            if (key === "h" && page.crop.y + page.crop.h > 1) page.crop.y = Math.max(0, 1 - page.crop.h);
+            output.textContent = `${input.value}%`;
+            await recropPage(page);
+            image.src = page.dataUrl;
+            delete state.cloudMediaByPage[page.id];
+            if (cloudStatus) cloudStatus.textContent = say("Crop changed—save online again when ready.", "裁切已改变，确认后请再次保存到云端。");
+            renderBook();
+          });
+          label.append(name, input, output);
+          cropEditor.append(label);
+        });
+        toggleCrop.addEventListener("click", () => {
+          cropEditor.hidden = !cropEditor.hidden;
+          toggleCrop.textContent = cropEditor.hidden ? say("Adjust crop", "调整裁切") : say("Close crop controls", "收起裁切工具");
+        });
+        details.append(cropEditor);
+      }
       article.append(visual, details);
       pageEditor.append(article);
     });
   }
 
   function updateApproval() {
-    approveProof.disabled = !state.pages.length || !approvalChecks.every((check) => check.checked);
+    approveProof.disabled = !authorsReady() || !approvalChecks.every((check) => check.checked);
   }
 
   function bookMetadata() {
@@ -369,7 +539,7 @@
   async function saveProject() {
     const metadata = bookMetadata();
     const id = state.projectId || (crypto.randomUUID?.() || `class-book-${Date.now()}`);
-    const project = { id, ...metadata, mode: state.mode, sources: state.sources, pages: state.pages, savedAt: new Date().toISOString(), visibility: "private-device" };
+    const project = { id, ...metadata, mode: state.mode, sources: state.sources, pages: state.pages, cloudProjectId: state.cloudProjectId, cloudConsentId: state.cloudConsentId, cloudMediaByPage: state.cloudMediaByPage, cloudAttester: cloudAttester?.value || "", savedAt: new Date().toISOString(), visibility: "private-device" };
     const database = await openDatabase();
     await new Promise((resolve, reject) => {
       const transaction = database.transaction(STORE, "readwrite");
@@ -401,6 +571,11 @@
     state.mode = project.mode || "board";
     state.sources = project.sources || [];
     state.pages = project.pages;
+    state.cloudProjectId = project.cloudProjectId || "";
+    state.cloudConsentId = project.cloudConsentId || "";
+    state.cloudMediaByPage = project.cloudMediaByPage || {};
+    if (cloudAttester) cloudAttester.value = project.cloudAttester || "";
+    if (cloudPermission) cloudPermission.checked = Boolean(state.cloudConsentId);
     collectionTitle.value = project.title || "";
     collectionDate.value = project.date || todayValue();
     classLabel.value = project.classLabel || "";
@@ -414,7 +589,74 @@
     $("[data-progress-step='2']")?.classList.add("is-active");
     $("[data-progress-step='3']")?.classList.add("is-active");
     renderBook(-1);
+    updateCloudActions();
     publishSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error("file_read_failed"));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function loadCloudProject(projectId) {
+    const platform = window.StoriesLensPlatform;
+    if (!platform || !projectId) return;
+    cloudStatus.textContent = say("Opening the private classroom project…", "正在打开私密班级项目……");
+    try {
+      const result = await platform.api(`/api/projects/${encodeURIComponent(projectId)}`);
+      const project = result.project;
+      if (project.mode !== "classroom") throw new Error(say("This is not a classroom publishing project.", "这不是班级出版项目。"));
+      const metadata = project.clientSnapshot?.teacherPublisher || {};
+      const pages = [];
+      for (let index = 0; index < project.scenes.length; index += 1) {
+        const scene = project.scenes[index];
+        if (!scene.imageUrl) continue;
+        const response = await fetch(scene.imageUrl, { credentials: "same-origin" });
+        if (!response.ok) throw new Error(say("One approved page could not be loaded.", "有一页审核作品暂时无法读取。"));
+        const dataUrl = await blobToDataUrl(await response.blob());
+        const page = makePage(dataUrl, index);
+        page.id = scene.id || page.id;
+        page.title = scene.title;
+        page.credit = scene.text || say("Creator nickname", "创作者昵称");
+        page.creditConfirmed = true;
+        page.creditSource = "saved";
+        pages.push(page);
+        state.cloudMediaByPage[page.id] = { fingerprint: pageFingerprint(page), url: scene.imageUrl };
+      }
+      if (!pages.length) throw new Error(say("This project has no approved pages yet.", "这个项目还没有审核页面。"));
+      state.mode = "individual";
+      state.sources = [{ name: project.title, dataUrl: pages[0].dataUrl, width: 0, height: 0 }];
+      state.pages = pages;
+      state.cloudProjectId = project.id;
+      state.cloudConsentId = metadata.classroomConsentId || "";
+      if (cloudAttester) cloudAttester.value = metadata.attesterName || "";
+      if (cloudPermission) cloudPermission.checked = Boolean(state.cloudConsentId);
+      collectionTitle.value = project.title;
+      collectionDate.value = metadata.collectionDate || todayValue();
+      classLabel.value = metadata.classLabel || "";
+      edition.value = metadata.edition || "single";
+      coverTheme.value = metadata.coverTheme || "ink";
+      setMode("individual");
+      state.sources = [{ name: project.title, dataUrl: pages[0].dataUrl, width: 0, height: 0 }];
+      state.pages = pages;
+      renderSelection();
+      renderPageEditor();
+      resetApproval();
+      reviewSection.hidden = false;
+      publishSection.hidden = false;
+      $("[data-progress-step='2']")?.classList.add("is-active");
+      $("[data-progress-step='3']")?.classList.add("is-active");
+      renderBook(-1);
+      updateCloudActions();
+      cloudStatus.textContent = say("Private classroom project opened.", "私密班级项目已打开。");
+      publishSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (loadError) {
+      cloudStatus.textContent = loadError.message || say("The private project could not be opened.", "暂时无法打开私密项目。");
+    }
   }
 
   function escapeHtml(value) {
@@ -458,6 +700,188 @@
     printWindow.addEventListener("load", () => window.setTimeout(() => printWindow.print(), 300), { once: true });
   }
 
+  function pageFingerprint(page) {
+    const value = `${page.dataUrl.length}:${page.dataUrl.slice(-160)}`;
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16);
+  }
+
+  function cloudProjectPayload(scenes = []) {
+    const metadata = bookMetadata();
+    return {
+      title: metadata.title,
+      language: currentLocale() === "zh" ? "zh" : "en",
+      mode: "classroom",
+      ageGroup: "adult",
+      visibility: "invite",
+      sourceType: "classroom",
+      sourceText: say("Teacher-approved classroom collection", "教师审核的班级作品集"),
+      draft: state.pages.map((page) => `${page.title} — ${page.credit}`).join("\n"),
+      coverImageUrl: scenes[0]?.imageUrl || "",
+      scenes: scenes.length ? scenes : state.pages.map((page, index) => ({
+        id: page.id,
+        title: page.title || say(`Student work ${index + 1}`, `学生作品${index + 1}`),
+        text: page.credit,
+        caption: page.title,
+        imageUrl: "",
+        duration: 6,
+        transition: "fade"
+      })),
+      clientSnapshot: {
+        teacherPublisher: {
+          collectionDate: metadata.date,
+          classLabel: metadata.classLabel,
+          edition: metadata.edition,
+          coverTheme: metadata.coverTheme,
+          pageCount: state.pages.length,
+          firstPageCreated: state.pages.length > 0,
+          privacyReviewed: true,
+          classroomConsentId: state.cloudConsentId,
+          attesterName: cloudAttester?.value.trim() || "",
+          savedAt: new Date().toISOString()
+        },
+        firstPageCreated: state.pages.length > 0
+      }
+    };
+  }
+
+  function updateCloudActions() {
+    const saved = Boolean(state.cloudProjectId);
+    [cloudShare, cloudDocx, cloudPdf].forEach((button) => { if (button) button.disabled = !saved; });
+    if (cloudProduction) {
+      cloudProduction.hidden = !saved;
+      cloudProduction.href = saved ? `movie-studio.html?project=${encodeURIComponent(state.cloudProjectId)}&from=teacher` : "";
+    }
+    if (cloudSave) cloudSave.querySelector("span").textContent = saved ? say("Update approved cloud book", "更新云端审核版") : say("Save approved book online", "保存审核版到云端");
+  }
+
+  async function saveCloudBook() {
+    const platform = window.StoriesLensPlatform;
+    if (!platform) return;
+    cloudSave.disabled = true;
+    cloudStatus.textContent = say("Checking the teacher account…", "正在检查教师账户……");
+    try {
+      const session = await platform.getSession();
+      if (!session.authenticated) {
+        const returnTo = `classroom-archive.html?resume=${encodeURIComponent(state.projectId || "latest")}`;
+        location.assign(`teacher-login.html?returnTo=${encodeURIComponent(returnTo)}`);
+        return;
+      }
+      const attesterName = cloudAttester?.value.trim() || "";
+      if (!attesterName || !cloudPermission?.checked) {
+        cloudStatus.textContent = say(
+          "Enter the educator name and confirm documented guardian permission before cloud storage.",
+          "请填写教师姓名，并确认已取得所需监护人授权后再保存到云端。"
+        );
+        cloudAttester?.focus();
+        return;
+      }
+      if (!state.cloudProjectId) {
+        cloudStatus.textContent = say("Creating the private classroom project…", "正在创建私密班级项目……");
+        const created = await platform.api("/api/projects", {
+          method: "POST",
+          headers: { "Idempotency-Key": `teacher-book-${state.projectId || pageFingerprint(state.pages[0])}` },
+          body: JSON.stringify(cloudProjectPayload())
+        });
+        state.cloudProjectId = created.project.id;
+      }
+      if (!state.cloudConsentId) {
+        cloudStatus.textContent = say("Recording the educator permission statement…", "正在记录教师授权声明……");
+        const consentResult = await platform.api(`/api/projects/${encodeURIComponent(state.cloudProjectId)}/classroom-consent`, {
+          method: "POST",
+          body: JSON.stringify({
+            attesterName,
+            confirmedAdult: true,
+            documentedGuardianPermission: true,
+            approvedPrivateMedia: true,
+            approvedFamilySharing: true,
+            approvedPrinting: true,
+            approvedClassFilm: true,
+            acknowledgedRegionalProcessing: true
+          })
+        });
+        state.cloudConsentId = consentResult.consent.id;
+      }
+
+      const scenes = [];
+      for (let index = 0; index < state.pages.length; index += 1) {
+        const page = state.pages[index];
+        const fingerprint = pageFingerprint(page);
+        const cached = state.cloudMediaByPage[page.id];
+        let imageUrl = cached?.fingerprint === fingerprint ? cached.url : "";
+        if (!imageUrl) {
+          cloudStatus.textContent = say(`Saving approved work ${index + 1} of ${state.pages.length}…`, `正在保存第 ${index + 1}／${state.pages.length} 份审核作品……`);
+          const uploaded = await platform.api("/api/media", {
+            method: "POST",
+            body: JSON.stringify({
+              projectId: state.cloudProjectId,
+              dataUrl: page.dataUrl,
+              metadataRemoved: true,
+              purpose: "classroom-work",
+              personalPhotoConsentId: state.cloudConsentId,
+              uploadId: `${page.id}-${fingerprint}`
+            })
+          });
+          imageUrl = uploaded.media.url;
+          state.cloudMediaByPage[page.id] = { fingerprint, url: imageUrl };
+        }
+        scenes.push({ id: page.id, title: page.title, text: page.credit, caption: page.title, imageUrl, duration: 6, transition: "fade" });
+      }
+      await platform.api(`/api/projects/${encodeURIComponent(state.cloudProjectId)}`, { method: "PATCH", body: JSON.stringify(cloudProjectPayload(scenes)) });
+      await saveProject();
+      updateCloudActions();
+      cloudStatus.textContent = say("Saved to your regional private library. Nothing is public.", "已保存到所属地区的私密资料库，没有公开任何内容。");
+    } catch (saveError) {
+      if (saveError.status === 402) {
+        cloudStatus.textContent = say("A Teacher Classroom Project is required to save up to 30 approved works online.", "云端保存最多30份审核作品需要一个教师班级项目额度。");
+        $("[data-teacher-checkout]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        cloudStatus.textContent = saveError.message || say("The private cloud save did not complete.", "私密云端保存没有完成，请重试。");
+      }
+    } finally {
+      cloudSave.disabled = false;
+    }
+  }
+
+  async function shareCloudBook() {
+    if (!state.cloudProjectId) return;
+    cloudShare.disabled = true;
+    try {
+      const result = await window.StoriesLensPlatform.api(`/api/projects/${encodeURIComponent(state.cloudProjectId)}/share`, { method: "POST", body: "{}" });
+      const shareUrl = new URL(result.shareUrl, location.href).href;
+      if (navigator.share) await navigator.share({ title: bookMetadata().title, text: say("A private class book", "一本私密班级作品集"), url: shareUrl });
+      else await navigator.clipboard.writeText(shareUrl);
+      cloudStatus.textContent = say("Private family invitation ready. It expires automatically.", "私密家庭邀请已准备好，并会自动过期。");
+    } catch (shareError) {
+      cloudStatus.textContent = shareError.message || say("The invitation could not be created.", "暂时无法创建邀请。");
+    } finally {
+      cloudShare.disabled = false;
+    }
+  }
+
+  async function downloadCloudBook(format) {
+    if (!state.cloudProjectId) return;
+    cloudStatus.textContent = say(`Preparing ${format.toUpperCase()}…`, `正在生成${format.toUpperCase()}……`);
+    const response = await fetch(`/api/projects/${encodeURIComponent(state.cloudProjectId)}/export/${format}`, { credentials: "same-origin" });
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({}));
+      cloudStatus.textContent = problem.error || say("The export could not be created.", "暂时无法生成导出文件。");
+      return;
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${safeFilename(bookMetadata().title)}.${format}`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    cloudStatus.textContent = say(`${format.toUpperCase()} downloaded.`, `${format.toUpperCase()}已下载。`);
+  }
+
   $$('[data-capture-mode]').forEach((button) => button.addEventListener("click", () => setMode(button.dataset.captureMode)));
   boardInput.addEventListener("change", () => acceptFiles(boardInput.files, "board"));
   worksInput.addEventListener("change", () => acceptFiles(worksInput.files, "individual"));
@@ -477,6 +901,10 @@
       state.pages = state.mode === "board"
         ? await cropBoard(state.sources[0])
         : state.sources.map((source, index) => makePage(source.dataUrl, index, source.name));
+      state.cloudProjectId = "";
+      state.cloudConsentId = "";
+      state.cloudMediaByPage = {};
+      updateCloudActions();
       renderPageEditor();
       resetApproval();
       reviewSection.hidden = false;
@@ -493,7 +921,7 @@
   });
 
   approveProof.addEventListener("click", async () => {
-    if (!state.pages.length || !approvalChecks.every((check) => check.checked)) return;
+    if (!authorsReady() || !approvalChecks.every((check) => check.checked)) return;
     approveProof.disabled = true;
     const saveState = $("[data-save-state]");
     saveState.textContent = say("Saving the private edition on this device…", "正在把私密版本保存到此设备……");
@@ -515,6 +943,10 @@
   $("[data-book-next]").addEventListener("click", () => renderBook(Math.min(state.pages.length - 1, state.bookIndex + 1)));
   $("[data-download-book]").addEventListener("click", downloadBook);
   $("[data-print-book]").addEventListener("click", printBook);
+  cloudSave?.addEventListener("click", saveCloudBook);
+  cloudShare?.addEventListener("click", shareCloudBook);
+  cloudDocx?.addEventListener("click", () => downloadCloudBook("docx"));
+  cloudPdf?.addEventListener("click", () => downloadCloudBook("pdf"));
   $("[data-start-another]").addEventListener("click", () => location.assign("classroom-archive.html?new=1"));
   [collectionTitle, collectionDate, classLabel, coverTheme].forEach((field) => field.addEventListener("input", () => renderBook()));
 
@@ -536,4 +968,8 @@
   resumeLast.hidden = !localStorage.getItem(LAST_PROJECT_KEY) || new URLSearchParams(location.search).has("new");
   applyArchiveLocale();
   renderSelection();
+  updateCloudActions();
+  const pageParams = new URLSearchParams(location.search);
+  if (pageParams.get("project")) window.addEventListener("load", () => loadCloudProject(pageParams.get("project")), { once: true });
+  else if (pageParams.has("resume") && !resumeLast.hidden) resumeLast.click();
 })();

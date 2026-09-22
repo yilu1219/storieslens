@@ -2,11 +2,12 @@
   "use strict";
 
   const platform = window.StoriesLensPlatform;
+  const teacherContext = document.body.dataset.loginContext === "teacher";
   const pageParams = new URLSearchParams(location.search);
   const requestedReturn = pageParams.get("returnTo") || pageParams.get("return") || "";
   const normalizedReturn = requestedReturn.replace(/^\/+/, "");
   const referralCode = (pageParams.get("ref") || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100);
-  const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio|checkout|payment-success)\.html(?:[?#].*)?$/.test(normalizedReturn) ? normalizedReturn : "my-stories.html";
+  const returnAfterLogin = /^(?:squad-board|my-stories|app|chinese-studio|checkout|payment-success|teacher-dashboard|classroom-archive)\.html(?:[?#].*)?$/.test(normalizedReturn) ? normalizedReturn : (teacherContext ? "teacher-dashboard.html" : "my-stories.html");
   const $ = (selector) => document.querySelector(selector);
   const startForm = $("[data-email-start]");
   const verifyForm = $("[data-email-verify]");
@@ -156,7 +157,7 @@
           code: verificationCode,
           method: "email",
           destination: $("[data-email]").value.trim(),
-          displayName: $("[data-display-name]").value.trim() || "Creator",
+          displayName: $("[data-display-name]").value.trim() || (teacherContext ? "Teacher" : "Creator"),
           ageGroup: "adult",
           primaryRegion: selectedRegion(),
           countryCode: countryCode(),
@@ -167,7 +168,9 @@
       });
       $("[data-login-form-wrap]").hidden = true;
       $("[data-login-success]").hidden = false;
-      $("[data-success-copy]").textContent = `${result.user.displayName}, your private library and free first-scene illustration are ready. · 私人作品库与首张免费插图额度已经准备好。`;
+      $("[data-success-copy]").textContent = teacherContext
+        ? `${result.user.displayName}, your private teacher workspace is ready. · 教师工作台已经准备好。`
+        : `${result.user.displayName}, your private library and free first-scene illustration are ready. · 私人作品库与首张免费插图额度已经准备好。`;
       const successLink = $("[data-login-success] a");
       if (successLink) successLink.href = returnAfterLogin;
       window.setTimeout(() => { location.href = returnAfterLogin; }, 900);

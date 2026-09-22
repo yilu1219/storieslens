@@ -13,6 +13,7 @@ const htmlFiles = [
   "create-reading-publish.html",
   "visual-write.html",
   "teacher-dashboard.html",
+  "teacher-login.html",
   "teacher-project.html",
   "project-output.html",
   "visual-read.html",
@@ -46,6 +47,7 @@ const groupProjectStudioHtml = htmlByFile["group-project-studio.html"];
 const startHtml = htmlByFile["start.html"];
 const storyDnaHtml = htmlByFile["story-dna.html"];
 const teacherHtml = htmlByFile["teacher-dashboard.html"];
+const teacherLoginHtml = htmlByFile["teacher-login.html"];
 const classroomArchiveHtml = htmlByFile["classroom-archive.html"];
 const classroomArchiveJs = read("classroom-archive.js");
 const portalHomeJs = read("portal-home.js");
@@ -348,7 +350,7 @@ assert(ccssStandards.every((standard) => Array.isArray(standard.keywords)), "CCS
   "Turn bulletin boards and student work into a dated class book.",
   "Photograph the wall once—or upload each work—to create a digital or printed keepsake.",
   "Open Teacher Publisher",
-  "classroom-archive.html",
+  "teacher-dashboard.html",
   'class="company-family"',
   "Every age has a story worth keeping.",
   "Lightyear Story helps real lives be heard, organized, and passed on.",
@@ -463,6 +465,11 @@ assert(!chineseStudioHtml.includes("MAP"), "Chinese studio should not expose the
   "data-download-book",
   "data-print-book",
   "Class film",
+  "data-grid-layout",
+  "data-cloud-save",
+  "data-cloud-share",
+  "data-cloud-docx",
+  "data-cloud-pdf",
   'src="classroom-archive.js?',
   'href="classroom-archive.css?'
 ].forEach((token) => assert(classroomArchiveHtml?.includes(token), `Classroom archive should include: ${token}`));
@@ -474,9 +481,27 @@ assert(!chineseStudioHtml.includes("MAP"), "Chinese studio should not expose the
   "buildBookHtml",
   "downloadBook",
   "printBook",
+  "recropPage",
+  "saveCloudBook",
+  "suggestAuthorFromWork",
+  "authorsReady",
+  "Teacher checked this author credit",
+  "/api/classroom/recognize-author",
+  "classroom-consent",
+  "documentedGuardianPermission",
+  "personalPhotoConsentId: state.cloudConsentId",
+  'purpose: "classroom-work"',
+  'mode: "classroom"',
   "metadata-free previews",
   "visibility: \"private-device\""
 ].forEach((token) => assert(classroomArchiveJs.includes(token), `Classroom archive app should include: ${token}`));
+
+assert(read("platform-api.js").includes("classroomConsentMatch") && read("platform-api.js").includes('relationship: "Educator with documented guardian permission"'), "classroom cloud publishing should record an adult educator attestation before storing identifiable student work");
+assert(read("platform-api.js").includes("shareMediaMatch") && read("platform-api.js").includes("/media/${encodeURIComponent(cleanId(match[1]))}"), "private family invitations should load classroom images through expiring share-token URLs");
+assert(serverJs.includes("handleClassroomAuthorRecognition") && serverJs.includes("teacherConfirmationRequired") && serverJs.includes("Do not infer identity from a face"), "author OCR should provide only a teacher-confirmed suggestion and must never identify a child from their face");
+assert(teacherHtml.includes('href="teacher-login.html"') && teacherLoginHtml.includes('data-login-context="teacher"'), "the teacher workspace should provide a dedicated email-only teacher sign-in entrance");
+assert(teacherLoginHtml.includes("Teacher invitation code (optional)") && teacherLoginHtml.includes("Open teacher workspace"), "teacher sign-in should accept an optional beta code and return directly to the teacher workspace");
+assert(read("login.js").includes("teacherContext") && read("login.js").includes('teacherContext ? "teacher-dashboard.html"'), "shared passwordless email authentication should route teacher accounts back to the teacher desk");
 
 [
   "How do you want to create?",
@@ -823,11 +848,16 @@ assert(!visualWriteHtml.includes('resolution: "2K"'), "Visual Write image reques
   "Printed class book",
   "Class premiere",
   "classroom-archive.html",
+  "data-teacher-account",
+  "data-teacher-project-list",
+  "teacher-dashboard.js",
   "teacher-dashboard.css"
 ].forEach((token) => {
   assert(teacherHtml.includes(token), `Teacher Studio should include: ${token}`);
 });
 assert(!teacherHtml.includes("create-reading-project.html"), "Teacher Studio should expose only the bulletin-board publishing workflow");
+assert(read("platform-api.js").includes('body.mode === "classroom" ? "classroomProjects" : "storyProjects"'), "classroom projects should consume the teacher allowance instead of a solo story allowance");
+assert(read("platform-api.js").includes('resource: "studentWorks"') && read("platform-api.js").includes('referenceType: "classroom-work"'), "approved cloud classroom pages should consume auditable student-work allowance");
 
 const forbiddenVisibleTokens = [
   "AI Feedback API Contract",

@@ -1680,12 +1680,13 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return true;
       }
       const requestKey = cleanText(request.headers["idempotency-key"] || body.idempotencyKey || crypto.randomUUID(), 200);
+      const projectResource = body.mode === "classroom" ? "classroomProjects" : "storyProjects";
       const reserved = store.mutate((nextDatabase) => reserveCredits(nextDatabase, {
         userId: user.id,
-        resource: "storyProjects",
+        resource: projectResource,
         units: 1,
         idempotencyKey: `project:${requestKey}`,
-        referenceType: "story-project",
+        referenceType: body.mode === "classroom" ? "classroom-project" : "story-project",
         metadata: { mode: body.mode || "solo" }
       }));
       if (reserved.duplicate && reserved.reservation.status === "settled") {
@@ -2302,31 +2303,65 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           }
         }
       }
+      let classroomWorkReservation = null;
+      if (kind === "image" && project?.mode === "classroom" && body.purpose === "classroom-work") {
+        const uploadId = cleanId(body.uploadId) || crypto.randomUUID();
+        classroomWorkReservation = store.mutate((nextDatabase) => reserveCredits(nextDatabase, {
+          userId: user.id,
+          resource: "studentWorks",
+          units: 1,
+          idempotencyKey: `classroom-work:${project.id}:${uploadId}`,
+          referenceType: "classroom-work",
+          referenceId: project.id,
+          metadata: { projectId: project.id, uploadId }
+        }));
+        if (classroomWorkReservation.duplicate && classroomWorkReservation.reservation.status === "settled") {
+          const existingMedia = store.read().media.find((item) => item.ownerId === user.id && item.allowanceReservationId === classroomWorkReservation.reservation.id);
+          if (existingMedia) {
+            sendJson(response, 200, { media: publicMedia(existingMedia), wallet: classroomWorkReservation.wallet, duplicate: true });
+            return true;
+          }
+        }
+      }
+
       const mediaId = crypto.randomUUID();
       const extension = imageExtensions[mimeType] || audioExtensions[mimeType];
-      const storageRecord = await mediaStorage.put({
-        user,
-        key: `${user.id}/${project ? project.id : `squad-${squad.id}`}/${mediaId}.${extension}`,
-        buffer,
-        contentType: mimeType
-      });
-      const media = {
-        id: mediaId,
-        ownerId: user.id,
-        projectId: project?.id || "",
-        squadId: squad?.id || "",
-        kind,
-        mimeType,
-        bytes: buffer.length,
-        ...storageRecord,
-        private: true,
-        metadataRemoved: kind === "image",
-        containsRealPerson: kind === "image" ? Boolean(imageReview?.checks?.realPerson) : false,
-        personalPhotoConsentId: kind === "image" ? cleanId(body.personalPhotoConsentId) : "",
-        createdAt: nowIso()
-      };
-      store.mutate((nextDatabase) => nextDatabase.media.push(media));
-      sendJson(response, 201, { media: publicMedia(media) });
+      try {
+        const storageRecord = await mediaStorage.put({
+          user,
+          key: `${user.id}/${project ? project.id : `squad-${squad.id}`}/${mediaId}.${extension}`,
+          buffer,
+          contentType: mimeType
+        });
+        const media = {
+          id: mediaId,
+          ownerId: user.id,
+          projectId: project?.id || "",
+          squadId: squad?.id || "",
+          kind,
+          mimeType,
+          bytes: buffer.length,
+          ...storageRecord,
+          private: true,
+          metadataRemoved: kind === "image",
+          containsRealPerson: kind === "image" ? Boolean(imageReview?.checks?.realPerson) : false,
+          personalPhotoConsentId: kind === "image" ? cleanId(body.personalPhotoConsentId) : "",
+          allowanceReservationId: classroomWorkReservation?.reservation?.id || "",
+          createdAt: nowIso()
+        };
+        const wallet = store.mutate((nextDatabase) => {
+          nextDatabase.media.push(media);
+          return classroomWorkReservation
+            ? settleReservation(nextDatabase, { reservationId: classroomWorkReservation.reservation.id }).wallet
+            : null;
+        });
+        sendJson(response, 201, { media: publicMedia(media), wallet });
+      } catch (error) {
+        if (classroomWorkReservation?.reservation?.id) {
+          store.mutate((nextDatabase) => releaseReservation(nextDatabase, { reservationId: classroomWorkReservation.reservation.id, reason: "classroom-work-upload-failed" }));
+        }
+        throw error;
+      }
       return true;
     }
 
@@ -2352,6 +2387,79 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   }
 
   async function handleConsentAndSharing(request, response, requestUrl) {
+    const shareMediaMatch = requestUrl.pathname.match(/^\/api\/shares\/([^/]+)\/media\/([^/]+)$/);
+    if (shareMediaMatch && request.method === "GET") {
+      const database = store.read();
+      const token = cleanText(decodeURIComponent(shareMediaMatch[1]), 80);
+      const mediaId = cleanId(decodeURIComponent(shareMediaMatch[2]));
+      const share = database.shares.find((item) => item.token === token && !item.revokedAt && new Date(item.expiresAt) > new Date());
+      const project = share ? database.projects.find((item) => item.id === share.projectId && !item.deletedAt) : null;
+      const media = project ? database.media.find((item) => item.id === mediaId && item.projectId === project.id && item.ownerId === project.ownerId) : null;
+      const storedObject = media ? await mediaStorage.get(media) : null;
+      if (!share || !project || !media || !storedObject) {
+        sendJson(response, 404, { error: "This private classroom image is unavailable or the invitation has expired." });
+        return true;
+      }
+      response.writeHead(200, {
+        "Content-Type": storedObject.contentType || media.mimeType,
+        "Content-Length": storedObject.bytes,
+        "Cache-Control": "private, no-store",
+        "X-Robots-Tag": "noindex, noarchive",
+        "Referrer-Policy": "no-referrer"
+      });
+      response.end(storedObject.body);
+      return true;
+    }
+
+    const classroomConsentMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/classroom-consent$/);
+    if (classroomConsentMatch) {
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(classroomConsentMatch[1])));
+      if (!project || project.mode !== "classroom") {
+        sendJson(response, 404, { error: "Classroom project not found." });
+        return true;
+      }
+      if (request.method !== "POST") {
+        sendJson(response, 405, { error: "Method not allowed" });
+        return true;
+      }
+      const body = await readJsonBody(request);
+      const attesterName = cleanText(body.attesterName, 100);
+      const confirmations = [
+        body.confirmedAdult,
+        body.documentedGuardianPermission,
+        body.approvedPrivateMedia,
+        body.approvedFamilySharing,
+        body.approvedPrinting,
+        body.approvedClassFilm,
+        body.acknowledgedRegionalProcessing
+      ];
+      if (user.kind !== "account" || !attesterName || confirmations.some((value) => value !== true)) {
+        sendJson(response, 400, { error: "An adult educator must confirm documented guardian permission for private classroom publishing." });
+        return true;
+      }
+      const scopes = ["private_media", "personal_photo_reference", "regional_ai_processing", "invite_share", "print_proof", "class_film"];
+      const existingConsent = database.guardianConsents.find((item) => item.projectId === project.id && !item.revokedAt && item.relationship === "Educator with documented guardian permission" && scopes.every((scope) => item.scopes?.includes(scope)));
+      if (existingConsent) {
+        sendJson(response, 200, { consent: existingConsent });
+        return true;
+      }
+      const consent = {
+        id: crypto.randomUUID(),
+        projectId: project.id,
+        guardianName: attesterName,
+        relationship: "Educator with documented guardian permission",
+        scopes,
+        verificationStatus: "account-attested",
+        policyVersion: "2026-09-22",
+        createdAt: nowIso(),
+        revokedAt: ""
+      };
+      store.mutate((nextDatabase) => nextDatabase.guardianConsents.push(consent));
+      sendJson(response, 201, { consent, notice: "The classroom collection remains private and may be deleted or revoked by the educator." });
+      return true;
+    }
+
     const consentRevokeMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/consents\/([^/]+)$/);
     if (consentRevokeMatch && request.method === "DELETE") {
       const { database, user } = sessionFor(request, response);
@@ -2495,6 +2603,10 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         sendJson(response, 404, { error: "This private story link is unavailable or has expired." });
         return true;
       }
+      const shareMediaUrl = (value) => {
+        const match = cleanUrl(value).match(/^\/api\/media\/([^/?#]+)/);
+        return match ? `/api/shares/${encodeURIComponent(token)}/media/${encodeURIComponent(cleanId(match[1]))}` : cleanUrl(value);
+      };
       sendJson(response, 200, {
         project: {
           id: project.id,
@@ -2502,8 +2614,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           language: project.language,
           draft: project.draft,
           storyDna: project.storyDna,
-          scenes: project.scenes.map((scene) => ({ ...scene, narrationMediaId: "" })),
-          coverImageUrl: project.coverImageUrl,
+          scenes: project.scenes.map((scene) => ({ ...scene, imageUrl: shareMediaUrl(scene.imageUrl), videoUrl: "", narrationMediaId: "" })),
+          coverImageUrl: shareMediaUrl(project.coverImageUrl),
           updatedAt: project.updatedAt
         },
         expiresAt: share.expiresAt
@@ -2812,6 +2924,13 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   };
 
   handlePlatformApi.creditManager = {
+    requireAccount(request, response) {
+      const { user } = sessionFor(request, response, { create: false });
+      if (user?.kind !== "account") {
+        throw Object.assign(new Error("Sign in with an adult-owned teacher account first."), { statusCode: 401, code: "TEACHER_ACCOUNT_REQUIRED" });
+      }
+      return user;
+    },
     ownerId(request, response) {
       return sessionFor(request, response).user.id;
     },

@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v90-mobile-photo-20260922";
+const VERSION = "storieslens-pwa-v93-teacher-email-20260922";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -13,11 +13,15 @@ const APP_SHELL = [
   "/my-stories.html",
   "/product-video.html",
   "/classroom-archive.html",
+  "/teacher-dashboard.html",
+  "/teacher-login.html",
   "/manifest.webmanifest",
   "/styles.css",
   "/teacher-dashboard.css",
-  "/classroom-archive.css?v=20260920-green-1",
-  "/classroom-archive.js?v=20260913-4",
+  "/teacher-login.css?v=20260922-1",
+  "/classroom-archive.css?v=20260922-author-2",
+  "/classroom-archive.js?v=20260922-author-2",
+  "/teacher-dashboard.js?v=20260922-teacher-1",
   "/analytics.js",
   "/i18n.js?v=20260908-1",
   "/portal-home.css?v=20260916-6",
@@ -37,7 +41,7 @@ const APP_SHELL = [
   "/pwa.css",
   "/platform-client.js",
   "/login.css?v=20260915-1",
-  "/login.js?v=20260921-1",
+  "/login.js?v=20260922-teacher-login-2",
   "/payment-success.js?v=20260917-1",
   "/my-stories.js?v=20260921-open-registration-1",
   "/safety-client.js",

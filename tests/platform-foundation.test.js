@@ -108,6 +108,8 @@ test("mobile product foundation covers the ten H5 capabilities", () => {
   assert(app.includes("data-photo-consent-processing") && chineseStudio.includes("data-photo-consent-processing"), "both studios should disclose regional cloud processing before personal-photo consent");
   assert(api.includes('"regional_ai_processing"') && api.includes("acknowledgedRegionalProcessing"), "personal-photo consent must explicitly cover regional safety and AI processing");
   assert(api.includes("personalPhotoMediaDeleted") && api.includes('searchParams.get("permanent") === "true"'), "revocation and permanent project deletion should remove stored personal-photo media");
+  assert(api.includes("classroomConsentMatch") && api.includes("documented guardian permission") && api.includes('"invite_share"'), "teacher publishing should require a recorded adult attestation before student work can be stored or invited");
+  assert(api.includes("shareMediaMatch") && api.includes("This private classroom image is unavailable"), "family share tokens should provide expiring read access to private classroom images");
   assert(!appJs.includes("工作坊仅接收画作，不接收真人照片") && appJs.includes("真人照片安全检查通过"), "a safe real-person photo should continue into private cloud creation instead of being blocked");
   assert(appJs.includes("safeArtwork.review?.checks?.realPerson") && appJs.includes("personalPhoto"), "personal photos should be classified explicitly without making a face itself a rejection reason");
   assert(appJs.includes('platform.api("/api/projects"') && appJs.includes('platform.api("/api/media"'), "formal H5 should save real private projects and artwork");
