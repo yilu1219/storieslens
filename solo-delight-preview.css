@@ -144,6 +144,17 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .style-card.is-selected { border-color: var(--green); box-shadow: 0 0 0 4px rgba(8,122,84,.10); }
 .make-picture-button { width: 100%; min-height: 58px; margin-top: 15px; color: #fff; border: 0; border-radius: 17px; background: var(--green); font-weight: 900; cursor: pointer; box-shadow: 0 14px 30px rgba(8,122,84,.19); }
 .make-picture-button:disabled { color: var(--muted); background: #e7eae6; box-shadow: none; cursor: not-allowed; }
+.picture-reveal-slot { width: 100%; margin-top: 14px; overflow: hidden; border: 1px solid rgba(8,122,84,.18); border-radius: 23px; background: #fff; box-shadow: 0 18px 44px rgba(7,86,62,.13); }
+.picture-reveal-slot[hidden] { display: none; }
+.picture-reveal-slot.is-drawing, .picture-reveal-slot.has-error { padding: 18px; }
+.picture-reveal-slot.is-ready { animation: picture-reveal-pop .75s cubic-bezier(.2,.9,.25,1.18) both; }
+.inline-drawing { text-align: center; }
+.inline-drawing > small, .inline-picture-error > small { color: var(--green); font-size: 9px; font-weight: 950; letter-spacing: .13em; }
+.inline-drawing > h2, .inline-picture-error > h2 { margin-top: 7px; font-size: clamp(23px,4vw,34px); }
+.inline-picture-error { text-align: center; }
+.wow-reveal { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 58px; color: #fff; background: linear-gradient(110deg,#07563e,#0d9a68 48%,#d6a12f); letter-spacing: .13em; }
+.wow-reveal b { font: 950 clamp(24px,5vw,38px)/1 var(--serif); }
+.wow-reveal span { font-size: 20px; animation: wow-spark 1s ease-in-out infinite alternate; }
 .real-life-consent { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-top: 15px; padding: 15px; text-align: left; border: 1px solid rgba(8,122,84,.2); border-radius: 17px; background: var(--mint); }
 .real-life-consent[hidden] { display: none; }
 .real-life-consent > div, .real-life-consent .consent-check { grid-column: 1 / -1; }
@@ -186,6 +197,7 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .result-copy { padding: 22px; }
 .result-origin { display: inline-flex; margin-bottom: 13px; padding: 7px 10px; color: #5a4209; border-radius: 999px; background: var(--gold-soft); font-size: 10px; font-weight: 900; }
 .result-copy h2 { font-size: clamp(29px,4vw,42px); }
+.result-story-title { margin: 8px 0 12px; color: var(--green); font: 800 clamp(20px,3vw,28px)/1.12 var(--serif); }
 .result-copy p { font-size: 15px; }
 .result-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-top: 17px; }
 .change-request { margin: 14px 0; padding: 12px 14px; color: var(--green-dark); border-left: 4px solid var(--green); border-radius: 0 12px 12px 0; background: var(--mint); font: 700 18px/1.4 var(--serif); }
@@ -199,6 +211,9 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .change-lock-note small { margin-top: 2px; color: #776b4c; font-size: 10px; }
 .result-action { padding: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
 .result-action.primary { color: #fff; border-color: var(--green); background: var(--green); }
+
+@keyframes picture-reveal-pop { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes wow-spark { from { opacity: .55; transform: scale(.8) rotate(-8deg); } to { opacity: 1; transform: scale(1.18) rotate(8deg); } }
 
 .author-card { position: relative; overflow: hidden; padding: 23px; color: #fff; border-radius: 24px; background: linear-gradient(145deg,#07563e,#0a7653 58%,#164936); box-shadow: 0 22px 50px rgba(7,86,62,.22); }
 .author-card:after { position: absolute; right: -55px; bottom: -85px; width: 220px; height: 220px; content: ""; border: 38px solid rgba(243,199,103,.15); border-radius: 50%; }

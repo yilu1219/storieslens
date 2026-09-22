@@ -753,10 +753,12 @@
         '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="' + (state.userUploadedReference ? 'false' : 'true') + '">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses all ' + referenceCount + ' uploaded ' + (referenceCount === 1 ? 'character' : 'characters') : 'Upload 1–3 characters first') + '</small></span></button>' +
       '</div>' +
       '<section class="real-life-consent" data-real-life-consent hidden><div><small>PRIVATE REAL-PERSON PHOTOS</small><h3>A grown-up confirms before Yu creates</h3><p>The ' + referenceCount + ' prepared ' + (referenceCount === 1 ? 'photo is' : 'photos are') + ' sent only when you press the green create button. They stay private and can be permanently deleted with the project.</p></div><label><span>Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Parent, guardian, or adult with permission" /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>I am 18 or older and I am pictured or have permission for every person shown from their parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>I agree that these prepared copies may be processed by the regional image model to create this private story scene.</span></label></section>' +
-      '<button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button></section>');
+      '<button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button>' +
+      '<section class="picture-reveal-slot" data-picture-reveal hidden aria-live="polite"></section></section>');
     const styleStage = message.querySelector('[data-style-stage]');
     const makeButton = message.querySelector('[data-make-picture]');
     const consentPanel = message.querySelector('[data-real-life-consent]');
+    const revealSlot = message.querySelector('[data-picture-reveal]');
     function realLifeConsentReady() {
       if (state.selectedStyle !== 'Real-life story') return true;
       return Boolean(consentPanel.querySelector('[data-photo-adult-name]').value.trim())
@@ -814,18 +816,36 @@
       field.addEventListener('input', refreshMakeButton);
       field.addEventListener('change', refreshMakeButton);
     });
-    makeButton.addEventListener('click', function () { showDrawing(consentPanel); });
+    makeButton.addEventListener('click', function () {
+      makeButton.disabled = true;
+      makeButton.textContent = '✦ Yu is making your free picture…';
+      showDrawing(consentPanel, revealSlot, makeButton);
+    });
   }
 
-  async function showDrawing(consentPanel) {
+  async function showDrawing(consentPanel, revealSlot, makeButton) {
     state.pictureConsentPanel = consentPanel || state.pictureConsentPanel;
+    if (makeButton) {
+      makeButton.disabled = true;
+      makeButton.textContent = '✦ Yu is making your free picture…';
+    }
     const hasReference = uploadedReferenceUrls().length > 0;
     const realLifeMode = state.selectedStyle === 'Real-life story';
     const referenceNotice = realLifeMode
       ? '<div class="reference-lock-note"><span>✓</span><div><strong>Real-life version uses your uploaded photo</strong><small>Yu keeps the same face, age, hairstyle, clothes, and number of people while placing them inside the story scene.</small></div></div>'
       : (hasReference ? '<div class="reference-lock-note"><span>✓</span><div><strong>Your uploaded picture is the main reference</strong><small>Yu keeps the same person or character identity and changes only the story scene and chosen style.</small></div></div>' : '<div class="reference-lock-note is-words"><span>✦</span><div><strong>Building from your words</strong><small>No picture was uploaded, so Yu follows the character details you described.</small></div></div>');
     const changeNotice = state.pictureChangeRequest ? '<div class="change-lock-note"><strong>Changing only:</strong> “' + escapeHtml(state.pictureChangeRequest) + '”<small>Everything else stays locked.</small></div>' : '';
-    const drawing = yuMessage('<small>YU IS CREATING WITH YOUR WORDS</small><h2>Watch your first ' + (state.outputType === 'film' ? 'movie frame' : 'story picture') + ' appear…</h2><p class="tiny-note">Format: ' + escapeHtml(state.outputType === 'film' ? 'Story film' : 'Illustrated book') + ' · Style: ' + escapeHtml(state.selectedStyle) + '</p>' + referenceNotice + changeNotice + '<div class="drawing-stage"><img src="' + escapeHtml(state.resultImage) + '" alt="A picture forming from the creator’s story" /><span class="wand">✦</span></div><div class="drawing-status"><div class="progress-track"><i data-draw-progress></i></div><b data-draw-title>' + (state.pictureChangeRequest ? 'Changing only the detail you named' : 'Keeping your characters and story details') + '</b><span data-draw-subtitle>No need to stay here—your story is already saved.</span></div>', 'drawing-card');
+    const drawingMarkup = '<div class="inline-drawing"><small>YU IS CREATING WITH YOUR WORDS</small><h2>Watch your first ' + (state.outputType === 'film' ? 'movie frame' : 'story picture') + ' appear…</h2><p class="tiny-note">Format: ' + escapeHtml(state.outputType === 'film' ? 'Story film' : 'Illustrated book') + ' · Style: ' + escapeHtml(state.selectedStyle) + '</p>' + referenceNotice + changeNotice + '<div class="drawing-stage"><img src="' + escapeHtml(state.resultImage) + '" alt="A picture forming from the creator’s story" /><span class="wand">✦</span></div><div class="drawing-status"><div class="progress-track"><i data-draw-progress></i></div><b data-draw-title>' + (state.pictureChangeRequest ? 'Changing only the detail you named' : 'Keeping your characters and story details') + '</b><span data-draw-subtitle>Stay right here—the surprise will appear below this button.</span></div></div>';
+    let drawing;
+    if (revealSlot) {
+      revealSlot.hidden = false;
+      revealSlot.className = 'picture-reveal-slot is-drawing';
+      revealSlot.innerHTML = drawingMarkup;
+      drawing = revealSlot;
+      window.requestAnimationFrame(function () { revealSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+    } else {
+      drawing = yuMessage(drawingMarkup, 'drawing-card');
+    }
     const progress = drawing.querySelector('[data-draw-progress]');
     const title = drawing.querySelector('[data-draw-title]');
     const stages = [
@@ -847,31 +867,54 @@
       clearInterval(progressTimer);
       progress.style.width = '100%';
       title.textContent = 'Your picture is ready!';
-      setTimeout(function () { showResult(drawing); }, 220);
+      setTimeout(function () { showResult(drawing, makeButton); }, 220);
     } catch (error) {
       clearInterval(progressTimer);
-      drawing.remove();
       const message = error.code === 'PERSONAL_PHOTO_CONSENT_REQUIRED'
         ? 'A grown-up needs to confirm the private photo permission again.'
         : error.message;
       const signIn = error.code === 'AUTH_REQUIRED' || error.status === 401
         ? '<a class="why-button" href="login.html?returnTo=%2Fsolo-story">Sign in to save &amp; create</a>'
         : '';
-      yuMessage('<small>YU KEPT YOUR WORK SAFE</small><h2>The new picture was not charged.</h2><p>' + escapeHtml(message) + '</p>' + signIn + '<button class="why-button" type="button" data-picture-retry>← Return to picture choices</button>');
+      const errorMarkup = '<div class="inline-picture-error"><small>YU KEPT YOUR WORK SAFE</small><h2>The new picture was not charged.</h2><p>' + escapeHtml(message) + '</p>' + signIn + '<button class="why-button" type="button" data-picture-retry>Try my free picture again</button></div>';
+      if (revealSlot) {
+        revealSlot.className = 'picture-reveal-slot has-error';
+        revealSlot.innerHTML = errorMarkup;
+      } else {
+        drawing.remove();
+        yuMessage(errorMarkup);
+      }
+      if (makeButton) {
+        makeButton.disabled = false;
+        makeButton.textContent = state.outputType === 'film' ? '✦ Make my first movie frame' : '✦ Make my free first picture';
+      }
       showToast(message);
-      thread.lastElementChild.querySelector('[data-picture-retry]').addEventListener('click', showStyles);
+      const retry = (revealSlot || thread.lastElementChild).querySelector('[data-picture-retry]');
+      if (retry) retry.addEventListener('click', function () { showDrawing(state.pictureConsentPanel, revealSlot, makeButton); });
     }
   }
 
-  function showResult(progressMessage) {
+  function showResult(progressMessage, makeButton) {
     const pictureStep = document.querySelector('[data-step-dot="picture"]');
     pictureStep.classList.remove('is-active');
     pictureStep.classList.add('is-done');
     pictureStep.querySelector('span').textContent = '✓';
     celebrate();
     const resultImage = state.resultImage || (state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png');
-    const result = yuMessage('<div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>' + escapeHtml(state.storyTitle) + '</h2><p>' + escapeHtml(state.revisedScene) + '</p><div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">Try again · 1 gift</button></div></div></div>');
-    if (progressMessage) progressMessage.remove();
+    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p><div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">Try again · 1 gift</button></div></div></div>';
+    let result;
+    if (progressMessage && progressMessage.matches('[data-picture-reveal]')) {
+      progressMessage.className = 'picture-reveal-slot is-ready';
+      progressMessage.innerHTML = resultMarkup;
+      result = progressMessage;
+    } else {
+      result = yuMessage(resultMarkup);
+      if (progressMessage) progressMessage.remove();
+    }
+    if (makeButton) {
+      makeButton.textContent = '✓ My free first picture is ready below';
+      makeButton.disabled = true;
+    }
     const image = result.querySelector('[data-result-image]');
     image.addEventListener('error', function handleResultImageError() {
       image.removeEventListener('error', handleResultImageError);
@@ -905,7 +948,7 @@
             return;
           }
           state.pictureChangeRequest = '';
-          showDrawing(state.pictureConsentPanel);
+          showDrawing(state.pictureConsentPanel, result.matches('[data-picture-reveal]') ? result : null, makeButton);
         }
       });
     });
@@ -939,7 +982,13 @@
       }
       state.pictureChangeRequest = request;
       showToast('Yu is changing only the part you named.');
-      setTimeout(showDrawing, 350);
+      setTimeout(function () {
+        showDrawing(
+          state.pictureConsentPanel,
+          document.querySelector('[data-picture-reveal]'),
+          document.querySelector('[data-make-picture]')
+        );
+      }, 350);
     });
     review.querySelector('[data-cancel-picture-change]').addEventListener('click', function () {
       showToast('Kept the current picture. No gift was used.');

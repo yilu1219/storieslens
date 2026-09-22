@@ -152,7 +152,10 @@ test("real-life SOLO converts HEIC, requires adult consent, and calls the real i
 
 test("the finished picture replaces the progress card and always has a visible fallback", () => {
   const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
-  assert.match(preview, /showResult\(drawing\)/);
+  assert.match(preview, /data-picture-reveal/);
+  assert.match(preview, /showResult\(drawing, makeButton\)/);
+  assert.match(preview, /Your story just became a picture!/);
+  assert.match(preview, /My free first picture is ready below/);
   assert.match(preview, /progressMessage\.remove\(\)/);
   assert.match(preview, /data-result-image/);
   assert.match(preview, /handleResultImageError/);
