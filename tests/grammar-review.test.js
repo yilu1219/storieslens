@@ -16,6 +16,11 @@ test("detects a model response that lists corrections but returns the original p
   assert.equal(grammarSuggestionNeedsRepair(original, original, changes), true);
 });
 
+test("requires repair when a suggestion changes the passage without listing every correction", () => {
+  assert.equal(grammarSuggestionNeedsRepair("She go home.", "She goes home.", []), true);
+  assert.equal(grammarSuggestionNeedsRepair("She goes home.", "She goes home.", []), false);
+});
+
 test("applies exact declared corrections without replacing letters inside other words", () => {
   const repaired = applyDeclaredGrammarChanges(original, changes);
   assert.match(repaired, /brother Leo and I are going/);

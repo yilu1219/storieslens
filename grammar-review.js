@@ -21,7 +21,7 @@ function containsExactPhrase(text, phrase) {
   return Boolean(pattern && pattern.test(normalizeGrammarText(text)));
 }
 
-function cleanGrammarChanges(changes, limit = 12) {
+function cleanGrammarChanges(changes, limit = 40) {
   return (Array.isArray(changes) ? changes : []).slice(0, limit).map((change) => ({
     before: normalizeGrammarText(change?.before),
     after: normalizeGrammarText(change?.after),
@@ -35,7 +35,7 @@ function grammarSuggestionNeedsRepair(original, suggestion, changes) {
   const candidate = normalizeGrammarText(suggestion);
   const declared = cleanGrammarChanges(changes);
   if (!candidate) return true;
-  if (!declared.length) return false;
+  if (!declared.length) return candidate !== source;
   if (candidate === source) return true;
   return declared.some((change) => !containsExactPhrase(candidate, change.after));
 }

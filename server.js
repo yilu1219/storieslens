@@ -1367,7 +1367,7 @@ async function handleWritingAssistant(request, response) {
     const actionInstructions = {
       begin: "Ask exactly one vivid question that helps the creator imagine and write their own first sentence from the Story DNA. Do not provide a sentence, sample prose, or plot answer. For an expression-stage creator only, you may offer two short direction words, never two finished sentences. Set suggestion, strength, priority, and microLesson to empty strings.",
       hint: "Ask one useful question or give one short hint. Do not write the answer for the student.",
-      check: "Apply ORIGINAL LOCK and copyedit the complete submitted passage. In suggestion, correct every real error in grammar, usage, spelling, capitalization, punctuation, agreement, articles, prepositions, and word order required for grammatical clarity. Never improve style or vocabulary inside suggestion. Never add, remove, replace, combine, reinterpret, or infer any character, name, relationship, setting, place, time, object, action, feeling, conflict, outcome, plot event, point of view, or cultural detail. Do not change tense unless the original grammar makes the intended tense unambiguous; otherwise ask the creator. Do not turn fragments into invented prose. If one clause is ambiguous, preserve its facts and make the smallest grammatical repair possible; ask a short clarification question only when no safe grammatical repair exists. If the passage is already grammatically correct, return it unchanged. Set grammarNote to a child-friendly summary. Set grammarCategory to exactly one of: clear, punctuation, sentence-structure, tense, agreement, spelling, word-choice, articles, plurality, word-order, connectors, repetition, de-di-de, other. Return grammarChanges as an array with one object for every actual correction, using exact keys before, after, skill, explanation. before and after must quote the smallest exact changed phrases from the original and corrected passage; skill names the grammar rule; explanation uses language a seven-year-old can understand. Before returning JSON, silently proofread suggestion twice and verify that every grammarChanges.after phrase really appears in suggestion and every listed error is actually fixed there. If nothing changes, grammarChanges must be an empty array. Keep writingNote as advice only: name at most one optional craft idea without changing suggestion. Name one specific strength, then ask whether the corrected passage still means what the creator intended. Do not expand the passage or add new story prose.",
+      check: "Apply ORIGINAL LOCK and copyedit the complete submitted passage. In suggestion, correct every real error in grammar, usage, spelling, capitalization, punctuation, agreement, articles, prepositions, and word order required for grammatical clarity. Never improve style or vocabulary inside suggestion. Never add, remove, replace, combine, reinterpret, or infer any character, name, relationship, setting, place, time, object, action, feeling, conflict, outcome, plot event, point of view, or cultural detail. Do not change tense unless the original grammar makes the intended tense unambiguous; otherwise ask the creator. Do not turn fragments into invented prose. If one clause is ambiguous, preserve its facts and make the smallest grammatical repair possible; ask a short clarification question only when no safe grammatical repair exists. If the passage is already grammatically correct, return it unchanged. Set grammarNote to a child-friendly summary. Set grammarCategory to exactly one of: clear, punctuation, sentence-structure, tense, agreement, spelling, word-choice, articles, plurality, word-order, connectors, repetition, de-di-de, other. Return grammarChanges as an array with one separate object for every actual correction, using exact keys before, after, skill, explanation. Never combine unrelated corrections into one item. before and after must quote the smallest exact changed phrases from the original and corrected passage; skill names the grammar rule; explanation uses language a seven-year-old can understand. Before returning JSON, silently proofread suggestion twice and verify that every grammarChanges.after phrase really appears in suggestion and every listed error is actually fixed there. If nothing changes, grammarChanges must be an empty array. Keep writingNote as advice only: name at most one optional craft idea without changing suggestion. Name one specific strength, then ask whether the corrected passage still means what the creator intended. Do not expand the passage or add new story prose.",
       details: "Name two categories of sensory or setting detail the creator may explore, then ask the creator to supply the actual detail. Do not invent story facts.",
       dialogue: "Diagnose the purpose or naturalness of the dialogue. Offer a fill-in-the-blank pattern or an unrelated neutral micro-example only; never write dialogue for the creator's characters.",
       continuity: "Check whether this chapter connects logically to the surrounding chapters. Identify one strong connection and one specific continuity fix without rewriting the chapter.",
@@ -1379,7 +1379,9 @@ async function handleWritingAssistant(request, response) {
       "Support the creator's thinking without replacing their full draft.",
       "The human creator is the author. Never claim authorship, imitate source text, or insert finished story prose for them.",
       yuCurriculum.prompt,
-      storyLanguage === "zh" ? "Keep the complete coaching response under 220 Chinese characters." : "Keep the complete coaching response under 110 words.",
+      action === "check"
+        ? (storyLanguage === "zh" ? "The grammar review may use up to 900 Chinese characters so every genuine correction can be listed and explained." : "The grammar review may use up to 520 words so every genuine correction can be listed and explained.")
+        : (storyLanguage === "zh" ? "Keep the complete coaching response under 220 Chinese characters." : "Keep the complete coaching response under 110 words."),
       "Never produce sexual, graphic violent, self-harm, hateful, or dangerous instructional content.",
       "Respect the teacher task, skill focus, approved characters, and source text context.",
       actionInstructions[action] || actionInstructions.hint,
@@ -1436,7 +1438,7 @@ async function handleWritingAssistant(request, response) {
 
     let verificationUsage = null;
     const originalReviewText = selectedText || draft;
-    if (action === "check" && grammarSuggestionNeedsRepair(originalReviewText, result.suggestion, result.grammarChanges)) {
+    if (action === "check") {
       const repairResponse = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         headers: textProviderHeaders(provider),
@@ -1450,7 +1452,7 @@ async function handleWritingAssistant(request, response) {
                 "Return strict JSON with keys suggestion, grammarChanges, grammarNote, grammarCategory, microLesson.",
                 "Correct every genuine grammar, spelling, capitalization, punctuation, agreement, article, preposition, and sentence-boundary error.",
                 "Preserve every person, name, age, relationship, place, object, event, action, tense when meaningful, point of view, and story fact. Do not add plot or richer vocabulary.",
-                "Each grammarChanges item must contain exact keys before, after, skill, explanation. before and after must be the smallest exact phrases found in the original and final suggestion.",
+                "Return one separate grammarChanges item for every actual correction; never combine unrelated corrections. Each item must contain exact keys before, after, skill, explanation. before and after must be the smallest exact phrases found in the original and final suggestion.",
                 "Silently proofread the final suggestion twice. Every listed after phrase must appear in suggestion, and suggestion must be a complete corrected version of the entire original passage. Explain rules so a seven-year-old can understand."
               ].join(" ")
             },
@@ -1547,7 +1549,7 @@ async function handleWritingAssistant(request, response) {
     }
     const limit = (value, max) => String(value || "").trim().slice(0, max);
     const grammarCategories = new Set(["clear", "punctuation", "sentence-structure", "tense", "agreement", "spelling", "word-choice", "articles", "plurality", "word-order", "connectors", "repetition", "de-di-de", "other"]);
-    const grammarChanges = Array.isArray(result.grammarChanges) ? result.grammarChanges.slice(0, 12).map((change) => ({
+    const grammarChanges = Array.isArray(result.grammarChanges) ? result.grammarChanges.slice(0, 40).map((change) => ({
       before: limit(change?.before, 100),
       after: limit(change?.after, 100),
       skill: limit(change?.skill, 80),

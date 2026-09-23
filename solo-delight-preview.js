@@ -655,12 +655,12 @@
     state.revisionReason = revision.reason;
     state.storyTitle = revision.title;
     state.resultImage = state.characterImageUrl || state.imageUrl || revision.image;
-    state.currentPrompt = 'Listen to your first scene. I kept every idea and only fixed grammar. Then I will show you each change. Is this still what you meant?';
-    yuMessage('<small>YOUR FIRST SCENE</small><h2>Your story is still your story.</h2><p>I did not rewrite it. I only fixed the grammar, spelling, capitals, and punctuation.</p><p class="grammar-change-count">✓ Yu found ' + changeCount + ' grammar ' + (changeCount === 1 ? 'change' : 'changes') + ' and will teach you one useful rule.</p>' +
+    state.currentPrompt = 'Listen to your first scene. I kept every idea and only fixed grammar. I listed every correction and can explain them one by one. Is this still what you meant?';
+    yuMessage('<small>YOUR FIRST SCENE</small><h2>Your story is still your story.</h2><p>I did not rewrite it. I only fixed the grammar, spelling, capitals, and punctuation.</p><p class="grammar-change-count">✓ Yu found ' + changeCount + ' grammar ' + (changeCount === 1 ? 'change' : 'changes') + (changeCount ? ' and explains every one below.' : '. Your grammar is already clear.') + '</p>' +
       '<div class="revision-card">' +
         '<div class="revision-section"><small>YOU SAID</small><blockquote>' + escapeHtml(original) + '</blockquote></div>' +
-        '<div class="revision-section suggestion"><small>YU’S GRAMMAR-ONLY VERSION</small><blockquote>' + escapeHtml(revised) + '</blockquote><button class="why-button" type="button" data-why>▶ What grammar changed?</button><div class="grammar-change-panel" data-why-copy hidden><p>' + escapeHtml(revision.reason) + '</p><ol>' + revision.changes.map(function (change) { return '<li><strong>' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after) + '</strong><span>' + escapeHtml(change.skill + ': ' + change.explanation) + '</span></li>'; }).join('') + '</ol></div></div>' +
-        '<div class="yu-grammar-lesson"><div class="yu-lesson-heading"><span aria-hidden="true">✦</span><div><small>YU TEACHES ONE GRAMMAR POINT</small><h3>' + escapeHtml(lesson.title) + '</h3></div></div><p>' + escapeHtml(lesson.explanation) + '</p><blockquote>' + escapeHtml(lesson.example) + '</blockquote><button type="button" data-hear-grammar>▶ Hear Yu teach me</button></div>' +
+        '<div class="revision-section suggestion"><small>YU’S GRAMMAR-ONLY VERSION</small><blockquote>' + escapeHtml(revised) + '</blockquote><button class="why-button" type="button" data-why>▼ All grammar changes · explained one by one</button><div class="grammar-change-panel" data-why-copy><p>' + escapeHtml(revision.reason) + '</p>' + (changeCount ? '<ol>' + revision.changes.map(function (change, index) { return '<li><b class="grammar-change-number">' + (index + 1) + '</b><strong>' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after) + '</strong><span><b>' + escapeHtml(change.skill) + '</b>: ' + escapeHtml(change.explanation) + '</span><button type="button" data-hear-change="' + index + '">▶ Hear Yu explain #' + (index + 1) + '</button></li>'; }).join('') + '</ol>' : '<div class="grammar-all-clear">✓ Yu checked the whole passage and found no grammar errors.</div>') + '</div></div>' +
+        '<div class="yu-grammar-lesson"><div class="yu-lesson-heading"><span aria-hidden="true">✦</span><div><small>START HERE · FIRST GRAMMAR POINT</small><h3>' + escapeHtml(lesson.title) + '</h3></div></div><p>' + escapeHtml(lesson.explanation) + '</p><blockquote>' + escapeHtml(lesson.example) + '</blockquote><button type="button" data-hear-grammar>▶ Hear Yu teach this first point</button></div>' +
         '<div class="revision-actions"><button class="change-button" type="button" data-revise-change>Let me change it</button><button class="keep-button" type="button" data-revise-keep>Yes—that is my story</button></div>' +
       '</div>');
     state.voiceMood = 'story';
@@ -669,7 +669,16 @@
     latest.querySelector('[data-why]').addEventListener('click', function () {
       const whyCopy = latest.querySelector('[data-why-copy]');
       whyCopy.hidden = !whyCopy.hidden;
-      speakText(revision.reason, 'lesson');
+      latest.querySelector('[data-why]').textContent = whyCopy.hidden ? '▶ Show every grammar change' : '▼ Hide grammar changes';
+      if (!whyCopy.hidden) speakText(revision.reason, 'lesson');
+    });
+    latest.querySelectorAll('[data-hear-change]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const index = Number(button.dataset.hearChange);
+        const change = revision.changes[index];
+        if (!change) return;
+        speakText('Grammar change ' + (index + 1) + '. ' + change.before + ' becomes ' + change.after + '. ' + change.skill + '. ' + change.explanation, 'lesson');
+      });
     });
     latest.querySelector('[data-hear-grammar]').addEventListener('click', function () {
       speakText('Yu’s grammar tip. ' + lesson.title + '. ' + lesson.explanation + ' Try it with your sentence: ' + lesson.example, 'lesson');

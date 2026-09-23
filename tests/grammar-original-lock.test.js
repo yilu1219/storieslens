@@ -59,12 +59,18 @@ test("the character question supports words, a private upload, and a real credit
   assert.match(script, /state\.characterImageUrl/);
 });
 
-test("Yu teaches one child-friendly grammar point after showing the corrections", () => {
+test("Yu lists every grammar correction and explains them one by one", () => {
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
-  assert.match(script, /YU TEACHES ONE GRAMMAR POINT/);
+  const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  assert.match(script, /All grammar changes · explained one by one/);
+  assert.match(script, /data-hear-change/);
+  assert.match(script, /Hear Yu explain #/);
+  assert.match(script, /START HERE · FIRST GRAMMAR POINT/);
   assert.match(script, /data-hear-grammar/);
   assert.match(script, /Use “I” when you are doing the action/);
-  assert.match(script, /Yu found.*grammar/);
+  assert.match(script, /explains every one below/);
+  assert.match(server, /grammarChanges\.slice\(0, 40\)/);
+  assert.match(server, /every genuine correction can be listed and explained/);
 });
 
 test("picture surprise chooses book or film before a six-style visual direction", () => {
