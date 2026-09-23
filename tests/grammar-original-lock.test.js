@@ -128,6 +128,21 @@ test("a completed SOLO book can generate a cover and a private child-authored Ab
   assert.match(css, /\.cover-builder-preview/);
 });
 
+test("author photos support both library upload and direct front-camera capture", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.css"), "utf8");
+  assert.match(script, /data-author-photo/);
+  assert.match(script, /capture="user" data-author-camera/);
+  assert.match(script, /Upload a photo/);
+  assert.match(script, /Take a photo/);
+  assert.match(script, /data-about-photo-input/);
+  assert.match(script, /capture="user" data-about-camera-input/);
+  assert.match(script, /processArtworkWithServerFallback/);
+  assert.match(script, /Location and camera details were removed/);
+  assert.match(css, /\.author-photo-actions/);
+  assert.match(css, /\.about-photo-actions/);
+});
+
 test("picture surprise chooses book or film before a six-style visual direction", () => {
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(script, /data-output-type="book"/);

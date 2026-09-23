@@ -244,6 +244,9 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .author-info h2 { margin-top: 7px; color: #fff; font-size: 34px; }
 .author-info p { margin: 6px 0 0; color: rgba(255,255,255,.78); font-size: 13px; }
 .author-photo-action { position: relative; z-index: 1; display: inline-flex; margin-top: 14px; padding: 9px 12px; color: #183d2e; border-radius: 11px; background: var(--gold); font-size: 11px; font-weight: 900; cursor: pointer; }
+.author-photo-actions { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 7px; }
+.author-photo-action { border: 0; }
+.author-photo-action.camera { color: #fff; background: rgba(255,255,255,.17); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); }
 .author-photo-note { position: relative; z-index: 1; margin: 8px 0 0 !important; color: rgba(255,255,255,.66) !important; font-size: 10px !important; }
 .author-badges { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
 .author-badges span { padding: 7px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: rgba(255,255,255,.08); font-size: 10px; font-weight: 800; }
@@ -429,6 +432,9 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .author-photo-builder label { cursor: pointer; }
 .author-photo-builder strong, .author-photo-builder small { display: block; }
 .author-photo-builder small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.about-photo-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.about-photo-actions button { padding: 8px 10px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.22); border-radius: 10px; background: #fff; font-size: 11px; font-weight: 900; cursor: pointer; }
+.about-photo-actions button:last-child { color: #fff; border-color: var(--green); background: var(--green); }
 .author-photo-preview { display: grid; width: 92px; height: 106px; place-items: center; overflow: hidden; border-radius: 12px; background: var(--mint); text-align: center; }
 .author-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
 .author-photo-preview span { font-size: 30px; }

@@ -1421,7 +1421,7 @@
           '<label class="author-name-field"><span>Author name</span><input type="text" maxlength="80" data-author-name value="' + escapeHtml(currentAuthor.name || state.name || '') + '" placeholder="First name, nickname, or pen name" /></label>' +
           '<button class="yu-build-bio" type="button" data-build-bio>✦ Yu, help me build my introduction</button>' +
           '<label class="author-bio-field"><span>My editable introduction</span><textarea rows="5" maxlength="1200" data-author-bio placeholder="Yu will build a short introduction from your answers. You can change every word.">' + escapeHtml(currentAuthor.bio || '') + '</textarea></label>' +
-          '<div class="author-photo-builder"><div class="author-photo-preview" data-about-photo>' + (currentAuthor.photoUrl ? '<img src="' + escapeHtml(currentAuthor.photoUrl) + '" alt="Author" />' : '<span>＋</span><small>Author photo · optional</small>') + '</div><label><strong>Upload my author photo</strong><small>It becomes part of the private About the Author page.</small><input type="file" accept="image/*,.heic,.heif,.avif" data-about-photo-input hidden /></label></div>' +
+          '<div class="author-photo-builder"><div class="author-photo-preview" data-about-photo>' + (currentAuthor.photoUrl ? '<img src="' + escapeHtml(currentAuthor.photoUrl) + '" alt="Author" />' : '<span>＋</span><small>Author photo · optional</small>') + '</div><div><strong>Add my author photo</strong><small>It becomes part of the private About the Author page.</small><input type="file" accept="image/*,.heic,.heif,.avif" data-about-photo-input hidden /><input type="file" accept="image/*" capture="user" data-about-camera-input hidden /><div class="about-photo-actions"><button type="button" data-about-upload>＋ Upload a photo</button><button type="button" data-about-camera>◉ Take a photo</button></div></div></div>' +
           '<section class="author-photo-consent" data-author-photo-consent hidden><strong>Grown-up permission for the author photo</strong><label><span>Adult name</span><input type="text" maxlength="100" data-photo-adult-name /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label><input type="checkbox" data-photo-permission /> I am 18 or older and have permission to use this photo.</label><label><input type="checkbox" data-photo-processing /> I agree to private regional processing and storage for this book.</label></section>' +
           '<button class="save-author-page" type="button" data-save-author>Save my cover &amp; About the Author page</button>' +
         '</div></div>' +
@@ -1449,9 +1449,10 @@
       showToast('Yu built a short introduction. Every word remains editable.');
     });
     const photoInput = finisher.querySelector('[data-about-photo-input]');
-    finisher.querySelector('.author-photo-builder label').addEventListener('click', function () { photoInput.click(); });
-    photoInput.addEventListener('change', async function () {
-      const file = photoInput.files?.[0];
+    const cameraInput = finisher.querySelector('[data-about-camera-input]');
+    finisher.querySelector('[data-about-upload]').addEventListener('click', function () { photoInput.click(); });
+    finisher.querySelector('[data-about-camera]').addEventListener('click', function () { cameraInput.click(); });
+    async function prepareAboutAuthorPhoto(file) {
       if (!file) return;
       try {
         if (!window.StoriesLensArtworkSafety) throw new Error('The private photo tool did not load. Refresh and try again.');
@@ -1460,7 +1461,9 @@
         finisher.querySelector('[data-author-photo-consent]').hidden = false;
         showToast('Author photo prepared privately. Save the page when ready.');
       } catch (error) { showToast(error.message); }
-    });
+    }
+    photoInput.addEventListener('change', function () { prepareAboutAuthorPhoto(photoInput.files?.[0]); });
+    cameraInput.addEventListener('change', function () { prepareAboutAuthorPhoto(cameraInput.files?.[0]); });
     finisher.querySelector('[data-save-author]').addEventListener('click', async function () {
       const button = finisher.querySelector('[data-save-author]');
       button.disabled = true;
@@ -1641,20 +1644,25 @@
     const displayName = state.name || 'Young Storymaker';
     const initial = state.name ? state.name.charAt(0).toUpperCase() : '✦';
     const card = yuMessage('<small>AUTHOR UNLOCKED</small><h2>You did not just make a picture—you became an author.</h2><p>Add your own photo if you want, then choose how to spend the stars you earned by writing.</p>' +
-      '<div class="author-card" data-author-card><div class="author-card-top"><div class="author-photo" data-author-photo-preview>' + escapeHtml(initial) + '</div><div class="author-info"><small>STORIESLENS YOUNG AUTHOR</small><h2>' + escapeHtml(displayName) + '</h2><p>Author of <i>' + escapeHtml(state.storyTitle) + '</i></p></div></div><input type="file" accept="image/*,.heic,.heif,.avif" data-author-photo hidden /><label class="author-photo-action">＋ Add my author photo</label><p class="author-photo-note">Optional · private by default · a grown-up controls sharing.</p><div class="author-badges"><span>✦ Original Voice</span><span>✦ Character Builder</span><span>✦ Story Editor</span></div></div>' +
+      '<div class="author-card" data-author-card><div class="author-card-top"><div class="author-photo" data-author-photo-preview>' + escapeHtml(initial) + '</div><div class="author-info"><small>STORIESLENS YOUNG AUTHOR</small><h2>' + escapeHtml(displayName) + '</h2><p>Author of <i>' + escapeHtml(state.storyTitle) + '</i></p></div></div><input type="file" accept="image/*,.heic,.heif,.avif" data-author-photo hidden /><input type="file" accept="image/*" capture="user" data-author-camera hidden /><div class="author-photo-actions"><button class="author-photo-action" type="button" data-author-upload>＋ Upload a photo</button><button class="author-photo-action camera" type="button" data-author-take-photo>◉ Take a photo</button></div><p class="author-photo-note">Optional · upload from your library or open the front camera · private by default · a grown-up controls sharing.</p><div class="author-badges"><span>✦ Original Voice</span><span>✦ Character Builder</span><span>✦ Story Editor</span></div></div>' +
       '<section class="star-bank"><div class="star-bank-head"><h3>My star bank</h3><span class="star-balance" data-star-balance>★ ' + state.stars + '</span></div><p>Stars come from real creating—not screen time.</p><div class="reward-shop"><button type="button" data-redeem="5"><span>Choose a special book-cover frame</span><b>5 ★</b></button><button type="button" data-redeem="10"><span>Add a gold author seal</span><b>10 ★</b></button><button type="button" data-redeem="20" disabled><span>Unlock one extra illustration</span><b>20 ★</b></button></div><p class="reward-principle">Learning stars stay private. No public ranking and no lost streaks.</p></section>' +
       '<section class="showcase-box"><div class="showcase-head"><div><small>MONTHLY YOUNG AUTHORS FESTIVAL</small><h3>Secret Worlds</h3></div><span class="private-chip">PRIVATE UNTIL APPROVED</span></div><p>A grown-up can submit this story to the monthly showcase. Readers respond with encouragement, not dislikes.</p><div class="warm-reactions"><span>❤️ I love this character</span><span>✨ So imaginative</span><span>📖 What happens next?</span><span>🎨 Beautiful story world</span></div><div class="showcase-rules"><span><b>✓</b> No live popularity ranking</span><span><b>✓</b> Reader’s Choice announced after the month ends</span><span><b>✓</b> Learning stars never depend on votes</span></div><button class="showcase-request" type="button" data-showcase-request>Ask a grown-up to enter my story</button></section>');
 
     const photoInput = card.querySelector('[data-author-photo]');
-    const photoLabel = card.querySelector('.author-photo-action');
-    photoLabel.addEventListener('click', function () { photoInput.click(); });
-    photoInput.addEventListener('change', function () {
-      const file = photoInput.files && photoInput.files[0];
+    const cameraInput = card.querySelector('[data-author-camera]');
+    card.querySelector('[data-author-upload]').addEventListener('click', function () { photoInput.click(); });
+    card.querySelector('[data-author-take-photo]').addEventListener('click', function () { cameraInput.click(); });
+    async function previewAuthorPhoto(file) {
       if (!file) return;
-      const photoUrl = URL.createObjectURL(file);
-      card.querySelector('[data-author-photo-preview]').innerHTML = '<img src="' + photoUrl + '" alt="Author photo preview" />';
-      showToast('Author photo added privately.');
-    });
+      try {
+        if (!window.StoriesLensArtworkSafety) throw new Error('The private photo tool did not load. Refresh and try again.');
+        const prepared = await window.StoriesLensArtworkSafety.processArtworkWithServerFallback(file);
+        card.querySelector('[data-author-photo-preview]').innerHTML = '<img src="' + prepared.dataUrl + '" alt="Author photo preview" />';
+        showToast('Author photo prepared privately. Location and camera details were removed.');
+      } catch (error) { showToast(error.message); }
+    }
+    photoInput.addEventListener('change', function () { previewAuthorPhoto(photoInput.files?.[0]); });
+    cameraInput.addEventListener('change', function () { previewAuthorPhoto(cameraInput.files?.[0]); });
     card.querySelectorAll('[data-redeem]').forEach(function (rewardButton) {
       const cost = Number(rewardButton.dataset.redeem);
       rewardButton.disabled = state.stars < cost;
