@@ -365,6 +365,39 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .report-button { width: 100%; margin-top: 13px; padding: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 14px; background: #f0f1ee; font-size: 11px; font-weight: 800; }
 .report-button:not(:disabled) { color: #fff; background: var(--green-dark); cursor: pointer; }
 
+.creation-stage-grid { display: grid; gap: 10px; margin-top: 18px; }
+.creation-stage-card { position: relative; display: grid; grid-template-columns: 58px 1fr; gap: 13px; width: 100%; padding: 15px; text-align: left; color: var(--ink); border: 1px solid rgba(8,122,84,.2); border-radius: 18px; background: rgba(255,255,255,.78); cursor: pointer; transition: .2s ease; }
+.creation-stage-card:hover, .creation-stage-card:focus-visible { border-color: var(--green); background: var(--mint); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(7,86,62,.09); }
+.creation-stage-card.is-selected { color: #fff; background: var(--green-dark); }
+.creation-stage-icon { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 16px; background: var(--gold-soft); font-size: 26px; }
+.creation-stage-card > span:nth-child(2) { display: grid; gap: 3px; }
+.creation-stage-card small { color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.creation-stage-card strong { font: 24px/1.05 var(--serif); }
+.creation-stage-card b { font-size: 13px; line-height: 1.35; }
+.creation-stage-card i { color: var(--muted); font-size: 12px; font-style: normal; line-height: 1.4; }
+.creation-stage-card em { position: absolute; top: 11px; right: 11px; padding: 5px 7px; color: var(--green-dark); border-radius: 999px; background: var(--gold); font-size: 8px; font-style: normal; font-weight: 900; letter-spacing: .09em; }
+.stage-guidance-note { margin-top: 12px !important; padding: 11px 13px; color: var(--green-dark) !important; border-left: 3px solid var(--gold); border-radius: 0 12px 12px 0; background: rgba(243,199,103,.2); font-size: 12px !important; }
+.continuity-lock { display: grid; grid-template-columns: 35px 1fr; gap: 9px; margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--mint); }
+.continuity-lock > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: #fff; }
+.continuity-lock strong, .continuity-lock small { display: block; }
+.continuity-lock small { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.page-grammar-details { margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.page-grammar-details summary { color: var(--green-dark); font-weight: 900; cursor: pointer; }
+.page-grammar-details ol { display: grid; gap: 10px; margin: 12px 0 0; padding-left: 20px; }
+.page-grammar-details li span, .page-grammar-details li p { display: block; margin-top: 3px; font-size: 12px; line-height: 1.4; }
+.book-progress { display: grid; grid-template-columns: 70px 1fr; gap: 14px; align-items: center; margin: 16px 0; padding: 14px; border-radius: 18px; background: var(--mint); }
+.book-progress > div { display: grid; text-align: center; }
+.book-progress > div b { color: var(--green-dark); font: 38px/1 var(--serif); }
+.book-progress > div span { color: var(--muted); font-size: 10px; }
+.book-progress section { display: flex; flex-wrap: wrap; gap: 6px; }
+.book-progress i { display: grid; width: 29px; height: 29px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 50%; background: #fff; font-size: 10px; font-style: normal; font-weight: 900; }
+.book-progress i.is-done { color: #fff; border-color: var(--green); background: var(--green); }
+.book-progress i.is-next { color: var(--green-dark); border: 2px solid var(--gold); background: var(--gold-soft); }
+.book-next-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.book-next { min-height: 48px; padding: 11px 13px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.25); border-radius: 14px; background: #fff; font-weight: 900; cursor: pointer; }
+.book-next.primary { grid-column: 1 / -1; color: #fff; border-color: var(--green); background: var(--green); font-size: 14px; }
+.book-next.quiet { color: var(--muted); }
+
 .celebration { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
 .confetti { position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 4px; animation: confetti-fall 1.7s ease-in forwards; }
 .toast { position: fixed; z-index: 30; left: 50%; bottom: 32px; padding: 13px 18px; color: #fff; border-radius: 999px; background: var(--green-dark); box-shadow: 0 14px 45px rgba(7,86,62,.28); font-size: 13px; font-weight: 900; transform: translateX(-50%); }
@@ -443,6 +476,15 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
   .send-button span { display: none; }
   .quick-ideas { overflow-x: auto; flex-wrap: nowrap; }
   .quick-ideas span, .quick-ideas button { flex: 0 0 auto; }
+  .creation-stage-card { grid-template-columns: 46px 1fr; padding: 12px; }
+  .creation-stage-icon { width: 44px; height: 44px; border-radius: 13px; font-size: 21px; }
+  .creation-stage-card strong { font-size: 20px; }
+  .creation-stage-card em { position: static; grid-column: 2; justify-self: start; }
+  .book-progress { grid-template-columns: 56px 1fr; padding: 11px; }
+  .book-progress > div b { font-size: 31px; }
+  .book-progress i { width: 25px; height: 25px; }
+  .book-next-actions { grid-template-columns: 1fr; }
+  .book-next.primary { grid-column: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

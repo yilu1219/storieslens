@@ -78,6 +78,30 @@ test("Yu lists every grammar correction and explains them one by one", () => {
   assert.match(server, /every genuine correction can be listed and explained/);
 });
 
+test("SOLO offers four age-guided creation paths and grows one consistent multi-page book", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.css"), "utf8");
+  assert.match(script, /Picture & Voice/);
+  assert.match(script, /My First Book/);
+  assert.match(script, /Story Builder/);
+  assert.match(script, /Author & Film Studio/);
+  assert.match(script, /Ages 5–6/);
+  assert.match(script, /Ages 7–9/);
+  assert.match(script, /Ages 10–12/);
+  assert.match(script, /Ages 13–16/);
+  assert.match(script, /Who, Where, What, Why, and When/);
+  assert.match(script, /targetPages: 10/);
+  assert.match(script, /maxPages: 24/);
+  assert.match(script, /function showCreationStageChooser/);
+  assert.match(script, /function showBookContinuation/);
+  assert.match(script, /function startNextPage/);
+  assert.match(script, /state\.bookScenes\.push/);
+  assert.match(script, /approved Page 1 world-and-style anchor/);
+  assert.match(script, /movie-studio\.html\?project=/);
+  assert.match(css, /\.creation-stage-grid/);
+  assert.match(css, /\.book-progress/);
+});
+
 test("picture surprise chooses book or film before a six-style visual direction", () => {
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(script, /data-output-type="book"/);

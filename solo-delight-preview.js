@@ -66,7 +66,13 @@
     pictureConsentPanel: null,
     refreshStyleReferenceChoice: null,
     resumedGuestCreation: false,
-    postSignupAction: ''
+    postSignupAction: '',
+    creationStage: '',
+    targetPages: 10,
+    bookScenes: [],
+    currentPageDraft: '',
+    currentPageOriginal: '',
+    restoredProject: false
   };
   let pendingHeicFiles = [];
 
@@ -86,32 +92,54 @@
     }
   }
 
-  const questions = [
-    {
-      title: 'Who is in your story?',
-      copy: 'Start with one main character. What is their name, about how old are they, what do they look like, and what do they really want?',
-      placeholder: 'Maya is about 8. She has short black hair, wears a yellow coat, and wants to find her way home…',
-      fallback: 'Maya is about 8. She wears a yellow coat and wants to find her way home.',
-      skill: 'character',
-      reward: ['Character builder', 'You gave your hero a reason to act.']
+  const creationStages = {
+    'picture-voice': {
+      title: 'Picture & Voice', ages: 'Ages 5–6', icon: '🎙️', targetPages: 6, minPages: 4, maxPages: 6,
+      promise: 'Tell a tiny story with pictures and your voice.',
+      guidance: 'Yu asks one very short question at a time. Complete grammar is not required.',
+      questions: [
+        { title: 'Who is here?', copy: 'Say a name, or show me a picture.', placeholder: 'This is Niko the moon fox…', fallback: 'This is Niko the moon fox.', skill: 'character', reward: ['Character finder', 'You chose who is in the story.'] },
+        { title: 'Where are they?', copy: 'Tell me one place.', placeholder: 'In a glowing forest…', fallback: 'They are in a glowing forest.', skill: 'challenge', reward: ['World builder', 'You gave your character a place.'] },
+        { title: 'What happens?', copy: 'Say one thing we can see.', placeholder: 'A star falls into the pond…', fallback: 'A star falls into the pond.', skill: 'sequence', reward: ['Scene starter', 'You made something happen.'] }
+      ],
+      pagePrompts: ['Who do we meet?', 'Where do they go?', 'What do they find?', 'What feels hard?', 'Who helps?', 'How does it end?']
     },
-    {
-      title: 'What is hard right now?',
-      copy: 'Tell me one thing making the adventure tricky.',
-      placeholder: 'The books are too tall, and he cannot see the door…',
-      fallback: 'The books are too tall, and he cannot see the door.',
-      skill: 'challenge',
-      reward: ['Challenge finder', 'Now your reader has a reason to keep going.']
+    'first-book': {
+      title: 'My First Book', ages: 'Ages 7–9', icon: '📖', targetPages: 10, minPages: 10, maxPages: 10,
+      promise: 'Make a complete 10-page illustrated book.',
+      guidance: 'Yu uses Who, Where, What, Why, and When. Write or say 1–3 sentences per page.',
+      questions: [
+        { title: 'Who is in your story?', copy: 'Who are they, where are they, and what do they want?', placeholder: 'Maya is 8. She is in a moon garden and wants to find her way home…', fallback: 'Maya is 8. She is in a moon garden and wants to find her way home.', skill: 'character', reward: ['Character builder', 'You gave your hero a place and a wish.'] },
+        { title: 'What is hard right now?', copy: 'What problem makes their journey difficult?', placeholder: 'The moon bridge has disappeared…', fallback: 'The moon bridge has disappeared.', skill: 'challenge', reward: ['Challenge finder', 'Now your reader wants to know what happens.'] },
+        { title: 'What happens first?', copy: 'When does it begin, and what do we see or hear?', placeholder: 'At midnight, a silver fox brings Maya a glowing key…', fallback: 'At midnight, a silver fox brings Maya a glowing key.', skill: 'sequence', reward: ['Scene starter', 'You used when and what to begin the action.'] }
+      ],
+      pagePrompts: ['Meet the hero: who and where?', 'What does your hero really want?', 'What problem appears?', 'What do they try first?', 'How does the problem get harder?', 'What helper, clue, or surprise appears?', 'What hard choice must they make?', 'How do they solve the problem?', 'What changes because of their choice?', 'How do they feel at the end?']
     },
-    {
-      title: 'What happens first?',
-      copy: 'What would we see or hear in the very first scene?',
-      placeholder: 'He sneezes a little flame and a hidden map glows…',
-      fallback: 'He sneezes a little flame and a hidden map glows.',
-      skill: 'sequence',
-      reward: ['Scene starter', 'You turned an idea into something we can see.']
+    'story-builder': {
+      title: 'Story Builder', ages: 'Ages 10–12', icon: '✍️', targetPages: 12, minPages: 10, maxPages: 16,
+      promise: 'Build a 10–16 page story with strong paragraphs.',
+      guidance: 'Yu develops motivation, conflict, dialogue, paragraph structure, and complete grammar.',
+      questions: [
+        { title: 'Who is the protagonist?', copy: 'Describe what they want, why it matters, and where the story begins.', placeholder: 'Amara wants to win the robotics trial because…', fallback: 'Amara wants to win the robotics trial because it could save her school club.', skill: 'character', reward: ['Motivation builder', 'You connected a character to a meaningful goal.'] },
+        { title: 'What blocks that goal?', copy: 'Describe the main conflict and what might be lost.', placeholder: 'Her closest teammate hides the final power cell…', fallback: 'Her closest teammate hides the final power cell.', skill: 'challenge', reward: ['Conflict builder', 'You created pressure and a reason to act.'] },
+        { title: 'How does the first scene unfold?', copy: 'Use action, detail, or dialogue to begin the story.', placeholder: '“We have ten minutes,” Amara whispered as the lights went out…', fallback: '“We have ten minutes,” Amara whispered as the lights went out.', skill: 'sequence', reward: ['Scene builder', 'You opened with action, detail, or dialogue.'] }
+      ],
+      pagePrompts: ['Establish the protagonist and setting.', 'Reveal the goal and why it matters.', 'Introduce the central conflict.', 'Show the first attempt with action or dialogue.', 'Escalate the consequences.', 'Reveal a clue, ally, or reversal.', 'Force a difficult decision.', 'Build toward the decisive action.', 'Show the result and its cost.', 'Deepen the character change.', 'Resolve the main relationship.', 'End with a memorable image or line.']
+    },
+    'author-film': {
+      title: 'Author & Film Studio', ages: 'Ages 13–16', icon: '🎬', targetPages: 12, minPages: 12, maxPages: 24,
+      promise: 'Create chapters or a 12–24 scene film.',
+      guidance: 'Yu coaches point of view, theme, pacing, scene direction, deep revision, and screenplay form.',
+      questions: [
+        { title: 'Whose story is this?', copy: 'Choose the point of view, desire, setting, and thematic question.', placeholder: 'From Leo’s point of view, the city rewards perfect memories—but he wants to forget…', fallback: 'From Leo’s point of view, the city rewards perfect memories, but he wants to forget.', skill: 'character', reward: ['Story architect', 'You connected point of view, desire, and theme.'] },
+        { title: 'What forces a choice?', copy: 'Define the conflict, stakes, and decision the protagonist cannot avoid.', placeholder: 'If Leo erases the evidence, his sister is safe—but the city stays controlled…', fallback: 'Leo must choose between protecting his sister and revealing the truth.', skill: 'challenge', reward: ['Dramatic pressure', 'You built conflict with real stakes.'] },
+        { title: 'How does the opening play?', copy: 'Write the first beat using action, image, sound, or dialogue.', placeholder: 'INT. MEMORY ARCHIVE — NIGHT. Blue light flickers across Leo’s face…', fallback: 'INT. MEMORY ARCHIVE — NIGHT. Blue light flickers across Leo’s face.', skill: 'sequence', reward: ['Opening director', 'You staged an opening beat for the reader or camera.'] }
+      ],
+      pagePrompts: ['Opening image and point of view.', 'Theme question and character desire.', 'Inciting incident.', 'First irreversible choice.', 'Rising action and opposition.', 'Relationship turn or revelation.', 'Midpoint reversal.', 'Consequences close in.', 'Lowest point and inner decision.', 'Climactic action.', 'Emotional resolution.', 'Final image that echoes the opening.']
     }
-  ];
+  };
+
+  let questions = creationStages['first-book'].questions;
 
   const yuAvatar = '<span class="avatar"><img src="assets/yu-mascot-logo-v2.png" alt="Yu the story mentor" /></span>';
   function userAvatar() {
@@ -218,6 +246,16 @@
   function projectPayload(extraSnapshot) {
     const params = new URLSearchParams(location.search);
     const language = ['zh', 'bilingual'].includes(params.get('storyLang')) ? params.get('storyLang') : 'en';
+    const liveScene = state.revisedScene ? {
+      id: 'scene-' + (state.bookScenes.length + 1),
+      title: 'Page ' + (state.bookScenes.length + 1),
+      text: state.revisedScene,
+      caption: state.revisedScene.slice(0, 500),
+      imageUrl: /^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : '',
+      duration: 6,
+      transition: 'fade'
+    } : null;
+    const savedScenes = state.bookScenes.length ? state.bookScenes.slice() : (liveScene ? [liveScene] : []);
     return {
       title: state.storyTitle || state.answers[0]?.slice(0, 80) || 'My StoriesLens story',
       language,
@@ -226,18 +264,19 @@
       visibility: 'private',
       sourceType: state.userUploadedReference ? 'personal-photo' : 'text',
       sourceText: state.answers[0] || '',
-      draft: state.revisedScene || state.originalScene || state.answers.join(' '),
-      coverImageUrl: /^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : '',
-      scenes: state.revisedScene ? [{
-        id: 'scene-1',
-        title: 'First scene',
-        text: state.revisedScene,
-        caption: state.revisedScene.slice(0, 500),
-        imageUrl: /^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : '',
-        duration: 6,
-        transition: 'fade'
-      }] : [],
-      storyDna: { source: 'solo-story', answers: state.answers.slice(0, 4), outputType: state.outputType, selectedStyle: state.selectedStyle },
+      draft: savedScenes.map(function (scene) { return scene.text; }).join('\n\n') || state.revisedScene || state.originalScene || state.answers.join(' '),
+      coverImageUrl: savedScenes[0]?.imageUrl || (/^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : ''),
+      scenes: savedScenes,
+      storyDna: {
+        source: 'solo-story',
+        answers: state.answers.slice(0, 4),
+        outputType: state.outputType,
+        selectedStyle: state.selectedStyle,
+        creationStage: state.creationStage,
+        targetPages: state.targetPages,
+        lockedCharacters: state.answers[1] || state.answers[0] || '',
+        characterReferenceCount: uploadedReferenceUrls().length
+      },
       clientSnapshot: {
         from: 'solo-story',
         mentorRevisionCompleted: Boolean(state.revisedScene),
@@ -245,6 +284,10 @@
         stars: state.stars,
         outputType: state.outputType,
         selectedStyle: state.selectedStyle,
+        creationStage: state.creationStage,
+        targetPages: state.targetPages,
+        completedPages: state.bookScenes.length,
+        personalPhotoConsentId: state.personalPhotoConsentId,
         ...(extraSnapshot || {})
       }
     };
@@ -300,6 +343,9 @@
           state.resultImage = String(pending.resultImage);
           state.outputType = pending.outputType === 'film' ? 'film' : 'book';
           state.selectedStyle = String(pending.selectedStyle || 'Storybook watercolor');
+          state.creationStage = creationStages[pending.creationStage] ? pending.creationStage : 'first-book';
+          state.targetPages = creationStages[state.creationStage].targetPages;
+          questions = creationStages[state.creationStage].questions;
           state.resumedGuestCreation = true;
           state.postSignupAction = String(params.get('postSignup') || pending.action || 'continue');
         }
@@ -307,6 +353,32 @@
     } catch (_error) {
       state.projectId = '';
       state.name = '';
+    }
+
+    if (state.projectId && params.has('project')) {
+      try {
+        const saved = await apiJson('/api/projects/' + encodeURIComponent(state.projectId));
+        const project = saved.project || {};
+        state.bookScenes = Array.isArray(project.scenes) ? project.scenes.filter(function (scene) { return scene && scene.text; }) : [];
+        state.storyTitle = String(project.title || state.storyTitle || 'My Story');
+        state.outputType = project.storyDna?.outputType === 'film' ? 'film' : (project.storyDna?.outputType || state.outputType || 'book');
+        state.selectedStyle = String(project.storyDna?.selectedStyle || state.selectedStyle || 'Storybook watercolor');
+        state.personalPhotoConsentId = String(project.clientSnapshot?.personalPhotoConsentId || '');
+        state.userUploadedReference = project.sourceType === 'personal-photo';
+        state.uploadContainsRealPerson = project.sourceType === 'personal-photo';
+        state.creationStage = creationStages[project.storyDna?.creationStage] ? project.storyDna.creationStage : 'first-book';
+        state.targetPages = Math.max(creationStages[state.creationStage].minPages, Math.min(creationStages[state.creationStage].maxPages, Number(project.storyDna?.targetPages) || creationStages[state.creationStage].targetPages));
+        questions = creationStages[state.creationStage].questions;
+        state.answers = Array.isArray(project.storyDna?.answers) ? project.storyDna.answers.map(String).slice(0, 4) : state.answers;
+        if (state.bookScenes.length) {
+          const lastScene = state.bookScenes[state.bookScenes.length - 1];
+          state.originalScene = lastScene.text;
+          state.revisedScene = lastScene.text;
+          state.resultImage = lastScene.imageUrl || project.coverImageUrl || state.resultImage;
+          if (state.userUploadedReference) state.characterImageUrl = project.coverImageUrl || state.bookScenes[0]?.imageUrl || '';
+          state.restoredProject = true;
+        }
+      } catch (_error) { /* A new story can still begin if the saved project is unavailable. */ }
     }
 
     try {
@@ -334,15 +406,22 @@
   }
 
   async function requestYuRevision(original) {
+    const stageProfiles = {
+      'picture-voice': { grade: 'K', level: 'emergent', focus: 'oral storytelling clarity; preserve child voice; do not require complete grammar' },
+      'first-book': { grade: '3', level: 'expression', focus: '1–3 clear sentences, 5W story detail, age-appropriate grammar and punctuation' },
+      'story-builder': { grade: '6', level: 'paragraph', focus: 'paragraph structure, motivation, conflict, dialogue, complete grammar and precise verbs' },
+      'author-film': { grade: '10', level: 'advanced', focus: 'point of view, theme, pacing, scene construction, screenplay format and deep revision' }
+    };
+    const profile = stageProfiles[state.creationStage] || stageProfiles['first-book'];
     const result = await apiJson('/api/writing-assistant', {
       method: 'POST',
       body: JSON.stringify({
         action: 'check',
         mode: 'free',
         storyLanguage: 'en',
-        grade: '3',
-        creatorLevel: 'expression',
-        skillFocus: 'narrative writing and grammar',
+        grade: profile.grade,
+        creatorLevel: profile.level,
+        skillFocus: profile.focus,
         inspiration: state.answers[0] || '',
         storyDnaContext: state.answers.map(function (answer, index) { return (index + 1) + '. ' + answer; }).join('\n'),
         selectedText: original,
@@ -416,7 +495,10 @@
   async function generateStoryPicture(consentPanel) {
     await saveProject({ pictureGenerationRequested: true });
     const guestPersonalPhotoHeld = !hasAccount() && state.uploadContainsRealPerson;
-    const referenceImages = guestPersonalPhotoHeld ? [] : uploadedReferenceUrls().slice(0, 3);
+    const identityReferences = guestPersonalPhotoHeld ? [] : uploadedReferenceUrls().slice(0, 3);
+    const firstPageAnchor = state.bookScenes[0]?.imageUrl || '';
+    const referenceImages = identityReferences.slice();
+    if (firstPageAnchor && referenceImages.length < 3 && !referenceImages.includes(firstPageAnchor)) referenceImages.push(firstPageAnchor);
     const needsPersonalPhotoConsent = referenceImages.length > 0 && (state.selectedStyle === 'Real-life story' || state.uploadContainsRealPerson);
     const consentId = needsPersonalPhotoConsent ? await ensurePersonalPhotoConsent(consentPanel) : '';
     const visualDirection = guestPersonalPhotoHeld
@@ -426,8 +508,11 @@
       'Create one finished square story scene from the child’s own writing.',
       'Story: ' + state.revisedScene,
       'Visual direction: ' + visualDirection + '.',
+      state.bookScenes.length ? 'This is Page ' + (state.bookScenes.length + 1) + ' of the same story. Keep the exact same recurring characters, clothing, proportions, visual style, color language, and world design established on Page 1.' : '',
+      state.bookScenes.length && firstPageAnchor ? 'The final attached image is the approved Page 1 world-and-style anchor. Match its visual continuity while illustrating the new action.' : '',
+      state.answers[1] ? 'Locked character description from the child: ' + state.answers[1] : '',
       state.pictureChangeRequest ? 'Change only this requested detail: ' + state.pictureChangeRequest + '.' : '',
-      referenceImages.length ? 'Use all ' + referenceImages.length + ' attached approved reference ' + (referenceImages.length === 1 ? 'image' : 'images') + '. Each reference is a separate protagonist. Preserve each person’s own face, age, skin tone, hairstyle, clothing, and body proportions. Keep the identities separate: do not blend or swap faces, do not omit anyone, include each protagonist exactly once, and do not add extra people.' : '',
+      identityReferences.length ? 'Use the first ' + identityReferences.length + ' attached approved identity reference ' + (identityReferences.length === 1 ? 'image' : 'images') + '. Each identity reference is a separate protagonist. Preserve each person’s own face, age, skin tone, hairstyle, clothing, and body proportions. Keep the identities separate: do not blend or swap faces, do not omit anyone, and do not add extra people.' : '',
       'Do not add text, captions, logos, watermarks, UI, arrows, or play icons.'
     ].filter(Boolean).join('\n');
     const result = await apiJson('/api/generate-image', {
@@ -435,7 +520,7 @@
       headers: { 'Idempotency-Key': 'solo-' + Date.now() + '-' + Math.random().toString(36).slice(2) },
       body: JSON.stringify({
         projectId: state.projectId || 'solo-preview',
-        partId: 'first-scene',
+        partId: 'page-' + (state.bookScenes.length + 1),
         submissionId: 'solo-' + Date.now(),
         prompt: storyPrompt,
         studentWriting: state.revisedScene,
@@ -570,13 +655,85 @@
     setTimeout(function () { celebration.hidden = true; }, 2200);
   }
 
+  function activeStage() {
+    return creationStages[state.creationStage] || creationStages['first-book'];
+  }
+
+  function setParentStageSnapshot() {
+    const maps = {
+      'picture-voice': {
+        character: ['Character naming', 'Who is in the picture or story?'],
+        challenge: ['Place & feeling', 'Where are they, and how does it feel?'],
+        sequence: ['Visible action', 'What happens that we can see or hear?'],
+        revision: ['Voice confirmation', 'Can the creator hear and approve their words?']
+      },
+      'first-book': {
+        character: ['Who & where', 'Who is here, where are they, and what do they want?'],
+        challenge: ['What & why', 'What is hard, and why does it matter?'],
+        sequence: ['When & sequence', 'When does it begin, and what happens first?'],
+        revision: ['Grammar decision', 'Understands and approves a clearer sentence.']
+      },
+      'story-builder': {
+        character: ['Character motivation', 'What does the protagonist want and why?'],
+        challenge: ['Conflict & stakes', 'What blocks the goal, and what may be lost?'],
+        sequence: ['Paragraph & dialogue', 'How do action, detail, and dialogue build the scene?'],
+        revision: ['Complete revision', 'Improves structure and grammar without losing voice.']
+      },
+      'author-film': {
+        character: ['Point of view & theme', 'Whose story is this, and what question drives it?'],
+        challenge: ['Choice & stakes', 'What decision cannot be avoided?'],
+        sequence: ['Pacing & staging', 'How do image, sound, action, and dialogue shape the beat?'],
+        revision: ['Deep craft revision', 'Refines form, rhythm, and meaning while retaining authorship.']
+      }
+    };
+    const selected = maps[state.creationStage] || maps['first-book'];
+    Object.keys(selected).forEach(function (skill) {
+      const card = document.querySelector('[data-learning="' + skill + '"]');
+      if (!card) return;
+      card.querySelector('strong').textContent = selected[skill][0];
+      card.querySelector('p').textContent = selected[skill][1];
+    });
+  }
+
+  function chooseCreationStage(stageId) {
+    const stage = creationStages[stageId] || creationStages['first-book'];
+    state.creationStage = stageId in creationStages ? stageId : 'first-book';
+    state.targetPages = stage.targetPages;
+    questions = stage.questions;
+    setParentStageSnapshot();
+    try { localStorage.setItem('storieslens_creation_stage', state.creationStage); } catch (_error) { /* optional preference */ }
+    document.querySelectorAll('[data-creation-stage]').forEach(function (button) {
+      button.classList.toggle('is-selected', button.dataset.creationStage === state.creationStage);
+    });
+    composer.hidden = false;
+    showGreeting();
+    composer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    speakText(stage.title + ' selected. ' + stage.promise, 'celebration');
+  }
+
+  function showCreationStageChooser() {
+    composer.hidden = true;
+    setJourney('idea');
+    state.currentPrompt = 'How would you like to create today? Choose pictures and voice, a first book, a bigger story, or an author and film studio.';
+    const cards = Object.keys(creationStages).map(function (key) {
+      const stage = creationStages[key];
+      const recommended = key === 'first-book' ? '<em>RECOMMENDED FIRST</em>' : '';
+      return '<button class="creation-stage-card" type="button" data-creation-stage="' + key + '"><span class="creation-stage-icon" aria-hidden="true">' + stage.icon + '</span><span><small>' + stage.ages + '</small><strong>' + stage.title + '</strong><b>' + stage.promise + '</b><i>' + stage.guidance + '</i></span>' + recommended + '</button>';
+    }).join('');
+    const picker = yuMessage('<small>CHOOSE YOUR CREATION PATH</small><h1>How would you like to tell your story?</h1><p>There is no test. Pick the way that feels fun today—a grown-up can help choose.</p><div class="creation-stage-grid">' + cards + '</div><p class="tiny-note">Age is only a guide. Yu follows the creator’s confidence and can switch paths for the next story.</p>', 'stage-picker');
+    picker.querySelectorAll('[data-creation-stage]').forEach(function (button) {
+      button.addEventListener('click', function () { chooseCreationStage(button.dataset.creationStage); });
+    });
+  }
+
   function showGreeting() {
     setJourney('idea');
+    const stage = activeStage();
     const accountNote = hasAccount()
       ? '<p class="tiny-note">✓ Signed in · your private story and picture balance will save automatically.</p>'
       : '<p class="tiny-note"><strong>Your first picture is free—no sign-up needed.</strong> Make it first. Create an account only when you want to continue or download it.</p>';
-    yuMessage('<small>YU · YOUR STORY MENTOR</small><h1>Hi! What shall we imagine today?</h1><p>Upload a drawing, photo, or portrait—or tell me one idea. I’ll help with the next step.</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
-    state.currentPrompt = 'Hi! Upload a drawing, photo, or portrait—or tell me one tiny idea. Just three words can be enough.';
+    yuMessage('<small>' + escapeHtml(stage.title.toUpperCase()) + ' · ' + escapeHtml(stage.ages.toUpperCase()) + '</small><h1>Hi! What shall we imagine today?</h1><p>Upload a drawing, photo, or portrait—or tell me one idea. I’ll help you make ' + state.targetPages + ' story ' + (state.outputType === 'film' ? 'scenes' : 'pages') + ' at your pace.</p><p class="stage-guidance-note">' + escapeHtml(stage.guidance) + '</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
+    state.currentPrompt = 'Welcome to ' + stage.title + '. Upload a drawing, photo, or portrait—or tell me one idea. ' + stage.guidance;
     state.voiceMood = 'theatrical';
   }
 
@@ -594,6 +751,20 @@
 
   function handleAnswer() {
     const typed = input.value.trim();
+    if (state.editMode === 'next-page') {
+      if (!typed) {
+        showToast('Tell Yu what happens on this page, or hold the green button to speak.');
+        input.focus();
+        return;
+      }
+      state.editMode = '';
+      state.currentPageOriginal = typed;
+      input.value = '';
+      composer.hidden = true;
+      userMessage(typed, '', 'PAGE ' + (state.bookScenes.length + 1));
+      reviewNextPage(typed);
+      return;
+    }
     if (state.editMode === 'picture-change') {
       if (!typed) {
         showToast('Tell Yu one thing to change, or hold the green button to say it.');
@@ -652,11 +823,22 @@
       checkingStep += 1;
     }, 1500);
     let revision;
-    try {
-      revision = await requestYuRevision(original);
-    } catch (error) {
-      revision = buildRevision(original);
-      showToast('Yu used the safe on-device grammar check this time: ' + error.message);
+    if (state.creationStage === 'picture-voice') {
+      revision = {
+        text: original,
+        reason: 'Yu kept the creator’s spoken words. At this stage, telling the idea matters more than complete grammar.',
+        changes: [],
+        lesson: { title: 'Stories can begin with your voice', explanation: 'Say who is there, where they are, and what happens. Yu can read your words back so you can decide.', example: original },
+        title: original.split(/[.!?。！？\n]/)[0].trim().slice(0, 56) || 'My Story',
+        image: state.characterImageUrl || state.imageUrl || 'assets/original-garden-door-hd-v2.png'
+      };
+    } else {
+      try {
+        revision = await requestYuRevision(original);
+      } catch (error) {
+        revision = buildRevision(original);
+        showToast('Yu used the safe on-device grammar check this time: ' + error.message);
+      }
     }
     window.clearInterval(checkingTimer);
     checking.remove();
@@ -669,11 +851,16 @@
     state.storyTitle = revision.title;
     state.resultImage = state.characterImageUrl || state.imageUrl || revision.image;
     state.currentPrompt = 'Listen to your first scene. I kept every idea and only fixed grammar. I listed every correction and can explain them one by one. Is this still what you meant?';
-    yuMessage('<small>YOUR FIRST SCENE</small><h2>Your story is still your story.</h2><p>I did not rewrite it. I only fixed the grammar, spelling, capitals, and punctuation.</p><p class="grammar-change-count">✓ Yu found ' + changeCount + ' grammar ' + (changeCount === 1 ? 'change' : 'changes') + (changeCount ? ' and explains every one below.' : '. Your grammar is already clear.') + '</p>' +
+    const revisionIntro = state.creationStage === 'picture-voice'
+      ? '<p>I kept your spoken words. At this stage, sharing the idea matters more than perfect grammar.</p><p class="grammar-change-count">✓ Listen and tell Yu whether this is what you meant.</p>'
+      : '<p>I did not rewrite it. I only fixed the grammar, spelling, capitals, and punctuation.</p><p class="grammar-change-count">✓ Yu found ' + changeCount + ' grammar ' + (changeCount === 1 ? 'change' : 'changes') + (changeCount ? ' and explains every one below.' : '. Your grammar is already clear.') + '</p>';
+    const suggestionLabel = state.creationStage === 'picture-voice' ? 'YU READS YOUR WORDS BACK' : 'YU’S GRAMMAR-ONLY VERSION';
+    const lessonHeading = state.creationStage === 'picture-voice' ? 'VOICE &amp; STORY TIP' : 'START HERE · FIRST GRAMMAR POINT';
+    yuMessage('<small>YOUR FIRST SCENE</small><h2>Your story is still your story.</h2>' + revisionIntro +
       '<div class="revision-card">' +
         '<div class="revision-section"><small>YOU SAID</small><blockquote>' + escapeHtml(original) + '</blockquote></div>' +
-        '<div class="revision-section suggestion"><small>YU’S GRAMMAR-ONLY VERSION</small><blockquote>' + escapeHtml(revised) + '</blockquote><button class="why-button" type="button" data-why>▼ All grammar changes · explained one by one</button><div class="grammar-change-panel" data-why-copy><p>' + escapeHtml(revision.reason) + '</p>' + (changeCount ? '<ol>' + revision.changes.map(function (change, index) { return '<li><b class="grammar-change-number">' + (index + 1) + '</b><strong>' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after) + '</strong><span><b>' + escapeHtml(change.skill) + '</b>: ' + escapeHtml(change.explanation) + '</span><button type="button" data-hear-change="' + index + '">▶ Hear Yu explain #' + (index + 1) + '</button></li>'; }).join('') + '</ol>' : '<div class="grammar-all-clear">✓ Yu checked the whole passage and found no grammar errors.</div>') + '</div></div>' +
-        '<div class="yu-grammar-lesson"><div class="yu-lesson-heading"><span aria-hidden="true">✦</span><div><small>START HERE · FIRST GRAMMAR POINT</small><h3>' + escapeHtml(lesson.title) + '</h3></div></div><p>' + escapeHtml(lesson.explanation) + '</p><blockquote>' + escapeHtml(lesson.example) + '</blockquote><button type="button" data-hear-grammar>▶ Hear Yu teach this first point</button></div>' +
+        '<div class="revision-section suggestion"><small>' + suggestionLabel + '</small><blockquote>' + escapeHtml(revised) + '</blockquote><button class="why-button" type="button" data-why>▼ ' + (state.creationStage === 'picture-voice' ? 'Why Yu kept my words' : 'All grammar changes · explained one by one') + '</button><div class="grammar-change-panel" data-why-copy><p>' + escapeHtml(revision.reason) + '</p>' + (changeCount ? '<ol>' + revision.changes.map(function (change, index) { return '<li><b class="grammar-change-number">' + (index + 1) + '</b><strong>' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after) + '</strong><span><b>' + escapeHtml(change.skill) + '</b>: ' + escapeHtml(change.explanation) + '</span><button type="button" data-hear-change="' + index + '">▶ Hear Yu explain #' + (index + 1) + '</button></li>'; }).join('') + '</ol>' : '<div class="grammar-all-clear">✓ Yu kept the meaning and the creator’s own voice.</div>') + '</div></div>' +
+        '<div class="yu-grammar-lesson"><div class="yu-lesson-heading"><span aria-hidden="true">✦</span><div><small>' + lessonHeading + '</small><h3>' + escapeHtml(lesson.title) + '</h3></div></div><p>' + escapeHtml(lesson.explanation) + '</p><blockquote>' + escapeHtml(lesson.example) + '</blockquote><button type="button" data-hear-grammar>▶ Hear Yu teach this first point</button></div>' +
         '<div class="revision-actions"><button class="change-button" type="button" data-revise-change>Let me change it</button><button class="keep-button" type="button" data-revise-keep>Yes—that is my story</button></div>' +
       '</div>');
     state.voiceMood = 'story';
@@ -705,6 +892,48 @@
     latest.querySelector('[data-revise-keep]').addEventListener('click', function () {
       finishRevision(revised);
     });
+  }
+
+  async function reviewNextPage(original) {
+    const pageNumber = state.bookScenes.length + 1;
+    const checking = yuMessage('<div class="yu-checking" role="status" aria-live="polite"><div class="yu-checking-orbit" aria-hidden="true"><img src="assets/yu-mascot-logo-v2.png" alt="" /></div><div><small>YU IS CHECKING PAGE ' + pageNumber + '</small><h2>Your story facts stay exactly the same.</h2><p>Checking grammar and making sure this page follows the last one…</p><span>' + escapeHtml(activeStage().guidance) + '</span></div></div>');
+    let revision;
+    if (state.creationStage === 'picture-voice') {
+      revision = {
+        text: original,
+        reason: 'Yu kept the creator’s spoken words.',
+        changes: [],
+        lesson: { title: 'One clear story action', explanation: 'A page can show one thing happening.', example: original }
+      };
+    } else {
+      try {
+        revision = await requestYuRevision(original);
+      } catch (error) {
+        revision = buildRevision(original);
+        showToast('Yu used the safe on-device grammar check this time.');
+      }
+    }
+    checking.remove();
+    state.currentPageDraft = revision.text;
+    const changeCount = revision.changes.length;
+    state.currentPrompt = 'I kept your idea and checked page ' + pageNumber + '. Listen, then choose whether it still sounds like you.';
+    const review = yuMessage('<small>PAGE ' + pageNumber + ' · YU’S CHECK</small><h2>Does this still sound like your story?</h2><div class="revision-card compact"><div class="revision-section"><small>YOU SAID</small><blockquote>' + escapeHtml(original) + '</blockquote></div><div class="revision-section suggestion"><small>GRAMMAR-CHECKED VERSION</small><blockquote>' + escapeHtml(revision.text) + '</blockquote></div>' + (changeCount ? '<details class="page-grammar-details"><summary>' + changeCount + ' grammar ' + (changeCount === 1 ? 'change' : 'changes') + ' · explained</summary><ol>' + revision.changes.map(function (change, index) { return '<li><b>' + (index + 1) + '. ' + escapeHtml(change.skill) + '</b><span>' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after) + '</span><p>' + escapeHtml(change.explanation) + '</p></li>'; }).join('') + '</ol></details>' : '<p class="grammar-all-clear">✓ Yu found no grammar errors on this page.</p>') + '<div class="revision-actions"><button class="change-button" type="button" data-page-change>Let me change it</button><button class="keep-button" type="button" data-page-keep>Yes—make Page ' + pageNumber + '</button></div></div>');
+    review.querySelector('[data-page-change]').addEventListener('click', function () {
+      state.editMode = 'next-page';
+      composer.hidden = false;
+      setComposer('Change any words you want.', revision.text, 'Check my page');
+      input.value = revision.text;
+      input.focus();
+    });
+    review.querySelector('[data-page-keep]').addEventListener('click', function () {
+      state.originalScene = original;
+      state.revisedScene = revision.text;
+      state.revisionReason = revision.reason;
+      state.pictureChangeRequest = '';
+      composer.hidden = true;
+      showDrawing(state.pictureConsentPanel, null, null);
+    });
+    setTimeout(function () { speakText('Page ' + pageNumber + '. ' + revision.text + ' Does this still sound like your story?', 'story'); }, 320);
   }
 
   function cleanSentence(text) {
@@ -744,7 +973,10 @@
         image: 'assets/outcome-film-hd-v2.png'
       };
     }
-    const sentences = state.answers.slice(0,4).map(cleanSentence).filter(Boolean);
+    const sourceSentences = state.currentPageOriginal === original
+      ? String(original).split(/(?<=[.!?。！？])\s+/).filter(Boolean)
+      : state.answers.slice(0,4);
+    const sentences = sourceSentences.map(cleanSentence).filter(Boolean);
     const revised = sentences.join(' ');
     const first = sentences[0] || 'My story begins';
     return {
@@ -924,7 +1156,8 @@
       ? '<div class="reference-lock-note"><span>✓</span><div><strong>Real-life version uses your uploaded photo</strong><small>Yu keeps the same face, age, hairstyle, clothes, and number of people while placing them inside the story scene.</small></div></div>'
       : (hasReference ? '<div class="reference-lock-note"><span>✓</span><div><strong>Your uploaded picture is the main reference</strong><small>Yu keeps the same person or character identity and changes only the story scene and chosen style.</small></div></div>' : '<div class="reference-lock-note is-words"><span>✦</span><div><strong>Building from your words</strong><small>No picture was uploaded, so Yu follows the character details you described.</small></div></div>');
     const changeNotice = state.pictureChangeRequest ? '<div class="change-lock-note"><strong>Changing only:</strong> “' + escapeHtml(state.pictureChangeRequest) + '”<small>Everything else stays locked.</small></div>' : '';
-    const drawingMarkup = '<div class="inline-drawing"><small>YU IS CREATING WITH YOUR WORDS</small><h2>Watch your first ' + (state.outputType === 'film' ? 'movie frame' : 'story picture') + ' appear…</h2><p class="tiny-note">Format: ' + escapeHtml(state.outputType === 'film' ? 'Story film' : 'Illustrated book') + ' · Style: ' + escapeHtml(state.selectedStyle) + '</p>' + referenceNotice + changeNotice + '<div class="drawing-stage"><img src="' + escapeHtml(state.resultImage) + '" alt="A picture forming from the creator’s story" /><span class="wand">✦</span></div><div class="drawing-status"><div class="progress-track"><i data-draw-progress></i></div><b data-draw-title>' + (state.pictureChangeRequest ? 'Changing only the detail you named' : 'Keeping your characters and story details') + '</b><span data-draw-subtitle>Stay right here—the surprise will appear below this button.</span></div></div>';
+    const pageNumber = state.bookScenes.length + 1;
+    const drawingMarkup = '<div class="inline-drawing"><small>PAGE ' + pageNumber + ' OF ' + state.targetPages + ' · YU IS CREATING WITH YOUR WORDS</small><h2>Watch your ' + (pageNumber === 1 ? 'first ' : 'next ') + (state.outputType === 'film' ? 'movie frame' : 'story picture') + ' appear…</h2><p class="tiny-note">Format: ' + escapeHtml(state.outputType === 'film' ? 'Story film' : 'Illustrated book') + ' · Style: ' + escapeHtml(state.selectedStyle) + '</p>' + referenceNotice + changeNotice + '<div class="drawing-stage"><img src="' + escapeHtml(state.resultImage) + '" alt="A picture forming from the creator’s story" /><span class="wand">✦</span></div><div class="drawing-status"><div class="progress-track"><i data-draw-progress></i></div><b data-draw-title>' + (state.pictureChangeRequest ? 'Changing only the detail you named' : 'Keeping your characters and story details') + '</b><span data-draw-subtitle>Stay right here—the surprise will appear below this button.</span></div></div>';
     let drawing;
     if (revealSlot) {
       revealSlot.hidden = false;
@@ -995,7 +1228,8 @@
         storyTitle: state.storyTitle,
         resultImage: state.resultImage,
         outputType: state.outputType,
-        selectedStyle: state.selectedStyle
+        selectedStyle: state.selectedStyle,
+        creationStage: state.creationStage || 'first-book'
       }));
     } catch (_error) { /* The guest project still remains in the private server session. */ }
   }
@@ -1024,7 +1258,79 @@
     }
   }
 
+  function commitCurrentPage() {
+    const pageNumber = state.bookScenes.length + 1;
+    const scene = {
+      id: 'scene-' + pageNumber,
+      title: (state.outputType === 'film' ? 'Scene ' : 'Page ') + pageNumber,
+      text: state.revisedScene,
+      caption: state.revisedScene.slice(0, 500),
+      imageUrl: /^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : '',
+      duration: 6,
+      transition: 'fade'
+    };
+    state.bookScenes.push(scene);
+    state.currentPageDraft = '';
+    state.currentPageOriginal = '';
+    return scene;
+  }
+
+  function openBookStudio() {
+    if (!state.projectId) {
+      showToast('Yu is still saving your book. Try again in a moment.');
+      return;
+    }
+    location.href = 'movie-studio.html?project=' + encodeURIComponent(state.projectId);
+  }
+
+  function startNextPage() {
+    const stage = activeStage();
+    const pageNumber = state.bookScenes.length + 1;
+    const prompt = stage.pagePrompts[Math.min(pageNumber - 1, stage.pagePrompts.length - 1)] || 'What happens next?';
+    state.editMode = 'next-page';
+    state.currentPrompt = 'Page ' + pageNumber + '. ' + prompt + ' ' + stage.guidance;
+    state.voiceMood = 'question';
+    composer.hidden = false;
+    namePrompt.hidden = true;
+    uploadEntry.hidden = false;
+    characterMaker.hidden = true;
+    quickIdeas.hidden = true;
+    uploadEntry.querySelector('strong').textContent = state.userUploadedReference ? 'Your locked character pictures stay with this book' : 'Add or replace a character picture · optional';
+    uploadEntry.querySelector('small').textContent = state.userUploadedReference ? 'Yu will keep the same people and style on every page.' : 'You may add up to three character references at any time.';
+    setComposer('PAGE ' + pageNumber + ' OF ' + state.targetPages + ' · ' + prompt, stage.title === 'Picture & Voice' ? 'Say or type one tiny thing…' : 'Write or say what happens on this page…', 'Let Yu check');
+    const next = yuMessage('<small>' + escapeHtml(stage.title.toUpperCase()) + ' · PAGE ' + pageNumber + ' OF ' + state.targetPages + '</small><h2>' + escapeHtml(prompt) + '</h2><p>' + escapeHtml(stage.guidance) + '</p><div class="continuity-lock"><span>🔒</span><div><strong>Your characters and picture style are locked</strong><small>Yu will use the approved first page as the visual anchor for the whole book.</small></div></div>');
+    next.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    speakText(state.currentPrompt, 'question');
+  }
+
+  function showBookContinuation() {
+    const pageCount = state.bookScenes.length;
+    const stage = activeStage();
+    const isComplete = pageCount >= state.targetPages;
+    const progress = Array.from({ length: state.targetPages }, function (_, index) {
+      return '<i class="' + (index < pageCount ? 'is-done' : (index === pageCount ? 'is-next' : '')) + '">' + (index < pageCount ? '✓' : index + 1) + '</i>';
+    }).join('');
+    const extendAction = isComplete && stage.maxPages > state.targetPages
+      ? '<button class="book-next" type="button" data-extend-story>Keep building to ' + stage.maxPages + ' ' + (state.outputType === 'film' ? 'scenes' : 'pages') + '</button>'
+      : '';
+    const actions = isComplete
+      ? '<button class="book-next primary" type="button" data-open-book>Open my finished ' + (state.outputType === 'film' ? 'story' : 'e-book') + '</button>' + extendAction + '<button class="book-next" type="button" data-author-finish>Make my author card</button>'
+      : '<button class="book-next primary" type="button" data-next-page>Continue to ' + (state.outputType === 'film' ? 'Scene ' : 'Page ') + (pageCount + 1) + ' with Yu</button><button class="book-next" type="button" data-open-book>See my ' + pageCount + ' ' + (pageCount === 1 ? 'page' : 'pages') + ' so far</button><button class="book-next quiet" type="button" data-author-finish>Finish for today</button>';
+    const card = yuMessage('<small>' + (isComplete ? 'YOUR FIRST BOOK IS READY' : 'KEEP YOUR STORY GROWING') + '</small><h2>' + (isComplete ? 'You made all ' + state.targetPages + ' pages!' : 'Page ' + pageCount + ' is safely inside your book.') + '</h2><p>' + (isComplete ? 'Open Book Studio to preview the whole story and export Word or PDF.' : 'Next, Yu asks one clear question. Your characters, uploaded photos, and chosen style stay the same.') + '</p><div class="book-progress" aria-label="' + pageCount + ' of ' + state.targetPages + ' pages complete"><div><b>' + pageCount + '</b><span>of ' + state.targetPages + ' ' + (state.outputType === 'film' ? 'scenes' : 'pages') + '</span></div><section>' + progress + '</section></div><div class="book-next-actions">' + actions + '</div><p class="stage-guidance-note"><strong>' + escapeHtml(stage.title) + ':</strong> ' + escapeHtml(stage.guidance) + '</p>');
+    const nextButton = card.querySelector('[data-next-page]');
+    if (nextButton) nextButton.addEventListener('click', startNextPage);
+    const extendButton = card.querySelector('[data-extend-story]');
+    if (extendButton) extendButton.addEventListener('click', function () {
+      state.targetPages = stage.maxPages;
+      startNextPage();
+    });
+    card.querySelector('[data-open-book]').addEventListener('click', openBookStudio);
+    card.querySelector('[data-author-finish]').addEventListener('click', showAuthorCard);
+    if (isComplete) celebrate();
+  }
+
   function showResult(progressMessage, makeButton) {
+    const pageNumber = state.bookScenes.length + 1;
     const pictureStep = document.querySelector('[data-step-dot="picture"]');
     pictureStep.classList.remove('is-active');
     pictureStep.classList.add('is-done');
@@ -1034,7 +1340,10 @@
     const resultActions = hasAccount()
       ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">' + (state.betaUnlimitedCreation ? 'Try again · beta access' : 'Try again · 1 gift') + '</button></div>'
       : '<div class="guest-next-step"><small>YOUR FREE PICTURE IS READY</small><h3>What would you like to do next?</h3><p>Create a free grown-up account now so this picture and story move with you—nothing needs to be entered again.</p><div class="result-actions"><button class="result-action primary" type="button" data-result="signup-continue">Continue creating with Yu</button><button class="result-action" type="button" data-result="signup-download">Download my picture</button></div><span>Free account · private library · your work stays yours</span></div>';
-    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
+    const resultPageLabel = pageNumber === 1
+      ? (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + ' · 1 OF ' + state.targetPages
+      : (state.outputType === 'film' ? 'MOVIE SCENE ' : 'STORY PAGE ') + pageNumber + ' OF ' + state.targetPages;
+    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + resultPageLabel + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
     let result;
     if (progressMessage && progressMessage.matches('[data-picture-reveal]')) {
       progressMessage.className = 'picture-reveal-slot is-ready';
@@ -1055,7 +1364,7 @@
       showToast(state.selectedStyle === 'Real-life story' ? 'Yu restored your prepared photo. Your story is still saved.' : 'Yu restored the picture preview. Your story is still saved.');
     });
     window.requestAnimationFrame(function () { result.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-    setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'your first story page is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
+    setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'page ' + pageNumber + ' is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
     result.querySelectorAll('[data-result]').forEach(function (button) {
       button.addEventListener('click', async function () {
         if (button.dataset.result === 'signup-continue') {
@@ -1066,13 +1375,15 @@
           button.disabled = true;
           button.textContent = 'Saving…';
           try {
-            await saveProject({ completedFirstScene: true, acceptedPicture: true });
-            showToast('Saved! Chapter 1 is ready for the next adventure.');
+            commitCurrentPage();
+            await saveProject({ completedFirstScene: state.bookScenes.length >= 1, acceptedPicture: true, completedPages: state.bookScenes.length });
+            showToast('Saved! Page ' + state.bookScenes.length + ' is inside your book.');
             reportButton.disabled = false;
             reportButton.textContent = 'Open ' + (state.name ? state.name + '’s' : 'the creator’s') + ' full learning report';
             button.textContent = '✓ Saved';
-            setTimeout(showAuthorCard, 420);
+            setTimeout(showBookContinuation, 420);
           } catch (error) {
+            if (state.bookScenes.length && state.bookScenes[state.bookScenes.length - 1].text === state.revisedScene) state.bookScenes.pop();
             button.disabled = false;
             button.textContent = 'I love it';
             showToast(error.message);
@@ -1400,7 +1711,7 @@
       try { state.recognition.stop(); } catch (error) { /* already stopped */ }
       state.recognition = null;
     }
-    if (!input.value.trim() && state.editMode === 'picture-change') {
+    if (!input.value.trim() && (state.editMode === 'picture-change' || state.editMode === 'next-page')) {
       showToast('I could not hear that. Hold the button and try again, or type your change.');
       return;
     }
@@ -1422,8 +1733,18 @@
     creatorName.value = state.name;
     if (state.name) document.querySelector('[data-child-name]').textContent = state.name;
     refreshAccountState().finally(function () {
-      showGreeting();
-      if (!state.resumedGuestCreation || !hasAccount()) return;
+      if (state.restoredProject && hasAccount()) {
+        setParentStageSnapshot();
+        composer.hidden = true;
+        setJourney('picture');
+        yuMessage('<small>WELCOME BACK</small><h1>Your story is right where you left it.</h1><p>Yu restored ' + state.bookScenes.length + ' of ' + state.targetPages + ' ' + (state.outputType === 'film' ? 'scenes' : 'pages') + ', including your locked visual style.</p>');
+        showBookContinuation();
+        return;
+      }
+      if (!state.resumedGuestCreation || !hasAccount()) {
+        showCreationStageChooser();
+        return;
+      }
       setJourney('picture');
       composer.hidden = true;
       setTimeout(function () {
