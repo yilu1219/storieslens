@@ -99,6 +99,7 @@
       title: 'Picture & Voice', ages: 'Ages 5–6', icon: '🎙️', targetPages: 6, minPages: 4, maxPages: 6,
       promise: 'Tell a tiny story with pictures and your voice.',
       guidance: 'Yu asks one very short question at a time. Complete grammar is not required.',
+      voiceGuide: 'Pick Picture and Voice if you want to show a picture or tell a tiny story out loud. I will ask only one short question at a time. You do not need perfect grammar.',
       questions: [
         { title: 'Who is here?', copy: 'Say a name, or show me a picture.', placeholder: 'This is Niko the moon fox…', fallback: 'This is Niko the moon fox.', skill: 'character', reward: ['Character finder', 'You chose who is in the story.'] },
         { title: 'Where are they?', copy: 'Tell me one place.', placeholder: 'In a glowing forest…', fallback: 'They are in a glowing forest.', skill: 'challenge', reward: ['World builder', 'You gave your character a place.'] },
@@ -110,6 +111,7 @@
       title: 'My First Book', ages: 'Ages 7–9', icon: '📖', targetPages: 10, minPages: 10, maxPages: 10,
       promise: 'Make a complete 10-page illustrated book.',
       guidance: 'Yu uses Who, Where, What, Why, and When. Write or say 1–3 sentences per page.',
+      voiceGuide: 'Pick My First Book if you want to make a ten page picture book. You can talk or type one to three sentences at a time. I will help you with who, where, when, what, and why.',
       questions: [
         { title: 'Who is in your story?', copy: 'Who are they, where are they, and what do they want?', placeholder: 'Maya is 8. She is in a moon garden and wants to find her way home…', fallback: 'Maya is 8. She is in a moon garden and wants to find her way home.', skill: 'character', reward: ['Character builder', 'You gave your hero a place and a wish.'] },
         { title: 'What is hard right now?', copy: 'What problem makes their journey difficult?', placeholder: 'The moon bridge has disappeared…', fallback: 'The moon bridge has disappeared.', skill: 'challenge', reward: ['Challenge finder', 'Now your reader wants to know what happens.'] },
@@ -121,6 +123,7 @@
       title: 'Story Builder', ages: 'Ages 10–12', icon: '✍️', targetPages: 12, minPages: 10, maxPages: 16,
       promise: 'Build a 10–16 page story with strong paragraphs.',
       guidance: 'Yu develops motivation, conflict, dialogue, paragraph structure, and complete grammar.',
+      voiceGuide: 'Pick Story Builder if you want to write a longer story with paragraphs. I will help with characters, problems, dialogue, and grammar while keeping every idea yours.',
       questions: [
         { title: 'Who is the protagonist?', copy: 'Describe what they want, why it matters, and where the story begins.', placeholder: 'Amara wants to win the robotics trial because…', fallback: 'Amara wants to win the robotics trial because it could save her school club.', skill: 'character', reward: ['Motivation builder', 'You connected a character to a meaningful goal.'] },
         { title: 'What blocks that goal?', copy: 'Describe the main conflict and what might be lost.', placeholder: 'Her closest teammate hides the final power cell…', fallback: 'Her closest teammate hides the final power cell.', skill: 'challenge', reward: ['Conflict builder', 'You created pressure and a reason to act.'] },
@@ -132,6 +135,7 @@
       title: 'Author & Film Studio', ages: 'Ages 13–16', icon: '🎬', targetPages: 12, minPages: 12, maxPages: 24,
       promise: 'Create chapters or a 12–24 scene film.',
       guidance: 'Yu coaches point of view, theme, pacing, scene direction, deep revision, and screenplay form.',
+      voiceGuide: 'Pick Author and Film Studio if you want to write chapters or build a film. I will coach point of view, theme, pacing, scenes, and screenplay form without taking over your story.',
       questions: [
         { title: 'Whose story is this?', copy: 'Choose the point of view, desire, setting, and thematic question.', placeholder: 'From Leo’s point of view, the city rewards perfect memories—but he wants to forget…', fallback: 'From Leo’s point of view, the city rewards perfect memories, but he wants to forget.', skill: 'character', reward: ['Story architect', 'You connected point of view, desire, and theme.'] },
         { title: 'What forces a choice?', copy: 'Define the conflict, stakes, and decision the protagonist cannot avoid.', placeholder: 'If Leo erases the evidence, his sister is safe—but the city stays controlled…', fallback: 'Leo must choose between protecting his sister and revealing the truth.', skill: 'challenge', reward: ['Dramatic pressure', 'You built conflict with real stakes.'] },
@@ -740,7 +744,8 @@
     setParentStageSnapshot();
     try { localStorage.setItem('storieslens_creation_stage', state.creationStage); } catch (_error) { /* optional preference */ }
     document.querySelectorAll('[data-creation-stage]').forEach(function (button) {
-      button.classList.toggle('is-selected', button.dataset.creationStage === state.creationStage);
+      const card = button.closest('.creation-stage-card');
+      if (card) card.classList.toggle('is-selected', button.dataset.creationStage === state.creationStage);
     });
     composer.hidden = false;
     showGreeting();
@@ -755,9 +760,18 @@
     const cards = Object.keys(creationStages).map(function (key) {
       const stage = creationStages[key];
       const recommended = key === 'first-book' ? '<em>RECOMMENDED FIRST</em>' : '';
-      return '<button class="creation-stage-card" type="button" data-creation-stage="' + key + '"><span class="creation-stage-icon" aria-hidden="true">' + stage.icon + '</span><span><small>' + stage.ages + '</small><strong>' + stage.title + '</strong><b>' + stage.promise + '</b><i>' + stage.guidance + '</i></span>' + recommended + '</button>';
+      return '<article class="creation-stage-card"><button class="creation-stage-select" type="button" data-creation-stage="' + key + '"><span class="creation-stage-icon" aria-hidden="true">' + stage.icon + '</span><span><small>' + stage.ages + '</small><strong>' + stage.title + '</strong><b>' + stage.promise + '</b><i>' + stage.guidance + '</i></span></button><button class="creation-stage-hear" type="button" data-hear-stage="' + key + '" aria-label="Hear Yu explain ' + escapeHtml(stage.title) + '">▶ Hear Yu</button>' + recommended + '</article>';
     }).join('');
-    const picker = yuMessage('<small>CHOOSE YOUR CREATION PATH</small><h1>How would you like to tell your story?</h1><p>There is no test. Pick the way that feels fun today—a grown-up can help choose.</p><div class="creation-stage-grid">' + cards + '</div><p class="tiny-note">Age is only a guide. Yu follows the creator’s confidence and can switch paths for the next story.</p>', 'stage-picker');
+    const picker = yuMessage('<small>CHOOSE YOUR CREATION PATH</small><h1>How would you like to tell your story?</h1><p>There is no test. Pick the way that feels fun today—a grown-up can help choose.</p><button class="stage-overview-hear" type="button" data-hear-stage-overview>▶ Hear Yu explain how to choose</button><div class="creation-stage-grid">' + cards + '</div><p class="tiny-note">Age is only a guide. Yu follows the creator’s confidence and can switch paths for the next story.</p>', 'stage-picker');
+    picker.querySelector('[data-hear-stage-overview]').addEventListener('click', function () {
+      speakText('There is no test, and you cannot choose wrong. Pick pictures and voice for a tiny spoken story, My First Book for a ten page picture book, Story Builder for longer paragraphs, or Author and Film Studio for chapters and movies. You can always choose a different path for your next story.', 'question');
+    });
+    picker.querySelectorAll('[data-hear-stage]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const stage = creationStages[button.dataset.hearStage];
+        if (stage) speakText(stage.voiceGuide, 'lesson');
+      });
+    });
     picker.querySelectorAll('[data-creation-stage]').forEach(function (button) {
       button.addEventListener('click', function () { chooseCreationStage(button.dataset.creationStage); });
     });

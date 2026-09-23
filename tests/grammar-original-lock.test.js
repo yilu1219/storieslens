@@ -93,12 +93,18 @@ test("SOLO offers four age-guided creation paths and grows one consistent multi-
   assert.match(script, /targetPages: 10/);
   assert.match(script, /maxPages: 24/);
   assert.match(script, /function showCreationStageChooser/);
+  assert.match(script, /Hear Yu explain how to choose/);
+  assert.match(script, /data-hear-stage/);
+  assert.match(script, /you cannot choose wrong/);
+  assert.match(script, /voiceGuide/);
   assert.match(script, /function showBookContinuation/);
   assert.match(script, /function startNextPage/);
   assert.match(script, /state\.bookScenes\.push/);
   assert.match(script, /approved Page 1 world-and-style anchor/);
   assert.match(script, /movie-studio\.html\?project=/);
   assert.match(css, /\.creation-stage-grid/);
+  assert.match(css, /\.creation-stage-hear/);
+  assert.match(css, /\.stage-overview-hear/);
   assert.match(css, /\.book-progress/);
 });
 

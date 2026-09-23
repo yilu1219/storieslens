@@ -369,16 +369,19 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .report-button:not(:disabled) { color: #fff; background: var(--green-dark); cursor: pointer; }
 
 .creation-stage-grid { display: grid; gap: 10px; margin-top: 18px; }
-.creation-stage-card { position: relative; display: grid; grid-template-columns: 58px 1fr; gap: 13px; width: 100%; padding: 15px; text-align: left; color: var(--ink); border: 1px solid rgba(8,122,84,.2); border-radius: 18px; background: rgba(255,255,255,.78); cursor: pointer; transition: .2s ease; }
-.creation-stage-card:hover, .creation-stage-card:focus-visible { border-color: var(--green); background: var(--mint); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(7,86,62,.09); }
+.creation-stage-card { position: relative; width: 100%; overflow: hidden; color: var(--ink); border: 1px solid rgba(8,122,84,.2); border-radius: 18px; background: rgba(255,255,255,.78); transition: .2s ease; }
+.creation-stage-card:hover, .creation-stage-card:focus-within { border-color: var(--green); background: var(--mint); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(7,86,62,.09); }
 .creation-stage-card.is-selected { color: #fff; background: var(--green-dark); }
+.creation-stage-select { display: grid; grid-template-columns: 58px 1fr; gap: 13px; width: 100%; padding: 15px 15px 49px; text-align: left; color: inherit; border: 0; background: transparent; cursor: pointer; }
 .creation-stage-icon { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 16px; background: var(--gold-soft); font-size: 26px; }
-.creation-stage-card > span:nth-child(2) { display: grid; gap: 3px; }
+.creation-stage-select > span:nth-child(2) { display: grid; gap: 3px; }
 .creation-stage-card small { color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
 .creation-stage-card strong { font: 24px/1.05 var(--serif); }
 .creation-stage-card b { font-size: 13px; line-height: 1.35; }
 .creation-stage-card i { color: var(--muted); font-size: 12px; font-style: normal; line-height: 1.4; }
 .creation-stage-card em { position: absolute; top: 11px; right: 11px; padding: 5px 7px; color: var(--green-dark); border-radius: 999px; background: var(--gold); font-size: 8px; font-style: normal; font-weight: 900; letter-spacing: .09em; }
+.creation-stage-hear { position: absolute; right: 12px; bottom: 10px; min-height: 31px; padding: 6px 10px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.24); border-radius: 999px; background: #fff; font-size: 10px; font-weight: 900; cursor: pointer; }
+.stage-overview-hear { min-height: 40px; margin-top: 10px; padding: 9px 13px; color: #fff; border: 0; border-radius: 999px; background: var(--green); font-size: 11px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(8,122,84,.14); }
 .stage-guidance-note { margin-top: 12px !important; padding: 11px 13px; color: var(--green-dark) !important; border-left: 3px solid var(--gold); border-radius: 0 12px 12px 0; background: rgba(243,199,103,.2); font-size: 12px !important; }
 .continuity-lock { display: grid; grid-template-columns: 35px 1fr; gap: 9px; margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--mint); }
 .continuity-lock > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: #fff; }
@@ -536,9 +539,11 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
   .send-button span { display: none; }
   .quick-ideas { overflow-x: auto; flex-wrap: nowrap; }
   .quick-ideas span, .quick-ideas button { flex: 0 0 auto; }
-  .creation-stage-card { grid-template-columns: 46px 1fr; padding: 12px; }
+  .creation-stage-select { grid-template-columns: 46px 1fr; padding: 12px 12px 46px; }
   .creation-stage-icon { width: 44px; height: 44px; border-radius: 13px; font-size: 21px; }
   .creation-stage-card strong { font-size: 20px; }
+  .creation-stage-card i { display: none; }
+  .creation-stage-hear { right: 10px; bottom: 8px; min-height: 30px; }
   .creation-stage-card em { position: static; grid-column: 2; justify-self: start; }
   .book-progress { grid-template-columns: 56px 1fr; padding: 11px; }
   .book-progress > div b { font-size: 31px; }
