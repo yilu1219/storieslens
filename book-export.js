@@ -95,9 +95,19 @@ function fittedImageSize(buffer, type) {
   };
 }
 
+function fittedCoverImageSize(buffer, type) {
+  const source = imageDimensions(buffer, type) || { width: 4, height: 5 };
+  const maxWidth = 330;
+  const maxHeight = 290;
+  const scale = Math.min(maxWidth / source.width, maxHeight / source.height, 1);
+  return { width: Math.max(1, Math.round(source.width * scale)), height: Math.max(1, Math.round(source.height * scale)) };
+}
+
 function authorNames(project) {
   const credits = Array.isArray(project.clientSnapshot?.credits) ? project.clientSnapshot.credits : [];
   const names = [...new Set(credits.map((item) => String(item?.authorName || "").trim()).filter(Boolean))];
+  const soloAuthor = String(project.clientSnapshot?.authorProfile?.name || "").trim();
+  if (!names.length && soloAuthor) names.push(soloAuthor);
   return names;
 }
 
@@ -149,15 +159,58 @@ async function buildBookDocx(project, { loadImage } = {}) {
     ? project.scenes
     : [{ title: project.title, text: project.draft || project.sourceText || "" }];
 
+  let coverImageParagraph = null;
+  if (loadImage && project.coverImageUrl) {
+    const image = await loadImage(project.coverImageUrl).catch(() => null);
+    const type = imageType(image?.mimeType);
+    if (image?.buffer?.length && type) {
+      coverImageParagraph = new Paragraph({
+        alignment: AlignmentType.CENTER,
+        keepNext: true,
+        spacing: { after: 180 },
+        children: [new ImageRun({
+          data: image.buffer,
+          type,
+          transformation: fittedCoverImageSize(image.buffer, type),
+          altText: { title: project.title, description: language === "zh" ? "故事封面" : "Story cover", name: "book-cover" }
+        })]
+      });
+    }
+  }
+
   const coverChildren = [
-    ...Array.from({ length: 4 }, () => new Paragraph({ text: "" })),
+    new Paragraph({ text: "" }),
     new Paragraph({ style: "Biography Cover Meta", text: "STORIESLENS · 光年传记版式" }),
+    ...(coverImageParagraph ? [coverImageParagraph] : Array.from({ length: 3 }, () => new Paragraph({ text: "" }))),
     new Paragraph({ style: "Biography Cover Title", text: language === "zh" ? `《${project.title}》` : project.title }),
     new Paragraph({ style: "Biography Cover Meta", text: language === "zh" ? `${byline} · 创作` : `Created by ${byline}` }),
     new Paragraph({ style: "Biography Cover Motto", text: language === "zh" ? "从一份原创出发，写成属于自己的故事世界。" : "From something you made to a story world of your own." })
   ];
 
   const bodyChildren = [];
+  const authorProfile = project.clientSnapshot?.authorProfile || {};
+  if (authorProfile.bio || authorProfile.photoUrl) {
+    bodyChildren.push(new Paragraph({ style: "Biography Chapter", text: language === "zh" ? "关于作者" : "About the Author" }));
+    if (loadImage && authorProfile.photoUrl) {
+      const image = await loadImage(authorProfile.photoUrl).catch(() => null);
+      const type = imageType(image?.mimeType);
+      if (image?.buffer?.length && type) {
+        bodyChildren.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          keepNext: true,
+          spacing: { after: 220 },
+          children: [new ImageRun({
+            data: image.buffer,
+            type,
+            transformation: fittedCoverImageSize(image.buffer, type),
+            altText: { title: authorProfile.name || byline, description: language === "zh" ? "作者照片" : "Author photo", name: "about-the-author" }
+          })]
+        }));
+      }
+    }
+    bodyChildren.push(...textParagraphs(authorProfile.bio || ""));
+    bodyChildren.push(new Paragraph({ style: "Biography Caption", text: language === "zh" ? `作者 · ${authorProfile.name || byline}` : `Author · ${authorProfile.name || byline}` }));
+  }
   for (let index = 0; index < scenes.length; index += 1) {
     const scene = scenes[index] || {};
     const chapterTitle = scene.title || (language === "zh" ? `第 ${index + 1} 章` : `Chapter ${index + 1}`);

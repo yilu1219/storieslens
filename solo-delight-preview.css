@@ -397,6 +397,47 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .book-next { min-height: 48px; padding: 11px 13px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.25); border-radius: 14px; background: #fff; font-weight: 900; cursor: pointer; }
 .book-next.primary { grid-column: 1 / -1; color: #fff; border-color: var(--green); background: var(--green); font-size: 14px; }
 .book-next.quiet { color: var(--muted); }
+.book-finisher { display: grid; gap: 15px; margin-top: 16px; }
+.finisher-step { display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding: 16px; border: 1px solid rgba(8,122,84,.2); border-radius: 20px; background: rgba(255,255,255,.8); }
+.finisher-step > b { display: grid; width: 38px; height: 38px; place-items: center; color: #fff; border-radius: 50%; background: var(--green); font: 22px/1 var(--serif); }
+.finisher-step h3 { margin: 3px 0 10px; font: 22px/1.15 var(--serif); }
+.finisher-step > div > small { color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+.finisher-step > div > p { color: var(--muted); font-size: 12px; }
+.title-voice-row { display: grid; grid-template-columns: 1fr auto; gap: 7px; }
+.title-voice-row input, .author-about-grid input, .author-name-field input, .author-bio-field textarea, .author-photo-consent input, .author-photo-consent select { width: 100%; padding: 12px; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; background: #fff; font: 700 14px/1.3 var(--sans); }
+.title-voice-row button, .yu-build-bio { padding: 10px 13px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.25); border-radius: 12px; background: var(--mint); font-weight: 900; cursor: pointer; }
+.cover-builder-preview { position: relative; display: grid; min-height: 260px; place-items: center; overflow: hidden; border: 1px dashed rgba(8,122,84,.35); border-radius: 18px; background: linear-gradient(145deg,var(--mint),var(--gold-soft)); text-align: center; }
+.cover-builder-preview > span { font-size: 42px; }
+.cover-builder-preview > p { margin-top: -70px; font-size: 13px; }
+.cover-builder-preview.has-cover { aspect-ratio: 4/5; min-height: 0; background: #10261f; }
+.cover-builder-preview.has-cover img { width: 100%; height: 100%; object-fit: cover; }
+.cover-builder-preview.has-cover:after { position: absolute; inset: 0; content: ""; background: linear-gradient(180deg,rgba(4,20,14,.08),transparent 45%,rgba(4,20,14,.7)); pointer-events: none; }
+.cover-builder-preview.has-cover > div { position: absolute; z-index: 1; inset: auto 18px 18px; color: #fff; text-shadow: 0 2px 15px rgba(0,0,0,.5); }
+.cover-builder-preview.has-cover small, .cover-builder-preview.has-cover strong, .cover-builder-preview.has-cover span { display: block; }
+.cover-builder-preview.has-cover strong { margin: 4px 0; font: 34px/1 var(--serif); }
+.cover-builder-preview.has-cover span { font-size: 12px; }
+.generate-cover-button, .save-author-page { width: 100%; margin-top: 9px; padding: 13px; color: #fff; border: 0; border-radius: 13px; background: var(--green); font-weight: 900; cursor: pointer; }
+.generate-cover-button:disabled, .save-author-page:disabled { opacity: .65; cursor: wait; }
+.author-about-grid { display: grid; gap: 9px; }
+.author-about-grid label, .author-name-field, .author-bio-field { display: grid; gap: 5px; color: var(--ink); font-size: 12px; font-weight: 900; }
+.author-about-grid label > div { display: grid; grid-template-columns: 1fr auto; gap: 5px; }
+.author-about-grid button { padding: 9px 11px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.2); border-radius: 11px; background: var(--mint); font-size: 11px; font-weight: 900; cursor: pointer; }
+.author-name-field, .author-bio-field, .yu-build-bio { margin-top: 10px; }
+.author-bio-field textarea { resize: vertical; font-family: var(--serif); font-size: 16px; font-weight: 400; line-height: 1.45; }
+.author-photo-builder { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: center; margin-top: 12px; padding: 11px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+.author-photo-builder label { cursor: pointer; }
+.author-photo-builder strong, .author-photo-builder small { display: block; }
+.author-photo-builder small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.author-photo-preview { display: grid; width: 92px; height: 106px; place-items: center; overflow: hidden; border-radius: 12px; background: var(--mint); text-align: center; }
+.author-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.author-photo-preview span { font-size: 30px; }
+.author-photo-preview small { padding: 5px; }
+.author-photo-consent { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid rgba(217,141,115,.35); border-radius: 14px; background: #fff5ed; }
+.author-photo-consent > label { display: grid; gap: 4px; font-size: 11px; line-height: 1.4; }
+.author-photo-consent > label:has(input[type="checkbox"]) { grid-template-columns: auto 1fr; align-items: start; }
+.author-photo-consent input[type="checkbox"] { width: 18px; height: 18px; padding: 0; }
+.book-export-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+.book-export-actions a, .book-export-actions button { display: grid; min-height: 46px; place-items: center; padding: 10px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.25); border-radius: 13px; background: #fff; text-align: center; text-decoration: none; font-weight: 900; cursor: pointer; }
 
 .celebration { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
 .confetti { position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 4px; animation: confetti-fall 1.7s ease-in forwards; }
@@ -485,6 +526,10 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
   .book-progress i { width: 25px; height: 25px; }
   .book-next-actions { grid-template-columns: 1fr; }
   .book-next.primary { grid-column: 1; }
+  .finisher-step { grid-template-columns: 30px 1fr; padding: 12px; }
+  .finisher-step > b { width: 30px; height: 30px; font-size: 18px; }
+  .title-voice-row, .author-about-grid label > div, .book-export-actions { grid-template-columns: 1fr; }
+  .cover-builder-preview.has-cover strong { font-size: 28px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -102,6 +102,27 @@ test("SOLO offers four age-guided creation paths and grows one consistent multi-
   assert.match(css, /\.book-progress/);
 });
 
+test("a completed SOLO book can generate a cover and a private child-authored About the Author page", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.css"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "platform-api.js"), "utf8");
+  assert.match(script, /Design my cover &amp; author page/);
+  assert.match(script, /function generateBookCover/);
+  assert.match(script, /Create a polished vertical children’s book cover illustration/);
+  assert.match(script, /Do not draw any words, letters, captions, logos/);
+  assert.match(script, /FIRST INSIDE PAGE · ABOUT THE AUTHOR/);
+  assert.match(script, /What do you love making or learning/);
+  assert.match(script, /What gave you the idea for this story/);
+  assert.match(script, /What do you hope readers feel/);
+  assert.match(script, /data-about-photo-input/);
+  assert.match(script, /purpose: 'author-photo'/);
+  assert.match(script, /data-author-photo-consent/);
+  assert.match(script, /authorProfile: state\.authorProfile/);
+  assert.match(api, /"personal-photo"/);
+  assert.match(css, /\.book-finisher/);
+  assert.match(css, /\.cover-builder-preview/);
+});
+
 test("picture surprise chooses book or film before a six-style visual direction", () => {
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(script, /data-output-type="book"/);

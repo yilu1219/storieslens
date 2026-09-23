@@ -1,5 +1,6 @@
 const assert = require("node:assert");
 const test = require("node:test");
+const JSZip = require("jszip");
 const {
   buildBookDocx,
   convertDocxToPdf,
@@ -31,6 +32,28 @@ test("illustrations are fitted without changing aspect ratio", () => {
   const size = fittedImageSize(png, "png");
   assert.strictEqual(size.width / size.height, 4 / 3);
   assert(size.width <= 378 && size.height <= 472);
+});
+
+test("solo book export includes the generated cover and About the Author as the first inside page", async () => {
+  const solo = {
+    ...project,
+    language: "en",
+    coverImageUrl: "/cover.png",
+    clientSnapshot: {
+      authorProfile: {
+        name: "Mia",
+        bio: "Mia is a young storyteller who loves drawing moon foxes.",
+        photoUrl: "/author.png"
+      }
+    }
+  };
+  const result = await buildBookDocx(solo, { loadImage: async () => ({ buffer: png, mimeType: "image/png" }) });
+  const zip = await JSZip.loadAsync(result.buffer);
+  const documentXml = await zip.file("word/document.xml").async("string");
+  assert.match(documentXml, /About the Author/);
+  assert.match(documentXml, /Mia is a young storyteller/);
+  assert.match(documentXml, /Author · Mia/);
+  assert((documentXml.match(/<a:blip\b/g) || []).length >= 3);
 });
 
 test("PDF export uses the private LibreOffice renderer when present", { skip: !resolveLibreOfficeBinary() }, async () => {

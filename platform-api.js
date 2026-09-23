@@ -423,7 +423,7 @@ function normalizeProject(input, existing = {}) {
     mode: ["solo", "squad", "classroom", "family"].includes(input.mode) ? input.mode : (existing.mode || "solo"),
     ageGroup,
     visibility,
-    sourceType: ["artwork", "text", "voice", "inspiration", "classroom"].includes(input.sourceType) ? input.sourceType : (existing.sourceType || "text"),
+    sourceType: ["artwork", "text", "voice", "inspiration", "personal-photo", "classroom"].includes(input.sourceType) ? input.sourceType : (existing.sourceType || "text"),
     sourceText: cleanText(input.sourceText ?? existing.sourceText, 6000),
     draft: cleanText(input.draft ?? existing.draft, 40_000),
     storyDna: safeJsonValue(input.storyDna ?? existing.storyDna, 24_000),

@@ -72,7 +72,9 @@
     bookScenes: [],
     currentPageDraft: '',
     currentPageOriginal: '',
-    restoredProject: false
+    restoredProject: false,
+    coverImageUrl: '',
+    authorProfile: { name: '', bio: '', photoUrl: '' }
   };
   let pendingHeicFiles = [];
 
@@ -265,7 +267,7 @@
       sourceType: state.userUploadedReference ? 'personal-photo' : 'text',
       sourceText: state.answers[0] || '',
       draft: savedScenes.map(function (scene) { return scene.text; }).join('\n\n') || state.revisedScene || state.originalScene || state.answers.join(' '),
-      coverImageUrl: savedScenes[0]?.imageUrl || (/^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : ''),
+      coverImageUrl: state.coverImageUrl || savedScenes[0]?.imageUrl || (/^\/api\/media\//.test(state.resultImage || '') ? state.resultImage : ''),
       scenes: savedScenes,
       storyDna: {
         source: 'solo-story',
@@ -288,6 +290,7 @@
         targetPages: state.targetPages,
         completedPages: state.bookScenes.length,
         personalPhotoConsentId: state.personalPhotoConsentId,
+        authorProfile: state.authorProfile,
         ...(extraSnapshot || {})
       }
     };
@@ -364,6 +367,12 @@
         state.outputType = project.storyDna?.outputType === 'film' ? 'film' : (project.storyDna?.outputType || state.outputType || 'book');
         state.selectedStyle = String(project.storyDna?.selectedStyle || state.selectedStyle || 'Storybook watercolor');
         state.personalPhotoConsentId = String(project.clientSnapshot?.personalPhotoConsentId || '');
+        state.coverImageUrl = String(project.coverImageUrl || '');
+        state.authorProfile = {
+          name: String(project.clientSnapshot?.authorProfile?.name || state.name || ''),
+          bio: String(project.clientSnapshot?.authorProfile?.bio || ''),
+          photoUrl: String(project.clientSnapshot?.authorProfile?.photoUrl || '')
+        };
         state.userUploadedReference = project.sourceType === 'personal-photo';
         state.uploadContainsRealPerson = project.sourceType === 'personal-photo';
         state.creationStage = creationStages[project.storyDna?.creationStage] ? project.storyDna.creationStage : 'first-book';
@@ -1303,6 +1312,180 @@
     speakText(state.currentPrompt, 'question');
   }
 
+  function dictateInto(target, language) {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      showToast('Voice typing is not available on this device. You can type here instead.');
+      target.focus();
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = language || 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.onresult = function (event) {
+      let words = '';
+      for (let index = 0; index < event.results.length; index += 1) words += event.results[index][0].transcript;
+      target.value = words.trim();
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    recognition.onerror = function () { showToast('Yu could not hear that. Try again or type your words.'); };
+    try { recognition.start(); showToast('Yu is listening…'); } catch (_error) { target.focus(); }
+  }
+
+  async function generateBookCover(finisher) {
+    const titleInput = finisher.querySelector('[data-book-title]');
+    const button = finisher.querySelector('[data-generate-cover]');
+    const preview = finisher.querySelector('[data-cover-preview]');
+    state.storyTitle = titleInput.value.trim() || state.storyTitle || 'My Story';
+    titleInput.value = state.storyTitle;
+    button.disabled = true;
+    button.textContent = '✦ Yu is reading the whole story…';
+    try {
+      await requireAccount();
+      if (!hasPictureAllowance()) throw new Error('No picture credits remain. Your book is still saved and exportable.');
+      await saveProject({ coverGenerationRequested: true });
+      const storyText = state.bookScenes.map(function (scene, index) { return 'Page ' + (index + 1) + ': ' + scene.text; }).join('\n').slice(0, 9000);
+      const identityReferences = uploadedReferenceUrls().slice(0, 3);
+      const firstPage = state.bookScenes[0]?.imageUrl || '';
+      const references = identityReferences.slice();
+      if (firstPage && !references.includes(firstPage)) references.push(firstPage);
+      const personalPhoto = identityReferences.length > 0 && state.uploadContainsRealPerson;
+      const result = await apiJson('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': 'solo-cover-' + state.projectId + '-' + Date.now() },
+        body: JSON.stringify({
+          projectId: state.projectId,
+          partId: 'book-cover',
+          submissionId: 'cover-' + Date.now(),
+          prompt: [
+            'Create a polished vertical children’s book cover illustration for this complete story.',
+            'Book title for context only: ' + state.storyTitle + '.',
+            'Story pages:\n' + storyText,
+            'Visual direction: ' + selectedStylePrompt() + '.',
+            firstPage ? 'Match the approved first page’s recurring characters, clothing, visual style, color language, and world design.' : '',
+            identityReferences.length ? 'Preserve the exact approved protagonist identities from the attached character references.' : '',
+            'Compose one strong central image with quiet space near the top for the website to place the real editable title.',
+            'Do not draw any words, letters, captions, logos, watermarks, UI, arrows, or play icons.'
+          ].filter(Boolean).join('\n'),
+          studentWriting: storyText,
+          style: selectedStylePrompt(),
+          aspectRatio: '4:5',
+          referenceImageUrls: references.slice(0, 3),
+          personalPhoto,
+          personalPhotoConsentId: personalPhoto ? state.personalPhotoConsentId : ''
+        })
+      });
+      if (!result.imageUrl) throw new Error('Yu finished the cover, but it did not arrive. Please try again.');
+      state.coverImageUrl = result.imageUrl;
+      updatePictureAllowance(result.wallet || state.wallet);
+      await saveProject({ coverGenerated: true });
+      preview.innerHTML = '<img src="' + escapeHtml(state.coverImageUrl) + '" alt="Generated cover for ' + escapeHtml(state.storyTitle) + '" /><div><small>MY BOOK</small><strong>' + escapeHtml(state.storyTitle) + '</strong><span>by ' + escapeHtml(state.name || 'Young Storymaker') + '</span></div>';
+      preview.classList.add('has-cover');
+      button.textContent = '✓ Cover saved · make another for 1 credit';
+      button.disabled = false;
+      celebrate();
+      speakText('Your cover is ready! The title stays editable and clear.', 'celebration');
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = '✦ Try making my cover again';
+      showToast(error.message);
+    }
+  }
+
+  function authorBioFromAnswers(name, answers) {
+    const authorName = name || state.name || 'This young author';
+    const interests = answers[0] || 'making stories and discovering new ideas';
+    const inspiration = answers[1] || 'their imagination and the world around them';
+    const hope = answers[2] || 'feel curious about what could happen next';
+    return authorName + ' is a young storyteller who loves ' + interests.replace(/[.!?]+$/, '') + '. The idea for “' + (state.storyTitle || 'this story') + '” came from ' + inspiration.replace(/[.!?]+$/, '') + '. ' + authorName + ' hopes readers will ' + hope.replace(/[.!?]+$/, '') + '.';
+  }
+
+  function showBookFinisher() {
+    const existing = document.querySelector('[data-book-finisher]');
+    if (existing) {
+      existing.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    composer.hidden = true;
+    const existingCover = state.coverImageUrl || state.bookScenes[0]?.imageUrl || '';
+    const currentAuthor = state.authorProfile || {};
+    const finisher = yuMessage('<small>FINISH MY BOOK · 3 EASY STEPS</small><h2>Now let’s make it feel like a real book.</h2><p>Write or say the title, let Yu design a cover from the whole story, then make your first inside page: <i>About the Author</i>.</p>' +
+      '<section class="book-finisher" data-book-finisher>' +
+        '<div class="finisher-step"><b>1</b><div><small>NAME YOUR BOOK</small><h3>What should we call your story?</h3><div class="title-voice-row"><input type="text" maxlength="160" data-book-title value="' + escapeHtml(state.storyTitle || '') + '" placeholder="My Amazing Story" /><button type="button" data-say-title>● Say my title</button></div><p>The title remains editable text—it will stay crisp in Word, PDF, and print.</p></div></div>' +
+        '<div class="finisher-step"><b>2</b><div><small>DESIGN THE COVER</small><h3>Yu reads the whole story and illustrates its big idea.</h3><div class="cover-builder-preview' + (existingCover ? ' has-cover' : '') + '" data-cover-preview>' + (existingCover ? '<img src="' + escapeHtml(existingCover) + '" alt="Current book cover" /><div><small>MY BOOK</small><strong>' + escapeHtml(state.storyTitle || 'My Story') + '</strong><span>by ' + escapeHtml(state.name || 'Young Storymaker') + '</span></div>' : '<span>✦</span><p>Your cover surprise will appear here.</p>') + '</div><button class="generate-cover-button" type="button" data-generate-cover>✦ Generate my cover from the story · 1 picture credit</button><p>Yu matches your locked characters and style. The image contains no fake title text or logos.</p></div></div>' +
+        '<div class="finisher-step"><b>3</b><div><small>FIRST INSIDE PAGE · ABOUT THE AUTHOR</small><h3>Tell your readers a little about you.</h3><p>Yu asks three tiny questions. Type or use the microphone beside each answer.</p>' +
+          '<div class="author-about-grid"><label><span>What do you love making or learning?</span><div><input type="text" data-author-answer="0" placeholder="drawing dragons, building robots…" /><button type="button" data-dictate-author="0">● Speak</button></div></label><label><span>What gave you the idea for this story?</span><div><input type="text" data-author-answer="1" placeholder="a museum trip, my little brother…" /><button type="button" data-dictate-author="1">● Speak</button></div></label><label><span>What do you hope readers feel?</span><div><input type="text" data-author-answer="2" placeholder="brave, curious, excited…" /><button type="button" data-dictate-author="2">● Speak</button></div></label></div>' +
+          '<label class="author-name-field"><span>Author name</span><input type="text" maxlength="80" data-author-name value="' + escapeHtml(currentAuthor.name || state.name || '') + '" placeholder="First name, nickname, or pen name" /></label>' +
+          '<button class="yu-build-bio" type="button" data-build-bio>✦ Yu, help me build my introduction</button>' +
+          '<label class="author-bio-field"><span>My editable introduction</span><textarea rows="5" maxlength="1200" data-author-bio placeholder="Yu will build a short introduction from your answers. You can change every word.">' + escapeHtml(currentAuthor.bio || '') + '</textarea></label>' +
+          '<div class="author-photo-builder"><div class="author-photo-preview" data-about-photo>' + (currentAuthor.photoUrl ? '<img src="' + escapeHtml(currentAuthor.photoUrl) + '" alt="Author" />' : '<span>＋</span><small>Author photo · optional</small>') + '</div><label><strong>Upload my author photo</strong><small>It becomes part of the private About the Author page.</small><input type="file" accept="image/*,.heic,.heif,.avif" data-about-photo-input hidden /></label></div>' +
+          '<section class="author-photo-consent" data-author-photo-consent hidden><strong>Grown-up permission for the author photo</strong><label><span>Adult name</span><input type="text" maxlength="100" data-photo-adult-name /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label><input type="checkbox" data-photo-permission /> I am 18 or older and have permission to use this photo.</label><label><input type="checkbox" data-photo-processing /> I agree to private regional processing and storage for this book.</label></section>' +
+          '<button class="save-author-page" type="button" data-save-author>Save my cover &amp; About the Author page</button>' +
+        '</div></div>' +
+      '</section>');
+    let preparedAuthorPhoto = null;
+    finisher.querySelector('[data-say-title]').addEventListener('click', function () { dictateInto(finisher.querySelector('[data-book-title]'), 'en-US'); });
+    finisher.querySelector('[data-generate-cover]').addEventListener('click', function () { generateBookCover(finisher); });
+    finisher.querySelectorAll('[data-dictate-author]').forEach(function (button) {
+      button.addEventListener('click', function () { dictateInto(finisher.querySelector('[data-author-answer="' + button.dataset.dictateAuthor + '"]'), 'en-US'); });
+    });
+    finisher.querySelector('[data-build-bio]').addEventListener('click', function () {
+      const name = finisher.querySelector('[data-author-name]').value.trim();
+      const answers = Array.from(finisher.querySelectorAll('[data-author-answer]')).map(function (field) { return field.value.trim(); });
+      const bio = authorBioFromAnswers(name, answers);
+      finisher.querySelector('[data-author-bio]').value = bio;
+      speakText(bio, 'story');
+      showToast('Yu built a short introduction. Every word remains editable.');
+    });
+    const photoInput = finisher.querySelector('[data-about-photo-input]');
+    finisher.querySelector('.author-photo-builder label').addEventListener('click', function () { photoInput.click(); });
+    photoInput.addEventListener('change', async function () {
+      const file = photoInput.files?.[0];
+      if (!file) return;
+      try {
+        if (!window.StoriesLensArtworkSafety) throw new Error('The private photo tool did not load. Refresh and try again.');
+        preparedAuthorPhoto = await window.StoriesLensArtworkSafety.processArtworkWithServerFallback(file);
+        finisher.querySelector('[data-about-photo]').innerHTML = '<img src="' + preparedAuthorPhoto.dataUrl + '" alt="Prepared author photo" />';
+        finisher.querySelector('[data-author-photo-consent]').hidden = false;
+        showToast('Author photo prepared privately. Save the page when ready.');
+      } catch (error) { showToast(error.message); }
+    });
+    finisher.querySelector('[data-save-author]').addEventListener('click', async function () {
+      const button = finisher.querySelector('[data-save-author]');
+      button.disabled = true;
+      button.textContent = 'Saving the finished pages…';
+      try {
+        await requireAccount();
+        state.storyTitle = finisher.querySelector('[data-book-title]').value.trim() || state.storyTitle || 'My Story';
+        const authorName = finisher.querySelector('[data-author-name]').value.trim() || state.name || 'Young Storymaker';
+        const bio = finisher.querySelector('[data-author-bio]').value.trim();
+        if (!bio) throw new Error('Answer the three tiny questions, then ask Yu to build your introduction.');
+        await saveProject({ finishingBook: true });
+        let photoUrl = state.authorProfile.photoUrl || '';
+        if (preparedAuthorPhoto) {
+          const consentId = await ensurePersonalPhotoConsent(finisher.querySelector('[data-author-photo-consent]'));
+          const uploaded = await apiJson('/api/media', {
+            method: 'POST',
+            body: JSON.stringify({ projectId: state.projectId, dataUrl: preparedAuthorPhoto.dataUrl, metadataRemoved: true, purpose: 'author-photo', personalPhotoConsentId: consentId })
+          });
+          photoUrl = uploaded.media.url;
+        }
+        state.authorProfile = { name: authorName, bio, photoUrl };
+        await saveProject({ bookFinished: true, aboutAuthorCompleted: true });
+        button.textContent = '✓ About the Author saved';
+        const done = yuMessage('<small>YOUR BOOK PACKAGE IS READY</small><h2>Cover, story pages, and author page—saved together.</h2><p>Your About the Author page comes first inside the book. Open Book Studio to preview, or export the editable A5 edition now.</p><div class="book-export-actions"><a href="/api/projects/' + encodeURIComponent(state.projectId) + '/export/docx">Download Word</a><a href="/api/projects/' + encodeURIComponent(state.projectId) + '/export/pdf">Download PDF</a><button type="button" data-open-finished-book>Open Book Studio</button></div>');
+        done.querySelector('[data-open-finished-book]').addEventListener('click', openBookStudio);
+        celebrate();
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = 'Save my cover & About the Author page';
+        showToast(error.message);
+      }
+    });
+    finisher.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function showBookContinuation() {
     const pageCount = state.bookScenes.length;
     const stage = activeStage();
@@ -1314,11 +1497,13 @@
       ? '<button class="book-next" type="button" data-extend-story>Keep building to ' + stage.maxPages + ' ' + (state.outputType === 'film' ? 'scenes' : 'pages') + '</button>'
       : '';
     const actions = isComplete
-      ? '<button class="book-next primary" type="button" data-open-book>Open my finished ' + (state.outputType === 'film' ? 'story' : 'e-book') + '</button>' + extendAction + '<button class="book-next" type="button" data-author-finish>Make my author card</button>'
+      ? '<button class="book-next primary" type="button" data-finish-book>Design my cover &amp; author page</button><button class="book-next" type="button" data-open-book>Open my ' + (state.outputType === 'film' ? 'story' : 'e-book') + ' now</button>' + extendAction + '<button class="book-next" type="button" data-author-finish>Make my author card</button>'
       : '<button class="book-next primary" type="button" data-next-page>Continue to ' + (state.outputType === 'film' ? 'Scene ' : 'Page ') + (pageCount + 1) + ' with Yu</button><button class="book-next" type="button" data-open-book>See my ' + pageCount + ' ' + (pageCount === 1 ? 'page' : 'pages') + ' so far</button><button class="book-next quiet" type="button" data-author-finish>Finish for today</button>';
     const card = yuMessage('<small>' + (isComplete ? 'YOUR FIRST BOOK IS READY' : 'KEEP YOUR STORY GROWING') + '</small><h2>' + (isComplete ? 'You made all ' + state.targetPages + ' pages!' : 'Page ' + pageCount + ' is safely inside your book.') + '</h2><p>' + (isComplete ? 'Open Book Studio to preview the whole story and export Word or PDF.' : 'Next, Yu asks one clear question. Your characters, uploaded photos, and chosen style stay the same.') + '</p><div class="book-progress" aria-label="' + pageCount + ' of ' + state.targetPages + ' pages complete"><div><b>' + pageCount + '</b><span>of ' + state.targetPages + ' ' + (state.outputType === 'film' ? 'scenes' : 'pages') + '</span></div><section>' + progress + '</section></div><div class="book-next-actions">' + actions + '</div><p class="stage-guidance-note"><strong>' + escapeHtml(stage.title) + ':</strong> ' + escapeHtml(stage.guidance) + '</p>');
     const nextButton = card.querySelector('[data-next-page]');
     if (nextButton) nextButton.addEventListener('click', startNextPage);
+    const finishButton = card.querySelector('[data-finish-book]');
+    if (finishButton) finishButton.addEventListener('click', showBookFinisher);
     const extendButton = card.querySelector('[data-extend-story]');
     if (extendButton) extendButton.addEventListener('click', function () {
       state.targetPages = stage.maxPages;
