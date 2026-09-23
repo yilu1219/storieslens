@@ -88,7 +88,7 @@ test("SOLO offers four age-guided creation paths and grows one consistent multi-
   assert.match(script, /Ages 5–6/);
   assert.match(script, /Ages 7–9/);
   assert.match(script, /Ages 10–12/);
-  assert.match(script, /Ages 13–16/);
+  assert.match(script, /Ages 13\+/);
   assert.match(script, /Who, Where, What, Why, and When/);
   assert.match(script, /targetPages: 10/);
   assert.match(script, /maxPages: 24/);

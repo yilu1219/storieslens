@@ -132,7 +132,7 @@
       pagePrompts: ['Establish the protagonist and setting.', 'Reveal the goal and why it matters.', 'Introduce the central conflict.', 'Show the first attempt with action or dialogue.', 'Escalate the consequences.', 'Reveal a clue, ally, or reversal.', 'Force a difficult decision.', 'Build toward the decisive action.', 'Show the result and its cost.', 'Deepen the character change.', 'Resolve the main relationship.', 'End with a memorable image or line.']
     },
     'author-film': {
-      title: 'Author & Film Studio', ages: 'Ages 13–16', icon: '🎬', targetPages: 12, minPages: 12, maxPages: 24,
+      title: 'Author & Film Studio', ages: 'Ages 13+', icon: '🎬', targetPages: 12, minPages: 12, maxPages: 24,
       promise: 'Create chapters or a 12–24 scene film.',
       guidance: 'Yu coaches point of view, theme, pacing, scene direction, deep revision, and screenplay form.',
       voiceGuide: 'Pick Author and Film Studio if you want to write chapters or build a film. I will coach point of view, theme, pacing, scenes, and screenplay form without taking over your story.',
