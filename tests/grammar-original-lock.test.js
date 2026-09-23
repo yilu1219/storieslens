@@ -75,6 +75,9 @@ test("picture surprise chooses book or film before a six-style visual direction"
   assert.match(script, /Cyber future/);
   assert.match(script, /style-cyber-future-ultramodern-v1\.png/);
   assert.match(script, /Future world/);
+  assert.match(script, /style-movie-magic-blockbuster-v2\.webp/);
+  assert.match(script, /Big-screen cinematic adventure/);
+  assert.match(script, /cinematic blockbuster key art/);
   assert.doesNotMatch(script, /showcase-robot-friend\.png/);
   assert.match(script, /Real-life story/);
   assert.match(script, /Choose a style first/);
