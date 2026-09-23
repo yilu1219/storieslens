@@ -24,7 +24,7 @@ function database() {
 }
 
 test("allowance packages describe outcomes instead of opaque points", () => {
-  assert.deepEqual(PACKAGE_CATALOG["free-preview"].grants, { imageGenerations: 1 });
+  assert.deepEqual(PACKAGE_CATALOG["free-preview"].grants, { storyProjects: 1, imageGenerations: 1 });
   assert.deepEqual(PACKAGE_CATALOG["guest-story-start"].grants, { storyProjects: 1, imageGenerations: 1 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].grants, { storyProjects: 1, imageGenerations: 12 });
   assert.deepEqual(PACKAGE_CATALOG["creator-story"].price, { usd: 19, cny: 129 });
@@ -67,6 +67,23 @@ test("an anonymous first picture is granted once, survives registration, and old
   ensureGuestStoryStart(legacy, "guest-old");
   assert.equal(walletFor(legacy, "guest-old").resources.storyProjects.remaining, 1);
   assert.equal(walletFor(legacy, "guest-old").resources.imageGenerations.remaining, 1);
+
+  const legacyAccount = database();
+  legacyAccount.creditTransactions.push({
+    id: "legacy-free-image",
+    userId: "account-old",
+    resource: "imageGenerations",
+    delta: 1,
+    type: "grant",
+    packageId: "free-preview",
+    idempotencyKey: "free-preview:account-old:imageGenerations",
+    createdAt: new Date().toISOString()
+  });
+  ensureFreePreview(legacyAccount, "account-old");
+  ensureFreePreview(legacyAccount, "account-old");
+  assert.equal(walletFor(legacyAccount, "account-old").resources.storyProjects.remaining, 1);
+  assert.equal(walletFor(legacyAccount, "account-old").resources.imageGenerations.remaining, 1);
+  assert.equal(legacyAccount.creditTransactions.filter((entry) => entry.packageId === "free-preview").length, 2);
 });
 
 test("reservations prevent overspend and settle exactly once", () => {

@@ -10,11 +10,16 @@ test("live Yu prompt locks the original story and requires teachable grammar cha
   assert.match(source, /Apply ORIGINAL LOCK/);
   assert.match(source, /Never add, remove, replace, combine, reinterpret, or infer any character/);
   assert.match(source, /exact keys before, after, skill, explanation/);
-  assert.match(source, /If the meaning is ambiguous, keep suggestion identical to the original/);
+  assert.match(source, /If one clause is ambiguous, preserve its facts and make the smallest grammatical repair possible/);
   assert.match(source, /creatorSafetyText/);
   assert.match(source, /coachSafetyText/);
   assert.match(source, /originalLockedSuggestion/);
-  assert.match(source, /grammarCategory === "clear" \|\| grammarChanges\.length === 0/);
+  assert.match(source, /grammarChanges\.length === 0/);
+  assert.match(source, /requestedGrammarCategory === "clear"/);
+  assert.match(source, /Yu's final grammar verifier/);
+  assert.match(source, /grammarSuggestionNeedsRepair/);
+  assert.match(source, /applyDeclaredGrammarChanges/);
+  assert.match(source, /silently proofread suggestion twice/i);
   assert.match(source, /stage: "creator-input"/);
   assert.match(source, /stage: "coach-output"/);
   assert.match(source, /safetyStage: error\.safetyStage/);
@@ -168,6 +173,7 @@ test("every visitor makes one first picture before registration and registers on
   const credits = fs.readFileSync(path.join(__dirname, "..", "credit-system.js"), "utf8");
   const login = fs.readFileSync(path.join(__dirname, "..", "login.js"), "utf8");
   assert.match(credits, /"guest-story-start"[\s\S]*grants: \{ storyProjects: 1, imageGenerations: 1 \}/);
+  assert.match(credits, /"free-preview"[\s\S]*grants: \{ storyProjects: 1, imageGenerations: 1 \}/);
   assert.match(preview, /Your first picture is free—no sign-up needed/);
   assert.match(preview, /Continue creating with Yu/);
   assert.match(preview, /Download my picture/);

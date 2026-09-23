@@ -458,12 +458,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     let session = database.sessions.find((item) => item.id === cookieId && new Date(item.expiresAt) > new Date());
     let user = session ? database.users.find((item) => item.id === session.userId) : null;
     if (session && user) {
-      const hasFirstPictureGrant = database.creditTransactions?.some((entry) => entry.userId === user.id
-        && entry.resource === "imageGenerations"
-        && ["free-preview", "guest-story-start"].includes(entry.packageId));
+      const firstPictureResources = new Set(database.creditTransactions?.filter((entry) => entry.userId === user.id
+        && ["free-preview", "guest-story-start"].includes(entry.packageId)).map((entry) => entry.resource));
+      const firstPictureStartComplete = firstPictureResources.has("storyProjects") && firstPictureResources.has("imageGenerations");
       const guestResources = new Set(database.creditTransactions?.filter((entry) => entry.userId === user.id && entry.packageId === "guest-story-start").map((entry) => entry.resource));
       const guestStartComplete = guestResources.has("storyProjects") && guestResources.has("imageGenerations");
-      if (create && ((user.kind === "account" && !hasFirstPictureGrant) || (user.kind === "guest" && !guestStartComplete))) {
+      if (create && ((user.kind === "account" && !firstPictureStartComplete) || (user.kind === "guest" && !guestStartComplete))) {
         return store.mutate((nextDatabase) => {
           ensureCreditCollections(nextDatabase);
           if (user.kind === "account") ensureFreePreview(nextDatabase, user.id);

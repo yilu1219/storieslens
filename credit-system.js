@@ -16,7 +16,7 @@ const PACKAGE_CATALOG = Object.freeze({
     price: { usd: 0, cny: 0 },
     costGuardUsd: 0.15,
     saleMode: "automatic-trial",
-    grants: { imageGenerations: 1 }
+    grants: { storyProjects: 1, imageGenerations: 1 }
   },
   "guest-story-start": {
     name: "Guest Story Start",
@@ -325,10 +325,10 @@ function grantPackage(database, { userId, packageId, source = "admin", reference
 }
 
 function ensureFreePreview(database, userId) {
-  const alreadyGranted = database.creditTransactions?.some((entry) => entry.userId === userId
-    && entry.resource === "imageGenerations"
-    && ["free-preview", "guest-story-start"].includes(entry.packageId));
-  if (alreadyGranted) return walletFor(database, userId);
+  const grantedResources = new Set(database.creditTransactions?.filter((entry) => entry.userId === userId
+    && ["free-preview", "guest-story-start"].includes(entry.packageId)).map((entry) => entry.resource));
+  const fullyGranted = Object.keys(PACKAGE_CATALOG["free-preview"].grants).every((resource) => grantedResources.has(resource));
+  if (fullyGranted) return walletFor(database, userId);
   return grantPackage(database, {
     userId,
     packageId: "free-preview",
