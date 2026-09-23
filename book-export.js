@@ -183,7 +183,7 @@ async function buildBookDocx(project, { loadImage } = {}) {
     new Paragraph({ style: "Biography Cover Meta", text: "STORIESLENS · 光年传记版式" }),
     ...(coverImageParagraph ? [coverImageParagraph] : Array.from({ length: 3 }, () => new Paragraph({ text: "" }))),
     new Paragraph({ style: "Biography Cover Title", text: language === "zh" ? `《${project.title}》` : project.title }),
-    new Paragraph({ style: "Biography Cover Meta", text: language === "zh" ? `${byline} · 创作` : `Created by ${byline}` }),
+    new Paragraph({ style: "Biography Cover Meta", text: language === "zh" ? `作者 · ${byline}` : `Written by ${byline}` }),
     new Paragraph({ style: "Biography Cover Motto", text: language === "zh" ? "从一份原创出发，写成属于自己的故事世界。" : "From something you made to a story world of your own." })
   ];
 

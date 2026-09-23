@@ -53,6 +53,7 @@ test("solo book export includes the generated cover and About the Author as the 
   assert.match(documentXml, /About the Author/);
   assert.match(documentXml, /Mia is a young storyteller/);
   assert.match(documentXml, /Author · Mia/);
+  assert.match(documentXml, /Written by Mia/);
   assert((documentXml.match(/<a:blip\b/g) || []).length >= 3);
 });
 

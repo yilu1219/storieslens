@@ -1335,9 +1335,11 @@
 
   async function generateBookCover(finisher) {
     const titleInput = finisher.querySelector('[data-book-title]');
+    const authorInput = finisher.querySelector('[data-author-name]');
     const button = finisher.querySelector('[data-generate-cover]');
     const preview = finisher.querySelector('[data-cover-preview]');
     state.storyTitle = titleInput.value.trim() || state.storyTitle || 'My Story';
+    state.authorProfile.name = authorInput?.value.trim() || state.authorProfile.name || state.name || 'Young Storymaker';
     titleInput.value = state.storyTitle;
     button.disabled = true;
     button.textContent = '✦ Yu is reading the whole story…';
@@ -1365,7 +1367,7 @@
             'Visual direction: ' + selectedStylePrompt() + '.',
             firstPage ? 'Match the approved first page’s recurring characters, clothing, visual style, color language, and world design.' : '',
             identityReferences.length ? 'Preserve the exact approved protagonist identities from the attached character references.' : '',
-            'Compose one strong central image with quiet space near the top for the website to place the real editable title.',
+            'Compose one strong central image with two deliberate calm layout zones: generous quiet space near the top for the real editable book title, and a smaller uncluttered band near the bottom for the real editable writer name.',
             'Do not draw any words, letters, captions, logos, watermarks, UI, arrows, or play icons.'
           ].filter(Boolean).join('\n'),
           studentWriting: storyText,
@@ -1380,7 +1382,7 @@
       state.coverImageUrl = result.imageUrl;
       updatePictureAllowance(result.wallet || state.wallet);
       await saveProject({ coverGenerated: true });
-      preview.innerHTML = '<img src="' + escapeHtml(state.coverImageUrl) + '" alt="Generated cover for ' + escapeHtml(state.storyTitle) + '" /><div><small>MY BOOK</small><strong>' + escapeHtml(state.storyTitle) + '</strong><span>by ' + escapeHtml(state.name || 'Young Storymaker') + '</span></div>';
+      preview.innerHTML = '<img src="' + escapeHtml(state.coverImageUrl) + '" alt="Generated cover for ' + escapeHtml(state.storyTitle) + '" /><div class="cover-title-lockup"><small>MY BOOK</small><strong data-cover-title-text>' + escapeHtml(state.storyTitle) + '</strong></div><span class="cover-byline" data-cover-author-text>Written by ' + escapeHtml(state.authorProfile.name) + '</span>';
       preview.classList.add('has-cover');
       button.textContent = '✓ Cover saved · make another for 1 credit';
       button.disabled = false;
@@ -1413,7 +1415,7 @@
     const finisher = yuMessage('<small>FINISH MY BOOK · 3 EASY STEPS</small><h2>Now let’s make it feel like a real book.</h2><p>Write or say the title, let Yu design a cover from the whole story, then make your first inside page: <i>About the Author</i>.</p>' +
       '<section class="book-finisher" data-book-finisher>' +
         '<div class="finisher-step"><b>1</b><div><small>NAME YOUR BOOK</small><h3>What should we call your story?</h3><div class="title-voice-row"><input type="text" maxlength="160" data-book-title value="' + escapeHtml(state.storyTitle || '') + '" placeholder="My Amazing Story" /><button type="button" data-say-title>● Say my title</button></div><p>The title remains editable text—it will stay crisp in Word, PDF, and print.</p></div></div>' +
-        '<div class="finisher-step"><b>2</b><div><small>DESIGN THE COVER</small><h3>Yu reads the whole story and illustrates its big idea.</h3><div class="cover-builder-preview' + (existingCover ? ' has-cover' : '') + '" data-cover-preview>' + (existingCover ? '<img src="' + escapeHtml(existingCover) + '" alt="Current book cover" /><div><small>MY BOOK</small><strong>' + escapeHtml(state.storyTitle || 'My Story') + '</strong><span>by ' + escapeHtml(state.name || 'Young Storymaker') + '</span></div>' : '<span>✦</span><p>Your cover surprise will appear here.</p>') + '</div><button class="generate-cover-button" type="button" data-generate-cover>✦ Generate my cover from the story · 1 picture credit</button><p>Yu matches your locked characters and style. The image contains no fake title text or logos.</p></div></div>' +
+        '<div class="finisher-step"><b>2</b><div><small>DESIGN THE COVER</small><h3>Yu reads the whole story and illustrates its big idea.</h3><div class="cover-builder-preview' + (existingCover ? ' has-cover' : '') + '" data-cover-preview>' + (existingCover ? '<img src="' + escapeHtml(existingCover) + '" alt="Current book cover" /><div class="cover-title-lockup"><small>MY BOOK</small><strong data-cover-title-text>' + escapeHtml(state.storyTitle || 'My Story') + '</strong></div><span class="cover-byline" data-cover-author-text>Written by ' + escapeHtml(currentAuthor.name || state.name || 'Young Storymaker') + '</span>' : '<span>✦</span><p>Your cover surprise will appear here.<br />The title goes at the top and the writer’s name goes at the bottom.</p>') + '</div><button class="generate-cover-button" type="button" data-generate-cover>✦ Generate my cover from the story · 1 picture credit</button><p>Yu reserves a clear title area and a separate “Written by” area. The illustration contains no fake text or logos.</p></div></div>' +
         '<div class="finisher-step"><b>3</b><div><small>FIRST INSIDE PAGE · ABOUT THE AUTHOR</small><h3>Tell your readers a little about you.</h3><p>Yu asks three tiny questions. Type or use the microphone beside each answer.</p>' +
           '<div class="author-about-grid"><label><span>What do you love making or learning?</span><div><input type="text" data-author-answer="0" placeholder="drawing dragons, building robots…" /><button type="button" data-dictate-author="0">● Speak</button></div></label><label><span>What gave you the idea for this story?</span><div><input type="text" data-author-answer="1" placeholder="a museum trip, my little brother…" /><button type="button" data-dictate-author="1">● Speak</button></div></label><label><span>What do you hope readers feel?</span><div><input type="text" data-author-answer="2" placeholder="brave, curious, excited…" /><button type="button" data-dictate-author="2">● Speak</button></div></label></div>' +
           '<label class="author-name-field"><span>Author name</span><input type="text" maxlength="80" data-author-name value="' + escapeHtml(currentAuthor.name || state.name || '') + '" placeholder="First name, nickname, or pen name" /></label>' +
@@ -1426,6 +1428,14 @@
       '</section>');
     let preparedAuthorPhoto = null;
     finisher.querySelector('[data-say-title]').addEventListener('click', function () { dictateInto(finisher.querySelector('[data-book-title]'), 'en-US'); });
+    function refreshCoverWords() {
+      const titleNode = finisher.querySelector('[data-cover-title-text]');
+      const authorNode = finisher.querySelector('[data-cover-author-text]');
+      if (titleNode) titleNode.textContent = finisher.querySelector('[data-book-title]').value.trim() || 'My Story';
+      if (authorNode) authorNode.textContent = 'Written by ' + (finisher.querySelector('[data-author-name]').value.trim() || state.name || 'Young Storymaker');
+    }
+    finisher.querySelector('[data-book-title]').addEventListener('input', refreshCoverWords);
+    finisher.querySelector('[data-author-name]').addEventListener('input', refreshCoverWords);
     finisher.querySelector('[data-generate-cover]').addEventListener('click', function () { generateBookCover(finisher); });
     finisher.querySelectorAll('[data-dictate-author]').forEach(function (button) {
       button.addEventListener('click', function () { dictateInto(finisher.querySelector('[data-author-answer="' + button.dataset.dictateAuthor + '"]'), 'en-US'); });

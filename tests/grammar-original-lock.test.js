@@ -110,6 +110,11 @@ test("a completed SOLO book can generate a cover and a private child-authored Ab
   assert.match(script, /function generateBookCover/);
   assert.match(script, /Create a polished vertical children’s book cover illustration/);
   assert.match(script, /Do not draw any words, letters, captions, logos/);
+  assert.match(script, /quiet space near the top/);
+  assert.match(script, /uncluttered band near the bottom/);
+  assert.match(script, /Written by/);
+  assert.match(script, /data-cover-title-text/);
+  assert.match(script, /data-cover-author-text/);
   assert.match(script, /FIRST INSIDE PAGE · ABOUT THE AUTHOR/);
   assert.match(script, /What do you love making or learning/);
   assert.match(script, /What gave you the idea for this story/);
