@@ -61,6 +61,7 @@
     session: null,
     wallet: null,
     imageCredits: 0,
+    betaUnlimitedCreation: false,
     readingConfirmed: false,
     pictureConsentPanel: null,
     resumedGuestCreation: false,
@@ -165,6 +166,17 @@
     return Math.max(0, Number(wallet?.resources?.imageGenerations?.remaining) || 0);
   }
 
+  function hasPictureAllowance() {
+    return state.betaUnlimitedCreation || state.imageCredits > 0;
+  }
+
+  function updatePictureAllowance(wallet, unlimited) {
+    state.wallet = wallet || state.wallet;
+    if (typeof unlimited === 'boolean') state.betaUnlimitedCreation = unlimited;
+    state.imageCredits = walletImageCredits(state.wallet);
+    giftCount.textContent = state.betaUnlimitedCreation ? '∞' : String(state.imageCredits);
+  }
+
   function hasAccount() {
     return Boolean(state.session?.authenticated && state.session.user?.kind === 'account');
   }
@@ -175,18 +187,18 @@
       if (!state.session.user) {
         state.wallet = null;
         state.imageCredits = 0;
+        state.betaUnlimitedCreation = false;
         giftCount.textContent = '0';
         return state.session;
       }
       const credits = await apiJson('/api/credits');
-      state.wallet = credits.wallet;
-      state.imageCredits = walletImageCredits(credits.wallet);
-      giftCount.textContent = String(state.imageCredits);
+      updatePictureAllowance(credits.wallet, credits.betaUnlimitedCreation === true);
       return state.session;
     } catch (_error) {
       state.session = null;
       state.wallet = null;
       state.imageCredits = 0;
+      state.betaUnlimitedCreation = false;
       giftCount.textContent = '0';
       return null;
     }
@@ -435,9 +447,7 @@
     });
     if (!result.imageUrl) throw new Error('Yu finished drawing, but the new picture did not arrive. Please try again.');
     state.resultImage = result.imageUrl;
-    state.wallet = result.wallet || state.wallet;
-    state.imageCredits = walletImageCredits(state.wallet);
-    giftCount.textContent = String(state.imageCredits);
+    updatePictureAllowance(result.wallet || state.wallet);
     await saveProject({ pictureGenerated: true });
     return result.imageUrl;
   }
@@ -742,15 +752,13 @@
           method: 'POST',
           body: JSON.stringify({ projectId: state.projectId })
         });
-        state.wallet = gift.wallet || state.wallet;
-        state.imageCredits = walletImageCredits(state.wallet);
-        giftCount.textContent = String(state.imageCredits);
+        updatePictureAllowance(gift.wallet || state.wallet);
       }
     } catch (error) {
       showToast('Your scene is kept privately. Yu will retry the save before drawing.');
     }
     celebrate();
-    showToast('Surprise! Your careful revision is complete. Your picture balance is now ' + state.imageCredits + '.');
+    showToast(state.betaUnlimitedCreation ? 'Surprise! Your founder beta picture access is unlimited.' : 'Surprise! Your careful revision is complete. Your picture balance is now ' + state.imageCredits + '.');
     setTimeout(showStyles, 900);
   }
 
@@ -969,7 +977,7 @@
     celebrate();
     const resultImage = state.resultImage || (state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png');
     const resultActions = hasAccount()
-      ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">Try again · 1 gift</button></div>'
+      ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">' + (state.betaUnlimitedCreation ? 'Try again · beta access' : 'Try again · 1 gift') + '</button></div>'
       : '<div class="guest-next-step"><small>YOUR FREE PICTURE IS READY</small><h3>What would you like to do next?</h3><p>Create a free grown-up account now so this picture and story move with you—nothing needs to be entered again.</p><div class="result-actions"><button class="result-action primary" type="button" data-result="signup-continue">Continue creating with Yu</button><button class="result-action" type="button" data-result="signup-download">Download my picture</button></div><span>Free account · private library · your work stays yours</span></div>';
     const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
     let result;
@@ -1017,7 +1025,7 @@
         } else if (button.dataset.result === 'change') {
           startPictureChange();
         } else {
-          if (state.imageCredits < 1) {
+          if (!hasPictureAllowance()) {
             showToast('No picture gifts left. Your current picture is still saved.');
             return;
           }
@@ -1046,11 +1054,9 @@
   }
 
   function reviewPictureChange(request) {
-    const remaining = Number(giftCount.textContent || 0);
-    const review = yuMessage('<small>YU CHECKS YOUR CHANGE</small><h2>I will change only this:</h2><blockquote class="change-request">“' + escapeHtml(request) + '”</blockquote><p>I will keep the same characters, faces, clothes, story facts, and selected style. Regenerating uses 1 picture gift.</p><div class="picture-change-review"><button type="button" data-confirm-picture-change' + (remaining < 1 ? ' disabled' : '') + '>Use 1 gift &amp; update</button><button type="button" data-cancel-picture-change>Keep my current picture</button></div>');
+    const review = yuMessage('<small>YU CHECKS YOUR CHANGE</small><h2>I will change only this:</h2><blockquote class="change-request">“' + escapeHtml(request) + '”</blockquote><p>I will keep the same characters, faces, clothes, story facts, and selected style. ' + (state.betaUnlimitedCreation ? 'Your founder beta access covers this regeneration.' : 'Regenerating uses 1 picture gift.') + '</p><div class="picture-change-review"><button type="button" data-confirm-picture-change' + (!hasPictureAllowance() ? ' disabled' : '') + '>' + (state.betaUnlimitedCreation ? 'Update with beta access' : 'Use 1 gift &amp; update') + '</button><button type="button" data-cancel-picture-change>Keep my current picture</button></div>');
     review.querySelector('[data-confirm-picture-change]').addEventListener('click', function () {
-      const gifts = Number(giftCount.textContent || 0);
-      if (gifts < 1) {
+      if (!hasPictureAllowance()) {
         showToast('No picture gifts left. Your current picture is still saved.');
         return;
       }
@@ -1135,7 +1141,7 @@
       input.focus();
       return;
     }
-    if (state.imageCredits < 1) {
+    if (!hasPictureAllowance()) {
       showToast('No picture gifts left. You can describe the character or upload your own picture.');
       return;
     }
@@ -1165,18 +1171,16 @@
       });
       const previewUrl = generated.imageUrl;
       if (!previewUrl) throw new Error('The character picture did not arrive. Your credit was not charged.');
-      state.wallet = generated.wallet || state.wallet;
-      state.imageCredits = walletImageCredits(state.wallet);
-      giftCount.textContent = String(state.imageCredits);
+      updatePictureAllowance(generated.wallet || state.wallet);
       state.characterPreviewMade = true;
-      const card = yuMessage('<small>YOUR CHARACTER PICTURE</small><h2>Is this how you imagine them?</h2><p>Yu made this from your own description. One picture credit was used.</p><div class="character-preview"><img src="' + escapeHtml(previewUrl) + '" alt="Character preview based on the child’s words" /><div class="character-preview-actions"><button type="button" data-keep-character>Yes, keep this character</button><button type="button" data-try-character>Try another look</button></div></div>');
+      const card = yuMessage('<small>YOUR CHARACTER PICTURE</small><h2>Is this how you imagine them?</h2><p>Yu made this from your own description. ' + (state.betaUnlimitedCreation ? 'Founder beta access covered this picture.' : 'One picture credit was used.') + '</p><div class="character-preview"><img src="' + escapeHtml(previewUrl) + '" alt="Character preview based on the child’s words" /><div class="character-preview-actions"><button type="button" data-keep-character>Yes, keep this character</button><button type="button" data-try-character>Try another look</button></div></div>');
       card.querySelector('[data-keep-character]').addEventListener('click', function () {
         state.characterImageUrl = previewUrl;
         showToast('Character look saved for this story.');
         card.querySelector('[data-keep-character]').textContent = '✓ Character saved';
       });
       const retry = card.querySelector('[data-try-character]');
-      retry.textContent = 'Try another · 1 credit';
+      retry.textContent = state.betaUnlimitedCreation ? 'Try another · beta access' : 'Try another · 1 credit';
       retry.addEventListener('click', showCharacterPreview);
     } catch (error) {
       showToast(error.message);

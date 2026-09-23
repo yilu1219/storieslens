@@ -282,7 +282,7 @@ function walletFor(database, userId) {
     else if (delta > 0) resources[entry.resource].granted += delta;
     else resources[entry.resource].consumed += Math.abs(delta);
   });
-  database.creditReservations.filter((entry) => entry.userId === userId && entry.status === "reserved" && resources[entry.resource]).forEach((entry) => {
+  database.creditReservations.filter((entry) => entry.userId === userId && entry.status === "reserved" && !entry.sponsored && resources[entry.resource]).forEach((entry) => {
     resources[entry.resource].reserved += Math.max(0, Number(entry.units) || 0);
   });
   Object.values(resources).forEach((resource) => {
@@ -351,7 +351,7 @@ function ensureGuestStoryStart(database, userId) {
   }).wallet;
 }
 
-function reserveCredits(database, { userId, resource, units = 1, idempotencyKey, referenceType = "generation", referenceId = "", metadata = {} }) {
+function reserveCredits(database, { userId, resource, units = 1, idempotencyKey, referenceType = "generation", referenceId = "", metadata = {}, sponsored = false }) {
   ensureCreditCollections(database);
   expireStaleReservations(database);
   if (!CREDIT_RESOURCES[resource]) throw Object.assign(new Error("Unknown allowance type."), { statusCode: 400, code: "INVALID_CREDIT_RESOURCE" });
@@ -362,7 +362,7 @@ function reserveCredits(database, { userId, resource, units = 1, idempotencyKey,
   const existing = database.creditReservations.find((entry) => entry.userId === userId && entry.idempotencyKey === safeKey);
   if (existing && existing.status !== "released") return { reservation: existing, wallet: walletFor(database, userId), duplicate: true };
   const wallet = walletFor(database, userId);
-  if (wallet.resources[resource].remaining < safeUnits) {
+  if (!sponsored && wallet.resources[resource].remaining < safeUnits) {
     throw Object.assign(new Error(`Not enough ${CREDIT_RESOURCES[resource].label.toLowerCase()} remaining.`), {
       statusCode: 402,
       code: "INSUFFICIENT_CREDITS",
@@ -381,6 +381,7 @@ function reserveCredits(database, { userId, resource, units = 1, idempotencyKey,
     referenceType: String(referenceType || "generation").slice(0, 80),
     referenceId: cleanId(referenceId),
     metadata: JSON.parse(JSON.stringify(metadata || {})),
+    sponsored: sponsored === true,
     createdAt: nowIso()
   };
   if (existing) {
@@ -391,6 +392,7 @@ function reserveCredits(database, { userId, resource, units = 1, idempotencyKey,
       referenceType: String(referenceType || "generation").slice(0, 80),
       referenceId: cleanId(referenceId),
       metadata: JSON.parse(JSON.stringify(metadata || {})),
+      sponsored: sponsored === true,
       createdAt: nowIso(),
       releasedAt: "",
       releaseReason: ""
@@ -415,13 +417,14 @@ function settleReservation(database, { reservationId, costUsd = null, providerUs
     id: crypto.randomUUID(),
     userId: reservation.userId,
     resource: reservation.resource,
-    delta: -reservation.units,
+    delta: reservation.sponsored ? 0 : -reservation.units,
     type: "consumption",
     source: reservation.referenceType,
     referenceId: reservation.referenceId,
     reservationId: reservation.id,
     idempotencyKey: `settle:${reservation.id}:${reservation.resource}`,
     costUsd: reservation.costUsd,
+    sponsored: reservation.sponsored === true,
     createdBy: "system",
     createdAt: nowIso()
   });

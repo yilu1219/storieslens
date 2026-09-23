@@ -78,7 +78,7 @@ test("production email authentication sends and verifies a real provider code", 
     const startResponse = await fetch(`${baseUrl}/api/auth/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ method: "email", destination: "creator@example.com" })
+      body: JSON.stringify({ method: "email", destination: "yilu1219@hotmail.com" })
     });
     const challenge = await startResponse.json();
     assert.equal(startResponse.status, 200);
@@ -88,7 +88,7 @@ test("production email authentication sends and verifies a real provider code", 
     assert.equal(deliveries[0].url, "/emails");
     assert.equal(deliveries[0].headers.authorization, "Bearer re_test_key");
     assert.match(deliveries[0].headers["idempotency-key"], /^storieslens-auth-/);
-    assert.deepEqual(deliveries[0].body.to, ["creator@example.com"]);
+    assert.deepEqual(deliveries[0].body.to, ["yilu1219@hotmail.com"]);
     const code = deliveries[0].body.text.match(/\b\d{6}\b/)?.[0];
     assert.match(code, /^\d{6}$/);
 
@@ -99,7 +99,7 @@ test("production email authentication sends and verifies a real provider code", 
         challengeId: challenge.challengeId,
         code,
         method: "email",
-        destination: "creator@example.com",
+        destination: "yilu1219@hotmail.com",
         displayName: "Test Creator",
         ageGroup: "adult",
         primaryRegion: "us",
@@ -111,12 +111,26 @@ test("production email authentication sends and verifies a real provider code", 
     assert.equal(verifyResponse.status, 200);
     assert.equal(verified.authenticated, true);
     assert.equal(verified.user.displayName, "Test Creator");
+    assert.equal(verified.user.betaUnlimitedCreation, true);
     const accountCookie = (verifyResponse.headers.get("set-cookie") || "").split(";")[0];
     const creditsResponse = await fetch(`${baseUrl}/api/credits`, { headers: { Cookie: accountCookie } });
     const credits = await creditsResponse.json();
     assert.equal(creditsResponse.status, 200);
     assert.equal(credits.wallet.resources.imageGenerations.remaining, 1);
     assert.equal(credits.freeGift.firstIllustration, true);
+    assert.equal(credits.betaUnlimitedCreation, true);
+
+    for (const idempotencyKey of ["founder-story-1", "founder-story-2"]) {
+      const projectResponse = await fetch(`${baseUrl}/api/projects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: accountCookie, "Idempotency-Key": idempotencyKey },
+        body: JSON.stringify({ title: "Sponsored beta story", mode: "solo", language: "en", draft: "A child finds a bright doorway." })
+      });
+      assert.equal(projectResponse.status, 201);
+    }
+    const creditsAfterProjects = await fetch(`${baseUrl}/api/credits`, { headers: { Cookie: accountCookie } }).then((response) => response.json());
+    assert.equal(creditsAfterProjects.wallet.resources.storyProjects.remaining, 1);
+    assert.equal(creditsAfterProjects.usage.totals.consumptionOperations, 2);
 
     const adminLoginResponse = await fetch(`${baseUrl}/api/admin/session`, {
       method: "POST",

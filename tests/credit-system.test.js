@@ -111,6 +111,36 @@ test("failed generation releases the reservation without consuming allowance", (
   assert.equal(wallet.resources.imageGenerations.reserved, 0);
 });
 
+test("sponsored beta generation stays unlimited while recording operations and model cost", () => {
+  const data = database();
+  const first = reserveCredits(data, {
+    userId: "founder-beta",
+    resource: "imageGenerations",
+    units: 1,
+    idempotencyKey: "sponsored-image-1",
+    sponsored: true
+  });
+  assert.equal(first.reservation.sponsored, true);
+  assert.equal(first.wallet.resources.imageGenerations.remaining, 0);
+  assert.equal(first.wallet.resources.imageGenerations.reserved, 0);
+  settleReservation(data, { reservationId: first.reservation.id, costUsd: 0.08 });
+  const second = reserveCredits(data, {
+    userId: "founder-beta",
+    resource: "imageGenerations",
+    units: 1,
+    idempotencyKey: "sponsored-image-2",
+    sponsored: true
+  });
+  settleReservation(data, { reservationId: second.reservation.id, costUsd: 0.09 });
+  const wallet = walletFor(data, "founder-beta");
+  const usage = usageSummaryFor(data, "founder-beta");
+  assert.equal(wallet.resources.imageGenerations.consumed, 0);
+  assert.equal(wallet.resources.imageGenerations.remaining, 0);
+  assert.equal(usage.totals.consumptionOperations, 2);
+  assert.ok(Math.abs(usage.totals.recordedCostUsd - 0.17) < Number.EPSILON);
+  assert.ok(data.creditTransactions.every((entry) => entry.sponsored === true && entry.delta === 0));
+});
+
 test("invitation codes are region-bound, capacity-limited and never stored in raw form", () => {
   const data = database();
   const { rawCodes } = createInviteBatch(data, {

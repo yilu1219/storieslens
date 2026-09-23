@@ -186,3 +186,12 @@ test("every visitor makes one first picture before registration and registers on
   assert.doesNotMatch(preview, /!state\.session\.authenticated \|\| state\.session\.user\?\.kind !== 'account'/);
   assert.match(login, /solo-story/);
 });
+
+test("founder beta access stays visibly unlimited and never disables picture retries", () => {
+  const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(preview, /betaUnlimitedCreation/);
+  assert.match(preview, /giftCount\.textContent = state\.betaUnlimitedCreation \? '∞'/);
+  assert.match(preview, /function hasPictureAllowance\(\)/);
+  assert.match(preview, /Try again · beta access/);
+  assert.match(preview, /Update with beta access/);
+});

@@ -40,6 +40,9 @@ const DEFAULT_GUEST_MEDIA_QUOTA_BYTES = 20 * 1024 * 1024;
 const DEFAULT_ACCOUNT_MEDIA_QUOTA_BYTES = 250 * 1024 * 1024;
 const REGION_CONSENT_VERSION = "2026-09-14";
 const ADMIN_SESSION_HOURS = 12;
+const FOUNDER_BETA_TESTER_EMAIL_HASHES = new Set([
+  "237cb43c8499df7a659b4588c33c1f6cc0dc90fcce39c552b8feeca99f700a71"
+]);
 
 const offerCatalog = Object.fromEntries(Object.entries(STRIPE_OFFERS).map(([id, offer]) => [id, {
   ...offer,
@@ -162,6 +165,19 @@ function validateDestination(method, value) {
 
 function hashValue(value) {
   return crypto.createHash("sha256").update(String(value)).digest("hex");
+}
+
+function unlimitedBetaTesterHashes() {
+  const configured = String(process.env.BETA_UNLIMITED_TEST_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    .map((email) => hashValue(`email:${email}`));
+  return new Set([...FOUNDER_BETA_TESTER_EMAIL_HASHES, ...configured]);
+}
+
+function isUnlimitedBetaTester(user) {
+  return Boolean(user?.kind === "account" && user.destinationHash && unlimitedBetaTesterHashes().has(user.destinationHash));
 }
 
 function positiveIntegerEnvironment(name, fallback) {
@@ -298,6 +314,7 @@ function publicUser(user) {
     dataRegion: user.dataRegion || "unassigned",
     signInMethod: user.signInMethod || "guest",
     maskedDestination: user.maskedDestination || "",
+    betaUnlimitedCreation: isUnlimitedBetaTester(user),
     createdAt: user.createdAt
   };
 }
@@ -930,6 +947,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const summary = usageSummaryFor(database, user.id);
         return {
           wallet,
+          betaUnlimitedCreation: isUnlimitedBetaTester(user),
           freeGift: freeGiftProgress(database, user.id),
           referral: user.kind === "account" ? (() => {
             const referral = ensureReferral(database, user.id);
@@ -1682,7 +1700,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     if (requestUrl.pathname === "/api/projects" && request.method === "POST") {
       const body = await readJsonBody(request, 180_000);
       const { database, user } = sessionFor(request, response);
-      if (database.projects.filter((project) => project.ownerId === user.id && !project.deletedAt).length >= MAX_PROJECTS_PER_USER) {
+      if (!isUnlimitedBetaTester(user) && database.projects.filter((project) => project.ownerId === user.id && !project.deletedAt).length >= MAX_PROJECTS_PER_USER) {
         sendJson(response, 409, { error: "This account has reached its project limit." });
         return true;
       }
@@ -1694,7 +1712,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         units: 1,
         idempotencyKey: `project:${requestKey}`,
         referenceType: body.mode === "classroom" ? "classroom-project" : "story-project",
-        metadata: { mode: body.mode || "solo" }
+        metadata: { mode: body.mode || "solo" },
+        sponsored: isUnlimitedBetaTester(user)
       }));
       if (reserved.duplicate && reserved.reservation.status === "settled") {
         const existingProject = store.read().projects.find((item) => item.creationReservationId === reserved.reservation.id && item.ownerId === user.id);
@@ -2190,7 +2209,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const requestKey = cleanText(request.headers["idempotency-key"] || `squad-assemble:${squad.id}`, 200);
       const reserved = store.mutate((nextDatabase) => reserveCredits(nextDatabase, {
         userId: user.id, resource: "storyProjects", units: 1, idempotencyKey: requestKey,
-        referenceType: "squad-project", referenceId: squad.id
+        referenceType: "squad-project", referenceId: squad.id,
+        sponsored: isUnlimitedBetaTester(user)
       }));
       const assembled = store.mutate((nextDatabase) => {
         const storedSquad = nextDatabase.squads.find((item) => item.id === squad.id);
@@ -2320,7 +2340,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           idempotencyKey: `classroom-work:${project.id}:${uploadId}`,
           referenceType: "classroom-work",
           referenceId: project.id,
-          metadata: { projectId: project.id, uploadId }
+          metadata: { projectId: project.id, uploadId },
+          sponsored: isUnlimitedBetaTester(user)
         }));
         if (classroomWorkReservation.duplicate && classroomWorkReservation.reservation.status === "settled") {
           const existingMedia = store.read().media.find((item) => item.ownerId === user.id && item.allowanceReservationId === classroomWorkReservation.reservation.id);
@@ -2987,15 +3008,20 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     },
     reserve(request, response, { resource, units = 1, idempotencyKey, referenceType, referenceId, metadata, payerId = "" }) {
       const { user } = sessionFor(request, response);
-      return store.mutate((database) => reserveCredits(database, {
-        userId: cleanId(payerId) || user.id,
-        resource,
-        units,
-        idempotencyKey: cleanText(idempotencyKey || request.headers["idempotency-key"] || crypto.randomUUID(), 200),
-        referenceType,
-        referenceId,
-        metadata
-      }));
+      return store.mutate((database) => {
+        const chargedUserId = cleanId(payerId) || user.id;
+        const chargedUser = database.users.find((item) => item.id === chargedUserId);
+        return reserveCredits(database, {
+          userId: chargedUserId,
+          resource,
+          units,
+          idempotencyKey: cleanText(idempotencyKey || request.headers["idempotency-key"] || crypto.randomUUID(), 200),
+          referenceType,
+          referenceId,
+          metadata,
+          sponsored: isUnlimitedBetaTester(chargedUser)
+        });
+      });
     },
     settle(reservationId, details = {}) {
       return store.mutate((database) => settleReservation(database, { reservationId, ...details }));
