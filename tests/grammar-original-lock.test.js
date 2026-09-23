@@ -154,6 +154,10 @@ test("real-life SOLO converts HEIC, requires adult consent, and calls the real i
   assert.match(script, /convertedFromHeic/);
   assert.match(script, /data-photo-permission/);
   assert.match(script, /data-photo-processing/);
+  assert.match(script, /No handwritten signature is needed/);
+  assert.match(script, /function personalPhotoConsentRequired/);
+  assert.match(script, /state\.uploadContainsRealPerson \|\| state\.selectedStyle === 'Real-life story'/);
+  assert.match(script, /consentPanel\.hidden = !personalPhotoConsentRequired\(\)/);
   assert.match(script, /\/photo-consent/);
   assert.match(script, /\/api\/generate-image/);
   assert.match(script, /referenceImageUrls: referenceImages/);

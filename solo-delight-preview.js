@@ -792,15 +792,20 @@
         '<button class="style-card" type="button" data-style="Cinematic fantasy"><img src="assets/style-movie-magic-blockbuster-v2.webp" alt="Epic family blockbuster adventure with a glowing time portal" /><span><b>Blockbuster</b><small>Big-screen cinematic adventure</small></span></button>' +
         '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="' + (state.userUploadedReference ? 'false' : 'true') + '">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses all ' + referenceCount + ' uploaded ' + (referenceCount === 1 ? 'character' : 'characters') : 'Upload 1–3 characters first') + '</small></span></button>' +
       '</div>' +
-      '<section class="real-life-consent" data-real-life-consent hidden><div><small>PRIVATE REAL-PERSON PHOTOS</small><h3>A grown-up confirms before Yu creates</h3><p>The ' + referenceCount + ' prepared ' + (referenceCount === 1 ? 'photo is' : 'photos are') + ' sent only when you press the green create button. They stay private and can be permanently deleted with the project.</p></div><label><span>Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Parent, guardian, or adult with permission" /></label><label><span>Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>I am 18 or older and I am pictured or have permission for every person shown from their parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>I agree that these prepared copies may be processed by the regional image model to create this private story scene.</span></label></section>' +
+      '<section class="real-life-consent" data-real-life-consent hidden><div><small>GROWN-UP PERMISSION · COMPLETE HERE</small><h3>Use a real-person photo in this story</h3><p>No handwritten signature is needed. Type the adult’s name, choose their relationship, and tick both permission boxes below. The ' + referenceCount + ' prepared ' + (referenceCount === 1 ? 'photo is' : 'photos are') + ' sent only when you press the green create button. They stay private and can be permanently deleted with the project.</p></div><label><span>1 · Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Type the parent, guardian, or pictured adult’s name" /></label><label><span>2 · Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>3 · I am 18 or older and I am pictured or have permission for every person shown from their parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>4 · I agree that these prepared copies may be processed by the regional image model to create this private story scene.</span></label></section>' +
       '<button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button>' +
       '<section class="picture-reveal-slot" data-picture-reveal hidden aria-live="polite"></section></section>');
     const styleStage = message.querySelector('[data-style-stage]');
     const makeButton = message.querySelector('[data-make-picture]');
     const consentPanel = message.querySelector('[data-real-life-consent]');
     const revealSlot = message.querySelector('[data-picture-reveal]');
-    function realLifeConsentReady() {
-      if (state.selectedStyle !== 'Real-life story') return true;
+    function personalPhotoConsentRequired() {
+      return hasAccount()
+        && referenceCount > 0
+        && (state.uploadContainsRealPerson || state.selectedStyle === 'Real-life story');
+    }
+    function personalPhotoConsentReady() {
+      if (!personalPhotoConsentRequired()) return true;
       return Boolean(consentPanel.querySelector('[data-photo-adult-name]').value.trim())
         && Boolean(consentPanel.querySelector('[data-photo-relationship]').value)
         && consentPanel.querySelector('[data-photo-permission]').checked
@@ -812,9 +817,9 @@
         makeButton.textContent = 'Choose a style first';
         return;
       }
-      makeButton.disabled = !realLifeConsentReady();
-      if (state.selectedStyle === 'Real-life story' && !realLifeConsentReady()) {
-        makeButton.textContent = 'Complete the grown-up confirmation';
+      makeButton.disabled = !personalPhotoConsentReady();
+      if (personalPhotoConsentRequired() && !personalPhotoConsentReady()) {
+        makeButton.textContent = 'Complete the grown-up permission above';
         return;
       }
       makeButton.textContent = state.selectedStyle === 'Real-life story'
@@ -846,7 +851,7 @@
         message.querySelectorAll('[data-style]').forEach(function (item) { item.classList.remove('is-selected'); });
         card.classList.add('is-selected');
         state.selectedStyle = card.dataset.style;
-        consentPanel.hidden = state.selectedStyle !== 'Real-life story';
+        consentPanel.hidden = !personalPhotoConsentRequired();
         refreshMakeButton();
         if (!consentPanel.hidden) consentPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         speakText(card.dataset.style + ' selected!', 'celebration');
