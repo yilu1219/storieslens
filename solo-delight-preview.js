@@ -64,6 +64,7 @@
     betaUnlimitedCreation: false,
     readingConfirmed: false,
     pictureConsentPanel: null,
+    refreshStyleReferenceChoice: null,
     resumedGuestCreation: false,
     postSignupAction: ''
   };
@@ -638,7 +639,18 @@
     setJourney('polish');
     composer.hidden = true;
     const original = state.answers.slice(0,4).join(' ');
-    const checking = yuMessage('<small>YU IS LISTENING</small><h2>I am checking only the grammar—not changing your story.</h2><p>Your characters, places, problem, and ideas stay locked.</p>');
+    const checking = yuMessage('<div class="yu-checking" role="status" aria-live="polite"><div class="yu-checking-orbit" aria-hidden="true"><img src="assets/yu-mascot-logo-v2.png" alt="" /></div><div><small>YU IS CHECKING EACH SENTENCE</small><h2>I am checking only the grammar—not changing your story.</h2><p data-yu-checking-status>First, I am reading every sentence carefully…</p><span>Your characters, places, problem, and ideas stay locked.</span></div></div>');
+    const checkingStatus = checking.querySelector('[data-yu-checking-status]');
+    const checkingSteps = [
+      'Now I am finding spelling and punctuation clues…',
+      'Now I am checking verbs, pronouns, and sentence order…',
+      'Almost ready—I am preparing one explanation for every change…'
+    ];
+    let checkingStep = 0;
+    const checkingTimer = window.setInterval(function () {
+      checkingStatus.textContent = checkingSteps[Math.min(checkingStep, checkingSteps.length - 1)];
+      checkingStep += 1;
+    }, 1500);
     let revision;
     try {
       revision = await requestYuRevision(original);
@@ -646,6 +658,7 @@
       revision = buildRevision(original);
       showToast('Yu used the safe on-device grammar check this time: ' + error.message);
     }
+    window.clearInterval(checkingTimer);
     checking.remove();
     const revised = revision.text;
     const lesson = revision.lesson;
@@ -790,18 +803,24 @@
         '<button class="style-card" type="button" data-style="Block world"><img src="assets/showcase-block-castle.png" alt="A colorful block-built adventure world" /><span><b>Block world</b><small>Colorful cubic adventure</small></span></button>' +
         '<button class="style-card" type="button" data-style="Cyber future"><img src="assets/style-cyber-future-ultramodern-v1.png" alt="An ultra-modern future city with floating transit, luminous towers, and sky gardens" /><span><b>Future world</b><small>Ultra-modern city adventure</small></span></button>' +
         '<button class="style-card" type="button" data-style="Cinematic fantasy"><img src="assets/style-movie-magic-blockbuster-v2.webp" alt="Epic family blockbuster adventure with a glowing time portal" /><span><b>Blockbuster</b><small>Big-screen cinematic adventure</small></span></button>' +
-        '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="' + (state.userUploadedReference ? 'false' : 'true') + '">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses all ' + referenceCount + ' uploaded ' + (referenceCount === 1 ? 'character' : 'characters') : 'Upload 1–3 characters first') + '</small></span></button>' +
+        '<button class="style-card real-life-style" type="button" data-style="Real-life story" data-real-life="true" aria-disabled="false">' + realLifePreview + '<span><b>Real-life story</b><small>' + (state.userUploadedReference ? 'Uses all ' + referenceCount + ' uploaded ' + (referenceCount === 1 ? 'character' : 'characters') : 'Tap to upload 1–3 characters') + '</small></span></button>' +
       '</div>' +
-      '<section class="real-life-consent" data-real-life-consent hidden><div><small>GROWN-UP PERMISSION · COMPLETE HERE</small><h3>Use a real-person photo in this story</h3><p>No handwritten signature is needed. Type the adult’s name, choose their relationship, and tick both permission boxes below. The ' + referenceCount + ' prepared ' + (referenceCount === 1 ? 'photo is' : 'photos are') + ' sent only when you press the green create button. They stay private and can be permanently deleted with the project.</p></div><label><span>1 · Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Type the parent, guardian, or pictured adult’s name" /></label><label><span>2 · Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>3 · I am 18 or older and I am pictured or have permission for every person shown from their parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>4 · I agree that these prepared copies may be processed by the regional image model to create this private story scene.</span></label></section>' +
+      '<div class="style-photo-upload"><div><strong>Want the real people in your story?</strong><small data-style-upload-note>' + (state.userUploadedReference ? referenceCount + ' character ' + (referenceCount === 1 ? 'photo is' : 'photos are') + ' ready. You can replace them here.' : 'Upload 1–3 photos here, then Yu will select Real-life story for you.') + '</small></div><button type="button" data-style-upload>＋ ' + (state.userUploadedReference ? 'Replace character photos' : 'Upload character photos') + '</button></div>' +
+      '<section class="real-life-consent" data-real-life-consent hidden><div><small>GROWN-UP PERMISSION · COMPLETE HERE</small><h3>Use a real-person photo in this story</h3><p>No handwritten signature is needed. Type the adult’s name, choose their relationship, and tick both permission boxes below. <span data-consent-photo-summary>The prepared photos are sent only when you press the green create button.</span> They stay private and can be permanently deleted with the project.</p></div><label><span>1 · Adult name</span><input type="text" maxlength="100" autocomplete="name" data-photo-adult-name placeholder="Type the parent, guardian, or pictured adult’s name" /></label><label><span>2 · Relationship</span><select data-photo-relationship><option value="">Choose one</option><option value="Self">I am the adult pictured</option><option value="Parent">Parent</option><option value="Legal guardian">Legal guardian</option></select></label><label class="consent-check"><input type="checkbox" data-photo-permission /><span>3 · I am 18 or older and I am pictured or have permission for every person shown from their parent/legal guardian.</span></label><label class="consent-check"><input type="checkbox" data-photo-processing /><span>4 · I agree that these prepared copies may be processed by the regional image model to create this private story scene.</span></label></section>' +
       '<button class="make-picture-button" type="button" data-make-picture disabled>Choose a style first</button>' +
       '<section class="picture-reveal-slot" data-picture-reveal hidden aria-live="polite"></section></section>');
     const styleStage = message.querySelector('[data-style-stage]');
     const makeButton = message.querySelector('[data-make-picture]');
     const consentPanel = message.querySelector('[data-real-life-consent]');
     const revealSlot = message.querySelector('[data-picture-reveal]');
+    const realLifeCard = message.querySelector('[data-real-life]');
+    const styleUploadButton = message.querySelector('[data-style-upload]');
+    const styleUploadNote = message.querySelector('[data-style-upload-note]');
+    const consentPhotoSummary = message.querySelector('[data-consent-photo-summary]');
+    let selectRealLifeAfterUpload = false;
     function personalPhotoConsentRequired() {
       return hasAccount()
-        && referenceCount > 0
+        && uploadedReferenceUrls().length > 0
         && (state.uploadContainsRealPerson || state.selectedStyle === 'Real-life story');
     }
     function personalPhotoConsentReady() {
@@ -842,10 +861,11 @@
         styleStage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
-    message.querySelectorAll('[data-style]').forEach(function (card) {
-      card.addEventListener('click', function () {
+    function selectStyleCard(card) {
         if (card.dataset.realLife === 'true' && !state.userUploadedReference) {
-          showToast('Upload a photo first so Yu can keep the real person as the main character.');
+          selectRealLifeAfterUpload = true;
+          showToast('Choose 1–3 character photos. Yu will return you to Real-life story when they are ready.');
+          upload.click();
           return;
         }
         message.querySelectorAll('[data-style]').forEach(function (item) { item.classList.remove('is-selected'); });
@@ -855,8 +875,29 @@
         refreshMakeButton();
         if (!consentPanel.hidden) consentPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         speakText(card.dataset.style + ' selected!', 'celebration');
-      });
+    }
+    message.querySelectorAll('[data-style]').forEach(function (card) {
+      card.addEventListener('click', function () { selectStyleCard(card); });
     });
+    styleUploadButton.addEventListener('click', function () {
+      selectRealLifeAfterUpload = true;
+      upload.click();
+    });
+    state.refreshStyleReferenceChoice = function () {
+      const urls = uploadedReferenceUrls();
+      const count = urls.length;
+      realLifeCard.setAttribute('aria-disabled', count ? 'false' : 'true');
+      realLifeCard.innerHTML = uploadedReferencePreview() + '<span><b>Real-life story</b><small>' + (count ? 'Uses all ' + count + ' uploaded ' + (count === 1 ? 'character' : 'characters') : 'Upload 1–3 characters first') + '</small></span>';
+      styleUploadButton.textContent = count ? '＋ Replace character photos' : '＋ Upload character photos';
+      styleUploadNote.textContent = count ? count + ' character ' + (count === 1 ? 'photo is' : 'photos are') + ' ready. You can replace them here.' : 'Upload 1–3 photos here, then Yu will select Real-life story for you.';
+      consentPhotoSummary.textContent = count === 1
+        ? 'The prepared photo is sent only when you press the green create button.'
+        : 'The ' + count + ' prepared photos are sent only when you press the green create button.';
+      if (count && selectRealLifeAfterUpload) {
+        selectRealLifeAfterUpload = false;
+        selectStyleCard(realLifeCard);
+      }
+    };
     consentPanel.querySelectorAll('input,select').forEach(function (field) {
       field.addEventListener('input', refreshMakeButton);
       field.addEventListener('change', refreshMakeButton);
@@ -1256,6 +1297,7 @@
       : 'Private preparation complete—Yu will keep all ' + files.length + ' characters separate.';
     uploadRecovery.hidden = true;
     pendingHeicFiles = [];
+    if (typeof state.refreshStyleReferenceChoice === 'function') state.refreshStyleReferenceChoice();
     showToast(files.length + ' ' + (files.length === 1 ? 'character is' : 'characters are') + ' ready for this story.');
   }
 

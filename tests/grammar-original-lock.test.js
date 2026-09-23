@@ -61,11 +61,16 @@ test("the character question supports words, a private upload, and a real credit
 
 test("Yu lists every grammar correction and explains them one by one", () => {
   const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.css"), "utf8");
   const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
   assert.match(script, /All grammar changes · explained one by one/);
   assert.match(script, /data-hear-change/);
   assert.match(script, /Hear Yu explain #/);
   assert.match(script, /START HERE · FIRST GRAMMAR POINT/);
+  assert.match(script, /YU IS CHECKING EACH SENTENCE/);
+  assert.match(script, /data-yu-checking-status/);
+  assert.match(script, /window\.setInterval/);
+  assert.match(css, /@keyframes yu-orbit/);
   assert.match(script, /data-hear-grammar/);
   assert.match(script, /Use “I” when you are doing the action/);
   assert.match(script, /explains every one below/);
@@ -140,7 +145,7 @@ test("picture results are square, text stays outside the artwork, and real-life 
   assert.match(preview, /Real-life story/);
   assert.match(preview, /real-life-block-world-poster-v1\.jpg/);
   assert.match(preview, /Movie-style example/);
-  assert.match(preview, /Upload a photo first/);
+  assert.match(preview, /Choose 1–3 character photos/);
   assert.match(preview, /state\.userUploadedReference/);
   assert.match(server, /"real-life-story"/);
   assert.match(server, /preserve the exact people, facial identity, age, skin tone, hairstyle, clothing/);
@@ -158,6 +163,10 @@ test("real-life SOLO converts HEIC, requires adult consent, and calls the real i
   assert.match(script, /function personalPhotoConsentRequired/);
   assert.match(script, /state\.uploadContainsRealPerson \|\| state\.selectedStyle === 'Real-life story'/);
   assert.match(script, /consentPanel\.hidden = !personalPhotoConsentRequired\(\)/);
+  assert.match(script, /data-style-upload/);
+  assert.match(script, /Upload 1–3 photos here/);
+  assert.match(script, /state\.refreshStyleReferenceChoice/);
+  assert.match(script, /selectStyleCard\(realLifeCard\)/);
   assert.match(script, /\/photo-consent/);
   assert.match(script, /\/api\/generate-image/);
   assert.match(script, /referenceImageUrls: referenceImages/);

@@ -75,6 +75,13 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .bubble .tiny-note { margin-top: 13px; color: #727b75; font-size: 13px; }
 .yu-greeting { position: relative; overflow: hidden; padding-right: 106px; }
 .yu-greeting:after { position: absolute; right: -3px; bottom: -22px; width: 114px; height: 138px; content: ""; background: url("assets/yu-mascot-v1.png") center top / cover no-repeat; filter: drop-shadow(0 12px 18px rgba(23,84,60,.15)); }
+.yu-checking { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 15px; }
+.yu-checking-orbit { position: relative; display: grid; width: 86px; height: 86px; place-items: center; border: 2px dashed rgba(8,122,84,.28); border-radius: 50%; animation: yu-orbit 2.2s linear infinite; }
+.yu-checking-orbit:after { position: absolute; top: -5px; width: 12px; height: 12px; content: ""; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 5px rgba(243,199,103,.22); }
+.yu-checking-orbit img { width: 62px; height: 62px; object-fit: contain; animation: yu-counter-orbit 2.2s linear infinite; }
+.yu-checking h2 { font-size: clamp(21px,3vw,29px); }
+.yu-checking p { margin-top: 7px; color: var(--green-dark); font-size: 14px; font-weight: 850; }
+.yu-checking span { display: block; margin-top: 7px; color: var(--muted); font-size: 12px; }
 .inline-picture-grid { display: grid; grid-template-columns: repeat(var(--picture-count,1),minmax(0,1fr)); gap: 7px; width: min(430px,100%); margin-top: 14px; }
 .inline-picture-grid.count-2 { --picture-count: 2; }
 .inline-picture-grid.count-3 { --picture-count: 3; }
@@ -145,6 +152,11 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .real-life-empty b { font-size: 11px; }
 .real-life-style[aria-disabled="true"] { opacity: .7; box-shadow: none; }
 .style-card.is-selected { border-color: var(--green); box-shadow: 0 0 0 4px rgba(8,122,84,.10); }
+.style-photo-upload { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; margin-top: 13px; padding: 13px 14px; border: 1px solid rgba(8,122,84,.18); border-radius: 16px; background: var(--gold-soft); }
+.style-photo-upload strong, .style-photo-upload small { display: block; }
+.style-photo-upload strong { color: var(--green-dark); font-size: 13px; }
+.style-photo-upload small { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.style-photo-upload button { min-height: 42px; padding: 8px 12px; color: #fff; border: 0; border-radius: 12px; background: var(--green); font-size: 11px; font-weight: 900; cursor: pointer; }
 .make-picture-button { width: 100%; min-height: 58px; margin-top: 15px; color: #fff; border: 0; border-radius: 17px; background: var(--green); font-weight: 900; cursor: pointer; box-shadow: 0 14px 30px rgba(8,122,84,.19); }
 .make-picture-button:disabled { color: var(--muted); background: #e7eae6; box-shadow: none; cursor: not-allowed; }
 .picture-reveal-slot { width: 100%; margin-top: 14px; overflow: hidden; border: 1px solid rgba(8,122,84,.18); border-radius: 23px; background: #fff; box-shadow: 0 18px 44px rgba(7,86,62,.13); }
@@ -359,6 +371,8 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 
 @keyframes message-in { from { opacity: 0; transform: translateY(13px) scale(.985); } }
 @keyframes reward-pop { from { opacity: 0; transform: scale(.75) translateY(8px); } }
+@keyframes yu-orbit { to { transform: rotate(360deg); } }
+@keyframes yu-counter-orbit { to { transform: rotate(-360deg); } }
 @keyframes wand { to { transform: translate(-50%,-57%) rotate(8deg) scale(1.12); } }
 @keyframes confetti-fall { to { transform: translate3d(var(--drift),110vh,0) rotate(620deg); } }
 
@@ -367,6 +381,10 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
   .parent-panel { position: fixed; inset: 12px; z-index: 40; display: none; min-height: 0; max-height: calc(100vh - 24px); }
   .parent-panel.is-open { display: block; animation: message-in .25s ease both; }
   .parent-panel-head button { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yu-checking-orbit, .yu-checking-orbit img { animation: none; }
 }
 
 @media (max-width: 620px) {
@@ -395,12 +413,16 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
   .bubble p { font-size: 15px; line-height: 1.5; }
   .yu-greeting { padding-right: 77px; }
   .yu-greeting:after { width: 88px; height: 110px; }
+  .yu-checking { grid-template-columns: 68px 1fr; gap: 10px; }
+  .yu-checking-orbit { width: 64px; height: 64px; }
+  .yu-checking-orbit img { width: 47px; height: 47px; }
   .learning-pop { margin-left: 48px; }
   .output-choice-grid { grid-template-columns: 1fr; }
   .output-choice { grid-template-columns: 88px 1fr; }
   .output-choice img { width: 88px; height: 78px; }
   .style-grid { grid-template-columns: repeat(2,1fr); gap: 7px; }
   .style-card { grid-template-rows: auto minmax(58px,auto); font-size: 10px; }
+  .style-photo-upload { grid-template-columns: 1fr; }
   .real-life-consent { grid-template-columns: 1fr; }
   .real-life-consent > div, .real-life-consent .consent-check { grid-column: 1; }
   .result-actions { grid-template-columns: 1fr; }
