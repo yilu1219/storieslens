@@ -648,20 +648,48 @@
     showToast.timer = setTimeout(function () { toast.hidden = true; }, 2400);
   }
 
-  function celebrate() {
+  function celebrate(anchor) {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    clearTimeout(celebrate.timer);
     celebration.hidden = false;
     celebration.innerHTML = '';
     const colors = ['#087a54','#f3c767','#d98d73','#9e80bd','#72b6d8'];
-    for (let i = 0; i < 42; i += 1) {
+    const anchorRect = anchor && typeof anchor.getBoundingClientRect === 'function'
+      ? anchor.getBoundingClientRect()
+      : null;
+    const burstCount = anchorRect ? 28 : 0;
+    for (let i = 0; i < 54; i += 1) {
       const bit = document.createElement('i');
-      bit.className = 'confetti';
-      bit.style.left = Math.random() * 100 + '%';
+      const isBurst = i < burstCount;
+      bit.className = 'confetti' + (isBurst ? ' confetti-burst' : '');
       bit.style.background = colors[i % colors.length];
-      bit.style.animationDelay = Math.random() * .35 + 's';
-      bit.style.setProperty('--drift', (Math.random() * 180 - 90) + 'px');
+      bit.style.width = (7 + Math.random() * 7) + 'px';
+      bit.style.height = (10 + Math.random() * 12) + 'px';
+      bit.style.borderRadius = i % 3 === 0 ? '50%' : (i % 3 === 1 ? '2px' : '999px');
+      if (isBurst) {
+        const startX = anchorRect.left + anchorRect.width * (.08 + Math.random() * .84);
+        const startY = anchorRect.top + anchorRect.height * (.28 + Math.random() * .42);
+        const direction = startX < anchorRect.left + anchorRect.width / 2 ? -1 : 1;
+        const burstX = direction * (70 + Math.random() * 180);
+        bit.style.left = startX + 'px';
+        bit.style.top = startY + 'px';
+        bit.style.animationDelay = Math.random() * .16 + 's';
+        bit.style.setProperty('--burst-mid-x', burstX * .58 + 'px');
+        bit.style.setProperty('--burst-x', burstX + 'px');
+        bit.style.setProperty('--burst-peak', -(70 + Math.random() * 150) + 'px');
+        bit.style.setProperty('--burst-fall', (170 + Math.random() * 250) + 'px');
+        bit.style.setProperty('--burst-rotate', (direction * (420 + Math.random() * 520)) + 'deg');
+      } else {
+        bit.style.left = Math.random() * 100 + '%';
+        bit.style.animationDelay = Math.random() * .45 + 's';
+        bit.style.setProperty('--drift', (Math.random() * 210 - 105) + 'px');
+      }
       celebration.appendChild(bit);
     }
-    setTimeout(function () { celebration.hidden = true; }, 2200);
+    celebrate.timer = setTimeout(function () {
+      celebration.hidden = true;
+      celebration.innerHTML = '';
+    }, 2600);
   }
 
   function activeStage() {
@@ -1533,7 +1561,6 @@
     pictureStep.classList.remove('is-active');
     pictureStep.classList.add('is-done');
     pictureStep.querySelector('span').textContent = '✓';
-    celebrate();
     const resultImage = state.resultImage || (state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png');
     const resultActions = hasAccount()
       ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">' + (state.betaUnlimitedCreation ? 'Try again · beta access' : 'Try again · 1 gift') + '</button></div>'
@@ -1561,7 +1588,10 @@
       image.src = state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png';
       showToast(state.selectedStyle === 'Real-life story' ? 'Yu restored your prepared photo. Your story is still saved.' : 'Yu restored the picture preview. Your story is still saved.');
     });
-    window.requestAnimationFrame(function () { result.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    window.requestAnimationFrame(function () {
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      celebrate(result.querySelector('.wow-reveal'));
+    });
     setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'page ' + pageNumber + ' is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
     result.querySelectorAll('[data-result]').forEach(function (button) {
       button.addEventListener('click', async function () {

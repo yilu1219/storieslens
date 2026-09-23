@@ -446,8 +446,9 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .book-export-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
 .book-export-actions a, .book-export-actions button { display: grid; min-height: 46px; place-items: center; padding: 10px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.25); border-radius: 13px; background: #fff; text-align: center; text-decoration: none; font-weight: 900; cursor: pointer; }
 
-.celebration { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
-.confetti { position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 4px; animation: confetti-fall 1.7s ease-in forwards; }
+.celebration { position: fixed; inset: 0; z-index: 60; pointer-events: none; overflow: hidden; }
+.confetti { position: absolute; top: -24px; width: 12px; height: 18px; border-radius: 4px; opacity: 0; will-change: transform,opacity; animation: confetti-fall 1.9s ease-in forwards; }
+.confetti-burst { animation: confetti-burst 1.65s cubic-bezier(.14,.76,.28,1) forwards; }
 .toast { position: fixed; z-index: 30; left: 50%; bottom: 32px; padding: 13px 18px; color: #fff; border-radius: 999px; background: var(--green-dark); box-shadow: 0 14px 45px rgba(7,86,62,.28); font-size: 13px; font-weight: 900; transform: translateX(-50%); }
 
 @keyframes message-in { from { opacity: 0; transform: translateY(13px) scale(.985); } }
@@ -455,7 +456,18 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 @keyframes yu-orbit { to { transform: rotate(360deg); } }
 @keyframes yu-counter-orbit { to { transform: rotate(-360deg); } }
 @keyframes wand { to { transform: translate(-50%,-57%) rotate(8deg) scale(1.12); } }
-@keyframes confetti-fall { to { transform: translate3d(var(--drift),110vh,0) rotate(620deg); } }
+@keyframes confetti-fall {
+  0% { opacity: 0; transform: translate3d(0,-20px,0) rotate(0deg) scale(.8); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--drift),110vh,0) rotate(720deg) scale(1); }
+}
+@keyframes confetti-burst {
+  0% { opacity: 0; transform: translate3d(0,0,0) rotate(0deg) scale(.35); }
+  12% { opacity: 1; }
+  46% { opacity: 1; transform: translate3d(var(--burst-mid-x),var(--burst-peak),0) rotate(240deg) scale(1.08); }
+  100% { opacity: 0; transform: translate3d(var(--burst-x),var(--burst-fall),0) rotate(var(--burst-rotate)) scale(.8); }
+}
 
 @media (max-width: 980px) {
   .experience-shell { grid-template-columns: 1fr; }
@@ -465,7 +477,7 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .yu-checking-orbit, .yu-checking-orbit img { animation: none; }
+  .yu-checking-orbit, .yu-checking-orbit img, .confetti, .confetti-burst { animation: none; }
 }
 
 @media (max-width: 620px) {
