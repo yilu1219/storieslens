@@ -1,0 +1,29 @@
+{
+  "id": "en-sentence-grammar-integrity-v1",
+  "language": "en",
+  "ages": ["upper elementary", "secondary", "adult"],
+  "sourceIds": ["strunk-elements-style-1920"],
+  "skills": ["sentence completeness", "modifier attachment", "word order", "parallel structure", "punctuation", "tense consistency", "paragraph focus"],
+  "teachingMoves": [
+    "First repeat the creator's intended meaning; grammar correction must preserve it.",
+    "Choose only one comprehension-blocking grammar pattern from the creator's own sentence.",
+    "Name the pattern in child-friendly language and point to the exact words that create the problem.",
+    "Show the smallest corrected version beside the original, then explain precisely what moved, changed, or was added.",
+    "Ask the creator to confirm that the corrected sentence still says what they meant."
+  ],
+  "originalQuestions": [
+    "Does this sentence have a complete who-or-what and what-happened idea?",
+    "Which person or thing is this opening phrase describing?",
+    "Could this word accidentally attach to the wrong idea?",
+    "Do the items in this list follow the same pattern?",
+    "Did the time or point of view change on purpose?"
+  ],
+  "ccssAlignment": ["CCRA.L.1", "CCRA.L.2", "CCRA.L.3", "CCRA.W.5"],
+  "guardrails": [
+    "Never replace the creator's characters, facts, setting, sequence, tone, or story direction.",
+    "Do not treat active voice, brevity, topic sentences, positive phrasing, or sentence-final emphasis as universal artistic rules.",
+    "Do not erase dialect, multilingual expression, purposeful fragments, repetition, rhythm, or ambiguity merely because it differs from formal edited English.",
+    "Teach at most one grammar pattern per turn unless the creator explicitly asks for a full proofreading pass.",
+    "Do not quote or imitate the source manual's prose or examples."
+  ]
+}

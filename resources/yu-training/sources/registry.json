@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-09-22",
+  "lastReviewed": "2026-09-23",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -257,6 +257,36 @@
       "skills": ["材料选择", "主旨", "受众", "组织", "清楚表达", "读者复述"],
       "credibility": "high as a primary modern Chinese composition-teaching text; historical judgments and examples are excluded from the contemporary teaching transfer",
       "localRecord": "sources/zh/liang-qichao-composition.md"
+    },
+    {
+      "id": "strunk-elements-style-1920",
+      "status": "adopted",
+      "language": "en",
+      "title": "The Elements of Style (1920 edition)",
+      "authorOrInstitution": "William Strunk Jr.; rights record hosted by Project Gutenberg",
+      "published": "1920; Project Gutenberg eBook released 2011",
+      "retrieved": "2026-09-23",
+      "url": "https://www.gutenberg.org/ebooks/37134",
+      "rights": "Project Gutenberg marks eBook 37134 public domain in the USA. This review stored no source prose.",
+      "ages": ["secondary", "adult"],
+      "skills": ["grammar", "punctuation", "paragraph focus", "sentence clarity", "revision"],
+      "credibility": "historically influential primary style manual with clear U.S. public-domain status; only bounded sentence-integrity checks are adopted alongside modern IES revision and authorship safeguards",
+      "localRecord": "sources/en/strunk-elements-style.md"
+    },
+    {
+      "id": "xia-liu-wenzhang-zuofa-1926",
+      "status": "rejected",
+      "language": "zh",
+      "title": "《文章作法》",
+      "authorOrInstitution": "夏丏尊、刘薰宇；候选目录记录见中文维基文库夏丏尊作者页",
+      "published": "1926",
+      "retrieved": "2026-09-23",
+      "url": "https://zh.wikisource.org/wiki/Author:夏丏尊",
+      "rights": "The author page identifies the 1926 work and marks Xia Mianzun's original works public domain in some jurisdictions, but the linked full-work page is missing and this review did not verify a stable complete primary edition or a work-level rights record covering both coauthors.",
+      "ages": ["secondary", "adult"],
+      "skills": ["记叙", "叙事", "说明", "议论", "小品文"],
+      "credibility": "potentially important modern Chinese composition-teaching source, but the available catalog entry is insufficient for reliable extraction",
+      "rejectionReason": "Rejected for this run because the linked work is a red link and no stable, rights-verifiable primary text was available. No excerpts, examples, or teaching rules entered Yu."
     }
   ]
 }

@@ -129,6 +129,22 @@ test("English clarity coaching uses the CC0 GSA source without making active voi
   assert.match(curriculum.prompt, /who-does-what check/i);
 });
 
+test("English grammar coaching uses the public-domain 1920 Elements of Style with modern authorship guardrails", () => {
+  const source = registry.sources.find((item) => item.id === "strunk-elements-style-1920");
+  const module = loadModule("en", "sentence-grammar-integrity.json");
+  const curriculum = buildEnglishCoachCurriculum({ action: "check", grade: 7, genre: "story" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /public domain/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.skills.includes("modifier attachment"));
+  assert(module.guardrails.some((item) => /dialect|multilingual/i.test(item)));
+  assert(module.guardrails.some((item) => /one grammar pattern per turn/i.test(item)));
+  assert(curriculum.methodNames.includes("Sentence grammar and meaning check"));
+  assert(curriculum.knowledgeSources.some((title) => title.includes("The Elements of Style")));
+  assert.match(curriculum.prompt, /smallest corrected version/i);
+  assert.match(curriculum.prompt, /universal artistic rules/i);
+});
+
 test("Chinese clarity coaching uses a public-domain material-focus-reader check", () => {
   const source = registry.sources.find((item) => item.id === "liang-qichao-composition-method");
   const module = loadModule("zh", "material-focus-reader.json");

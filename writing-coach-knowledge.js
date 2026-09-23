@@ -63,6 +63,10 @@ const SOURCE_CATALOG = Object.freeze({
   liangComposition: {
     title: "梁启超《中学以上作文教学法》（节录）",
     contribution: "公有领域：材料选择、主眼、读者位置、组织与原意确认"
+  },
+  strunkElements: {
+    title: "William Strunk Jr.《The Elements of Style》（1920）",
+    contribution: "美国公有领域：句子完整性、修饰语归属、相关词位置、平行结构、标点与时态一致"
   }
 });
 
@@ -243,6 +247,25 @@ const WRITING_METHODS = Object.freeze({
       "If a reader says this back in their own words, what must stay the same?"
     ]
   },
+  grammarIntegrity: {
+    id: "grammar-integrity",
+    name: "Sentence grammar and meaning check",
+    sources: ["strunkElements"],
+    principles: [
+      "Repeat the creator's intended meaning first; every correction must preserve their characters, facts, sequence, and tone.",
+      "Check sentence completeness, modifier attachment, related-word placement, parallel structure, punctuation, tense, and point of view; select only the one pattern that most affects understanding.",
+      "Point to the exact words, show the smallest corrected version beside the original, and explain exactly what changed.",
+      "Active voice, brevity, topic sentences, positive phrasing, and sentence-final emphasis are options rather than universal artistic rules.",
+      "Preserve dialect, multilingual expression, purposeful fragments, repetition, rhythm, and ambiguity when they carry the creator's intended voice."
+    ],
+    questions: [
+      "Does this sentence have a complete who-or-what and what-happened idea?",
+      "Which person or thing is this phrase describing?",
+      "Could this word attach to the wrong idea?",
+      "Did the tense or point of view change on purpose?",
+      "Does the smallest correction still say exactly what you meant?"
+    ]
+  },
   visualActionLight: {
     id: "visual-action-light",
     name: "Visual action · light invitation",
@@ -325,7 +348,7 @@ function selectWritingMethods(input = {}) {
   if (action === "begin") selected.push("ideation", "character");
   if (["continuity", "report"].includes(action)) selected.push("structure", "revision");
   if (["details", "dialogue", "scene"].includes(action)) selected.push(language === "en" ? (usesLightVisualAction ? "visualActionLight" : "visualAction") : "scene");
-  if (action === "check") selected.push("prose", language === "zh" ? "materialFocusReader" : "audienceClarity", "revision");
+  if (action === "check") selected.push(...(language === "en" ? ["grammarIntegrity", "audienceClarity", "revision"] : ["prose", "materialFocusReader", "revision"]));
   if (action === "hint") selected.push("character", "structure");
 
   // Preserve specialist genre methods before adding a language tradition.
