@@ -68,7 +68,7 @@
     resumedGuestCreation: false,
     postSignupAction: '',
     creationStage: '',
-    targetPages: 10,
+    targetPages: 1,
     bookScenes: [],
     currentPageDraft: '',
     currentPageOriginal: '',
@@ -350,9 +350,9 @@
           state.resultImage = String(pending.resultImage);
           state.outputType = pending.outputType === 'film' ? 'film' : 'book';
           state.selectedStyle = String(pending.selectedStyle || 'Storybook watercolor');
-          state.creationStage = creationStages[pending.creationStage] ? pending.creationStage : 'first-book';
-          state.targetPages = creationStages[state.creationStage].targetPages;
-          questions = creationStages[state.creationStage].questions;
+          state.creationStage = creationStages[pending.creationStage] ? pending.creationStage : '';
+          state.targetPages = state.creationStage ? creationStages[state.creationStage].targetPages : 1;
+          questions = state.creationStage ? creationStages[state.creationStage].questions : creationStages['first-book'].questions;
           state.resumedGuestCreation = true;
           state.postSignupAction = String(params.get('postSignup') || pending.action || 'continue');
         }
@@ -736,7 +736,7 @@
     });
   }
 
-  function chooseCreationStage(stageId) {
+  async function chooseCreationStage(stageId, afterFirstPicture) {
     const stage = creationStages[stageId] || creationStages['first-book'];
     state.creationStage = stageId in creationStages ? stageId : 'first-book';
     state.targetPages = stage.targetPages;
@@ -747,22 +747,36 @@
       const card = button.closest('.creation-stage-card');
       if (card) card.classList.toggle('is-selected', button.dataset.creationStage === state.creationStage);
     });
+    speakText(stage.title + ' selected. ' + stage.promise, 'celebration');
+    if (afterFirstPicture) {
+      composer.hidden = true;
+      state.currentPrompt = stage.title + ' selected. Your first picture is safe. Let us decide what happens on the next page.';
+      try {
+        await saveProject({ creationPathChosenAfterFirstPicture: true });
+        showToast(stage.title + ' is ready for your next page.');
+      } catch (error) {
+        showToast('Your choice is saved on this device. Yu will try the cloud again later.');
+      }
+      showBookContinuation();
+      return;
+    }
     composer.hidden = false;
     showGreeting();
     composer.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    speakText(stage.title + ' selected. ' + stage.promise, 'celebration');
   }
 
-  function showCreationStageChooser() {
+  function showCreationStageChooser(afterFirstPicture) {
     composer.hidden = true;
-    setJourney('idea');
-    state.currentPrompt = 'How would you like to create today? Choose pictures and voice, a first book, a bigger story, or an author and film studio.';
+    setJourney(afterFirstPicture ? 'picture' : 'idea');
+    state.currentPrompt = afterFirstPicture
+      ? 'Your first picture is ready. Where should your story go next? You can choose a tiny picture and voice story, a first book, a bigger story, or an author and film studio.'
+      : 'How would you like to create today? Choose pictures and voice, a first book, a bigger story, or an author and film studio.';
     const cards = Object.keys(creationStages).map(function (key) {
       const stage = creationStages[key];
       const recommended = key === 'first-book' ? '<em>RECOMMENDED FIRST</em>' : '';
       return '<article class="creation-stage-card"><button class="creation-stage-select" type="button" data-creation-stage="' + key + '"><span class="creation-stage-icon" aria-hidden="true">' + stage.icon + '</span><span><small>' + stage.ages + '</small><strong>' + stage.title + '</strong><b>' + stage.promise + '</b><i>' + stage.guidance + '</i></span></button><button class="creation-stage-hear" type="button" data-hear-stage="' + key + '" aria-label="Hear Yu explain ' + escapeHtml(stage.title) + '">▶ Hear Yu</button>' + recommended + '</article>';
     }).join('');
-    const picker = yuMessage('<small>CHOOSE YOUR CREATION PATH</small><h1>How would you like to tell your story?</h1><p>There is no test. Pick the way that feels fun today—a grown-up can help choose.</p><button class="stage-overview-hear" type="button" data-hear-stage-overview>▶ Hear Yu explain how to choose</button><div class="creation-stage-grid">' + cards + '</div><p class="tiny-note">Age is only a guide. Yu follows the creator’s confidence and can switch paths for the next story.</p>', 'stage-picker');
+    const picker = yuMessage('<small>' + (afterFirstPicture ? 'YOUR FIRST PICTURE IS SAFE' : 'CHOOSE YOUR CREATION PATH') + '</small><h1>' + (afterFirstPicture ? 'Where should your story go next?' : 'How would you like to tell your story?') + '</h1><p>' + (afterFirstPicture ? 'Now that you can see your story, choose what you would enjoy making next.' : 'There is no test. Pick the way that feels fun today—a grown-up can help choose.') + '</p><button class="stage-overview-hear" type="button" data-hear-stage-overview>▶ Hear Yu explain how to choose</button><div class="creation-stage-grid">' + cards + '</div><p class="tiny-note">Age is only a guide. Yu follows the creator’s confidence and can switch paths for the next story.</p>', 'stage-picker');
     picker.querySelector('[data-hear-stage-overview]').addEventListener('click', function () {
       speakText('There is no test, and you cannot choose wrong. Pick pictures and voice for a tiny spoken story, My First Book for a ten page picture book, Story Builder for longer paragraphs, or Author and Film Studio for chapters and movies. You can always choose a different path for your next story.', 'question');
     });
@@ -773,18 +787,29 @@
       });
     });
     picker.querySelectorAll('[data-creation-stage]').forEach(function (button) {
-      button.addEventListener('click', function () { chooseCreationStage(button.dataset.creationStage); });
+      button.addEventListener('click', function () { chooseCreationStage(button.dataset.creationStage, afterFirstPicture); });
     });
+    setTimeout(function () { speakText(state.currentPrompt, 'question'); }, 320);
   }
 
   function showGreeting() {
     setJourney('idea');
     const stage = activeStage();
+    const startingFresh = !state.creationStage;
     const accountNote = hasAccount()
       ? '<p class="tiny-note">✓ Signed in · your private story and picture balance will save automatically.</p>'
       : '<p class="tiny-note"><strong>Your first picture is free—no sign-up needed.</strong> Make it first. Create an account only when you want to continue or download it.</p>';
-    yuMessage('<small>' + escapeHtml(stage.title.toUpperCase()) + ' · ' + escapeHtml(stage.ages.toUpperCase()) + '</small><h1>Hi! What shall we imagine today?</h1><p>Upload a drawing, photo, or portrait—or tell me one idea. I’ll help you make ' + state.targetPages + ' story ' + (state.outputType === 'film' ? 'scenes' : 'pages') + ' at your pace.</p><p class="stage-guidance-note">' + escapeHtml(stage.guidance) + '</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
-    state.currentPrompt = 'Welcome to ' + stage.title + '. Upload a drawing, photo, or portrait—or tell me one idea. ' + stage.guidance;
+    const greetingSmall = startingFresh ? 'START WITH ONE IDEA' : escapeHtml(stage.title.toUpperCase()) + ' · ' + escapeHtml(stage.ages.toUpperCase());
+    const greetingCopy = startingFresh
+      ? 'Upload a drawing, photo, or portrait—or speak or type one idea. I’ll ask three short questions and help turn your words into a first picture.'
+      : 'Upload a drawing, photo, or portrait—or tell me one idea. I’ll help you make ' + state.targetPages + ' story ' + (state.outputType === 'film' ? 'scenes' : 'pages') + ' at your pace.';
+    const guidance = startingFresh
+      ? 'No age level or story format to choose yet. First, let’s make something together.'
+      : stage.guidance;
+    yuMessage('<small>' + greetingSmall + '</small><h1>Hi! What shall we imagine today?</h1><p>' + greetingCopy + '</p><p class="stage-guidance-note">' + escapeHtml(guidance) + '</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
+    state.currentPrompt = startingFresh
+      ? 'Show or tell me one tiny idea. You can upload a drawing or photo, speak, or type. I will ask three short questions and help you make your first picture.'
+      : 'Welcome to ' + stage.title + '. Upload a drawing, photo, or portrait—or tell me one idea. ' + stage.guidance;
     state.voiceMood = 'theatrical';
   }
 
@@ -1208,7 +1233,10 @@
       : (hasReference ? '<div class="reference-lock-note"><span>✓</span><div><strong>Your uploaded picture is the main reference</strong><small>Yu keeps the same person or character identity and changes only the story scene and chosen style.</small></div></div>' : '<div class="reference-lock-note is-words"><span>✦</span><div><strong>Building from your words</strong><small>No picture was uploaded, so Yu follows the character details you described.</small></div></div>');
     const changeNotice = state.pictureChangeRequest ? '<div class="change-lock-note"><strong>Changing only:</strong> “' + escapeHtml(state.pictureChangeRequest) + '”<small>Everything else stays locked.</small></div>' : '';
     const pageNumber = state.bookScenes.length + 1;
-    const drawingMarkup = '<div class="inline-drawing"><small>PAGE ' + pageNumber + ' OF ' + state.targetPages + ' · YU IS CREATING WITH YOUR WORDS</small><h2>Watch your ' + (pageNumber === 1 ? 'first ' : 'next ') + (state.outputType === 'film' ? 'movie frame' : 'story picture') + ' appear…</h2><p class="tiny-note">Format: ' + escapeHtml(state.outputType === 'film' ? 'Story film' : 'Illustrated book') + ' · Style: ' + escapeHtml(state.selectedStyle) + '</p>' + referenceNotice + changeNotice + '<div class="drawing-stage"><img src="' + escapeHtml(state.resultImage) + '" alt="A picture forming from the creator’s story" /><span class="wand">✦</span></div><div class="drawing-status"><div class="progress-track"><i data-draw-progress></i></div><b data-draw-title>' + (state.pictureChangeRequest ? 'Changing only the detail you named' : 'Keeping your characters and story details') + '</b><span data-draw-subtitle>Stay right here—the surprise will appear below this button.</span></div></div>';
+    const drawingStepLabel = !state.creationStage && pageNumber === 1
+      ? 'YOUR FIRST STORY PICTURE · YU IS CREATING WITH YOUR WORDS'
+      : 'PAGE ' + pageNumber + ' OF ' + state.targetPages + ' · YU IS CREATING WITH YOUR WORDS';
+    const drawingMarkup = '<div class="inline-drawing"><small>' + drawingStepLabel + '</small><h2>Watch your ' + (pageNumber === 1 ? 'first ' : 'next ') + (state.outputType === 'film' ? 'movie frame' : 'story picture') + ' appear…</h2><p class="tiny-note">Format: ' + escapeHtml(state.outputType === 'film' ? 'Story film' : 'Illustrated book') + ' · Style: ' + escapeHtml(state.selectedStyle) + '</p>' + referenceNotice + changeNotice + '<div class="drawing-stage"><img src="' + escapeHtml(state.resultImage) + '" alt="A picture forming from the creator’s story" /><span class="wand">✦</span></div><div class="drawing-status"><div class="progress-track"><i data-draw-progress></i></div><b data-draw-title>' + (state.pictureChangeRequest ? 'Changing only the detail you named' : 'Keeping your characters and story details') + '</b><span data-draw-subtitle>Stay right here—the surprise will appear below this button.</span></div></div>';
     let drawing;
     if (revealSlot) {
       revealSlot.hidden = false;
@@ -1280,7 +1308,7 @@
         resultImage: state.resultImage,
         outputType: state.outputType,
         selectedStyle: state.selectedStyle,
-        creationStage: state.creationStage || 'first-book'
+        creationStage: state.creationStage || ''
       }));
     } catch (_error) { /* The guest project still remains in the private server session. */ }
   }
@@ -1579,7 +1607,9 @@
     const resultActions = hasAccount()
       ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">' + (state.betaUnlimitedCreation ? 'Try again · beta access' : 'Try again · 1 gift') + '</button></div>'
       : '<div class="guest-next-step"><small>YOUR FREE PICTURE IS READY</small><h3>What would you like to do next?</h3><p>Create a free grown-up account now so this picture and story move with you—nothing needs to be entered again.</p><div class="result-actions"><button class="result-action primary" type="button" data-result="signup-continue">Continue creating with Yu</button><button class="result-action" type="button" data-result="signup-download">Download my picture</button></div><span>Free account · private library · your work stays yours</span></div>';
-    const resultPageLabel = pageNumber === 1
+    const resultPageLabel = !state.creationStage && pageNumber === 1
+      ? 'YOUR FIRST STORY PICTURE'
+      : pageNumber === 1
       ? (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + ' · 1 OF ' + state.targetPages
       : (state.outputType === 'film' ? 'MOVIE SCENE ' : 'STORY PAGE ') + pageNumber + ' OF ' + state.targetPages;
     const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + resultPageLabel + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
@@ -1623,7 +1653,10 @@
             reportButton.disabled = false;
             reportButton.textContent = 'Open ' + (state.name ? state.name + '’s' : 'the creator’s') + ' full learning report';
             button.textContent = '✓ Saved';
-            setTimeout(showBookContinuation, 420);
+            setTimeout(function () {
+              if (!state.creationStage && state.bookScenes.length === 1) showCreationStageChooser(true);
+              else showBookContinuation();
+            }, 420);
           } catch (error) {
             if (state.bookScenes.length && state.bookScenes[state.bookScenes.length - 1].text === state.revisedScene) state.bookScenes.pop();
             button.disabled = false;
@@ -1989,7 +2022,9 @@
         return;
       }
       if (!state.resumedGuestCreation || !hasAccount()) {
-        showCreationStageChooser();
+        state.targetPages = 1;
+        questions = creationStages['first-book'].questions;
+        showGreeting();
         return;
       }
       setJourney('picture');

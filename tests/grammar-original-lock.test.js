@@ -93,6 +93,11 @@ test("SOLO offers four age-guided creation paths and grows one consistent multi-
   assert.match(script, /targetPages: 10/);
   assert.match(script, /maxPages: 24/);
   assert.match(script, /function showCreationStageChooser/);
+  assert.match(script, /Where should your story go next\?/);
+  assert.match(script, /showCreationStageChooser\(true\)/);
+  assert.match(script, /YOUR FIRST STORY PICTURE/);
+  assert.match(script, /No age level or story format to choose yet/);
+  assert.match(script, /state\.targetPages = 1;[\s\S]*showGreeting\(\)/);
   assert.match(script, /Hear Yu explain how to choose/);
   assert.match(script, /data-hear-stage/);
   assert.match(script, /you cannot choose wrong/);
