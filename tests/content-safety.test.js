@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { checkImageSafety, checkTextSafety, extractOpenRouterJson, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -26,6 +26,13 @@ test("does not block ordinary safe story ideas", () => {
     "一位奶奶和孙女共同寻找遗失的家书。",
     "A dragon learns to solve disagreements with words."
   ].forEach((sample) => assert.strictEqual(localSafetyCheck(sample).safe, true, sample));
+});
+
+test("image safety reviews the child's words instead of protective identity boilerplate", () => {
+  const story = "We are going to Lego Land. Louis is 7, Leo is 4, and they cannot find the key home.";
+  const prompt = `${story}\nPreserve each child's exact face, age, clothing, and body proportions from the approved private photo.`;
+  assert.strictEqual(imageRequestSafetyText({ studentWriting: story }, prompt), story);
+  assert.strictEqual(imageRequestSafetyText({}, prompt), prompt);
 });
 
 test("ordinary adult and minor portrait noise is tolerated while flagged and material child-sexual signals stay blocked", () => {

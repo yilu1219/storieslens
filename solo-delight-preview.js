@@ -569,7 +569,7 @@
         partId: 'page-' + (state.bookScenes.length + 1),
         submissionId: 'solo-' + Date.now(),
         prompt: storyPrompt,
-        studentWriting: state.revisedScene,
+        studentWriting: [state.revisedScene, state.pictureChangeRequest].filter(Boolean).join('\n'),
         style: visualDirection,
         aspectRatio: '1:1',
         referenceImageUrls: referenceImages,

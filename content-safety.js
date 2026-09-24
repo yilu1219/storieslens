@@ -81,6 +81,14 @@ function localSafetyCheck(value) {
   return { safe: true, source: "local" };
 }
 
+function imageRequestSafetyText(body = {}, finalPrompt = "") {
+  const authoredText = [body.studentWriting, body.content, body.draft, body.pictureChangeRequest]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .join("\n");
+  return authoredText || String(finalPrompt || "");
+}
+
 async function callOpenAIModeration(input, { useStrictScores = true } = {}) {
   const apiKey = process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || "";
   if (!apiKey) return { available: false, reason: "missing_key" };
@@ -196,4 +204,4 @@ async function checkImageSafety(imageUrl, { requireExternal = true } = {}) {
   return external;
 }
 
-module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };
+module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };

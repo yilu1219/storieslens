@@ -2,7 +2,7 @@ const http = require("http");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { checkImageSafety, checkTextSafety } = require("./content-safety");
+const { checkImageSafety, checkTextSafety, imageRequestSafetyText, localSafetyCheck } = require("./content-safety");
 const { reviewArtworkImage, isSupportedSanitizedArtwork } = require("./artwork-safety-server");
 const { convertHeicBuffer, parseHeicDataUrl } = require("./heic-conversion");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
@@ -72,6 +72,16 @@ async function enforceTextSafety(text, { media = false, stage = "" } = {}) {
     error.safetyStage = stage;
     throw error;
   }
+}
+
+async function enforceImagePromptSafety(body, imageRequest, stage = "image-prompt") {
+  const local = localSafetyCheck(imageRequest.prompt);
+  if (!local.safe) {
+    const error = new SafetyPolicyError("This request cannot be used because it may contain unsafe or age-inappropriate content.");
+    error.safetyStage = stage;
+    throw error;
+  }
+  await enforceTextSafety(imageRequestSafetyText(body, imageRequest.prompt), { media: true, stage });
 }
 
 async function enforceImageSafety(imageUrl) {
@@ -1091,7 +1101,7 @@ async function handleGenerateImage(request, response) {
       prompt: consistencyPrompt,
       referenceImageUrls: [...new Set([...canonicalReferenceImageUrls, ...requestedReferenceImageUrls])]
     });
-    await enforceTextSafety(imageRequest.prompt, { media: true, stage: "image-prompt" });
+    await enforceImagePromptSafety(body, imageRequest);
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
       resource: "imageGenerations",
       units: 1,
@@ -1120,7 +1130,7 @@ async function handleGenerateImage(request, response) {
   } catch (error) {
     if (creditReservation) handlePlatformApi.creditManager.release(creditReservation.id, "image-generation-failed");
     const statusCode = error.statusCode || (String(error.message || "").includes("OPENROUTER_API_KEY") ? 501 : 500);
-    sendJson(response, statusCode, { code: error.code || "IMAGE_GENERATION_FAILED", error: error.message || "Image generation failed", remaining: error.remaining, required: error.required });
+    sendJson(response, statusCode, { code: error.code || "IMAGE_GENERATION_FAILED", error: error.message || "Image generation failed", safetyStage: error.safetyStage || undefined, remaining: error.remaining, required: error.required });
   }
 }
 
@@ -1141,7 +1151,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
       submissionId: body.submissionId || "submission",
       assetId: `task-${taskId}`
     });
-    await enforceTextSafety(imageRequest.prompt, { media: true });
+    await enforceImagePromptSafety(body, imageRequest);
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
       resource: "imageGenerations",
       units: 1,
