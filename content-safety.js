@@ -89,6 +89,19 @@ function imageRequestSafetyText(body = {}, finalPrompt = "") {
   return authoredText || String(finalPrompt || "");
 }
 
+function imageRetryPrompt(body = {}, finalPrompt = "") {
+  const story = imageRequestSafetyText(body, finalPrompt).slice(0, 5000);
+  const style = String(body.style || "warm storybook illustration").trim().slice(0, 300);
+  const referenceCount = Array.isArray(body.referenceImageUrls) ? body.referenceImageUrls.filter(Boolean).length : 0;
+  return [
+    "Create one finished, family-friendly story image for a child.",
+    story ? `Story: ${story}` : "Show the main action clearly.",
+    `Style: ${style}.`,
+    referenceCount ? "Use the attached approved reference images for the same recurring characters." : "Keep the characters friendly and clearly readable.",
+    "No words, logos, watermarks, interface controls, or play icons."
+  ].join("\n");
+}
+
 async function callOpenAIModeration(input, { useStrictScores = true } = {}) {
   const apiKey = process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || "";
   if (!apiKey) return { available: false, reason: "missing_key" };
@@ -204,4 +217,4 @@ async function checkImageSafety(imageUrl, { requireExternal = true } = {}) {
   return external;
 }
 
-module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };
+module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };

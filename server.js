@@ -2,7 +2,7 @@ const http = require("http");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { checkImageSafety, checkTextSafety, imageRequestSafetyText, localSafetyCheck } = require("./content-safety");
+const { checkImageSafety, checkTextSafety, imageRequestSafetyText, imageRetryPrompt, localSafetyCheck } = require("./content-safety");
 const { reviewArtworkImage, isSupportedSanitizedArtwork } = require("./artwork-safety-server");
 const { convertHeicBuffer, parseHeicDataUrl } = require("./heic-conversion");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
@@ -102,6 +102,33 @@ function discardUnsafeLocalImage(imageUrl) {
   const filePath = resolveRequestPath(value);
   const generatedRoot = path.join(root, "public", "generated");
   if (filePath?.startsWith(generatedRoot) && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}
+
+function shouldRetryImageGeneration(error) {
+  if (error?.statusCode === 503 && error?.code === "CONTENT_POLICY_BLOCKED") return false;
+  return error?.retryable === true
+    || (error?.code === "CONTENT_POLICY_BLOCKED" && /generated image did not pass/i.test(error.message || ""))
+    || /fetch|network|timeout|without an image|safety|policy|moderation/i.test(error?.message || "");
+}
+
+async function generateReviewedImage(provider, imageRequest) {
+  const generateOnce = async (request) => {
+    const result = await provider.generate(request);
+    try {
+      await enforceImageSafety(result.imageUrl);
+      return result;
+    } catch (error) {
+      discardUnsafeLocalImage(result.imageUrl);
+      throw error;
+    }
+  };
+
+  try {
+    return await generateOnce(imageRequest);
+  } catch (error) {
+    if (!imageRequest.retryPrompt || !shouldRetryImageGeneration(error)) throw error;
+  }
+  return generateOnce({ ...imageRequest, prompt: imageRequest.retryPrompt, retryPrompt: "" });
 }
 
 function resolveRequestPath(urlPathname) {
@@ -848,6 +875,7 @@ function createImageGenerationRequest(body, overrides = {}) {
 
   return {
     prompt,
+    retryPrompt: imageRetryPrompt(body, prompt),
     model: body.model || config.model,
     aspectRatio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
     size: body.size || config.size,
@@ -954,13 +982,17 @@ class OpenRouterImageProvider {
 
     const upstreamData = await upstreamResponse.json().catch(() => ({}));
     if (!upstreamResponse.ok) {
-      throw new Error(upstreamData?.error?.message || `Image generation failed with status ${upstreamResponse.status}`);
+      const message = upstreamData?.error?.message || `Image generation failed with status ${upstreamResponse.status}`;
+      throw Object.assign(new Error(message), {
+        statusCode: upstreamResponse.status,
+        retryable: upstreamResponse.status === 429 || upstreamResponse.status >= 500 || /safety|policy|moderation/i.test(message)
+      });
     }
 
     const firstImage = extractImageCandidate(upstreamData);
     const imageUrl = firstImage.url || (firstImage.b64_json ? saveBase64Image(firstImage.b64_json, imageRequest) : "");
     if (!imageUrl) {
-      throw new Error("Image generation finished without an image URL");
+      throw Object.assign(new Error("Image generation finished without an image URL"), { retryable: true });
     }
 
     return {
@@ -1006,11 +1038,15 @@ class VolcengineArkImageProvider {
     const upstreamData = await upstreamResponse.json().catch(() => ({}));
     if (!upstreamResponse.ok) {
       const message = upstreamData?.error?.message || upstreamData?.message || `China image generation failed with status ${upstreamResponse.status}`;
-      throw Object.assign(new Error(message), { statusCode: upstreamResponse.status >= 500 ? 502 : 422, code: "CHINA_IMAGE_GENERATION_FAILED" });
+      throw Object.assign(new Error(message), {
+        statusCode: upstreamResponse.status >= 500 ? 502 : 422,
+        code: "CHINA_IMAGE_GENERATION_FAILED",
+        retryable: upstreamResponse.status === 429 || upstreamResponse.status >= 500 || /safety|policy|moderation/i.test(message)
+      });
     }
     const firstImage = extractImageCandidate(upstreamData);
     const imageUrl = firstImage.url || (firstImage.b64_json ? saveBase64Image(firstImage.b64_json, imageRequest) : "");
-    if (!imageUrl) throw new Error("China image generation finished without an image URL.");
+    if (!imageUrl) throw Object.assign(new Error("China image generation finished without an image URL."), { retryable: true });
     const costUsd = this.config.costCny > 0 && this.config.cnyPerUsd > 0 ? Number((this.config.costCny / this.config.cnyPerUsd).toFixed(6)) : null;
     return { success: true, imageUrl, downloadUrl: imageUrl, taskId: upstreamData.id || null, costUsd };
   }
@@ -1037,13 +1073,7 @@ async function runImageTask(task) {
   task.updateTime = new Date().toISOString();
 
   try {
-    const result = await provider.generate(task.imageRequest);
-    try {
-      await enforceImageSafety(result.imageUrl);
-    } catch (error) {
-      discardUnsafeLocalImage(result.imageUrl);
-      throw error;
-    }
+    const result = await generateReviewedImage(provider, task.imageRequest);
     task.status = "COMPLETED";
     task.imageUrl = result.imageUrl;
     task.downloadUrl = result.downloadUrl;
@@ -1111,13 +1141,7 @@ async function handleGenerateImage(request, response) {
       metadata: { model: imageRequest.model, partId: imageRequest.partId, squadId: body.squadId || "", cardId: body.cardId || "", squadAnchor: body.squadAnchor === true },
       payerId
     }).reservation;
-    const result = await provider.generate(imageRequest);
-    try {
-      await enforceImageSafety(result.imageUrl);
-    } catch (error) {
-      discardUnsafeLocalImage(result.imageUrl);
-      throw error;
-    }
+    const result = await generateReviewedImage(provider, imageRequest);
 
     const settled = handlePlatformApi.creditManager.settle(creditReservation.id, { costUsd: result.costUsd });
     sendJson(response, 200, {
