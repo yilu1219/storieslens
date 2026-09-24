@@ -804,7 +804,7 @@
       ? 'Upload a drawing, photo, or portrait—or speak or type one idea. I’ll ask three short questions and help turn your words into a first picture.'
       : 'Upload a drawing, photo, or portrait—or tell me one idea. I’ll help you make ' + state.targetPages + ' story ' + (state.outputType === 'film' ? 'scenes' : 'pages') + ' at your pace.';
     const guidance = startingFresh
-      ? 'No age level or story format to choose yet. First, let’s make something together.'
+      ? 'No age level or story format to choose yet. Before making the picture, Yu shows your original words beside a grammar-only version and explains every change.'
       : stage.guidance;
     yuMessage('<small>' + greetingSmall + '</small><h1>Hi! What shall we imagine today?</h1><p>' + greetingCopy + '</p><p class="stage-guidance-note">' + escapeHtml(guidance) + '</p><p class="tiny-note">You make every story choice. I help you find the words.</p>' + accountNote, 'yu-greeting');
     state.currentPrompt = startingFresh
@@ -1012,17 +1012,49 @@
     setTimeout(function () { speakText('Page ' + pageNumber + '. ' + revision.text + ' Does this still sound like your story?', 'story'); }, 320);
   }
 
-  function cleanSentence(text) {
+  function grammarReplacement(sentence, pattern, replacement, skill, explanation, changes) {
+    return sentence.replace(pattern, function () {
+      const args = Array.from(arguments);
+      const before = args[0];
+      const after = typeof replacement === 'function' ? replacement.apply(null, args) : replacement;
+      if (before !== after) changes.push({ before, after, skill, explanation });
+      return after;
+    });
+  }
+
+  function cleanSentence(text, changes) {
     let sentence = String(text || '').replace(/\s+/g, ' ').trim();
     if (!sentence) return '';
-    sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
-    sentence = sentence
-      .replace(/\bi\b/g, 'I')
-      .replace(/\bcant\b/gi, "can't")
-      .replace(/\bancient egypt\b/gi, 'ancient Egypt')
-      .replace(/\bmetropolitan museum\b/gi, 'Metropolitan Museum')
-      .replace(/\bnew york city\b/gi, 'New York City');
-    if (!/[.!?…]$/.test(sentence)) sentence += '.';
+    const edits = changes || [];
+    sentence = grammarReplacement(sentence, /^me and ([a-z][a-z' -]{0,36}?)\s+(wants?|needs?|likes?|go(?:es)?|finds?|sees?|gives?|helps?|tries?|has|have|is|are)\b/i, function (_, partner, verb) {
+      const verbMap = { wants: 'want', needs: 'need', likes: 'like', goes: 'go', finds: 'find', sees: 'see', gives: 'give', helps: 'help', tries: 'try', has: 'have', is: 'are' };
+      const normalizedVerb = verbMap[verb.toLowerCase()] || verb.toLowerCase();
+      return partner.charAt(0).toUpperCase() + partner.slice(1) + ' and I ' + normalizedVerb;
+    }, 'Subject pronoun and verb agreement', 'When you and someone else do the action, name the other person first, use “I,” and use the plural verb form.', edits);
+    sentence = grammarReplacement(sentence, /\bi\b/g, 'I', 'Capital letter', 'The word “I” is always a capital letter.', edits);
+    sentence = grammarReplacement(sentence, /\bcant\b/gi, "can't", 'Apostrophe', 'The apostrophe in “can’t” shows that letters from “cannot” were left out.', edits);
+    sentence = grammarReplacement(sentence, /\bdont\b/gi, "don't", 'Apostrophe', 'The apostrophe in “don’t” shows that letters from “do not” were left out.', edits);
+    sentence = grammarReplacement(sentence, /\bdoesnt\b/gi, "doesn't", 'Apostrophe', 'The apostrophe in “doesn’t” shows that letters from “does not” were left out.', edits);
+    sentence = grammarReplacement(sentence, /\bim\b/gi, "I'm", 'Capital and apostrophe', '“I’m” needs a capital I and an apostrophe because it means “I am.”', edits);
+    sentence = grammarReplacement(sentence, /\bits\b(?=\s+(?:dark|light|late|early|cold|hot|hard|easy|scary|bright|raining|snowing|missing|broken|open|closed|time)\b)/gi, "it's", 'Contraction', 'Use “it’s” with an apostrophe when you mean “it is.”', edits);
+    sentence = grammarReplacement(sentence, /\bancient egypt\b/gi, 'ancient Egypt', 'Proper noun', '“Egypt” is a place name, so it begins with a capital letter.', edits);
+    sentence = grammarReplacement(sentence, /\bmetropolitan museum\b/gi, 'Metropolitan Museum', 'Proper noun', 'The name of a museum begins with capital letters.', edits);
+    sentence = grammarReplacement(sentence, /\bnew york city\b/gi, 'New York City', 'Proper noun', 'Each important word in the city name begins with a capital letter.', edits);
+    sentence = grammarReplacement(sentence, /\b((?:a|the|this|that)\s+[a-z][a-z'-]*\s+)(give|want|need|like|find|see|help|look|walk|run|try|go)\b/gi, function (_, subject, verb) {
+      const lower = verb.toLowerCase();
+      const agreed = lower === 'try' ? 'tries' : (/(?:go|do|watch|catch|wash|fix)$/.test(lower) ? lower + 'es' : lower + 's');
+      return subject + agreed;
+    }, 'Subject–verb agreement', 'One person, animal, or thing usually takes a present-tense verb ending in “s.”', edits);
+    if (/^[a-z]/.test(sentence)) {
+      const firstWord = sentence.match(/^[a-z][a-z'-]*/i)?.[0] || sentence.charAt(0);
+      const capitalized = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+      edits.push({ before: firstWord, after: capitalized, skill: 'Capital letter', explanation: 'A sentence begins with a capital letter.' });
+      sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
+    }
+    if (!/[.!?…]$/.test(sentence)) {
+      edits.push({ before: sentence, after: sentence + '.', skill: 'End punctuation', explanation: 'A complete statement ends with a full stop.' });
+      sentence += '.';
+    }
     return sentence;
   }
 
@@ -1052,15 +1084,14 @@
     const sourceSentences = state.currentPageOriginal === original
       ? String(original).split(/(?<=[.!?。！？])\s+/).filter(Boolean)
       : state.answers.slice(0,4);
-    const sentences = sourceSentences.map(cleanSentence).filter(Boolean);
+    const changes = [];
+    const sentences = sourceSentences.map(function (sentence) { return cleanSentence(sentence, changes); }).filter(Boolean);
     const revised = sentences.join(' ');
     const first = sentences[0] || 'My story begins';
     return {
       text: revised,
-      reason: 'I kept every story idea exactly as you gave it. I only checked sentence beginnings and endings.',
-      changes: revised === original ? [] : [
-        { before: 'your original sentence', after: 'the same sentence with a clear beginning and ending', skill: 'Capital letters and punctuation', explanation: 'A sentence begins with a capital letter and ends with a full stop, question mark, or exclamation mark.' }
-      ],
+      reason: changes.length ? 'I kept every story fact and checked pronouns, verbs, contractions, capitals, and punctuation. Every change is listed below.' : 'I kept every story idea exactly as you gave it. The grammar is already clear.',
+      changes,
       lesson: {
         title: 'Give every sentence a beginning and an ending',
         explanation: 'Begin with a capital letter. At the end, choose a full stop, question mark, or exclamation mark so the reader knows how your voice sounds.',

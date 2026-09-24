@@ -29,6 +29,21 @@ test("live Yu prompt locks the original story and requires teachable grammar cha
   assert.doesNotMatch(source, /enforceTextSafety\(userPrompt\)/);
 });
 
+test("on-device grammar fallback fixes common child writing errors one by one", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const start = script.indexOf("function grammarReplacement");
+  const end = script.indexOf("function buildRevision", start);
+  assert.ok(start > -1 && end > start);
+  const cleanSentence = new Function(script.slice(start, end) + "; return cleanSentence;")();
+  const changes = [];
+  assert.equal(cleanSentence("me and my dog wants to find home", changes), "My dog and I want to find home.");
+  assert.equal(cleanSentence("we cant see the path because its dark", changes), "We can't see the path because it's dark.");
+  assert.equal(cleanSentence("then a fox give us a light", changes), "Then a fox gives us a light.");
+  assert.ok(changes.some((change) => change.skill === "Subject pronoun and verb agreement"));
+  assert.ok(changes.some((change) => change.skill === "Subject–verb agreement"));
+  assert.ok(changes.some((change) => change.skill === "Contraction"));
+});
+
 test("seven-year-old preview preserves the ancient Egypt story instead of substituting a new plot", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(source, /My mom, my brother Leo, and I can't find our way back/);
@@ -74,6 +89,11 @@ test("Yu lists every grammar correction and explains them one by one", () => {
   assert.match(script, /data-hear-grammar/);
   assert.match(script, /Use “I” when you are doing the action/);
   assert.match(script, /explains every one below/);
+  assert.match(script, /Before making the picture, Yu shows your original words beside a grammar-only version/);
+  assert.match(script, /Subject pronoun and verb agreement/);
+  assert.match(script, /Subject–verb agreement/);
+  assert.match(script, /Use “it’s” with an apostrophe when you mean “it is.”/);
+  assert.match(script, /Every change is listed below/);
   assert.match(server, /grammarChanges\.slice\(0, 40\)/);
   assert.match(server, /every genuine correction can be listed and explained/);
 });
