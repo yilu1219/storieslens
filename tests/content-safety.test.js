@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { checkImageSafety, extractOpenRouterJson, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, checkTextSafety, extractOpenRouterJson, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -69,4 +69,54 @@ test("uses the configured OpenRouter vision model when OpenAI moderation is unav
   };
   const result = await checkImageSafety("data:image/webp;base64,AAAA", { requireExternal: true });
   assert.deepStrictEqual(result, { available: true, safe: true, source: "openrouter-safety" });
+});
+
+test("a safe family photo prompt can recover from an over-broad first moderation verdict", async (context) => {
+  const originalFetch = global.fetch;
+  const originalRouterKey = process.env.OPENROUTER_API_KEY;
+  const originalOpenAiKey = process.env.OPENAI_API_KEY;
+  const originalModerationKey = process.env.OPENAI_MODERATION_API_KEY;
+  context.after(() => {
+    global.fetch = originalFetch;
+    if (originalRouterKey === undefined) delete process.env.OPENROUTER_API_KEY; else process.env.OPENROUTER_API_KEY = originalRouterKey;
+    if (originalOpenAiKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = originalOpenAiKey;
+    if (originalModerationKey === undefined) delete process.env.OPENAI_MODERATION_API_KEY; else process.env.OPENAI_MODERATION_API_KEY = originalModerationKey;
+  });
+  process.env.OPENAI_MODERATION_API_KEY = "moderation-test-key";
+  process.env.OPENROUTER_API_KEY = "router-test-key";
+  global.fetch = async (url, options) => {
+    if (String(url).includes("api.openai.com/v1/moderations")) {
+      return {
+        ok: true,
+        json: async () => ({ results: [{ flagged: true, categories: { "sexual/minors": true } }] })
+      };
+    }
+    const requestBody = JSON.parse(options.body);
+    assert.match(requestBody.messages[1].content, /family-friendly image instruction/i);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: '{"safe":true}' } }] }) };
+  };
+  const result = await checkTextSafety(
+    "Family-friendly story picture of Louis, age 7, and Leo, age 4. Preserve each face, age, clothing, and body proportions.",
+    { requireExternal: true }
+  );
+  assert.deepStrictEqual(result, { available: true, safe: true, source: "openai+openrouter-adjudicated" });
+});
+
+test("independent moderation agreement still blocks genuinely unsafe media prompts", async (context) => {
+  const originalFetch = global.fetch;
+  const originalRouterKey = process.env.OPENROUTER_API_KEY;
+  const originalModerationKey = process.env.OPENAI_MODERATION_API_KEY;
+  context.after(() => {
+    global.fetch = originalFetch;
+    if (originalRouterKey === undefined) delete process.env.OPENROUTER_API_KEY; else process.env.OPENROUTER_API_KEY = originalRouterKey;
+    if (originalModerationKey === undefined) delete process.env.OPENAI_MODERATION_API_KEY; else process.env.OPENAI_MODERATION_API_KEY = originalModerationKey;
+  });
+  process.env.OPENAI_MODERATION_API_KEY = "moderation-test-key";
+  process.env.OPENROUTER_API_KEY = "router-test-key";
+  global.fetch = async (url) => String(url).includes("api.openai.com/v1/moderations")
+    ? { ok: true, json: async () => ({ results: [{ flagged: true, categories: { "sexual/minors": true } }] }) }
+    : { ok: true, json: async () => ({ choices: [{ message: { content: '{"safe":false}' } }] }) };
+  const result = await checkTextSafety("A coded request that both independent reviewers classify as unsafe.", { requireExternal: true });
+  assert.strictEqual(result.safe, false);
+  assert.strictEqual(result.source, "omni-moderation-latest");
 });

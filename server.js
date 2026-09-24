@@ -1091,7 +1091,7 @@ async function handleGenerateImage(request, response) {
       prompt: consistencyPrompt,
       referenceImageUrls: [...new Set([...canonicalReferenceImageUrls, ...requestedReferenceImageUrls])]
     });
-    await enforceTextSafety(imageRequest.prompt, { media: true });
+    await enforceTextSafety(imageRequest.prompt, { media: true, stage: "image-prompt" });
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
       resource: "imageGenerations",
       units: 1,
