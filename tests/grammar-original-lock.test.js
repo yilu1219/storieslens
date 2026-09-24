@@ -96,6 +96,39 @@ test("Yu lists every grammar correction and explains them one by one", () => {
   assert.match(script, /Every change is listed below/);
   assert.match(server, /grammarChanges\.slice\(0, 40\)/);
   assert.match(server, /every genuine correction can be listed and explained/);
+  assert.match(server, /action === "check" && grammarSuggestionNeedsRepair/);
+});
+
+test("SOLO grammar review has a visible countdown and a bounded fast fallback", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(script, /GRAMMAR_REVIEW_TIMEOUT_MS = 25000/);
+  assert.match(script, /timeoutMs: GRAMMAR_REVIEW_TIMEOUT_MS/);
+  assert.match(script, /about ' \+ remainingSeconds \+ ' seconds left/);
+  assert.match(script, /fast private check starts in/);
+  assert.match(script, /REQUEST_TIMEOUT/);
+  assert.match(script, /switched to the fast private grammar check/);
+});
+
+test("SOLO clears an abandoned HEIC error before the next writing step", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  assert.match(script, /function clearUploadRecovery\(\)/);
+  assert.match(script, /uploadRecovery\.hidden = true/);
+  assert.match(script, /pendingHeicFiles = \[\]/);
+  assert.match(script, /state\.answers\.push\(first\);\s*clearUploadRecovery\(\)/);
+  assert.match(script, /state\.answers\.push\(answer\);\s*clearUploadRecovery\(\)/);
+});
+
+test("automatic story titles end on a meaningful word instead of a clipped fragment", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
+  const start = script.indexOf("function naturalStoryTitle");
+  const end = script.indexOf("function walletImageCredits", start);
+  assert.ok(start > -1 && end > start);
+  const naturalStoryTitle = new Function(script.slice(start, end) + "; return naturalStoryTitle;")();
+  assert.equal(
+    naturalStoryTitle("A little fox finds a glowing key in the school garden and wants to discover what it opens."),
+    "A little fox finds a glowing key"
+  );
+  assert.equal(naturalStoryTitle("Pip Finds the Key."), "Pip Finds the Key");
 });
 
 test("SOLO offers four age-guided creation paths and grows one consistent multi-page book", () => {

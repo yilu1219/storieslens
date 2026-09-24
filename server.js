@@ -1438,7 +1438,7 @@ async function handleWritingAssistant(request, response) {
 
     let verificationUsage = null;
     const originalReviewText = selectedText || draft;
-    if (action === "check") {
+    if (action === "check" && grammarSuggestionNeedsRepair(originalReviewText, result.suggestion, result.grammarChanges)) {
       const repairResponse = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         headers: textProviderHeaders(provider),

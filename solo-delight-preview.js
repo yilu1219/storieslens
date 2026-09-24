@@ -28,6 +28,7 @@
   const characterGenerate = document.querySelector('[data-character-generate]');
   const uploadRecovery = document.querySelector('[data-upload-recovery]');
   const heicAutoConvert = document.querySelector('[data-heic-auto-convert]');
+  const GRAMMAR_REVIEW_TIMEOUT_MS = 25000;
 
   const state = {
     step: 0,
@@ -181,20 +182,51 @@
   }
 
   async function apiJson(path, options) {
-    const requestOptions = options || {};
-    const response = await fetch(path, {
-      ...requestOptions,
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', ...(requestOptions.headers || {}) }
-    });
-    const result = await response.json().catch(function () { return {}; });
-    if (!response.ok) {
-      const error = new Error(result.error || 'StoriesLens could not finish this step.');
-      error.code = result.code || '';
-      error.status = response.status;
+    const requestOptions = { ...(options || {}) };
+    const timeoutMs = Math.max(0, Number(requestOptions.timeoutMs) || 0);
+    delete requestOptions.timeoutMs;
+    const timeoutController = timeoutMs > 0 && !requestOptions.signal ? new AbortController() : null;
+    const timeoutId = timeoutController ? window.setTimeout(function () { timeoutController.abort(); }, timeoutMs) : null;
+    if (timeoutController) requestOptions.signal = timeoutController.signal;
+    try {
+      const response = await fetch(path, {
+        ...requestOptions,
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(requestOptions.headers || {}) }
+      });
+      const result = await response.json().catch(function () { return {}; });
+      if (!response.ok) {
+        const error = new Error(result.error || 'StoriesLens could not finish this step.');
+        error.code = result.code || '';
+        error.status = response.status;
+        throw error;
+      }
+      return result;
+    } catch (error) {
+      if (timeoutController?.signal.aborted) {
+        const timeoutError = new Error('The online grammar check took longer than 25 seconds.');
+        timeoutError.code = 'REQUEST_TIMEOUT';
+        throw timeoutError;
+      }
       throw error;
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
     }
-    return result;
+  }
+
+  function naturalStoryTitle(text, maxLength) {
+    const limit = Math.max(24, Number(maxLength) || 56);
+    const firstSentence = String(text || '').split(/[.!?。！？\n]/)[0].replace(/\s+/g, ' ').trim().replace(/[,:;\-–—]+$/, '');
+    if (!firstSentence) return 'My Story';
+    if (firstSentence.length <= limit && firstSentence.split(' ').length <= 10) return firstSentence;
+    const trailingWords = /^(?:a|an|the|and|or|but|in|on|at|to|from|with|for|of|by|into|over|under|after|before)$/i;
+    const chosen = [];
+    for (const word of firstSentence.split(' ')) {
+      if (chosen.length >= 9 || (chosen.join(' ') + ' ' + word).trim().length > limit) break;
+      chosen.push(word);
+    }
+    while (chosen.length > 3 && trailingWords.test(chosen[chosen.length - 1])) chosen.pop();
+    return chosen.join(' ').replace(/[,:;\-–—]+$/, '') || 'My Story';
   }
 
   function walletImageCredits(wallet) {
@@ -428,6 +460,7 @@
     const profile = stageProfiles[state.creationStage] || stageProfiles['first-book'];
     const result = await apiJson('/api/writing-assistant', {
       method: 'POST',
+      timeoutMs: GRAMMAR_REVIEW_TIMEOUT_MS,
       body: JSON.stringify({
         action: 'check',
         mode: 'free',
@@ -454,7 +487,7 @@
         explanation: firstChange?.explanation || assistant.microLesson || assistant.writingNote || 'Read the sentence aloud and check that it begins clearly and ends with punctuation.',
         example: firstChange ? firstChange.before + ' → ' + firstChange.after : revised
       },
-      title: revised.split(/[.!?。！？\n]/)[0].trim().slice(0, 56) || 'My Story',
+      title: naturalStoryTitle(revised),
       image: state.characterImageUrl || state.imageUrl || 'assets/original-garden-door-hd-v2.png'
     };
   }
@@ -568,6 +601,17 @@
     sendLabel.textContent = buttonText || 'Next';
     input.value = '';
     input.focus({ preventScroll: true });
+  }
+
+  function clearUploadRecovery() {
+    uploadRecovery.hidden = true;
+    pendingHeicFiles = [];
+    heicAutoConvert.disabled = false;
+    heicAutoConvert.textContent = 'Secure auto-convert · 安全自动转换';
+    if (!state.userUploadedReference) {
+      uploadEntry.querySelector('strong').textContent = 'Upload 1–3 characters, drawings, or photos';
+      uploadEntry.querySelector('small').textContent = 'Choose up to three pictures at once—Yu keeps every main character with this story.';
+    }
   }
 
   function setLearning(skill, evidence, note) {
@@ -834,6 +878,7 @@
         return;
       }
       state.editMode = '';
+      clearUploadRecovery();
       state.currentPageOriginal = typed;
       input.value = '';
       composer.hidden = true;
@@ -849,6 +894,7 @@
       }
       input.value = '';
       state.editMode = '';
+      clearUploadRecovery();
       composer.hidden = true;
       userMessage(typed, '', 'ONE PICTURE CHANGE');
       reviewPictureChange(typed);
@@ -858,6 +904,7 @@
       captureName();
       const first = typed || 'A tiny dragon is lost in a giant library.';
       state.answers.push(first);
+      clearUploadRecovery();
       userMessage(first, uploadedReferenceUrls());
       reward('Story spark', 'You began with your own idea.', 1);
       input.value = '';
@@ -871,6 +918,7 @@
       const qIndex = state.step - 1;
       const answer = typed || (qIndex === 0 && (state.characterImageUrl || state.imageUrl) ? 'This picture shows who is in my story.' : questions[qIndex].fallback);
       state.answers.push(answer);
+      clearUploadRecovery();
       userMessage(answer, qIndex === 0 ? uploadedReferenceUrls() : '');
       setLearning(questions[qIndex].skill, answer, questions[qIndex].reward[1]);
       reward(questions[qIndex].reward[0], questions[qIndex].reward[1], 2);
@@ -888,16 +936,16 @@
     const original = state.answers.slice(0,4).join(' ');
     const checking = yuMessage('<div class="yu-checking" role="status" aria-live="polite"><div class="yu-checking-orbit" aria-hidden="true"><img src="assets/yu-mascot-logo-v2.png" alt="" /></div><div><small>YU IS CHECKING EACH SENTENCE</small><h2>I am checking only the grammar—not changing your story.</h2><p data-yu-checking-status>First, I am reading every sentence carefully…</p><span>Your characters, places, problem, and ideas stay locked.</span></div></div>');
     const checkingStatus = checking.querySelector('[data-yu-checking-status]');
-    const checkingSteps = [
-      'Now I am finding spelling and punctuation clues…',
-      'Now I am checking verbs, pronouns, and sentence order…',
-      'Almost ready—I am preparing one explanation for every change…'
-    ];
-    let checkingStep = 0;
-    const checkingTimer = window.setInterval(function () {
-      checkingStatus.textContent = checkingSteps[Math.min(checkingStep, checkingSteps.length - 1)];
-      checkingStep += 1;
-    }, 1500);
+    const checkingStartedAt = Date.now();
+    const updateCheckingStatus = function () {
+      const elapsedSeconds = Math.floor((Date.now() - checkingStartedAt) / 1000);
+      const remainingSeconds = Math.max(0, Math.ceil(GRAMMAR_REVIEW_TIMEOUT_MS / 1000) - elapsedSeconds);
+      if (elapsedSeconds < 6) checkingStatus.textContent = 'Reading every sentence carefully… about ' + remainingSeconds + ' seconds left.';
+      else if (elapsedSeconds < 14) checkingStatus.textContent = 'Checking spelling, punctuation, verbs, and pronouns… about ' + remainingSeconds + ' seconds left.';
+      else checkingStatus.textContent = 'Yu is still thinking. If needed, the fast private check starts in ' + remainingSeconds + ' seconds.';
+    };
+    updateCheckingStatus();
+    const checkingTimer = window.setInterval(updateCheckingStatus, 1000);
     let revision;
     if (state.creationStage === 'picture-voice') {
       revision = {
@@ -905,7 +953,7 @@
         reason: 'Yu kept the creator’s spoken words. At this stage, telling the idea matters more than complete grammar.',
         changes: [],
         lesson: { title: 'Stories can begin with your voice', explanation: 'Say who is there, where they are, and what happens. Yu can read your words back so you can decide.', example: original },
-        title: original.split(/[.!?。！？\n]/)[0].trim().slice(0, 56) || 'My Story',
+        title: naturalStoryTitle(original),
         image: state.characterImageUrl || state.imageUrl || 'assets/original-garden-door-hd-v2.png'
       };
     } else {
@@ -913,7 +961,9 @@
         revision = await requestYuRevision(original);
       } catch (error) {
         revision = buildRevision(original);
-        showToast('Yu used the safe on-device grammar check this time: ' + error.message);
+        showToast(error.code === 'REQUEST_TIMEOUT'
+          ? 'Yu switched to the fast private grammar check so you do not have to keep waiting.'
+          : 'Yu used the safe on-device grammar check this time: ' + error.message);
       }
     }
     window.clearInterval(checkingTimer);
@@ -1097,7 +1147,7 @@
         explanation: 'Begin with a capital letter. At the end, choose a full stop, question mark, or exclamation mark so the reader knows how your voice sounds.',
         example: revised || original
       },
-      title: first.replace(/[.!?…]$/, '').slice(0,56),
+      title: naturalStoryTitle(first),
       image: lower.includes('time') || lower.includes('travel') ? 'assets/outcome-film-hd-v2.png' : 'assets/original-garden-door-hd-v2.png'
     };
   }
