@@ -375,13 +375,17 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
 .creation-stage-select { display: grid; grid-template-columns: 58px 1fr; gap: 13px; width: 100%; padding: 15px 15px 49px; text-align: left; color: inherit; border: 0; background: transparent; cursor: pointer; }
 .creation-stage-icon { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 16px; background: var(--gold-soft); font-size: 26px; }
 .creation-stage-select > span:nth-child(2) { display: grid; gap: 3px; }
-.creation-stage-card small { color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
 .creation-stage-card strong { font: 24px/1.05 var(--serif); }
 .creation-stage-card b { font-size: 13px; line-height: 1.35; }
 .creation-stage-card i { color: var(--muted); font-size: 12px; font-style: normal; line-height: 1.4; }
-.creation-stage-card em { position: absolute; top: 11px; right: 11px; padding: 5px 7px; color: var(--green-dark); border-radius: 999px; background: var(--gold); font-size: 8px; font-style: normal; font-weight: 900; letter-spacing: .09em; }
 .creation-stage-hear { position: absolute; right: 12px; bottom: 10px; min-height: 31px; padding: 6px 10px; color: var(--green-dark); border: 1px solid rgba(8,122,84,.24); border-radius: 999px; background: #fff; font-size: 10px; font-weight: 900; cursor: pointer; }
 .stage-overview-hear { min-height: 40px; margin-top: 10px; padding: 9px 13px; color: #fff; border: 0; border-radius: 999px; background: var(--green); font-size: 11px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(8,122,84,.14); }
+.continue-with-yu { display: grid; gap: 5px; width: 100%; margin-top: 17px; padding: 17px 19px; color: #fff; text-align: left; border: 0; border-radius: 18px; background: var(--green); cursor: pointer; box-shadow: 0 12px 25px rgba(8,122,84,.18); }
+.continue-with-yu small { color: var(--gold); font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.continue-with-yu strong { font: 24px/1.1 var(--serif); }
+.continue-with-yu span { font-size: 12px; line-height: 1.45; }
+.creation-path-details { margin-top: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.72); }
+.creation-path-details > summary { color: var(--green-dark); font-weight: 900; cursor: pointer; }
 .stage-guidance-note { margin-top: 12px !important; padding: 11px 13px; color: var(--green-dark) !important; border-left: 3px solid var(--gold); border-radius: 0 12px 12px 0; background: rgba(243,199,103,.2); font-size: 12px !important; }
 .continuity-lock { display: grid; grid-template-columns: 35px 1fr; gap: 9px; margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--mint); }
 .continuity-lock > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: #fff; }
@@ -544,7 +548,6 @@ button:focus-visible, textarea:focus-visible, label:focus-within { outline: 3px 
   .creation-stage-card strong { font-size: 20px; }
   .creation-stage-card i { display: none; }
   .creation-stage-hear { right: 10px; bottom: 8px; min-height: 30px; }
-  .creation-stage-card em { position: static; grid-column: 2; justify-self: start; }
   .book-progress { grid-template-columns: 56px 1fr; padding: 11px; }
   .book-progress > div b { font-size: 31px; }
   .book-progress i { width: 25px; height: 25px; }

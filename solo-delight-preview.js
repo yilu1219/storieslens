@@ -813,15 +813,20 @@
     composer.hidden = true;
     setJourney(afterFirstPicture ? 'picture' : 'idea');
     state.currentPrompt = afterFirstPicture
-      ? 'Your first picture is ready. Where should your story go next? You can choose a tiny picture and voice story, a first book, a bigger story, or an author and film studio.'
+      ? 'Your first picture is ready. Continue with me and I will ask one easy question at a time. You can choose a different way to create if you want.'
       : 'How would you like to create today? Choose pictures and voice, a first book, a bigger story, or an author and film studio.';
     const cards = Object.keys(creationStages).map(function (key) {
       const stage = creationStages[key];
-      const recommended = key === 'first-book' ? '<em>RECOMMENDED FIRST</em>' : '';
-      return '<article class="creation-stage-card"><button class="creation-stage-select" type="button" data-creation-stage="' + key + '"><span class="creation-stage-icon" aria-hidden="true">' + stage.icon + '</span><span><small>' + stage.ages + '</small><strong>' + stage.title + '</strong><b>' + stage.promise + '</b><i>' + stage.guidance + '</i></span></button><button class="creation-stage-hear" type="button" data-hear-stage="' + key + '" aria-label="Hear Yu explain ' + escapeHtml(stage.title) + '">▶ Hear Yu</button>' + recommended + '</article>';
+      return '<article class="creation-stage-card"><button class="creation-stage-select" type="button" data-creation-stage="' + key + '"><span class="creation-stage-icon" aria-hidden="true">' + stage.icon + '</span><span><strong>' + stage.title + '</strong><b>' + stage.promise + '</b><i>' + stage.guidance + '</i></span></button><button class="creation-stage-hear" type="button" data-hear-stage="' + key + '" aria-label="Hear Yu explain ' + escapeHtml(stage.title) + '">▶ Hear Yu</button></article>';
     }).join('');
-    const picker = yuMessage('<small>' + (afterFirstPicture ? 'YOUR FIRST PICTURE IS SAFE' : 'CHOOSE YOUR CREATION PATH') + '</small><h1>' + (afterFirstPicture ? 'Where should your story go next?' : 'How would you like to tell your story?') + '</h1><p>' + (afterFirstPicture ? 'Now that you can see your story, choose what you would enjoy making next.' : 'There is no test. Pick the way that feels fun today—a grown-up can help choose.') + '</p><button class="stage-overview-hear" type="button" data-hear-stage-overview>▶ Hear Yu explain how to choose</button><div class="creation-stage-grid">' + cards + '</div><p class="tiny-note">Age is only a guide. Yu follows the creator’s confidence and can switch paths for the next story.</p>', 'stage-picker');
-    picker.querySelector('[data-hear-stage-overview]').addEventListener('click', function () {
+    const choices = afterFirstPicture
+      ? '<button class="continue-with-yu" type="button" data-continue-with-yu><small>RECOMMENDED</small><strong>Continue my story with Yu</strong><span>Yu will ask one easy question at a time and adapt as I create.</span></button><details class="creation-path-details"><summary>Choose a different way to create</summary><button class="stage-overview-hear" type="button" data-hear-stage-overview>▶ Hear Yu explain the choices</button><div class="creation-stage-grid">' + cards + '</div></details>'
+      : '<button class="stage-overview-hear" type="button" data-hear-stage-overview>▶ Hear Yu explain how to choose</button><div class="creation-stage-grid">' + cards + '</div>';
+    const picker = yuMessage('<small>' + (afterFirstPicture ? 'YOUR FIRST PICTURE IS READY' : 'CHOOSE YOUR CREATION PATH') + '</small><h1>' + (afterFirstPicture ? 'Ready to keep going?' : 'How would you like to tell your story?') + '</h1><p>' + (afterFirstPicture ? 'Keep creating without another big decision. Yu will gently adapt the questions as you go.' : 'There is no test. Pick the way that feels fun today—a grown-up can help choose.') + '</p>' + choices + '<p class="tiny-note">There is no wrong choice. You can create differently next time.</p>', 'stage-picker');
+    picker.querySelector('[data-continue-with-yu]')?.addEventListener('click', function () {
+      chooseCreationStage('first-book', true);
+    });
+    picker.querySelector('[data-hear-stage-overview]')?.addEventListener('click', function () {
       speakText('There is no test, and you cannot choose wrong. Pick pictures and voice for a tiny spoken story, My First Book for a ten page picture book, Story Builder for longer paragraphs, or Author and Film Studio for chapters and movies. You can always choose a different path for your next story.', 'question');
     });
     picker.querySelectorAll('[data-hear-stage]').forEach(function (button) {
