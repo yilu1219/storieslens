@@ -118,6 +118,29 @@ test("a safe family photo prompt can recover from an over-broad first moderation
   assert.deepStrictEqual(result, { available: true, safe: true, source: "openai+openrouter-adjudicated" });
 });
 
+test("a safe family photo can recover from an over-broad first moderation verdict", async (context) => {
+  const originalFetch = global.fetch;
+  const originalRouterKey = process.env.OPENROUTER_API_KEY;
+  const originalModerationKey = process.env.OPENAI_MODERATION_API_KEY;
+  context.after(() => {
+    global.fetch = originalFetch;
+    if (originalRouterKey === undefined) delete process.env.OPENROUTER_API_KEY; else process.env.OPENROUTER_API_KEY = originalRouterKey;
+    if (originalModerationKey === undefined) delete process.env.OPENAI_MODERATION_API_KEY; else process.env.OPENAI_MODERATION_API_KEY = originalModerationKey;
+  });
+  process.env.OPENAI_MODERATION_API_KEY = "moderation-test-key";
+  process.env.OPENROUTER_API_KEY = "router-test-key";
+  global.fetch = async (url, options) => {
+    if (String(url).includes("api.openai.com/v1/moderations")) {
+      return { ok: true, json: async () => ({ results: [{ flagged: true, categories: { "sexual/minors": true } }] }) };
+    }
+    const requestBody = JSON.parse(options.body);
+    assert.strictEqual(requestBody.messages[1].content[1].image_url.url, "data:image/webp;base64,SAFEFAMILY");
+    return { ok: true, json: async () => ({ choices: [{ message: { content: '{"safe":true}' } }] }) };
+  };
+  const result = await checkImageSafety("data:image/webp;base64,SAFEFAMILY", { requireExternal: true });
+  assert.deepStrictEqual(result, { available: true, safe: true, source: "openai+openrouter-adjudicated" });
+});
+
 test("independent moderation agreement still blocks genuinely unsafe media prompts", async (context) => {
   const originalFetch = global.fetch;
   const originalRouterKey = process.env.OPENROUTER_API_KEY;

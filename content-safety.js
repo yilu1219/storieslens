@@ -212,6 +212,13 @@ async function checkImageSafety(imageUrl, { requireExternal = true } = {}) {
     type: "image_url",
     image_url: { url: String(imageUrl || "") }
   }]);
+  if (external.available && !external.safe) {
+    const adjudication = await callOpenRouterSafety(imageUrl, { image: true });
+    if (adjudication.available && adjudication.safe) {
+      return { available: true, safe: true, source: "openai+openrouter-adjudicated" };
+    }
+    return external;
+  }
   if (!external.available) external = await callOpenRouterSafety(imageUrl, { image: true });
   if (!external.available) return requireExternal ? { safe: false, unavailable: true, source: "external" } : { safe: true, source: "none" };
   return external;
