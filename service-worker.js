@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v100-save-library-20260927";
+const VERSION = "storieslens-pwa-v101-book-studio-20260927";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -10,11 +10,12 @@ const APP_SHELL = [
   "/solo-story",
   "/solo-delight-preview.html",
   "/solo-delight-preview.css?v=20260927-save-library-1",
-  "/solo-delight-preview.js?v=20260927-save-library-2",
+  "/solo-delight-preview.js?v=20260927-book-route-1",
   "/chinese-studio.html",
   "/index.html",
   "/login.html",
   "/my-stories.html",
+  "/book-studio.html",
   "/product-video.html",
   "/classroom-archive.html",
   "/teacher-dashboard.html",
@@ -48,7 +49,8 @@ const APP_SHELL = [
   "/login.css?v=20260915-1",
   "/login.js?v=20260922-teacher-login-2",
   "/payment-success.js?v=20260917-1",
-  "/my-stories.js?v=20260921-open-registration-1",
+  "/my-stories.js?v=20260927-book-route-1",
+  "/movie-studio.js?v=20260927-book-studio-1",
   "/safety-client.js",
   "/artwork-upload-safety.js?v=20260922-mobile-heic-1",
   "/pwa.js",

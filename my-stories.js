@@ -63,11 +63,12 @@
       body.append(node("h3", "", project.title));
       body.append(node("p", "", project.draft || project.sourceText || "A new story waiting for its first scene."));
       const meta = node("div", "project-meta");
-      [project.language === "zh" ? "中文" : project.language === "bilingual" ? "EN + 中文" : "English", `${project.scenes?.length || 0} scenes`, `Updated ${formatDate(project.updatedAt)}`].forEach((value) => meta.append(node("span", "", value)));
+      const isFilm = project.storyDna?.outputType === "film";
+      [project.language === "zh" ? "中文" : project.language === "bilingual" ? "EN + 中文" : "English", `${project.scenes?.length || 0} ${isFilm ? "scenes" : "pages"}`, `Updated ${formatDate(project.updatedAt)}`].forEach((value) => meta.append(node("span", "", value)));
       body.append(meta);
       const actions = node("div", "project-actions");
-      const studio = node("a", "app-primary", "Edit movie");
-      studio.href = `movie-studio.html?project=${encodeURIComponent(project.id)}`;
+      const studio = node("a", "app-primary", isFilm ? "Edit movie" : "Continue my book");
+      studio.href = `${isFilm ? "movie-studio" : "book-studio"}.html?project=${encodeURIComponent(project.id)}`;
       const reportLabel = project.completedAt
         ? (project.language === "zh" ? "查看成长报告" : "View growth report")
         : (project.language === "zh" ? "完成并生成报告" : "Finish & report");
@@ -428,7 +429,7 @@
         title: $("[data-new-title]").value.trim(), language: $("[data-new-language]").value, ageGroup: $("[data-new-age]").value,
         sourceType: "text", sourceText: $("[data-new-spark]").value.trim(), visibility: "private", mode: "solo"
       }) });
-      location.href = `movie-studio.html?project=${encodeURIComponent(result.project.id)}`;
+      location.href = `book-studio.html?project=${encodeURIComponent(result.project.id)}`;
     } catch (error) { toast(error.message, true); }
   });
 

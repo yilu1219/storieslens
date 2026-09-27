@@ -1552,7 +1552,8 @@
       showToast('Yu is still saving your book. Try again in a moment.');
       return;
     }
-    location.href = 'movie-studio.html?project=' + encodeURIComponent(state.projectId);
+    const studio = state.outputType === 'film' ? 'movie-studio.html' : 'book-studio.html';
+    location.href = studio + '?project=' + encodeURIComponent(state.projectId);
   }
 
   function startNextPage() {

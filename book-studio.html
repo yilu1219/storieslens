@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f3e7" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/storieslens-logo.png" />
+    <link rel="stylesheet" href="app-shell.css?v=20260927-book-studio-1" />
+    <link rel="stylesheet" href="h5-app.css" />
+    <title>Book Studio · StoriesLens</title>
+  </head>
+  <body data-studio-mode="book">
+    <header class="app-header"><a class="app-brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" />StoriesLens</a><nav aria-label="Book navigation"><a href="my-stories.html">My stories</a><a class="keep-mobile" href="index.html">Home</a></nav></header>
+    <main class="app-shell">
+      <section class="app-hero book-studio-hero">
+        <div><p class="app-kicker">YOUR BOOK · 你的书</p><h1>Let’s make the next page.</h1><p class="app-lede">Page 1 is safe. Yu keeps the same characters and picture style while guiding one clear page at a time.</p></div>
+        <div class="app-card app-status"><div><strong data-save-state>Opening your book…</strong><span>Private autosave · your work stays yours</span></div><i class="status-dot" aria-hidden="true"></i></div>
+      </section>
+      <section class="studio-grid book-studio-grid">
+        <aside class="stack">
+          <article class="app-card book-preview"><div class="film-stage" data-film-stage><p>Your first page will appear here.</p></div><div class="film-controls"><button class="app-secondary" type="button" data-play>▶ Read my book</button><button class="app-secondary" type="button" data-stop>■ Stop</button><span data-film-time>Ready</span></div></article>
+          <article class="app-card app-card-pad">
+            <p class="app-kicker">WHAT KIND OF BOOK?</p><h2>Choose what you want to make.</h2><p class="muted">You can change this later. Page 1 will not be lost.</p>
+            <div class="book-type-grid">
+              <label><input type="radio" name="book-type" value="voice-picture" /><strong>🎙 Voice picture book</strong><span>Pictures with your own spoken narration.</span></label>
+              <label><input type="radio" name="book-type" value="illustrated" checked /><strong>🖼 Illustrated book</strong><span>One picture and 1–3 sentences on each page.</span></label>
+              <label><input type="radio" name="book-type" value="chapter" /><strong>📚 Chapter book</strong><span>Longer scenes grouped into short chapters.</span></label>
+              <label><input type="radio" name="book-type" value="novel" /><strong>✍️ Novel</strong><span>Writing comes first; pictures are optional.</span></label>
+            </div>
+            <label>Narration language<select data-voice-language><option value="en-US">English</option><option value="zh-CN">中文普通话</option></select></label>
+          </article>
+          <article class="app-card app-card-pad book-delivery-card"><p class="app-kicker">WHEN YOUR BOOK IS READY</p><h3>Preview, download or print it</h3><p class="muted">Keep editing here, download an editable Word copy, or make a print-ready PDF.</p><div class="project-actions"><button class="app-secondary" type="button" data-export-book="docx" data-needs-project>Word · editable</button><button class="app-secondary" type="button" data-export-book="pdf" data-needs-project>PDF · print-ready</button><button class="app-primary" type="button" data-order-story data-needs-project>Ask about printing</button></div></article>
+        </aside>
+        <div>
+          <form class="app-card app-card-pad field-grid" data-project-form><label class="wide">Book title<input data-project-title maxlength="160" required /></label><label>Writing language<select data-project-language><option value="en">English</option><option value="zh">中文</option><option value="bilingual">English + 中文</option></select></label><label>Privacy<select data-project-visibility><option value="private">Private</option><option value="invite">Invite-only</option></select></label><label class="wide">My story so far<textarea data-project-draft maxlength="40000" placeholder="Your story stays here as it grows."></textarea></label></form>
+          <div class="app-toolbar"><div><p class="app-kicker">ONE PAGE AT A TIME</p><h2>My book pages</h2></div><a class="app-primary" data-continue-yu>Continue with Yu →</a></div><div class="scene-list" data-scene-list></div><p class="notice" data-studio-notice hidden></p>
+        </div>
+      </section>
+    </main>
+    <nav class="h5-bottom-nav" aria-label="App navigation"><a href="app.html"><span aria-hidden="true">＋</span><strong>Create</strong></a><a class="active" href="my-stories.html"><span aria-hidden="true">▤</span><strong>Stories</strong></a><a href="classroom-archive.html"><span aria-hidden="true">▦</span><strong>Class</strong></a><a href="my-stories.html#account"><span aria-hidden="true">○</span><strong>Account</strong></a></nav>
+    <button data-add-scene type="button" hidden>＋ Add page</button>
+    <template data-scene-template><article class="scene-card"><header><strong data-scene-number>Page</strong><button class="icon-button" type="button" data-move-up aria-label="Move page up">↑</button><button class="icon-button" type="button" data-move-down aria-label="Move page down">↓</button><button class="icon-button" type="button" data-delete-scene aria-label="Delete page">×</button></header><div class="scene-fields"><label class="wide">Page title<input data-scene-title maxlength="120" /></label><input data-scene-duration type="hidden" value="6" /><label class="wide">Words on this page<textarea data-scene-text maxlength="6000"></textarea></label><label class="wide">Page picture · optional<input data-scene-image type="file" accept="image/*,.heic,.heif,.avif" /><small>Phone photos are rewritten to remove location and device information before private storage.</small></label><div class="scene-preview wide" data-scene-preview><span>No page picture yet</span></div><div class="project-actions wide"><button class="app-secondary" type="button" data-record>● Record my voice</button><button class="app-secondary" type="button" data-play-voice>▶ Hear this page</button><span class="muted" data-voice-state>No recording</span></div></div></article></template>
+    <div class="app-toast" data-toast role="status" aria-live="polite"></div>
+    <dialog class="print-order-dialog" data-print-dialog><form method="dialog" data-print-form><div><p class="app-kicker">PRINT QUOTE</p><h2>How would you like this book made?</h2><p class="muted">No payment is taken when asking for a quote.</p></div><div class="field-grid"><label>Binding<select data-print-binding><option value="softcover">Softcover</option><option value="hardcover">Hardcover</option></select></label><label>Inside pages<select data-print-color><option value="full-color">Full color</option><option value="black-and-white">Black and white</option></select></label><label>Copies<select data-print-quantity><option>1</option><option>2</option><option>5</option><option>10</option><option>20</option></select></label><label>Service region<select data-print-region><option value="cn">China mainland</option><option value="us">United States</option><option value="intl">Other region</option></select></label><label>Country code<input data-print-country maxlength="2" placeholder="CN / US" required /></label><label>City<input data-print-city maxlength="80" required /></label><label class="wide">Postal code<input data-print-postal maxlength="20" required /></label><label class="wide">Notes<textarea data-print-notes maxlength="500"></textarea></label></div><p class="notice" data-print-notice hidden></p><div class="project-actions"><button class="app-secondary" type="button" data-print-cancel>Cancel</button><button class="app-primary" type="submit">Request quote</button></div></form></dialog>
+    <script src="pwa.js"></script><script src="platform-client.js"></script><script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script><script src="movie-studio.js?v=20260927-book-studio-1"></script>
+  </body>
+</html>

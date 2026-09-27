@@ -4,6 +4,7 @@
   const list = $("[data-scene-list]");
   const toastNode = $("[data-toast]");
   const projectId = new URLSearchParams(location.search).get("project");
+  const bookMode = document.body.dataset.studioMode === "book";
   let project = null;
   let scenes = [];
   let saveTimer = null;
@@ -44,7 +45,7 @@
   function cleanScenesFromDom() {
     return Array.from(list.children).map((card, index) => ({
       id: card.dataset.sceneId || `scene-${index + 1}`,
-      title: $("[data-scene-title]", card).value.trim() || `Scene ${index + 1}`,
+      title: $("[data-scene-title]", card).value.trim() || `${bookMode ? "Page" : "Scene"} ${index + 1}`,
       text: $("[data-scene-text]", card).value.trim(),
       caption: $("[data-scene-text]", card).value.trim().slice(0, 600),
       imageUrl: card.dataset.imageUrl || "",
@@ -57,7 +58,7 @@
 
   function renumber() {
     Array.from(list.children).forEach((card, index) => {
-      $("[data-scene-number]", card).textContent = `Scene ${index + 1}`;
+      $("[data-scene-number]", card).textContent = `${bookMode ? "Page" : "Scene"} ${index + 1}`;
       $("[data-move-up]", card).disabled = index === 0;
       $("[data-move-down]", card).disabled = index === list.children.length - 1;
     });
@@ -70,8 +71,8 @@
       const video = document.createElement("video");
       video.src = card.dataset.videoUrl; video.controls = true; video.playsInline = true; preview.append(video);
     } else if (card.dataset.imageUrl) {
-      const image = document.createElement("img"); image.src = card.dataset.imageUrl; image.alt = "Scene artwork"; preview.append(image);
-    } else preview.append(Object.assign(document.createElement("span"), { textContent: "No artwork yet" }));
+      const image = document.createElement("img"); image.src = card.dataset.imageUrl; image.alt = bookMode ? "Book page artwork" : "Scene artwork"; preview.append(image);
+    } else preview.append(Object.assign(document.createElement("span"), { textContent: bookMode ? "No page picture yet" : "No artwork yet" }));
   }
 
   function createSceneCard(scene = {}) {
@@ -88,7 +89,7 @@
     card.addEventListener("input", scheduleSave);
     $("[data-move-up]", card).addEventListener("click", () => { if (card.previousElementSibling) list.insertBefore(card, card.previousElementSibling); renumber(); scheduleSave(); });
     $("[data-move-down]", card).addEventListener("click", () => { if (card.nextElementSibling) list.insertBefore(card.nextElementSibling, card); renumber(); scheduleSave(); });
-    $("[data-delete-scene]", card).addEventListener("click", () => { if (list.children.length === 1) return toast("A story needs at least one scene.", true); card.remove(); renumber(); scheduleSave(); });
+    $("[data-delete-scene]", card).addEventListener("click", () => { if (list.children.length === 1) return toast(bookMode ? "A book needs at least one page." : "A story needs at least one scene.", true); card.remove(); renumber(); scheduleSave(); });
     $("[data-scene-image]", card).addEventListener("change", async (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -166,7 +167,8 @@
         language: $("[data-project-language]").value,
         visibility: $("[data-project-visibility]").value,
         draft: $("[data-project-draft]").value.trim(),
-        scenes
+        scenes,
+        storyDna: bookMode ? { ...(project.storyDna || {}), outputType: "book", bookType: document.querySelector('[name="book-type"]:checked')?.value || "illustrated" } : project.storyDna
       }) });
       project = result.project;
       $("[data-save-state]").textContent = "All changes saved";
@@ -199,7 +201,7 @@
   function stopPreview() {
     clearTimeout(previewTimer); previewTimer = null; previewIndex = 0;
     speechSynthesis?.cancel();
-    $("[data-film-time]").textContent = "0:00";
+    $("[data-film-time]").textContent = bookMode ? "Ready" : "0:00";
   }
 
   async function createRender() {
@@ -300,7 +302,13 @@
       $("[data-project-language]").value = project.language;
       $("[data-project-visibility]").value = project.visibility;
       $("[data-project-draft]").value = project.draft || project.sourceText || "";
-      scenes = project.scenes?.length ? project.scenes : [{ id: "scene-1", title: "First scene", text: project.draft || project.sourceText || "", duration: 6 }];
+      if (bookMode) {
+        const selectedType = document.querySelector(`[name="book-type"][value="${project.storyDna?.bookType || "illustrated"}"]`) || document.querySelector('[name="book-type"][value="illustrated"]');
+        if (selectedType) selectedType.checked = true;
+        const continueLink = $("[data-continue-yu]");
+        if (continueLink) continueLink.href = `solo-story?mode=solo&project=${encodeURIComponent(project.id)}&storyLang=${project.language === "zh" ? "zh" : "en"}`;
+      }
+      scenes = project.scenes?.length ? project.scenes : [{ id: "scene-1", title: bookMode ? "Page 1" : "First scene", text: project.draft || project.sourceText || "", duration: 6 }];
       scenes.forEach((scene) => list.append(createSceneCard(scene)));
       renumber();
       $("[data-save-state]").textContent = "All changes saved";
@@ -309,10 +317,11 @@
   }
 
   $("[data-project-form]").addEventListener("input", scheduleSave);
-  $("[data-add-scene]").addEventListener("click", () => { if (list.children.length >= 24) return toast("A movie can contain up to 24 scenes.", true); list.append(createSceneCard()); renumber(); scheduleSave(); list.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" }); });
-  $("[data-play]").addEventListener("click", () => { stopPreview(); previewIndex = 0; displayScene(0); });
-  $("[data-stop]").addEventListener("click", stopPreview);
-  $("[data-create-render]").addEventListener("click", createRender);
+  $("[data-add-scene]").addEventListener("click", () => { if (list.children.length >= (bookMode ? 60 : 24)) return toast(bookMode ? "This book can contain up to 60 pages." : "A movie can contain up to 24 scenes.", true); list.append(createSceneCard()); renumber(); scheduleSave(); list.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" }); });
+  $("[data-play]")?.addEventListener("click", () => { stopPreview(); previewIndex = 0; displayScene(0); });
+  $("[data-stop]")?.addEventListener("click", stopPreview);
+  $("[data-create-render]")?.addEventListener("click", createRender);
+  document.querySelectorAll('[name="book-type"]').forEach((input) => input.addEventListener("change", scheduleSave));
   document.querySelectorAll("[data-export-book]").forEach((button) => button.addEventListener("click", () => exportBook(button.dataset.exportBook)));
   $("[data-order-story]").addEventListener("click", orderStory);
   $("[data-print-cancel]").addEventListener("click", () => $("[data-print-dialog]").close());
