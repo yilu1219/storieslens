@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryNeedsTextOnly, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -44,9 +44,13 @@ test("image retry keeps the safe story and references without policy-sensitive i
   assert.doesNotMatch(retry, /exact face|body proportions/);
 });
 
-test("image safety rejection retries without a personal-photo reference", () => {
-  assert.strictEqual(imageRetryNeedsTextOnly({ message: "This request cannot be used because it may contain unsafe or age-inappropriate content." }), true);
-  assert.strictEqual(imageRetryNeedsTextOnly({ message: "Temporary network timeout." }), false);
+test("English moderation does not join ordinary words into prohibited substrings", () => {
+  for (const text of ["Do not add extra people.", "A grape on a draped table.", "Choose a story category.", "Kasen and Louis are going sailing together. Louis is 7 years old. Kasen is 9 years old. They face a thunderstorm."]) {
+    assert.strictEqual(localSafetyCheck(text).safe, true, text);
+  }
+  for (const text of ["n u d e", "ＮＵＤＥ", "p_o_r_n", "g o r e", "buildabomb", "血 腥"]) {
+    assert.strictEqual(localSafetyCheck(text).safe, false, text);
+  }
 });
 
 test("ordinary adult and minor portrait noise is tolerated while flagged and material child-sexual signals stay blocked", () => {

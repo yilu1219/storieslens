@@ -73,6 +73,12 @@ function localSafetyCheck(value) {
   for (const rule of LOCAL_RULES) {
     if (rule.terms.some((term) => {
       const normalizedTerm = normalizeSafetyText(term);
+      if (/^[a-z ]+$/.test(normalizedTerm)) {
+        // Match whole English words, including spaced-out evasions. Joining
+        // all words made "extra people" match "rape" and "category" match "gory".
+        const pattern = normalizedTerm.replace(/ /g, "").split("").join("\\s*");
+        return new RegExp(`(?<![a-z0-9])${pattern}(?![a-z0-9])`, "u").test(normalized);
+      }
       return normalized.includes(normalizedTerm) || compact.includes(normalizedTerm.replace(/\s+/g, ""));
     })) {
       return { safe: false, category: rule.category, source: "local" };
@@ -100,11 +106,6 @@ function imageRetryPrompt(body = {}, finalPrompt = "") {
     referenceCount ? "Use the attached approved reference images for the same recurring characters." : "Keep the characters friendly and clearly readable.",
     "No words, logos, watermarks, interface controls, or play icons."
   ].join("\n");
-}
-
-function imageRetryNeedsTextOnly(error) {
-  return error?.code === "CONTENT_POLICY_BLOCKED"
-    || /unsafe|age-inappropriate|safety|policy|moderation/i.test(String(error?.message || ""));
 }
 
 async function callOpenAIModeration(input, { useStrictScores = true } = {}) {
@@ -229,4 +230,4 @@ async function checkImageSafety(imageUrl, { requireExternal = true } = {}) {
   return external;
 }
 
-module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryNeedsTextOnly, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };
+module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };

@@ -2,7 +2,7 @@ const http = require("http");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { checkImageSafety, checkTextSafety, imageRequestSafetyText, imageRetryNeedsTextOnly, imageRetryPrompt, localSafetyCheck } = require("./content-safety");
+const { checkImageSafety, checkTextSafety, imageRequestSafetyText, imageRetryPrompt, localSafetyCheck } = require("./content-safety");
 const { reviewArtworkImage, isSupportedSanitizedArtwork } = require("./artwork-safety-server");
 const { convertHeicBuffer, parseHeicDataUrl } = require("./heic-conversion");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
@@ -105,10 +105,9 @@ function discardUnsafeLocalImage(imageUrl) {
 }
 
 function shouldRetryImageGeneration(error) {
-  if (error?.statusCode === 503 && error?.code === "CONTENT_POLICY_BLOCKED") return false;
+  if (error?.code === "CONTENT_POLICY_BLOCKED" || /unsafe|age-inappropriate|safety|policy|moderation/i.test(error?.message || "")) return false;
   return error?.retryable === true
-    || imageRetryNeedsTextOnly(error)
-    || /fetch|network|timeout|without an image|safety|policy|moderation/i.test(error?.message || "");
+    || /fetch|network|timeout|without an image/i.test(error?.message || "");
 }
 
 async function generateReviewedImage(provider, imageRequest) {
@@ -123,20 +122,17 @@ async function generateReviewedImage(provider, imageRequest) {
     }
   };
 
-  let retryWithoutReferences = false;
   try {
     return await generateOnce(imageRequest);
   } catch (error) {
     if (!imageRequest.retryPrompt || !shouldRetryImageGeneration(error)) throw error;
-    retryWithoutReferences = imageRequest.referenceImageUrls.length > 0 && imageRetryNeedsTextOnly(error);
   }
   const result = await generateOnce({
     ...imageRequest,
     prompt: imageRequest.retryPrompt,
-    retryPrompt: "",
-    referenceImageUrls: retryWithoutReferences ? [] : imageRequest.referenceImageUrls
+    retryPrompt: ""
   });
-  return retryWithoutReferences ? { ...result, referenceFallback: true } : result;
+  return result;
 }
 
 function resolveRequestPath(urlPathname) {
