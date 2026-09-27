@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v98-picture-recovery-20260927";
+const VERSION = "storieslens-pwa-v99-save-library-20260927";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -9,8 +9,8 @@ const APP_SHELL = [
   "/app.html",
   "/solo-story",
   "/solo-delight-preview.html",
-  "/solo-delight-preview.css",
-  "/solo-delight-preview.js?v=20260927-picture-recovery-1",
+  "/solo-delight-preview.css?v=20260927-save-library-1",
+  "/solo-delight-preview.js?v=20260927-save-library-1",
   "/chinese-studio.html",
   "/index.html",
   "/login.html",

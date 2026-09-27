@@ -62,6 +62,7 @@
     pictureReferenceFallback: false,
     pictureSavePending: false,
     pictureGenerationInFlight: false,
+    firstPictureSavePromptShown: false,
     session: null,
     wallet: null,
     imageCredits: 0,
@@ -1439,13 +1440,72 @@
         selectedStyle: state.selectedStyle,
         creationStage: state.creationStage || ''
       }));
-    } catch (_error) { /* The guest project still remains in the private server session. */ }
+      return true;
+    } catch (_error) {
+      showToast('Your browser could not keep this picture for sign-in. Keep this page open and allow site storage before continuing.');
+      return false;
+    }
   }
 
   function registerAfterFirstPicture(action) {
-    preserveGuestCreation(action);
-    const returnTo = 'solo-story?resumeGuest=1&postSignup=' + encodeURIComponent(action);
+    if (!preserveGuestCreation(action)) return;
+    const language = new URLSearchParams(location.search).get('storyLang') === 'zh' ? 'zh' : 'en';
+    const returnTo = 'solo-story?resumeGuest=1&storyLang=' + language + '&postSignup=' + encodeURIComponent(action);
     location.href = 'login.html?returnTo=' + encodeURIComponent(returnTo);
+  }
+
+  async function saveGeneratedPictureToLibrary() {
+    await requireAccount();
+    if (!/^\/api\/media\//.test(state.resultImage || '')) {
+      const response = await fetch(state.resultImage, { credentials: 'same-origin' });
+      if (!response.ok) throw new Error('The picture could not be downloaded for saving. Keep this page open and try again.');
+      const blob = await response.blob();
+      const prepared = await window.StoriesLensArtworkSafety.removeMetadata(new File([blob], 'story-picture', { type: blob.type }));
+      const uploaded = await apiJson('/api/media', {
+        method: 'POST',
+        body: JSON.stringify({ projectId: state.projectId, dataUrl: prepared.dataUrl, metadataRemoved: true, purpose: 'story-picture', personalPhotoConsentId: state.personalPhotoConsentId || '' })
+      });
+      state.resultImage = uploaded.media.url;
+    }
+    await saveProject({ pictureGenerated: true });
+    state.pictureSavePending = false;
+    try { localStorage.removeItem('storieslens_pending_guest_creation'); } catch (_error) { /* no-op */ }
+  }
+
+  function showFirstPictureSavePrompt() {
+    if (state.firstPictureSavePromptShown || state.bookScenes.length) return;
+    state.firstPictureSavePromptShown = true;
+    const signedIn = hasAccount();
+    const zh = new URLSearchParams(location.search).get('storyLang') === 'zh';
+    const dialog = document.createElement('dialog');
+    dialog.className = 'first-picture-save';
+    dialog.setAttribute('aria-labelledby', 'first-picture-save-title');
+    dialog.innerHTML = '<button type="button" class="save-prompt-close" aria-label="' + (zh ? '暂时关闭' : 'Close for now') + '" data-save-close>×</button><small>' + (zh ? '你的第一张作品诞生了' : 'YOUR FIRST CREATION IS HERE') + '</small><h2 id="first-picture-save-title">' + (zh ? '保存到我的作品库' : 'Save your first picture to your library') + '</h2><p>' + (signedIn ? (zh ? '把图片和故事一起存好，随时回来继续创作。' : 'Keep your picture and story together, ready whenever you want to continue.') : (zh ? '请家长帮你免费注册或登录，把这张图和故事保存到私人作品库。不用重新创作。' : 'Ask a grown-up to create a free account or sign in. Keep this picture and story in your private library—no need to start again.')) + '</p><button type="button" class="result-action primary" data-save-primary>' + (signedIn ? (zh ? '保存到我的作品库' : 'Save to my library') : (zh ? '免费注册并保存' : 'Create a free account & save')) + '</button>' + (!signedIn ? '<button type="button" class="why-button" data-save-login>' + (zh ? '已有账号？登录保存' : 'Already have an account? Sign in & save') + '</button>' : '') + '<p role="status" data-save-status></p><a href="my-stories.html" hidden data-save-library>' + (zh ? '查看我的作品库' : 'Open my library') + '</a><button type="button" class="why-button" data-save-later>' + (zh ? '先看看我的作品' : 'Let me admire it first') + '</button>';
+    document.body.appendChild(dialog);
+    dialog.addEventListener('close', function () { dialog.remove(); });
+    dialog.querySelector('[data-save-close]').addEventListener('click', function () { dialog.close(); });
+    dialog.querySelector('[data-save-later]').addEventListener('click', function () { dialog.close(); });
+    const primary = dialog.querySelector('[data-save-primary]');
+    const status = dialog.querySelector('[data-save-status]');
+    async function save() {
+      if (!signedIn) { registerAfterFirstPicture('save'); return; }
+      primary.disabled = true;
+      status.textContent = zh ? '正在保存图片和故事，请保持页面打开…' : 'Saving your picture and story. Please keep this page open…';
+      try {
+        await saveGeneratedPictureToLibrary();
+        status.textContent = zh ? '已保存到你的私人作品库！' : 'Saved to your private library!';
+        dialog.querySelector('[data-save-library]').hidden = false;
+        primary.textContent = zh ? '✓ 已保存' : '✓ Saved';
+      } catch (error) {
+        primary.disabled = false;
+        status.textContent = (zh ? '还未保存成功，请重试。' : 'Not saved yet. Please try again. ') + error.message;
+      }
+    }
+    primary.addEventListener('click', save);
+    dialog.querySelector('[data-save-login]')?.addEventListener('click', save);
+    dialog.showModal();
+    primary.focus();
+    if (signedIn && state.resumedGuestCreation && state.postSignupAction === 'save') save();
   }
 
   async function downloadFinishedPicture() {
@@ -1780,6 +1840,7 @@
           celebrated = true;
           celebrate(result.querySelector('.wow-reveal'));
           speakText((state.name ? state.name + ', ' : '') + 'page ' + pageNumber + ' is ready! You imagined it, revised it, and made it visible!', 'celebration');
+          showFirstPictureSavePrompt();
         }
       } catch (error) {
         pictureHeading.textContent = error.message;
@@ -1820,6 +1881,7 @@
           button.disabled = true;
           button.textContent = 'Saving…';
           try {
+            await saveGeneratedPictureToLibrary();
             commitCurrentPage();
             await saveProject({ completedFirstScene: state.bookScenes.length >= 1, acceptedPicture: true, completedPages: state.bookScenes.length });
             showToast('Saved! Page ' + state.bookScenes.length + ' is inside your book.');
@@ -2206,7 +2268,6 @@
         showResult(null, null);
         if (state.postSignupAction === 'download') setTimeout(downloadFinishedPicture, 500);
         else showToast('Welcome back—your picture and story are here. Keep creating with Yu!');
-        try { localStorage.removeItem('storieslens_pending_guest_creation'); } catch (_error) { /* no-op */ }
       }, 350);
     });
   });
