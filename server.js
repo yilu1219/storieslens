@@ -2,7 +2,7 @@ const http = require("http");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { checkImageSafety, checkTextSafety, imageRequestSafetyText, imageRetryPrompt, localSafetyCheck } = require("./content-safety");
+const { checkImageSafety, checkTextSafety, imageRequestSafetyText, imageRetryNeedsTextOnly, imageRetryPrompt, localSafetyCheck } = require("./content-safety");
 const { reviewArtworkImage, isSupportedSanitizedArtwork } = require("./artwork-safety-server");
 const { convertHeicBuffer, parseHeicDataUrl } = require("./heic-conversion");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
@@ -107,7 +107,7 @@ function discardUnsafeLocalImage(imageUrl) {
 function shouldRetryImageGeneration(error) {
   if (error?.statusCode === 503 && error?.code === "CONTENT_POLICY_BLOCKED") return false;
   return error?.retryable === true
-    || (error?.code === "CONTENT_POLICY_BLOCKED" && /generated image did not pass/i.test(error.message || ""))
+    || imageRetryNeedsTextOnly(error)
     || /fetch|network|timeout|without an image|safety|policy|moderation/i.test(error?.message || "");
 }
 
@@ -123,12 +123,20 @@ async function generateReviewedImage(provider, imageRequest) {
     }
   };
 
+  let retryWithoutReferences = false;
   try {
     return await generateOnce(imageRequest);
   } catch (error) {
     if (!imageRequest.retryPrompt || !shouldRetryImageGeneration(error)) throw error;
+    retryWithoutReferences = imageRequest.referenceImageUrls.length > 0 && imageRetryNeedsTextOnly(error);
   }
-  return generateOnce({ ...imageRequest, prompt: imageRequest.retryPrompt, retryPrompt: "" });
+  const result = await generateOnce({
+    ...imageRequest,
+    prompt: imageRequest.retryPrompt,
+    retryPrompt: "",
+    referenceImageUrls: retryWithoutReferences ? [] : imageRequest.referenceImageUrls
+  });
+  return retryWithoutReferences ? { ...result, referenceFallback: true } : result;
 }
 
 function resolveRequestPath(urlPathname) {
@@ -1148,6 +1156,7 @@ async function handleGenerateImage(request, response) {
       imageUrl: result.imageUrl,
       downloadUrl: result.downloadUrl || result.imageUrl,
       taskId: result.taskId || null,
+      referenceFallback: result.referenceFallback === true,
       status: "COMPLETED",
       wallet: settled.wallet
     });

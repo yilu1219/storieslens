@@ -59,6 +59,7 @@
     revisionReason: '',
     storyTitle: '',
     resultImage: 'assets/original-garden-door-hd-v2.png',
+    pictureReferenceFallback: false,
     session: null,
     wallet: null,
     imageCredits: 0,
@@ -199,6 +200,7 @@
         const error = new Error(result.error || 'StoriesLens could not finish this step.');
         error.code = result.code || '';
         error.status = response.status;
+        error.safetyStage = result.safetyStage || '';
         throw error;
       }
       return result;
@@ -579,6 +581,7 @@
     });
     if (!result.imageUrl) throw new Error('Yu finished drawing, but the new picture did not arrive. Please try again.');
     state.resultImage = result.imageUrl;
+    state.pictureReferenceFallback = result.referenceFallback === true;
     updatePictureAllowance(result.wallet || state.wallet);
     await saveProject({ pictureGenerated: true });
     return result.imageUrl;
@@ -1698,7 +1701,9 @@
       : pageNumber === 1
       ? (state.outputType === 'film' ? 'YOUR FIRST MOVIE FRAME' : 'YOUR FIRST STORY PAGE') + ' · 1 OF ' + state.targetPages
       : (state.outputType === 'film' ? 'MOVIE SCENE ' : 'STORY PAGE ') + pageNumber + ' OF ' + state.targetPages;
-    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (state.selectedStyle === 'Real-life story' ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (state.selectedStyle === 'Real-life story' ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span><small>' + resultPageLabel + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
+    const usedPersonalPhoto = state.selectedStyle === 'Real-life story' && !state.pictureReferenceFallback;
+    const fallbackNote = state.pictureReferenceFallback ? '<p class="tiny-note"><strong>Your first picture is ready.</strong> The image model could not use the private photo safely this time, so Yu drew from your words instead. Your photo remains private and unchanged.</p>' : '';
+    const resultMarkup = '<div class="wow-reveal" aria-hidden="true"><span>✦</span><b>WOW!</b><span>✦</span></div><div class="result-card"><div class="result-picture-wrap"><img class="result-picture" data-result-image src="' + escapeHtml(resultImage) + '" alt="' + (usedPersonalPhoto ? 'Real-life story preview made from the uploaded photo' : 'Illustration preview based on the creator’s story') + '" /></div><div class="result-copy"><span class="result-origin">✦ MADE FROM ' + escapeHtml(possessiveName().toUpperCase()) + (usedPersonalPhoto ? ' PHOTO &amp; WORDS' : ' WORDS') + '</span>' + fallbackNote + '<small>' + resultPageLabel + '</small><h2>Your story just became a picture!</h2><h3 class="result-story-title">' + escapeHtml(state.storyTitle || 'My Story') + '</h3><p>' + escapeHtml(state.revisedScene) + '</p>' + resultActions + '</div></div>';
     let result;
     if (progressMessage && progressMessage.matches('[data-picture-reveal]')) {
       progressMessage.className = 'picture-reveal-slot is-ready';

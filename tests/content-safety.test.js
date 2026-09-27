@@ -1,6 +1,6 @@
 const assert = require("assert");
 const test = require("node:test");
-const { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
+const { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryNeedsTextOnly, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText } = require("../content-safety");
 
 test("normalizes common separator and Unicode evasions", () => {
   assert.strictEqual(normalizeSafetyText("ＮＵＤＥ___image"), "nude image");
@@ -42,6 +42,11 @@ test("image retry keeps the safe story and references without policy-sensitive i
   assert.match(retry, /My mom, Leo, and I find a glowing key/);
   assert.match(retry, /attached approved reference images/);
   assert.doesNotMatch(retry, /exact face|body proportions/);
+});
+
+test("image safety rejection retries without a personal-photo reference", () => {
+  assert.strictEqual(imageRetryNeedsTextOnly({ message: "This request cannot be used because it may contain unsafe or age-inappropriate content." }), true);
+  assert.strictEqual(imageRetryNeedsTextOnly({ message: "Temporary network timeout." }), false);
 });
 
 test("ordinary adult and minor portrait noise is tolerated while flagged and material child-sexual signals stay blocked", () => {

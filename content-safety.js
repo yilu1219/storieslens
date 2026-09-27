@@ -102,6 +102,11 @@ function imageRetryPrompt(body = {}, finalPrompt = "") {
   ].join("\n");
 }
 
+function imageRetryNeedsTextOnly(error) {
+  return error?.code === "CONTENT_POLICY_BLOCKED"
+    || /unsafe|age-inappropriate|safety|policy|moderation/i.test(String(error?.message || ""));
+}
+
 async function callOpenAIModeration(input, { useStrictScores = true } = {}) {
   const apiKey = process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || "";
   if (!apiKey) return { available: false, reason: "missing_key" };
@@ -224,4 +229,4 @@ async function checkImageSafety(imageUrl, { requireExternal = true } = {}) {
   return external;
 }
 
-module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };
+module.exports = { checkImageSafety, checkTextSafety, extractOpenRouterJson, imageRequestSafetyText, imageRetryNeedsTextOnly, imageRetryPrompt, isModerationResultBlocked, isTextModerationResultBlocked, localSafetyCheck, normalizeSafetyText };
