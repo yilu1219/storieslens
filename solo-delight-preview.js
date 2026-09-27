@@ -60,6 +60,8 @@
     storyTitle: '',
     resultImage: 'assets/original-garden-door-hd-v2.png',
     pictureReferenceFallback: false,
+    pictureSavePending: false,
+    pictureGenerationInFlight: false,
     session: null,
     wallet: null,
     imageCredits: 0,
@@ -583,8 +585,42 @@
     state.resultImage = result.imageUrl;
     state.pictureReferenceFallback = result.referenceFallback === true;
     updatePictureAllowance(result.wallet || state.wallet);
-    await saveProject({ pictureGenerated: true });
+    state.pictureSavePending = false;
+    try {
+      await saveProject({ pictureGenerated: true });
+    } catch (_error) {
+      // The image already exists and was charged. Retry saving, not generation.
+      state.pictureSavePending = true;
+    }
     return result.imageUrl;
+  }
+
+  function loadResultPicture(image, url) {
+    return new Promise(function (resolve, reject) {
+      let attempts = 0;
+      let timer;
+      function cleanup() {
+        window.clearTimeout(timer);
+        image.onload = image.onerror = null;
+      }
+      function failed() {
+        cleanup();
+        if (attempts < 2) load();
+        else reject(new Error('Your picture was generated, but could not load. Reload the same picture without using another gift.'));
+      }
+      function load() {
+        attempts += 1;
+        image.onload = function () {
+          if (!image.naturalWidth) return failed();
+          cleanup();
+          resolve();
+        };
+        image.onerror = failed;
+        timer = window.setTimeout(failed, 20000);
+        image.src = url;
+      }
+      load();
+    });
   }
 
   function setJourney(active) {
@@ -1307,6 +1343,8 @@
   }
 
   async function showDrawing(consentPanel, revealSlot, makeButton) {
+    if (state.pictureGenerationInFlight) return;
+    state.pictureGenerationInFlight = true;
     state.pictureConsentPanel = consentPanel || state.pictureConsentPanel;
     if (makeButton) {
       makeButton.disabled = true;
@@ -1381,6 +1419,8 @@
       showToast(message);
       const retry = (revealSlot || thread.lastElementChild).querySelector('[data-picture-retry]');
       if (retry) retry.addEventListener('click', function () { showDrawing(state.pictureConsentPanel, revealSlot, makeButton); });
+    } finally {
+      state.pictureGenerationInFlight = false;
     }
   }
 
@@ -1692,7 +1732,7 @@
     pictureStep.classList.remove('is-active');
     pictureStep.classList.add('is-done');
     pictureStep.querySelector('span').textContent = '✓';
-    const resultImage = state.resultImage || (state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png');
+    const resultImage = state.resultImage;
     const resultActions = hasAccount()
       ? '<div class="result-actions"><button class="result-action primary" type="button" data-result="keep">I love it</button><button class="result-action" type="button" data-result="change">Change something</button><button class="result-action" type="button" data-result="again">' + (state.betaUnlimitedCreation ? 'Try again · beta access' : 'Try again · 1 gift') + '</button></div>'
       : '<div class="guest-next-step"><small>YOUR FREE PICTURE IS READY</small><h3>What would you like to do next?</h3><p>Create a free grown-up account now so this picture and story move with you—nothing needs to be entered again.</p><div class="result-actions"><button class="result-action primary" type="button" data-result="signup-continue">Continue creating with Yu</button><button class="result-action" type="button" data-result="signup-download">Download my picture</button></div><span>Free account · private library · your work stays yours</span></div>';
@@ -1718,16 +1758,58 @@
       makeButton.disabled = true;
     }
     const image = result.querySelector('[data-result-image]');
-    image.addEventListener('error', function handleResultImageError() {
-      image.removeEventListener('error', handleResultImageError);
-      image.src = state.selectedStyle === 'Real-life story' && state.imageUrl ? state.imageUrl : 'assets/original-garden-door-hd-v2.png';
-      showToast(state.selectedStyle === 'Real-life story' ? 'Yu restored your prepared photo. Your story is still saved.' : 'Yu restored the picture preview. Your story is still saved.');
-    });
+    const pictureHeading = result.querySelector('.result-copy h2');
+    const reloadButton = document.createElement('button');
+    reloadButton.type = 'button';
+    reloadButton.className = 'why-button';
+    reloadButton.textContent = 'Reload this picture · no extra gift';
+    reloadButton.hidden = true;
+    image.parentElement.appendChild(reloadButton);
+    let celebrated = false;
+    async function displayPicture() {
+      reloadButton.hidden = true;
+      pictureHeading.textContent = 'Your picture is generated. Loading it now…';
+      if (makeButton) makeButton.textContent = '✓ Generated · loading your picture';
+      result.querySelectorAll('[data-result]').forEach(function (button) { button.disabled = true; });
+      try {
+        await loadResultPicture(image, resultImage);
+        pictureHeading.textContent = 'Your story just became a picture!';
+        if (makeButton) makeButton.textContent = '✓ My free first picture is ready below';
+        result.querySelectorAll('[data-result]').forEach(function (button) { button.disabled = false; });
+        if (!celebrated) {
+          celebrated = true;
+          celebrate(result.querySelector('.wow-reveal'));
+          speakText((state.name ? state.name + ', ' : '') + 'page ' + pageNumber + ' is ready! You imagined it, revised it, and made it visible!', 'celebration');
+        }
+      } catch (error) {
+        pictureHeading.textContent = error.message;
+        if (makeButton) makeButton.textContent = '✓ Generated · reload the picture below';
+        reloadButton.hidden = false;
+      }
+    }
+    reloadButton.addEventListener('click', displayPicture);
+    displayPicture();
+    if (state.pictureSavePending) {
+      const saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.className = 'why-button';
+      saveButton.textContent = 'Cloud save pending · retry saving (no extra gift)';
+      result.querySelector('.result-copy').appendChild(saveButton);
+      saveButton.addEventListener('click', async function () {
+        saveButton.disabled = true;
+        try {
+          await saveProject({ pictureGenerated: true });
+          state.pictureSavePending = false;
+          saveButton.remove();
+        } catch (_error) {
+          saveButton.disabled = false;
+          showToast('Cloud save is still unavailable. Keep this page open and try saving again.');
+        }
+      });
+    }
     window.requestAnimationFrame(function () {
       result.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      celebrate(result.querySelector('.wow-reveal'));
     });
-    setTimeout(function () { speakText((state.name ? state.name + ', ' : '') + 'page ' + pageNumber + ' is ready! You imagined it, revised it, and made it visible!', 'celebration'); }, 350);
     result.querySelectorAll('[data-result]').forEach(function (button) {
       button.addEventListener('click', async function () {
         if (button.dataset.result === 'signup-continue') {

@@ -312,7 +312,7 @@ test("real-life SOLO converts HEIC, requires adult consent, and calls the real i
   assert.match(script, /do not blend or swap faces/);
 });
 
-test("the finished picture replaces the progress card and always has a visible fallback", () => {
+test("the finished picture replaces progress and retries loading without a substitute image", () => {
   const preview = fs.readFileSync(path.join(__dirname, "..", "solo-delight-preview.js"), "utf8");
   assert.match(preview, /data-picture-reveal/);
   assert.match(preview, /showResult\(drawing, makeButton\)/);
@@ -320,8 +320,9 @@ test("the finished picture replaces the progress card and always has a visible f
   assert.match(preview, /My free first picture is ready below/);
   assert.match(preview, /progressMessage\.remove\(\)/);
   assert.match(preview, /data-result-image/);
-  assert.match(preview, /handleResultImageError/);
-  assert.match(preview, /original-garden-door-hd-v2\.png/);
+  assert.match(preview, /loadResultPicture\(image, resultImage\)/);
+  assert.match(preview, /Reload this picture · no extra gift/);
+  assert.doesNotMatch(preview.slice(preview.indexOf('  function showResult('), preview.indexOf('  function startPictureChange(')), /original-garden-door-hd-v2|image\.src = state\.selectedStyle/);
   assert.match(preview, /result\.scrollIntoView\(\{ behavior: 'smooth', block: 'start' \}\)/);
 });
 
