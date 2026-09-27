@@ -63,7 +63,11 @@ test('saving imports the actual generated image into private media and retries p
   const start = source.indexOf('  async function saveGeneratedPictureToLibrary(');
   const save = vm.runInNewContext(source.slice(start, source.indexOf('  function showFirstPictureSavePrompt(', start)) + ';saveGeneratedPictureToLibrary', {
     state, requireAccount: async () => {},
-    fetch: async () => ({ ok: true, blob: async () => new Blob(['image'], { type: 'image/png' }) }), File,
+    fetch: async (url, options) => {
+      assert.equal(url, '/api/projects/project-1/picture-source');
+      assert.equal(JSON.parse(options.body).imageUrl, 'https://example.test/generated.png');
+      return { ok: true, blob: async () => new Blob(['image'], { type: 'image/png' }) };
+    }, File,
     window: { StoriesLensArtworkSafety: { removeMetadata: async () => ({ dataUrl: 'data:image/webp;base64,AAAA' }) } },
     apiJson: async (url, options) => {
       uploads++;
@@ -79,6 +83,33 @@ test('saving imports the actual generated image into private media and retries p
   await save();
   assert.equal(uploads, 1);
   assert.equal(saves, 2);
+});
+
+test('same-origin picture retrieval requires an account and owned project before fetching bytes', async () => {
+  const api = fs.readFileSync(path.join(__dirname, '../platform-api.js'), 'utf8');
+  const start = api.indexOf('  async function handleProjects(');
+  const end = api.indexOf('    if (requestUrl.pathname === "/api/projects"', start);
+  let user = { id: 'owner', kind: 'account' }, owns = true, loads = 0, status;
+  const handler = vm.runInNewContext(api.slice(start, end) + 'return false; };handleProjects', {
+    sessionFor: () => ({ database: {}, user }),
+    requireProject: () => owns ? { id: 'project-1' } : null,
+    cleanId: value => value,
+    sendJson: (_req, code) => { status = code; },
+    rateLimiter: { consume: () => true },
+    readJsonBody: async () => ({ imageUrl: 'https://example.test/generated.png' }),
+    loadProjectImage: async () => { loads++; return { mimeType: 'image/png', buffer: Buffer.from('image') }; }
+  });
+  const req = { method: 'POST' }, url = { pathname: '/api/projects/project-1/picture-source' };
+  const res = { writeHead(code) { status = code; }, end(bytes) { assert.equal(bytes.toString(), 'image'); } };
+  user.kind = 'guest';
+  await handler(req, res, url);
+  assert.equal(status, 403); assert.equal(loads, 0);
+  user.kind = 'account'; owns = false;
+  await handler(req, res, url);
+  assert.equal(status, 403); assert.equal(loads, 0);
+  owns = true;
+  await handler(req, res, url);
+  assert.equal(status, 200); assert.equal(loads, 1);
 });
 
 test('the save prompt follows decoded-image success, not the generation button or error', () => {

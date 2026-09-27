@@ -1690,6 +1690,28 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
   }
 
   async function handleProjects(request, response, requestUrl) {
+    const pictureSourceMatch = requestUrl.pathname.match(/^\/api\/projects\/([^/]+)\/picture-source$/);
+    if (pictureSourceMatch && request.method === "POST") {
+      const { database, user } = sessionFor(request, response);
+      const project = requireProject(database, user, cleanId(decodeURIComponent(pictureSourceMatch[1])));
+      if (user.kind !== "account" || !project) {
+        sendJson(response, 403, { error: "Sign in to the account that owns this story before saving its picture." });
+        return true;
+      }
+      if (!rateLimiter.consume(request, response, { bucket: "picture-source", limit: 20, windowMs: 60 * 60 * 1000, sendJson })) return true;
+      const body = await readJsonBody(request, 12_000);
+      // Provider images may display cross-origin but forbid browser fetch.
+      // Reuse the export loader's public-HTTPS/SSRF and image-size checks.
+      const picture = await loadProjectImage(database, user, project, body.imageUrl);
+      if (!picture || !["image/jpeg", "image/png", "image/webp"].includes(picture.mimeType)) {
+        sendJson(response, 422, { error: "The generated picture could not be retrieved. Keep this page open and try saving again." });
+        return true;
+      }
+      response.writeHead(200, { "Content-Type": picture.mimeType, "Content-Length": picture.buffer.length, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
+      response.end(picture.buffer);
+      return true;
+    }
+
     if (requestUrl.pathname === "/api/projects" && request.method === "GET") {
       const { database, user } = sessionFor(request, response);
       const projects = database.projects.filter((project) => project.ownerId === user.id && !project.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

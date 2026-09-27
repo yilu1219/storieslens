@@ -1457,10 +1457,14 @@
   async function saveGeneratedPictureToLibrary() {
     await requireAccount();
     if (!/^\/api\/media\//.test(state.resultImage || '')) {
-      const response = await fetch(state.resultImage, { credentials: 'same-origin' });
+      const response = await fetch('/api/projects/' + encodeURIComponent(state.projectId) + '/picture-source', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: state.resultImage })
+      });
       if (!response.ok) throw new Error('The picture could not be downloaded for saving. Keep this page open and try again.');
       const blob = await response.blob();
-      const prepared = await window.StoriesLensArtworkSafety.removeMetadata(new File([blob], 'story-picture', { type: blob.type }));
+      const prepared = await window.StoriesLensArtworkSafety.removeMetadata(new File([blob], 'story-picture.png', { type: blob.type }));
       const uploaded = await apiJson('/api/media', {
         method: 'POST',
         body: JSON.stringify({ projectId: state.projectId, dataUrl: prepared.dataUrl, metadataRemoved: true, purpose: 'story-picture', personalPhotoConsentId: state.personalPhotoConsentId || '' })
