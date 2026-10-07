@@ -297,6 +297,10 @@
         const questions = ["少侠，古琴声从哪里传来？谁第一个听见了？", "琴声突然停下时，什么困难出现在主角面前？", "主角第一次用了什么办法？结果发生了什么？", "这场交锋中，哪个动作最能表现人物的性格？", "刀剑与古琴之间，主角最终做出了什么选择？", "最后一声琴音响起时，谁发生了改变？"];
         return { question: questions[beat.index] || beat.prompt };
       }
+      if (activeSquad.theme === "sailing" && activeSquad.language === "zh") {
+        const questions = ["船上有谁？比赛开始时，每个人正在做什么？", "风向、浪或航线发生了什么变化？", "大家第一次用了什么办法？结果怎样？", "谁注意到了一个重要细节？这个发现改变了什么？", "意见不同时，团队做出了什么选择？为什么？", "冲线以后，大家最想记住这次比赛里的什么？"];
+        return { question: questions[beat.index] || beat.prompt };
+      }
       return { question: beat.prompt };
     }
     const checked = window.StoriesLensMentorRevision?.basicCheck?.(mentorState.activeSentence, activeSquad.language) || { suggestion: mentorState.activeSentence, changed: false };
@@ -333,7 +337,7 @@
           storyDnaContext: approvedStoryContext(activeSquad),
           studentDraft: draft,
           selectedText: mentorState.activeSentence,
-          teacherInstructions: `${activeSquad.theme === "wuxia" ? "Speak as 小羽大侠, a warm wuxia writing mentor. When useful, ask about the sound of the guqin, the rhythm of an action, the setting, the character's motive, or the choice behind the fight. Keep all action non-graphic and original; never imitate an existing film or filmmaker. " : ""}Keep the language child-friendly. Guide this exact story beat with one short question: ${beat.prompt} Refer to the approved shared story, but never write the next plot event for the creator.`
+          teacherInstructions: `${activeSquad.theme === "wuxia" ? "Speak as 小羽大侠, a warm wuxia writing mentor. When useful, ask about the sound of the guqin, the rhythm of an action, the setting, the character's motive, or the choice behind the fight. Keep all action non-graphic and original; never imitate an existing film or filmmaker. " : activeSquad.theme === "sailing" ? "Guide this real sailing-team memory with one short question about wind, teamwork, role, decision, sensory detail, or what the group learned. Do not invent a disaster, unsafe maneuver, result, or achievement that the children did not report. " : ""}Keep the language child-friendly. Guide this exact story beat with one short question: ${beat.prompt} Refer to the approved shared story, but never write the next plot event for the creator.`
         })
       });
       renderMentorGuidance(response.result || {}, review);

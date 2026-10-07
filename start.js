@@ -41,6 +41,8 @@
   const wuxiaStyleCards = [...document.querySelectorAll("[data-wuxia-style-card]")];
   const wuxiaStoryHints = document.querySelector("[data-wuxia-story-hints]");
   const wuxiaHintButtons = [...document.querySelectorAll("[data-wuxia-hint]")];
+  const sailingStoryHints = document.querySelector("[data-sailing-story-hints]");
+  const sailingHintButtons = [...document.querySelectorAll("[data-sailing-hint]")];
   const travelOutputButtons = [...document.querySelectorAll("[data-travel-output]")];
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
@@ -77,6 +79,7 @@
   const t = (text) => window.StoriesLensI18n?.t(text) || text;
 
   const themeConfigs = {
+    sailing: { origin: "picture", title: "我们的帆船故事", style: "cinematic", heading: "先选书或电影，再上传一张帆船照片", lede: "一张比赛照，六段接力，最后成为属于团队的故事书或电影。", seed: "比赛开始前，大家最期待什么？海上的哪个瞬间改变了计划？你们怎样一起完成？", uploadTitle: "上传一张帆船比赛照片", uploadButton: "＋ 选择帆船照片", uploadStatus: "请先取得照片中孩子监护人的私密创作许可；默认私密，不会自动用于宣传。", cta: "开始帆船共创", requirePhoto: true, characterRules: "以已获监护人许可的比赛照片作为人物与帆船参考；人物面貌、发型、救生衣颜色、船体与船帆颜色始终一致；保持帆船运动基本动作与装备合理；不添加危险行为或灾难；画面中不显示学校全名、联系方式、赛事号码、标志或水印；公开宣传前必须另行取得每位孩子监护人的公开使用许可。" },
     travel: { origin: "picture", title: "我们的旅行故事", style: "ink-watercolor", heading: "先选书或电影，再上传一张旅行照", lede: "大家说或写一句当时发生了什么，就能开始共创。", seed: "说一句：照片在哪里拍的？当时发生了什么？", uploadTitle: "上传旅行照片", uploadButton: "＋ 选择旅行照片", uploadStatus: "照片会先删除位置和设备信息，并默认私密。", cta: "开始旅行故事共创", requirePhoto: true },
     wuxia: { origin: "imagination", title: "我们的江湖故事", style: "ink-watercolor", heading: "先选书或电影，再开启你们的江湖", lede: "古琴一响，故事开场。小羽大侠会用问题带大家写出人物、困难、选择和结局。", seed: "雨夜里，谁听见了古琴声？他为什么走进江湖？眼前出现了什么困难？", cta: "开始武侠共创", characterRules: "原创中国武侠世界，古琴是推动故事的重要道具；动作像舞蹈一样有节奏，衣袂与雨、竹林或水面呼应；人物年龄、脸型、发型、服装颜色、兵器和古琴始终一致；非血腥，不出现伤口；不复制现有电影人物、服装或镜头。" },
     fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
@@ -172,7 +175,7 @@
     if (squadTitle) squadTitle.value = config.title;
     if (squadOutput) squadOutput.value = "book";
     if (squadStyle) squadStyle.value = config.style;
-    if (squadCharacterRules && config.characterRules) squadCharacterRules.value = config.characterRules;
+    if (squadCharacterRules) squadCharacterRules.value = config.characterRules || "";
     if (storySeed && config.seed && storyTheme === "csl-classroom") storySeed.value = config.seed;
     const outputTitle = travelOutputChoice?.querySelector(":scope > strong");
     const outputBook = travelOutputChoice?.querySelector('[data-travel-output="book"]');
@@ -195,6 +198,7 @@
     if (themeMentor) themeMentor.hidden = storyTheme !== "wuxia";
     if (wuxiaStyleChoices) wuxiaStyleChoices.hidden = storyTheme !== "wuxia";
     if (wuxiaStoryHints) wuxiaStoryHints.hidden = storyTheme !== "wuxia";
+    if (sailingStoryHints) sailingStoryHints.hidden = storyTheme !== "sailing";
   };
   applyStoryTheme();
 
@@ -383,6 +387,14 @@
     wuxiaHintButtons.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
     storySeed.focus();
     storySeed.setSelectionRange(storySeed.value.indexOf("________"), storySeed.value.indexOf("________") + 8);
+  }));
+  sailingHintButtons.forEach((button) => button.addEventListener("click", () => {
+    if (!storySeed) return;
+    storySeed.value = button.dataset.sailingHint;
+    sailingHintButtons.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
+    storySeed.focus();
+    const blank = storySeed.value.indexOf("________");
+    if (blank >= 0) storySeed.setSelectionRange(blank, blank + 8);
   }));
 
   const clearStyleReference = () => {
@@ -881,7 +893,7 @@
     }
 
     if (mode === "squad" && squadAction === "create" && themeConfigs[storyTheme]?.requirePhoto && !importedWork) {
-      error.textContent = "请先上传一张旅行照，再开始旅行故事共创。";
+      error.textContent = storyTheme === "sailing" ? "请先上传一张已获监护人许可的帆船比赛照片，再开始团队共创。" : "请先上传一张旅行照，再开始旅行故事共创。";
       workFile?.focus();
       return;
     }

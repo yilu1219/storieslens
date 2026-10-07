@@ -31,4 +31,5 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes('squad.outputType === "film" ? "movie-studio.html" : "book-studio.html"'), "assembled books and films should open their matching studio");
   assert(api.includes('theme: squad.theme || ""') && script.includes('theme: setup.theme'), "the selected creation theme should survive entry into the real private squad");
   assert(script.includes("assets/yu-wuxia-master-v1.png") && script.includes("Speak as 小羽大侠") && script.includes("古琴声从哪里传来"), "a wuxia squad should show Hero Yu and keep both live and fallback guidance in the original guqin story world");
+  assert(script.includes('activeSquad.theme === "sailing"') && script.includes("风向、浪或航线") && script.includes("Do not invent a disaster"), "a sailing squad should ask about authentic teamwork and never invent unsafe or unreported race events");
 });

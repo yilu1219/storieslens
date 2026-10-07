@@ -1986,7 +1986,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           title,
           language: body.language === "zh" ? "zh" : "en",
           outputType: body.outputType === "film" ? "film" : "book",
-          theme: ["travel", "wuxia", "fantasy", "lianhuanhua", "my-story", "csl-classroom", "free"].includes(body.theme) ? body.theme : "",
+          theme: ["sailing", "travel", "wuxia", "fantasy", "lianhuanhua", "my-story", "csl-classroom", "free"].includes(body.theme) ? body.theme : "",
           ageGroup: body.ageGroup === "under18" ? "under18" : "mixed",
           guardianConfirmed: body.guardianConfirmed === true,
           joinCode,
