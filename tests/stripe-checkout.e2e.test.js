@@ -140,6 +140,7 @@ test("a verified Stripe webhook grants the purchased allowance exactly once", { 
         livemode: false,
         payment_status: "paid",
         payment_intent: "pi_test_storieslens_123",
+        customer: "cus_TestStorieslensParent123",
         customer_details: { email: "parent@example.test" }
       } }
     };
@@ -156,6 +157,11 @@ test("a verified Stripe webhook grants the purchased allowance exactly once", { 
     assert.equal(after.payload.purchases.filter((item) => item.packageId === "creator-story").length, 1);
     const status = await jsonRequest(baseUrl, `/api/payments/checkout-status?session_id=${checkout.payload.sessionId}`, { cookie: accountCookie });
     assert.equal(status.payload.order.status, "paid");
+
+    const repeatCheckout = await jsonRequest(baseUrl, "/api/checkout-link", { method: "POST", cookie: accountCookie, body: { offer: "story-pass" } });
+    assert.equal(repeatCheckout.response.status, 201);
+    assert.equal(checkoutForm.get("customer"), "cus_TestStorieslensParent123");
+    assert.equal(checkoutForm.has("customer_creation"), false);
 
     async function sendSignedStripeEvent(stripeEvent) {
       const body = JSON.stringify(stripeEvent);

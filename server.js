@@ -122,17 +122,22 @@ async function generateReviewedImage(provider, imageRequest) {
     }
   };
 
-  try {
-    return await generateOnce(imageRequest);
-  } catch (error) {
-    if (!imageRequest.retryPrompt || !shouldRetryImageGeneration(error)) throw error;
-  }
-  const result = await generateOnce({
+  const retryRequest = {
     ...imageRequest,
-    prompt: imageRequest.retryPrompt,
+    prompt: imageRequest.retryPrompt || imageRequest.prompt,
     retryPrompt: ""
-  });
-  return result;
+  };
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await generateOnce(attempt === 0 ? imageRequest : retryRequest);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2 || !shouldRetryImageGeneration(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+  throw lastError;
 }
 
 function resolveRequestPath(urlPathname) {
@@ -444,7 +449,7 @@ function getImageConfig() {
     provider: getConfigValue("IMAGE_PROVIDER", "image.provider") || "OPENROUTER",
     model: getConfigValue("IMAGE_MODEL", "OPENROUTER_IMAGE_MODEL", "image.model") || "bytedance-seed/seedream-4.5",
     aspectRatio: getConfigValue("IMAGE_ASPECT_RATIO", "image.aspectRatio") || "16:9",
-    size: getConfigValue("IMAGE_SIZE", "OPENROUTER_IMAGE_SIZE", "image.size") || "2560x1440",
+    size: getConfigValue("IMAGE_SIZE", "OPENROUTER_IMAGE_SIZE", "image.size") || "2K",
     resolution: getConfigValue("IMAGE_RESOLUTION", "image.resolution") || "",
     openRouterApiKey: getConfigValue("OPENROUTER_API_KEY", "openrouter.apiKey"),
     openRouterImageApiUrl: getConfigValue("OPENROUTER_IMAGE_API_URL", "openrouter.imageApiUrl") || `${baseUrl}/images`,
@@ -457,7 +462,7 @@ function getChinaImageConfig() {
   const baseUrl = String(process.env.CHINA_ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3").replace(/\/+$/, "");
   return {
     provider: "VOLCENGINE_ARK",
-    model: process.env.CHINA_ARK_IMAGE_MODEL || "doubao-seedream-5-0-lite-260128",
+    model: process.env.CHINA_ARK_IMAGE_MODEL || "doubao-seedream-5-0-260128",
     size: process.env.CHINA_ARK_IMAGE_SIZE || "2K",
     apiKey: process.env.CHINA_ARK_API_KEY || "",
     imageApiUrl: process.env.CHINA_ARK_IMAGE_API_URL || `${baseUrl}/images/generations`,
@@ -806,6 +811,7 @@ function buildImagePrompt(body) {
   const style = String(body.style || "Warm storybook illustration").trim();
   const characterRules = String(body.characterRules || body.approvedCharacters || "").trim();
   const referenceCount = Array.isArray(body.referenceImageUrls) ? body.referenceImageUrls.filter(Boolean).length : 0;
+  const sceneCharacterCount = Math.max(0, Math.min(referenceCount - 1, Number(body.squadSceneCharacterCount) || 0));
 
   const storyPrompt = suppliedPrompt ? [suppliedPrompt] : [
     "Create a classroom-friendly story illustration.",
@@ -838,7 +844,9 @@ function buildImagePrompt(body) {
     "",
     "REFERENCE-LED CREATION — HIGHEST VISUAL PRIORITY:",
     `- ${referenceCount} user-approved reference image${referenceCount === 1 ? " is" : "s are"} attached. Treat the first image as the primary visual anchor, not as loose inspiration.`,
-    referenceCount > 1 ? "- Multiple references may represent different protagonists. Keep every identity separate: never blend or swap faces, include every referenced protagonist exactly once, omit nobody, and add no extra people." : "",
+    sceneCharacterCount ? "- The first reference is the project’s style and world anchor. Use its palette and art direction, but do not copy every person shown in it." : "",
+    sceneCharacterCount ? `- The final ${sceneCharacterCount} reference image${sceneCharacterCount === 1 ? " is the only character" : "s are the only characters"} allowed in this scene. Include each exactly once; do not add anyone else.` : "",
+    !sceneCharacterCount && referenceCount > 1 ? "- Multiple references may represent different protagonists. Keep every identity separate: never blend or swap faces, include every referenced protagonist exactly once, omit nobody, and add no extra people." : "",
     "- Preserve the same person or character identity: facial structure, skin tone, age, hairstyle, body proportions, clothing colors, distinctive accessories, and other recognizable features.",
     "- If the reference is a child’s drawing, preserve its character design, shapes, color relationships, and imaginative details instead of replacing them with a generic character.",
     "- Apply the selected visual style to the reference while changing only the pose, action, camera, and story setting needed for this scene.",
@@ -962,7 +970,7 @@ class OpenRouterImageProvider {
       response_format: "url"
     };
 
-    if (imageRequest.resolution) {
+    if (!imageRequest.size && imageRequest.resolution) {
       payload.resolution = imageRequest.resolution;
     }
 
@@ -1104,9 +1112,9 @@ async function handleGenerateImage(request, response) {
   let creditReservation = null;
   try {
     const body = await readJsonBody(request, 12_000_000);
-    if (body.personalPhoto === true) handlePlatformApi.creditManager.assertPersonalPhotoConsent(request, response, body.personalPhotoConsentId);
+    if (body.personalPhoto === true) handlePlatformApi.creditManager.assertPersonalPhotoConsent(request, response, body.personalPhotoConsentIds || body.personalPhotoConsentId);
     const squadContext = body.squadId && (body.cardId || body.squadAnchor === true)
-      ? handlePlatformApi.creditManager.squadGenerationContext(request, response, { squadId: body.squadId, cardId: body.cardId, anchor: body.squadAnchor === true })
+      ? await handlePlatformApi.creditManager.squadGenerationContext(request, response, { squadId: body.squadId, cardId: body.cardId, anchor: body.squadAnchor === true, characterCardIds: body.characterCardIds })
       : null;
     const payerId = squadContext?.payerId || handlePlatformApi.creditManager.ownerId(request, response);
     const providerRegion = handlePlatformApi.creditManager.accountRegion(request, response);
@@ -1117,6 +1125,7 @@ async function handleGenerateImage(request, response) {
       cinematic: "cinematic animated-feature concept art",
       comic: "polished graphic-novel illustration with clean readable staging",
       "block-world": "original colorful voxel block-world story art with cubic environments and friendly block-built characters; do not copy Minecraft branding, characters, textures, logos, or protected game assets",
+      "japanese-handpainted": "original Japanese-inspired hand-painted family animation with delicate linework, luminous gouache backgrounds, gentle natural light, expressive movement, and whimsical environmental details; do not imitate any named artist, studio, film, franchise, or copyrighted character",
       "cyber-future": "ultra-modern optimistic future-world cinematic concept art with monumental luminous architecture, floating transit, transparent sky bridges, vertical gardens, clean-energy technology, grand depth and wonder, and clearly readable child-friendly characters; bright and welcoming, never dystopian, ruined, threatening, or violent",
       "real-life-story": "photorealistic, family-friendly story scene led by the approved personal photo; preserve the exact people, facial identity, age, skin tone, hairstyle, clothing, body proportions, and number of people; use natural skin texture and cinematic light without beautifying, aging, face reshaping, identity swapping, or adding people"
     };
@@ -1125,6 +1134,7 @@ async function handleGenerateImage(request, response) {
       "SHARED STORY VISUAL BIBLE — MUST FOLLOW:",
       `Locked visual style (version ${squadContext.visualVersion}): ${styleNames[squadContext.visualStyle] || squadContext.visualStyle}.`,
       squadContext.characterRules ? `Locked character and world rules: ${squadContext.characterRules}` : "Keep every recurring character’s face, age, hairstyle, clothing, proportions, signature objects, and color palette identical to the approved reference image.",
+      squadContext.sceneCharacterRules ? `ONLY THESE CHARACTERS APPEAR IN THIS SCENE:\n${squadContext.sceneCharacterRules}` : "",
       squadContext.referenceImageUrls.length ? "The supplied approved images are canonical references. Preserve their character identity and art direction; change only the action, pose, camera, and setting required by this scene." : "This is the owner-created visual anchor. Establish clear, repeatable character designs and a stable palette for every later scene.",
       "Do not redesign recurring characters. Do not add readable text, logos, or watermarks."
     ].filter(Boolean).join("\n\n") : body.prompt;
@@ -1133,6 +1143,7 @@ async function handleGenerateImage(request, response) {
     const imageRequest = createImageGenerationRequest({
       ...body,
       prompt: consistencyPrompt,
+      squadSceneCharacterCount: squadContext?.sceneCharacterCount || 0,
       referenceImageUrls: [...new Set([...canonicalReferenceImageUrls, ...requestedReferenceImageUrls])]
     });
     await enforceImagePromptSafety(body, imageRequest);
@@ -1172,7 +1183,7 @@ async function handleCreateProjectPartImageTask(request, response, partId) {
   let creditReservation = null;
   try {
     const body = await readJsonBody(request, 12_000_000);
-    if (body.personalPhoto === true) handlePlatformApi.creditManager.assertPersonalPhotoConsent(request, response, body.personalPhotoConsentId);
+    if (body.personalPhoto === true) handlePlatformApi.creditManager.assertPersonalPhotoConsent(request, response, body.personalPhotoConsentIds || body.personalPhotoConsentId);
     const taskId = Date.now();
     const imageRequest = createImageGenerationRequest(body, {
       projectId: body.projectId || "project",

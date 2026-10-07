@@ -123,12 +123,47 @@ test("private squad supports approval, shared contributions and credited assembl
       "approving a collaborator is free; each creator pays only for their own generation"
     );
 
+    const databasePath = path.join(dataDirectory, "platform.json");
+    const database = JSON.parse(fs.readFileSync(databasePath, "utf8"));
+    const storedMember = database.squadMembers.find((member) => member.id === pendingMember.id);
+    const mediaId = "leo-character-card";
+    const mediaPath = path.join(dataDirectory, "media", `${mediaId}.png`);
+    fs.mkdirSync(path.dirname(mediaPath), { recursive: true });
+    const mediaBuffer = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+    fs.writeFileSync(mediaPath, mediaBuffer);
+    database.media.push({ id: mediaId, ownerId: storedMember.userId, projectId: "", squadId, kind: "image", mimeType: "image/png", bytes: mediaBuffer.length, storageProvider: "local", storageRegion: "local", storageKey: `${mediaId}.png`, filePath: mediaPath, private: true, metadataRemoved: true, containsRealPerson: false, personalPhotoConsentId: "", createdAt: new Date().toISOString() });
+    fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
+    const savedCharacter = await request(baseUrl, `/api/squads/${squadId}/cast-reference`, {
+      method: "POST", origin: true, cookies: [memberCookie],
+      body: { mediaId, characterName: "Leo", description: "Four years old, short black hair, red coat." }
+    });
+    assert.equal(savedCharacter.response.status, 200);
+    const lockedCharacter = await request(baseUrl, `/api/squads/${squadId}/cast-reference/${pendingMember.id}/lock`, {
+      method: "POST", origin: true, cookies: [ownerCookie], body: {}
+    });
+    assert.equal(lockedCharacter.response.status, 200);
+    assert.equal(lockedCharacter.payload.squad.members.find((member) => member.id === pendingMember.id).castLocked, true);
+    const blockedReplacement = await request(baseUrl, `/api/squads/${squadId}/cast-reference`, {
+      method: "POST", origin: true, cookies: [memberCookie],
+      body: { mediaId, characterName: "Different Leo", description: "Changed design" }
+    });
+    assert.equal(blockedReplacement.response.status, 409);
+    assert.equal(blockedReplacement.payload.code, "SQUAD_CHARACTER_CARD_LOCKED");
+
+    const claimedScene = await request(baseUrl, `/api/squads/${squadId}/scenes/1/claim`, {
+      method: "POST", origin: true, cookies: [memberCookie], body: {}
+    });
+    assert.equal(claimedScene.response.status, 200);
+    assert.equal(claimedScene.payload.squad.sceneClaims[0].sceneNumber, 1);
+    assert.equal(claimedScene.payload.squad.sceneClaims[0].isMine, true);
+
     const posted = await request(baseUrl, `/api/squads/${squadId}/cards`, {
       method: "POST", cookies: [memberCookie], body: { text: "Leo finds a silver feather beside the lantern.", yuGuided: true }
     });
     assert.equal(posted.response.status, 201);
     assert.equal(posted.payload.squad.cards[0].status, "pending");
     assert.equal(posted.payload.squad.cards[0].yuGuided, true);
+    assert.equal(posted.payload.squad.cards[0].sceneNumber, 1);
 
     const ownerWithCard = await request(baseUrl, `/api/squads/${squadId}`, { cookies: [ownerCookie] });
     const card = ownerWithCard.payload.squad.cards[0];
@@ -162,11 +197,12 @@ test("private squad supports approval, shared contributions and credited assembl
 
     const visualAdded = await request(baseUrl, `/api/squads/${squadId}/cards/${card.id}/visual`, {
       method: "POST", cookies: [memberCookie],
-      body: { imageUrl: "/public/generated/leo-lantern-scene.png" }
+      body: { imageUrl: "/public/generated/leo-lantern-scene.png", characterCardIds: [pendingMember.id] }
     });
     assert.equal(visualAdded.response.status, 200);
     assert.equal(visualAdded.payload.squad.cards[0].visualStatus, "pending");
     assert.equal(visualAdded.payload.squad.cards[0].imageUrl, "/public/generated/leo-lantern-scene.png");
+    assert.deepEqual(visualAdded.payload.squad.cards[0].characterCardIds, [pendingMember.id]);
 
     const ownerVisualReview = await request(baseUrl, `/api/squads/${squadId}`, { cookies: [ownerCookie] });
     assert.equal(ownerVisualReview.payload.squad.cards[0].visualStatus, "pending");
@@ -191,6 +227,9 @@ test("private squad supports approval, shared contributions and credited assembl
     assert.equal(assembled.response.status, 201);
     assert.equal(assembled.payload.project.scenes[0].text, "Leo finds a silver feather beside the lantern.");
     assert.equal(assembled.payload.project.scenes[0].imageUrl, "/public/generated/leo-lantern-scene.png");
+    assert.equal(assembled.payload.project.coverImageUrl, "/public/generated/lantern-team-anchor.png");
+    assert.equal(assembled.payload.project.clientSnapshot.poster.presenter, "StoriesLens Presents");
+    assert.equal(assembled.payload.project.clientSnapshot.poster.title, "The Lantern Team");
     assert.equal(assembled.payload.project.clientSnapshot.credits[0].authorName, "Leo");
     assert.equal(assembled.payload.project.clientSnapshot.credits[0].yuGuided, true);
   } catch (error) {

@@ -7,7 +7,7 @@ const { createRegionalObjectStorage } = require("./regional-object-storage");
 const { assertLaunchReady, evaluateLaunchReadiness } = require("./launch-readiness");
 const { createRequestRateLimiter } = require("./request-rate-limit");
 const { createGrowthReport, REPORT_VERSION } = require("./book-recommendations");
-const { STRIPE_OFFERS, createCheckoutSession, verifyWebhookSignature } = require("./stripe-payments");
+const { STRIPE_OFFERS, createCheckoutSession, priceIdForOffer, verifyWebhookSignature } = require("./stripe-payments");
 const {
   ensureCreditCollections,
   publicPackageCatalog,
@@ -344,14 +344,25 @@ function publicSquad(database, squad, viewerId) {
   const isOwner = squad.ownerId === viewerId;
   const members = database.squadMembers
     .filter((member) => member.squadId === squad.id && !member.removedAt && (isOwner || member.status === "approved" || member.userId === viewerId))
-    .map((member) => ({
-      id: member.id,
-      displayName: member.displayName,
-      role: member.role,
-      status: member.status,
-      joinedAt: member.joinedAt,
-      approvedAt: member.approvedAt || ""
-    }));
+    .map((member) => {
+      const castMedia = database.media?.find((item) => item.id === member.castReferenceMediaId && item.squadId === squad.id && item.kind === "image");
+      return {
+        id: member.id,
+        displayName: member.displayName,
+        role: member.role,
+        status: member.status,
+        joinedAt: member.joinedAt,
+        approvedAt: member.approvedAt || "",
+        castCharacterName: member.castCharacterName || member.displayName,
+        castDescription: member.castDescription || "",
+        castReferenceImageUrl: castMedia ? `/api/media/${castMedia.id}` : "",
+        castReferencePersonalPhoto: Boolean(castMedia?.containsRealPerson),
+        castReferenceConsentId: (isOwner || member.userId === viewerId) ? (castMedia?.personalPhotoConsentId || "") : "",
+        castLocked: Boolean(member.castLockedAt && castMedia),
+        castLockedAt: member.castLockedAt || "",
+        isViewer: member.userId === viewerId
+      };
+    });
   const cards = database.squadCards
     .filter((card) => card.squadId === squad.id && !card.deletedAt && (isOwner || card.status === "approved" || card.authorId === viewerId))
     .sort((a, b) => a.position - b.position || a.createdAt.localeCompare(b.createdAt))
@@ -370,6 +381,8 @@ function publicSquad(database, squad, viewerId) {
         yuGuided: card.yuGuided === true,
         canEdit,
         status: card.status,
+        sceneNumber: Number(card.sceneNumber || 0),
+        characterCardIds: Array.isArray(card.characterCardIds) ? card.characterCardIds : [],
         position: card.position,
         createdAt: card.createdAt,
         updatedAt: card.updatedAt
@@ -392,6 +405,12 @@ function publicSquad(database, squad, viewerId) {
     createdAt: squad.createdAt,
     updatedAt: squad.updatedAt,
     assembledProjectId: squad.assembledProjectId || "",
+    sceneClaims: (squad.sceneClaims || []).map((claim) => ({
+      sceneNumber: Number(claim.sceneNumber),
+      displayName: claim.displayName,
+      isMine: claim.userId === viewerId,
+      claimedAt: claim.claimedAt
+    })),
     viewer: viewer ? { membershipId: viewer.id, role: viewer.role, status: viewer.status, displayName: viewer.displayName } : null,
     members,
     cards
@@ -606,7 +625,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     const keyMatchesMode = liveExpected
       ? /^(?:sk|rk)_live_/.test(secretKey)
       : /^(?:sk|rk)_test_/.test(secretKey);
-    return { secretKey, webhookSecret, liveExpected, ready: keyMatchesMode && webhookSecret.startsWith("whsec_") };
+    const apiVersion = cleanText(process.env.STRIPE_API_VERSION, 80);
+    const versionValid = !apiVersion || /^\d{4}-\d{2}-\d{2}\.[a-z]+$/.test(apiVersion);
+    return { secretKey, webhookSecret, liveExpected, apiVersion, ready: keyMatchesMode && webhookSecret.startsWith("whsec_") && versionValid };
   }
 
   function ensureStripeCollections(database) {
@@ -623,16 +644,19 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     const offer = order ? offerCatalog[order.offerId] : null;
     const expectedLiveMode = process.env.STRIPE_LIVE_MODE === "true";
     const sessionPaymentIntent = typeof session?.payment_intent === "string" ? session.payment_intent : session?.payment_intent?.id || "";
+    const sessionCustomerId = cleanId(typeof session?.customer === "string" ? session.customer : session?.customer?.id || "");
     const amountMatches = Number(session?.amount_total) === Number(offer?.amountMinor);
     const currencyMatches = String(session?.currency || "").toLowerCase() === String(offer?.currency || "").toLowerCase();
     const metadataMatches = Boolean(order && offer
       && session?.client_reference_id === order.id
       && session?.metadata?.account_id === order.ownerId
       && session?.metadata?.offer_id === order.offerId
-      && String(session?.metadata?.package_id || "") === String(offer.packageId || ""));
+      && String(session?.metadata?.package_id || "") === String(offer.packageId || "")
+      && String(session?.metadata?.price_id || "") === String(order.stripePriceId || ""));
+    const customerMatches = Boolean(!order?.stripeCustomerId || sessionCustomerId === order.stripeCustomerId);
     const liveModeMatches = Boolean(session?.livemode) === expectedLiveMode;
     const paid = ["paid", "no_payment_required"].includes(session?.payment_status);
-    const accepted = metadataMatches && amountMatches && currencyMatches && liveModeMatches && paid;
+    const accepted = metadataMatches && customerMatches && amountMatches && currencyMatches && liveModeMatches && paid;
 
     if (!accepted) {
       if (order) {
@@ -671,6 +695,13 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       });
     }
     const customerEmail = validateDestination("email", session?.customer_details?.email);
+    if (sessionCustomerId.startsWith("cus_")) {
+      const account = database.users.find((item) => item.id === order.ownerId && item.kind === "account");
+      if (account && !account.stripeCustomerId) {
+        account.stripeCustomerId = sessionCustomerId;
+        account.updatedAt = nowIso();
+      }
+    }
     Object.assign(order, {
       status: "paid",
       paidAt: order.paidAt || nowIso(),
@@ -872,6 +903,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         sendJson(response, 400, { error: "Choose a valid StoriesLens package." });
         return true;
       }
+      const stripePriceId = priceIdForOffer(offer);
+      if (stripe.liveExpected && !stripePriceId) {
+        sendJson(response, 503, { code: "STRIPE_PRICE_NOT_CONFIGURED", error: `${offer.name} is not ready for live checkout yet.` });
+        return true;
+      }
+      const stripeCustomerId = /^cus_[A-Za-z0-9]+$/.test(String(user.stripeCustomerId || "")) ? user.stripeCustomerId : "";
       const order = {
         id: crypto.randomUUID(),
         ownerId: user.id,
@@ -884,6 +921,8 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         expectedAmountMinor: offer.amountMinor,
         currency: offer.currency.toUpperCase(),
         paymentProvider: "stripe",
+        stripePriceId,
+        stripeCustomerId,
         status: "creating_checkout",
         createdAt: nowIso(),
         updatedAt: nowIso()
@@ -896,9 +935,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const session = await createCheckoutSession({
           secretKey: stripe.secretKey,
           apiBaseUrl: process.env.STRIPE_API_BASE_URL || "https://api.stripe.com",
+          apiVersion: stripe.apiVersion,
           publicBaseUrl: process.env.PUBLIC_BASE_URL,
           order,
-          offer
+          offer,
+          priceId: stripePriceId,
+          customerId: stripeCustomerId
         });
         store.mutate((database) => {
           const stored = database.orders.find((item) => item.id === order.id);
@@ -1947,10 +1989,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           guardianConfirmed: body.guardianConfirmed === true,
           joinCode,
           status: "collecting",
-          visualStyle: ["storybook-watercolor", "ink-watercolor", "cinematic", "comic", "block-world"].includes(body.visualStyle) ? body.visualStyle : (body.language === "zh" ? "ink-watercolor" : "storybook-watercolor"),
+          visualStyle: ["storybook-watercolor", "ink-watercolor", "cinematic", "comic", "block-world", "japanese-handpainted"].includes(body.visualStyle) ? body.visualStyle : (body.language === "zh" ? "ink-watercolor" : "storybook-watercolor"),
           characterRules: cleanText(body.characterRules, 1200),
           visualAnchorImageUrl: "",
           visualVersion: 1,
+          sceneClaims: [],
           visualSettingsLockedAt: now,
           assembledProjectId: "",
           createdAt: now,
@@ -2042,8 +2085,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const squadId = cleanId(decodeURIComponent(squadPhotoConsentMatch[1]));
       const body = await readJsonBody(request);
       const database = store.read();
-      const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
-      if (!squad) {
+      const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
+      const member = squad ? squadMembership(database, squad.id, user.id) : null;
+      if (!squad || member?.status !== "approved") {
         sendJson(response, 404, { error: "Private squad not found." });
         return true;
       }
@@ -2058,7 +2102,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         return true;
       }
       const consent = {
-        id: crypto.randomUUID(), projectId: "", squadId: squad.id, guardianName, relationship,
+        id: crypto.randomUUID(), ownerId: user.id, projectId: "", squadId: squad.id, guardianName, relationship,
         scopes: ["private_media", "personal_photo_reference", "regional_ai_processing"],
         verificationStatus: "account-attested", policyVersion: "2026-09-18", createdAt: nowIso(), revokedAt: ""
       };
@@ -2073,20 +2117,84 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const squadId = cleanId(decodeURIComponent(squadConsentRevokeMatch[1]));
       const consentId = cleanId(decodeURIComponent(squadConsentRevokeMatch[2]));
       const database = store.read();
-      const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
-      const consent = squad ? database.guardianConsents.find((item) => item.id === consentId && item.squadId === squad.id && !item.revokedAt) : null;
+      const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
+      const consent = squad ? database.guardianConsents.find((item) => item.id === consentId && item.squadId === squad.id && !item.revokedAt && (item.ownerId === user.id || squad.ownerId === user.id)) : null;
       if (!squad || !consent) {
         sendJson(response, 404, { error: "Photo permission not found." });
         return true;
       }
-      const consentMedia = database.media.filter((item) => item.ownerId === user.id && item.squadId === squad.id && item.personalPhotoConsentId === consent.id);
+      const consentMedia = database.media.filter((item) => item.ownerId === (consent.ownerId || squad.ownerId) && item.squadId === squad.id && item.personalPhotoConsentId === consent.id);
       for (const media of consentMedia) await mediaStorage.remove(media);
+      const removedMediaIds = new Set(consentMedia.map((item) => item.id));
       store.mutate((nextDatabase) => {
         const stored = nextDatabase.guardianConsents.find((item) => item.id === consent.id);
         if (stored) stored.revokedAt = nowIso();
         nextDatabase.media = nextDatabase.media.filter((item) => item.personalPhotoConsentId !== consent.id);
+        nextDatabase.squadMembers.forEach((member) => {
+          if (!removedMediaIds.has(member.castReferenceMediaId)) return;
+          member.castReferenceMediaId = "";
+          member.castCharacterName = "";
+          member.castDescription = "";
+          member.castLockedAt = "";
+          member.castLockedBy = "";
+          member.updatedAt = nowIso();
+        });
       });
       sendJson(response, 200, { revoked: true, personalPhotoMediaDeleted: consentMedia.length });
+      return true;
+    }
+
+    const castReferenceMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/cast-reference$/);
+    if (castReferenceMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(castReferenceMatch[1]));
+      const body = await readJsonBody(request, 8_000);
+      const mediaId = cleanId(body.mediaId);
+      const characterName = cleanText(body.characterName, 60);
+      const description = cleanText(body.description, 400);
+      if (!mediaId || !characterName) {
+        sendJson(response, 400, { error: "Add one safe reference image and a character name." });
+        return true;
+      }
+      await enforceTextSafety(`${characterName}\n${description}`);
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
+        const member = squad ? squadMembership(database, squad.id, user.id) : null;
+        const media = squad ? database.media.find((item) => item.id === mediaId && item.ownerId === user.id && item.squadId === squad.id && item.kind === "image") : null;
+        if (!squad || member?.status !== "approved" || !media) throw Object.assign(new Error("This private cast reference could not be saved."), { statusCode: 403, code: "SQUAD_CAST_REFERENCE_FORBIDDEN" });
+        if (member.castLockedAt) throw Object.assign(new Error("This character card is already confirmed and locked for the project."), { statusCode: 409, code: "SQUAD_CHARACTER_CARD_LOCKED" });
+        member.castReferenceMediaId = media.id;
+        member.castCharacterName = characterName;
+        member.castDescription = description;
+        member.updatedAt = nowIso();
+        squad.updatedAt = member.updatedAt;
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
+      return true;
+    }
+
+    const castLockMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/cast-reference\/([^/]+)\/lock$/);
+    if (castLockMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(castLockMatch[1]));
+      const memberId = cleanId(decodeURIComponent(castLockMatch[2]));
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+        const member = squad ? database.squadMembers.find((item) => item.id === memberId && item.squadId === squad.id && item.status === "approved" && !item.removedAt) : null;
+        const media = member ? database.media.find((item) => item.id === member.castReferenceMediaId && item.squadId === squad.id && item.kind === "image") : null;
+        if (!squad || !member || !media) throw Object.assign(new Error("Add a complete character card before confirming it."), { statusCode: 404, code: "SQUAD_CHARACTER_CARD_NOT_FOUND" });
+        if (!member.castLockedAt) {
+          member.castLockedAt = nowIso();
+          member.castLockedBy = user.id;
+          member.updatedAt = member.castLockedAt;
+          squad.updatedAt = member.castLockedAt;
+        }
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
       return true;
     }
 
@@ -2115,6 +2223,38 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       return true;
     }
 
+    const sceneClaimMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/scenes\/([1-6])\/claim$/);
+    if (sceneClaimMatch && request.method === "POST") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(sceneClaimMatch[1]));
+      const sceneNumber = Number(sceneClaimMatch[2]);
+      const body = await readJsonBody(request, 4_000);
+      const result = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
+        const member = squad ? squadMembership(database, squad.id, user.id) : null;
+        if (!squad || !member || member.status !== "approved") throw Object.assign(new Error("Join and receive owner approval before claiming a scene."), { statusCode: 403, code: "SQUAD_APPROVAL_REQUIRED" });
+        squad.sceneClaims ||= [];
+        const approvedSceneCount = database.squadCards.filter((card) => card.squadId === squad.id && card.status === "approved" && !card.deletedAt).length;
+        const nextSceneNumber = Math.min(approvedSceneCount + 1, 6);
+        if (sceneNumber !== nextSceneNumber || approvedSceneCount >= 6) throw Object.assign(new Error("This scene is not ready to claim yet."), { statusCode: 409, code: "SQUAD_SCENE_NOT_READY" });
+        const existing = squad.sceneClaims.find((claim) => claim.sceneNumber === sceneNumber);
+        if (body.release === true) {
+          const hasDraft = database.squadCards.some((card) => card.squadId === squad.id && card.sceneNumber === sceneNumber && !card.deletedAt);
+          if (!existing || (existing.userId !== user.id && squad.ownerId !== user.id) || hasDraft) throw Object.assign(new Error("This scene claim cannot be released."), { statusCode: 409, code: "SQUAD_SCENE_CLAIM_LOCKED" });
+          squad.sceneClaims = squad.sceneClaims.filter((claim) => claim.sceneNumber !== sceneNumber);
+        } else if (existing && existing.userId !== user.id) {
+          throw Object.assign(new Error(`${existing.displayName} is already creating this scene.`), { statusCode: 409, code: "SQUAD_SCENE_ALREADY_CLAIMED" });
+        } else if (!existing) {
+          squad.sceneClaims.push({ sceneNumber, userId: user.id, memberId: member.id, displayName: member.displayName, claimedAt: nowIso() });
+        }
+        squad.updatedAt = nowIso();
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: result });
+      return true;
+    }
+
     const cardsMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/cards$/);
     if (cardsMatch && request.method === "POST") {
       const squadId = cleanId(decodeURIComponent(cardsMatch[1]));
@@ -2132,6 +2272,16 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
         const member = squad ? squadMembership(database, squad.id, user.id) : null;
         if (!squad || !member || member.status !== "approved") throw Object.assign(new Error("The project owner must approve you before you can post."), { statusCode: 403, code: "SQUAD_APPROVAL_REQUIRED" });
+        const approvedSceneCount = database.squadCards.filter((card) => card.squadId === squad.id && card.status === "approved" && !card.deletedAt).length;
+        const sceneNumber = approvedSceneCount < 6 ? approvedSceneCount + 1 : 0;
+        if (sceneNumber) {
+          const existingSceneDraft = database.squadCards.find((card) => card.squadId === squad.id && card.sceneNumber === sceneNumber && !card.deletedAt);
+          if (existingSceneDraft) throw Object.assign(new Error("This scene has already been submitted for owner review."), { statusCode: 409, code: "SQUAD_SCENE_ALREADY_SUBMITTED" });
+          squad.sceneClaims ||= [];
+          const claim = squad.sceneClaims.find((item) => item.sceneNumber === sceneNumber);
+          if (claim && claim.userId !== user.id) throw Object.assign(new Error(`${claim.displayName} is already creating this scene.`), { statusCode: 409, code: "SQUAD_SCENE_ALREADY_CLAIMED" });
+          if (!claim) squad.sceneClaims.push({ sceneNumber, userId: user.id, memberId: member.id, displayName: member.displayName, claimedAt: nowIso() });
+        }
         if (audioMediaId) {
           const audio = database.media.find((item) => item.id === audioMediaId && item.ownerId === user.id && item.squadId === squadId && item.kind === "audio");
           if (!audio) throw Object.assign(new Error("Voice recording not found."), { statusCode: 404, code: "SQUAD_AUDIO_NOT_FOUND" });
@@ -2142,6 +2292,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           kind: audioMediaId && text ? "mixed" : audioMediaId ? "audio" : "text",
           text, audioMediaId, status: member.role === "owner" ? "approved" : "pending",
           yuGuided,
+          sceneNumber,
           imageUrl: "", videoUrl: "", visualStatus: "none",
           position: database.squadCards.filter((item) => item.squadId === squadId && !item.deletedAt).length + 1,
           createdAt: now, updatedAt: now, deletedAt: ""
@@ -2183,6 +2334,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const body = await readJsonBody(request, 12_000);
       const imageUrl = cleanUrl(body.imageUrl);
       const videoUrl = cleanUrl(body.videoUrl);
+      const characterCardIds = [...new Set((Array.isArray(body.characterCardIds) ? body.characterCardIds : []).map(cleanId).filter(Boolean))].slice(0, 6);
       if (!imageUrl && !videoUrl) {
         sendJson(response, 400, { error: "A safe generated image or video URL is required." });
         return true;
@@ -2196,8 +2348,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         if (!squad || !member || member.status !== "approved" || !card || card.authorId !== user.id) {
           throw Object.assign(new Error("You can add visuals only to your own contribution."), { statusCode: 403, code: "SQUAD_VISUAL_FORBIDDEN" });
         }
+        const lockedCharacterIds = new Set(database.squadMembers.filter((item) => item.squadId === squad.id && item.status === "approved" && item.castLockedAt && item.castReferenceMediaId && !item.removedAt).map((item) => item.id));
+        if (characterCardIds.some((id) => !lockedCharacterIds.has(id))) throw Object.assign(new Error("Choose only confirmed character cards from this project."), { statusCode: 400, code: "SQUAD_CHARACTER_CARD_INVALID" });
         if (imageUrl) {
           card.imageUrl = imageUrl;
+          card.characterCardIds = characterCardIds;
           if (!videoUrl) card.videoUrl = "";
           if (owner && !squad.visualAnchorImageUrl) squad.visualAnchorImageUrl = imageUrl;
         }
@@ -2260,8 +2415,20 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           sourceType: "text",
           sourceText: cards.map((card) => `${card.authorName}: ${card.text || "[voice]"}`).join("\n\n"),
           draft: cards.map((card) => card.text).filter(Boolean).join("\n\n"),
+          coverImageUrl: storedSquad.visualAnchorImageUrl || "",
           scenes,
-          clientSnapshot: { squadId: storedSquad.id, outputType: storedSquad.outputType, credits: cards.map((card) => ({ cardId: card.id, authorName: card.authorName, yuGuided: card.yuGuided === true })) }
+          clientSnapshot: {
+            squadId: storedSquad.id,
+            outputType: storedSquad.outputType,
+            poster: {
+              presenter: "StoriesLens Presents",
+              createdAt: storedSquad.createdAt,
+              title: storedSquad.title,
+              storyBackground: storedSquad.characterRules || "",
+              castNames: nextDatabase.squadMembers.filter((member) => member.squadId === storedSquad.id && member.status === "approved" && member.castReferenceMediaId && !member.removedAt).map((member) => member.castCharacterName || member.displayName)
+            },
+            credits: cards.map((card) => ({ cardId: card.id, authorName: card.authorName, yuGuided: card.yuGuided === true }))
+          }
         });
         Object.assign(project, { id: crypto.randomUUID(), ownerId: user.id, createdAt: now, updatedAt: now, version: 1, deletedAt: "", creationReservationId: reserved.reservation.id });
         nextDatabase.projects.push(project);
@@ -2345,7 +2512,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             return true;
           }
           const consentId = cleanId(body.personalPhotoConsentId);
-          const consent = database.guardianConsents.find((item) => item.id === consentId && (item.projectId === project?.id || item.squadId === squad?.id) && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("private_media") && item.scopes?.includes("regional_ai_processing"));
+          const consent = database.guardianConsents.find((item) => item.id === consentId && (item.ownerId || project?.ownerId || squad?.ownerId) === user.id && (item.projectId === project?.id || item.squadId === squad?.id) && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("private_media") && item.scopes?.includes("regional_ai_processing"));
           if (!consent) {
             sendJson(response, 403, { error: "Adult consent is required before saving a real-person photo." });
             return true;
@@ -2990,15 +3157,16 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     },
     assertPersonalPhotoConsent(request, response, consentId) {
       const { database, user } = sessionFor(request, response, { create: false });
-      const consent = database.guardianConsents.find((item) => item.id === cleanId(consentId) && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("regional_ai_processing"));
-      const project = consent ? database.projects.find((item) => item.id === consent.projectId && item.ownerId === user?.id && !item.deletedAt) : null;
-      const squad = consent ? database.squads?.find((item) => item.id === consent.squadId && item.ownerId === user?.id && !item.deletedAt) : null;
-      if (user?.kind !== "account" || !consent || (!project && !squad)) {
+      const consentIds = (Array.isArray(consentId) ? consentId : [consentId]).map(cleanId).filter(Boolean);
+      const consents = consentIds.map((id) => database.guardianConsents.find((item) => item.id === id && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("regional_ai_processing"))).filter(Boolean);
+      const project = consents.length === 1 ? database.projects.find((item) => item.id === consents[0].projectId && item.ownerId === user?.id && !item.deletedAt) : null;
+      const squad = consents.length ? database.squads?.find((item) => item.id === consents[0].squadId && !item.deletedAt && consents.every((consent) => consent.squadId === item.id) && (item.ownerId === user?.id || consents.every((consent) => (consent.ownerId || item.ownerId) === user?.id))) : null;
+      if (user?.kind !== "account" || !consentIds.length || consents.length !== consentIds.length || (!project && !squad)) {
         throw Object.assign(new Error("Adult consent is required before a personal photo can be sent for AI creation."), { statusCode: 403, code: "PERSONAL_PHOTO_CONSENT_REQUIRED" });
       }
-      return { consent, project, squad };
+      return { consent: consents[0], consents, project, squad };
     },
-    squadGenerationContext(request, response, { squadId, cardId, anchor: isAnchor = false }) {
+    async squadGenerationContext(request, response, { squadId, cardId, anchor: isAnchor = false, characterCardIds = [] }) {
       const { database, user } = sessionFor(request, response, { create: false });
       ensureSquadCollections(database);
       const squad = database.squads.find((item) => item.id === cleanId(squadId) && !item.deletedAt);
@@ -3018,14 +3186,32 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       if (!isAnchor && !referenceAnchor) {
         throw Object.assign(new Error("The project owner needs to create and approve the first visual anchor before other creators generate images."), { statusCode: 409, code: "SQUAD_VISUAL_ANCHOR_REQUIRED" });
       }
-      const latest = approvedImages.at(-1) || "";
+      const requestedCharacterIds = [...new Set((Array.isArray(characterCardIds) ? characterCardIds : []).map(cleanId).filter(Boolean))].slice(0, 6);
+      const lockedCharacters = database.squadMembers.filter((item) => item.squadId === squad.id && item.status === "approved" && item.castLockedAt && item.castReferenceMediaId && !item.removedAt);
+      if (!isAnchor && lockedCharacters.length && !requestedCharacterIds.length) throw Object.assign(new Error("Choose who appears in this scene before generating the picture."), { statusCode: 400, code: "SQUAD_SCENE_CHARACTERS_REQUIRED" });
+      const selectedCharacters = requestedCharacterIds.map((id) => lockedCharacters.find((item) => item.id === id)).filter(Boolean);
+      if (selectedCharacters.length !== requestedCharacterIds.length) throw Object.assign(new Error("One selected character card is not confirmed for this project."), { statusCode: 400, code: "SQUAD_CHARACTER_CARD_INVALID" });
+      const characterReferences = [];
+      for (const selected of selectedCharacters) {
+        const media = database.media.find((item) => item.id === selected.castReferenceMediaId && item.squadId === squad.id && item.kind === "image");
+        if (!media) throw Object.assign(new Error("One selected character card is no longer available."), { statusCode: 409, code: "SQUAD_CHARACTER_CARD_MISSING" });
+        if (media.containsRealPerson) {
+          const consent = database.guardianConsents.find((item) => item.id === media.personalPhotoConsentId && item.squadId === squad.id && !item.revokedAt && item.scopes?.includes("personal_photo_reference") && item.scopes?.includes("regional_ai_processing"));
+          if (!consent) throw Object.assign(new Error("Adult photo permission is no longer active for one selected character."), { statusCode: 403, code: "PERSONAL_PHOTO_CONSENT_REQUIRED" });
+        }
+        const stored = await mediaStorage.get(media);
+        if (!stored) throw Object.assign(new Error("One selected character card could not be read."), { statusCode: 409, code: "SQUAD_CHARACTER_CARD_MISSING" });
+        characterReferences.push(`data:${stored.contentType || media.mimeType};base64,${stored.body.toString("base64")}`);
+      }
       return {
         payerId: user.id,
         anchor: isAnchor,
         visualStyle: squad.visualStyle || (squad.language === "zh" ? "ink-watercolor" : "storybook-watercolor"),
         characterRules: squad.characterRules || "",
+        sceneCharacterRules: selectedCharacters.map((item, index) => `Character reference ${index + 1}: ${item.castCharacterName || item.displayName}. ${item.castDescription || "Preserve this character exactly."}`).join("\n"),
+        sceneCharacterCount: selectedCharacters.length,
         visualVersion: Number(squad.visualVersion || 1),
-        referenceImageUrls: [...new Set([referenceAnchor, latest].filter(Boolean))].slice(0, 2)
+        referenceImageUrls: [referenceAnchor, ...characterReferences].filter(Boolean)
       };
     },
     reserve(request, response, { resource, units = 1, idempotencyKey, referenceType, referenceId, metadata, payerId = "" }) {

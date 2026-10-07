@@ -13,6 +13,19 @@
   color-scheme: light;
 }
 
+body[data-studio-mode="book"] {
+  --red: var(--green);
+  --h5-red: var(--green);
+}
+
+body[data-studio-mode="book"] :is(.app-danger, .notice.error, .recording) {
+  color: var(--green);
+}
+
+body[data-studio-mode="book"] :is(.app-danger, .notice.error) {
+  background: #e4f0e8;
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {

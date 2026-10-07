@@ -7,12 +7,19 @@
     <meta name="theme-color" content="#f1f5ed" />
     <title>Private Story Squad · StoriesLens</title>
     <link rel="stylesheet" href="squad-board.css?v=20260916-1" />
-    <link rel="stylesheet" href="squad-board-visuals.css?v=20260916-2" />
+    <link rel="stylesheet" href="squad-board-locale.css?v=20260930-1" />
+    <link rel="stylesheet" href="squad-board-visuals.css?v=20261007-character-lock-1" />
   </head>
   <body>
     <header class="squad-header">
       <a class="brand" href="index.html"><img src="assets/storieslens-logo.png" alt="" /><span>StoriesLens</span></a>
-      <nav><a href="my-stories.html">My Stories · 我的作品</a><a href="index.html">Home · 首页</a></nav>
+      <div class="squad-header-actions">
+        <nav><a href="my-stories.html">My Stories · 我的作品</a><a href="index.html">Home · 首页</a></nav>
+        <div class="squad-locale-switch" role="group" aria-label="Interface language · 界面语言">
+          <button type="button" data-squad-locale="en">EN</button>
+          <button type="button" data-squad-locale="zh">中文</button>
+        </div>
+      </div>
     </header>
 
     <main class="squad-shell">
@@ -37,9 +44,9 @@
             <label>Project title · 项目名称<input data-create-title maxlength="120" placeholder="Our Moonlight Adventure" required /></label>
             <label>Creator name · 创作者署名<input data-create-name maxlength="60" placeholder="Name or nickname" required /></label>
             <div class="two-fields"><label>Language · 语言<select data-create-language><option value="en">English</option><option value="zh">中文</option></select></label><label>Final outcome · 最终成果<select data-create-output><option value="book">Illustrated book · 绘本</option><option value="film">Story film · 故事电影</option></select></label></div>
-            <label>Locked visual style · 统一视觉风格<select data-create-style><option value="storybook-watercolor">Storybook watercolor · 绘本水彩</option><option value="ink-watercolor">Chinese ink watercolor · 水墨水彩</option><option value="cinematic">Cinematic animation · 电影动画</option><option value="comic">Graphic novel · 连环画</option><option value="block-world">Block World · 方块世界</option></select></label>
+            <label>Locked visual style · 统一视觉风格<select data-create-style><option value="storybook-watercolor">Storybook watercolor · 绘本水彩</option><option value="ink-watercolor">Chinese ink watercolor · 水墨水彩</option><option value="cinematic">Cinematic animation · 电影动画</option><option value="comic">Graphic novel · 连环画</option><option value="block-world">Block World · 方块世界</option><option value="japanese-handpainted">Japanese hand-painted · 日系手绘动画</option></select></label>
             <div class="character-lock-setup">
-              <label>Character &amp; world lock · 人物与世界设定<textarea data-create-character-rules maxlength="1200" rows="4" placeholder="Optional: Maya is 8, short black hair, yellow raincoat; the moon fox has silver wings… · 可选：人物年龄、发型、服装和标志性物件"></textarea><small>Describe the recurring characters, signature clothing, important objects and world. These rules will be locked for the whole squad.</small></label>
+              <label>Our Story DNA · 我们的故事蓝图<textarea data-create-character-rules maxlength="1200" rows="5" placeholder="Who is in the story? Where are they? What do they want? What is hard right now? How might it end? Add special clothes or objects. · 故事里有谁？他们在哪里？想要什么？遇到了什么困难？故事可能怎样结束？"></textarea><small>Answer in short phrases. Yu will use this one shared plan to keep every creator, character and scene in the same story.</small></label>
               <aside class="anchor-launch-card">
                 <span>VISUAL ANCHOR · 首张视觉设定</span>
                 <strong>See your shared world before inviting everyone.</strong>
@@ -83,6 +90,63 @@
         <p class="notice" data-notice hidden></p>
         <p class="status-banner" data-final-output hidden></p>
 
+        <section class="story-dna-board" data-story-dna hidden>
+          <div>
+            <span class="eyebrow">OUR SHARED STORY DNA · 共同故事蓝图</span>
+            <h3 data-story-dna-title></h3>
+            <p data-story-dna-rules></p>
+          </div>
+          <div class="story-dna-facts">
+            <span data-story-dna-output></span>
+            <span data-story-dna-style></span>
+            <span data-story-dna-anchor></span>
+          </div>
+        </section>
+
+        <section class="cast-studio" data-cast-studio hidden>
+          <header>
+            <div><span class="eyebrow">BECOME THE CHARACTERS · 成为故事主角</span><h3>Build our cast, then make one movie poster together.</h3><p>Each creator adds one private photo or drawing. Yu keeps every identity separate and turns the approved cast into the project’s shared visual reference.</p></div>
+            <button class="primary" type="button" data-generate-cast-poster hidden>Create our cast poster · 生成全体角色海报</button>
+          </header>
+          <div class="cast-grid" data-cast-grid></div>
+          <form class="cast-reference-form" data-cast-form>
+            <div><strong>Add yourself to the story · 把自己加入故事</strong><small>Upload a photo or drawing, then describe the character you will play.</small></div>
+            <label>Character name · 角色名字<input data-cast-name maxlength="60" required /></label>
+            <label>Character description · 角色介绍<textarea data-cast-description maxlength="400" rows="3" placeholder="Age, clothes, personality, special object or ability… · 年龄、服装、性格、特殊物件或能力……"></textarea></label>
+            <label class="cast-upload"><span>＋ Upload a photo or drawing · 上传照片或画作</span><input type="file" data-cast-file accept="image/*,.heic,.heif,.avif" required /></label>
+            <small data-cast-file-status>JPG, PNG, WEBP, HEIC or HEIF · Metadata will be removed before upload.</small>
+            <section class="cast-consent" data-cast-consent hidden>
+              <strong>Adult permission for a real-person photo · 真人照片需要成年人许可</strong>
+              <p>This private reference is used only for this Story Squad project and is never published automatically.</p>
+              <label class="check"><input type="checkbox" data-cast-consent-person /><span>I am the person pictured, or their parent/legal guardian, and permit this private story use.</span></label>
+              <label class="check"><input type="checkbox" data-cast-consent-processing /><span>I understand that a processed copy is sent to the selected regional safety and AI service.</span></label>
+              <div class="two-fields"><label>Adult name<input data-cast-adult-name maxlength="100" /></label><label>Relationship<input data-cast-relationship maxlength="80" placeholder="Parent or self" /></label></div>
+            </section>
+            <button class="primary" type="submit">Join the cast · 加入演员阵容</button>
+          </form>
+          <p class="cast-locked-note" data-cast-locked-note hidden>✓ Your character card is confirmed for this project. To protect visual continuity, it can no longer be replaced. · 你的角色卡已确认锁定，之后不会被替换。</p>
+          <figure class="cast-poster" data-cast-poster hidden>
+            <div class="hollywood-poster">
+              <img data-cast-poster-image alt="Story Squad cast poster" />
+              <div class="hollywood-poster-copy">
+                <span>STORIESLENS PRESENTS</span>
+                <h4 data-cast-poster-title></h4>
+                <p data-cast-poster-background></p>
+                <footer><strong data-cast-poster-names></strong><small data-cast-poster-date></small></footer>
+              </div>
+            </div>
+            <figcaption>Our approved cast poster · 项目共同视觉设定</figcaption>
+          </figure>
+        </section>
+
+        <section class="story-path" data-story-path hidden>
+          <header>
+            <div><span class="eyebrow">OUR SIX-SCENE STORY PATH · 六幕共创路线</span><h3>One story. Six small turns. Everyone can add a part.</h3></div>
+            <strong data-story-path-progress></strong>
+          </header>
+          <div class="story-beat-grid" data-story-beat-grid></div>
+        </section>
+
         <section class="anchor-studio" data-anchor-studio hidden>
           <div class="anchor-studio-copy">
             <span class="eyebrow">CHARACTER &amp; WORLD LOCK · 人物与世界设定</span>
@@ -105,7 +169,7 @@
           </aside>
           <div class="wall-column">
             <form class="composer" data-composer hidden>
-              <div><span class="eyebrow">ADD YOUR PART · 写下或说出你的部分</span><h3>What happens next?</h3></div>
+              <div><span class="eyebrow">ADD YOUR PART · 写下或说出你的部分</span><h3 data-next-beat-title>What happens next?</h3><p class="next-beat-prompt" data-next-beat-prompt></p></div>
               <section class="squad-yu" data-squad-yu>
                 <div class="squad-yu-head">
                   <img src="assets/yu-mascot-logo-v2.png" alt="" />
@@ -163,8 +227,9 @@
     <div class="toast" data-toast role="status" aria-live="polite"></div>
     <script src="platform-client.js"></script>
     <script src="mentor-revision.js"></script>
+    <script src="artwork-upload-safety.js?v=20260930-cast-poster-1"></script>
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="squad-board.js?v=20260922-clear-energy-1"></script>
+    <script src="squad-board.js?v=20261007-character-lock-1"></script>
   </body>
 </html>

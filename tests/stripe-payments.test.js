@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const test = require("node:test");
 
-const { STRIPE_OFFERS, createCheckoutSession, verifyWebhookSignature } = require("../stripe-payments");
+const { STRIPE_OFFERS, createCheckoutSession, priceIdForOffer, verifyWebhookSignature } = require("../stripe-payments");
 
 test("Stripe Checkout binds a signed-in account order to an exact package and amount", async () => {
   const originalNodeEnv = process.env.NODE_ENV;
@@ -29,6 +29,45 @@ test("Stripe Checkout binds a signed-in account order to an exact package and am
   } finally {
     process.env.NODE_ENV = originalNodeEnv;
   }
+});
+
+test("live Stripe Checkout requires a stable Price and reuses an existing Customer", async () => {
+  let captured;
+  const session = await createCheckoutSession({
+    secretKey: "rk_live_private_key",
+    publicBaseUrl: "https://www.storieslens.com",
+    apiVersion: "2026-02-25.clover",
+    order: { id: "order_live_123", ownerId: "account_456", offerId: "story-pass", region: "us" },
+    offer: STRIPE_OFFERS["story-pass"],
+    priceId: "price_liveStoryPass123",
+    customerId: "cus_parent123",
+    fetchImpl: async (url, options) => {
+      captured = { url, options, form: new URLSearchParams(options.body) };
+      return { ok: true, json: async () => ({ id: "cs_live_123", url: "https://checkout.stripe.com/c/pay/cs_live_123" }) };
+    }
+  });
+  assert.equal(session.id, "cs_live_123");
+  assert.equal(captured.form.get("line_items[0][price]"), "price_liveStoryPass123");
+  assert.equal(captured.form.has("line_items[0][price_data][unit_amount]"), false);
+  assert.equal(captured.form.get("customer"), "cus_parent123");
+  assert.equal(captured.form.has("customer_creation"), false);
+  assert.equal(captured.form.get("metadata[price_id]"), "price_liveStoryPass123");
+  assert.equal(captured.options.headers["Stripe-Version"], "2026-02-25.clover");
+});
+
+test("live Stripe Checkout fails closed without a stable Price", async () => {
+  await assert.rejects(createCheckoutSession({
+    secretKey: "rk_live_private_key",
+    publicBaseUrl: "https://www.storieslens.com",
+    order: { id: "order_live_123", ownerId: "account_456", offerId: "story-pass", region: "us" },
+    offer: STRIPE_OFFERS["story-pass"],
+    fetchImpl: async () => { throw new Error("Stripe must not be called"); }
+  }), (error) => error.code === "STRIPE_PRICE_NOT_CONFIGURED");
+});
+
+test("Stripe offer Price IDs come only from the server environment", () => {
+  assert.equal(priceIdForOffer(STRIPE_OFFERS["story-pass"], { STRIPE_PRICE_STORY_PASS: "price_storyPass123" }), "price_storyPass123");
+  assert.equal(priceIdForOffer(STRIPE_OFFERS["story-pass"], { STRIPE_PRICE_STORY_PASS: "https://example.com" }), "");
 });
 
 test("Stripe webhook verification accepts the raw signed body and rejects tampering", () => {

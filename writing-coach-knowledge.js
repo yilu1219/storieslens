@@ -67,6 +67,30 @@ const SOURCE_CATALOG = Object.freeze({
   strunkElements: {
     title: "William Strunk Jr.《The Elements of Style》（1920）",
     contribution: "美国公有领域：句子完整性、修饰语归属、相关词位置、平行结构、标点与时态一致"
+  },
+  excelsiorGrammar: {
+    title: "Excelsior University OWL《Grammar Essentials》",
+    contribution: "CC BY 4.0：按需诊断、重复错误归类、小剂量语法教学与学生自我修改"
+  },
+  wenzhangGuifan: {
+    title: "谢枋得《文章轨范》（四库全书本）",
+    contribution: "公有领域：段落任务、篇章次序、转折照应与先放后收的修改节奏"
+  },
+  oregonArgument: {
+    title: "Oregon State University《A Dam Good Argument》",
+    contribution: "CC BY 4.0：先探究再主张、善意倾听、辨认分歧、证据与修改"
+  },
+  xianqingDrama: {
+    title: "李渔《闲情偶寄·词曲部》",
+    contribution: "公有领域：戏剧主线、场景衔接、人物对白与朗读检验"
+  },
+  uhCompositionFeedback: {
+    title: "University of Hawai‘i《English Composition: Connect, Collaborate, Communicate》",
+    contribution: "CC BY 4.0：读者回应、反馈分类、冲突意见比较、修改选择与作者决定权"
+  },
+  wenzeRhetoric: {
+    title: "陈骙《文则》（四库全书本）",
+    contribution: "公有领域：比喻与意思的联系、读者推断、修辞节制与修改"
   }
 });
 
@@ -250,11 +274,12 @@ const WRITING_METHODS = Object.freeze({
   grammarIntegrity: {
     id: "grammar-integrity",
     name: "Sentence grammar and meaning check",
-    sources: ["strunkElements"],
+    sources: ["strunkElements", "excelsiorGrammar"],
     principles: [
       "Repeat the creator's intended meaning first; every correction must preserve their characters, facts, sequence, and tone.",
       "Check sentence completeness, modifier attachment, related-word placement, parallel structure, punctuation, tense, and point of view; select only the one pattern that most affects understanding.",
       "Point to the exact words, show the smallest corrected version beside the original, and explain exactly what changed.",
+      "When the creator asks for a full check, list each detected item, group repeated instances under one pattern, and teach only a small number of patterns at a time.",
       "Active voice, brevity, topic sentences, positive phrasing, and sentence-final emphasis are options rather than universal artistic rules.",
       "Preserve dialect, multilingual expression, purposeful fragments, repetition, rhythm, and ambiguity when they carry the creator's intended voice."
     ],
@@ -330,6 +355,96 @@ const WRITING_METHODS = Object.freeze({
       "这条材料是在帮助重点，还是把读者带去了别处？",
       "如果读者这样复述，和你原来想说的一样吗？"
     ]
+  },
+  paragraphFunction: {
+    id: "paragraph-function",
+    name: "段落任务与篇章关节",
+    sources: ["wenzhangGuifan"],
+    principles: [
+      "先用短标签辨认每一段正在完成的任务，例如起因、补背景、行动、转折、理由、证据或结果。",
+      "检查相邻段落如何连接，只处理一个断点：缺连接、顺序颠倒、重复或偏离中心。",
+      "比较开头给读者的期待与结尾实际回答的内容，让创作者决定补足、删减或保持留白。",
+      "议论可以沿观点、理由、证据和回应检查，但不得把它变成固定模板。",
+      "第一轮允许大胆写出材料，第二轮再小心辨认层次、节奏与篇章关节。"
+    ],
+    questions: [
+      "这一段在完成什么任务？",
+      "读完这一段，读者为什么会自然走到下一段？",
+      "这里是在补充、转折、举证，还是重复了已经说过的内容？",
+      "开头提出的期待，结尾真的回应了吗？"
+    ]
+  },
+  argumentInquiry: {
+    id: "argument-inquiry",
+    name: "Argument inquiry and ethical listening",
+    sources: ["oregonArgument"],
+    principles: [
+      "Begin with a real question and the writer's current uncertainty before asking for a fixed claim.",
+      "Identify whether the disagreement is mainly about fact, definition, evaluation, or policy so research and evidence answer the right question.",
+      "State the audience and context, then listen for the strongest fair version of another position instead of inventing a weak opponent.",
+      "Use relevant evidence to revise or qualify a claim; never invent evidence or replace the creator's judgment with finished advocacy."
+    ],
+    questions: [
+      "What do people already agree on, and where does the real disagreement begin?",
+      "Is this mainly a question of fact, definition, evaluation, or what should be done?",
+      "What evidence could change or narrow your claim?",
+      "How would someone who disagrees describe their strongest reason fairly?"
+    ]
+  },
+  collaborativeFeedback: {
+    id: "collaborative-feedback",
+    name: "Collaborative feedback and creator choice",
+    sources: ["uhCompositionFeedback"],
+    principles: [
+      "State what the reader should understand, feel, or wonder before asking for feedback.",
+      "Ask the listener to report what they understood and the exact place where they became uncertain before suggesting a change.",
+      "Separate observations, questions, and suggestions so advice is not mistaken for a command.",
+      "When responses conflict, compare them with the creator's purpose instead of taking a vote; the creator makes the final revision decision.",
+      "Choose one high-leverage revision, make it personally, and read the passage again to test whether it became clearer without losing the creator's voice."
+    ],
+    questions: [
+      "What do you want a reader to understand, feel, or wonder here?",
+      "What did the listener understand before they became unsure?",
+      "Is this response an observation, a question, or a suggestion?",
+      "Which comment best serves your purpose, and which one will you set aside?",
+      "After your change, what became clearer without losing your voice?"
+    ]
+  },
+  metaphorMeaning: {
+    id: "metaphor-meaning",
+    name: "比喻、意思与读者理解",
+    sources: ["wenzeRhetoric"],
+    principles: [
+      "先用普通话说清真正想表达的感受、动作或特点，再决定是否需要比喻。",
+      "找出两个事物共享的一个具体特点；若说不清共同点，就先不用这个比喻。",
+      "请读者用自己的话说出联系，检查理解是否接近原意。",
+      "比较直说、轻比喻和延展意象，只保留最清楚且最符合作者声音的一种。",
+      "同一小段只检查一个最强意象；若它遮住人物、行动或意思，由创作者决定缩短、替换或删去。"
+    ],
+    questions: [
+      "你真正想让读者感到什么？",
+      "这两个东西最像的地方是什么？",
+      "读者能不能用自己的话说出它们为什么像？",
+      "直接说、轻轻比一下，还是让这个意象继续发展，哪一种最像你的声音？",
+      "删掉这个比喻后，意思更清楚还是少了重要感受？"
+    ]
+  },
+  dramaDialogue: {
+    id: "drama-dialogue",
+    name: "戏剧主线与角色对白",
+    sources: ["xianqingDrama"],
+    principles: [
+      "先确认这一幕围绕谁、发生什么关键变化，再让每个场景因前一场的选择或结果而发生。",
+      "人物说话要符合当下目的、关系和处境；不能依靠人物标签、方言高低或刻板身份替代人物塑造。",
+      "遮住人物名字朗读对白，检查能否从用词、节奏和意图辨认说话者；听不清时只改一个最影响理解的地方。",
+      "历史戏曲经验只作可选择的观察镜头，不采用固定一人一事公式、陈旧角色规范或仿写原句。"
+    ],
+    questions: [
+      "这一幕真正围绕谁？结束时发生了什么变化？",
+      "这一场为什么必须接在上一场后面？",
+      "遮住人物名字朗读时，还能听出是谁在说话吗？依据是什么？",
+      "哪一句可以删掉，仍不影响人物的目的和场面的推进？"
+    ]
   }
 });
 
@@ -343,11 +458,21 @@ function selectWritingMethods(input = {}) {
   const language = String(input.language || "").trim();
   const grade = Number(input.grade);
   const usesLightVisualAction = Number.isFinite(grade) && grade >= 3 && grade <= 6;
+  const canUseCollaborativeFeedback = !Number.isFinite(grade) || grade >= 6;
+  const canUseMetaphorMeaning = !Number.isFinite(grade) || grade >= 5;
   const selected = [];
 
   if (action === "begin") selected.push("ideation", "character");
   if (["continuity", "report"].includes(action)) selected.push("structure", "revision");
-  if (["details", "dialogue", "scene"].includes(action)) selected.push(language === "en" ? (usesLightVisualAction ? "visualActionLight" : "visualAction") : "scene");
+  if (language === "en" && action === "continuity" && canUseCollaborativeFeedback) selected.unshift("collaborativeFeedback");
+  if (language === "en" && genre === "essay") selected.push("argumentInquiry");
+  if (language === "zh" && ["continuity", "report"].includes(action)) selected.push("paragraphFunction");
+  if (["details", "dialogue", "scene"].includes(action)) {
+    selected.push(language === "en"
+      ? (usesLightVisualAction ? "visualActionLight" : "visualAction")
+      : (action === "dialogue" || genre === "screenplay" ? "dramaDialogue" : "scene"));
+  }
+  if (language === "zh" && action === "details" && genre !== "screenplay" && canUseMetaphorMeaning) selected.unshift("metaphorMeaning");
   if (action === "check") selected.push(...(language === "en" ? ["grammarIntegrity", "audienceClarity", "revision"] : ["prose", "materialFocusReader", "revision"]));
   if (action === "hint") selected.push("character", "structure");
 
@@ -356,6 +481,7 @@ function selectWritingMethods(input = {}) {
   // by a general-purpose curriculum module when the list is capped below.
   if (genre === "screenplay") {
     if (language === "en") selected.push(usesLightVisualAction ? "visualActionLight" : "visualAction");
+    if (language === "zh") selected.push("dramaDialogue");
     selected.push("scene", "microfilm");
   }
   else if (genre === "scifi") selected.push("scienceFiction", "structure");

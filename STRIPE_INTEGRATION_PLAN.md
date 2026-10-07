@@ -36,11 +36,11 @@ The current Stripe account and website integration are in sandbox/test mode. The
 
 ### Payments
 
-1. Replace inline `price_data` with stable Stripe Products and Prices before live launch. Stable IDs improve reporting, tax-code assignment, refunds, and price-version control.
-2. Store `stripe_customer_id` on the adult account and reuse it for later purchases.
-3. Add dispute and fraud-event handling, especially `charge.dispute.created` and relevant early-fraud events.
+1. Create the stable Stripe Products and Prices in both test and live mode, then set the six `STRIPE_PRICE_...` environment variables. The code now refuses live checkout when the selected offer has no stable Price ID.
+2. The code now stores `stripeCustomerId` on the adult account after a verified first payment and reuses it for later purchases.
+3. Dispute creation, funds withdrawal, closure, reinstatement, unused-credit freezing and refund reversal are implemented. Early-fraud-warning handling and operator alerts remain to be added.
 4. Confirm the production database/volume is durable. Order, event-id, allowance, refund, and cost ledgers must survive redeploys.
-5. Pin and record the Stripe API version used by the integration.
+5. `STRIPE_API_VERSION` is now sent with Checkout requests. Configure the webhook endpoint with the same version and record any future upgrade through a tested environment change.
 
 ### Billing
 
@@ -168,4 +168,3 @@ The internal allowance ledger remains the source of truth for consumption. Strip
 3. Exact subscription names, prices, included monthly limits, cancellation/refund policy, and annual discount.
 4. Which countries will receive physical portfolios at launch?
 5. Which schools, if any, require invoices or purchase-order terms?
-

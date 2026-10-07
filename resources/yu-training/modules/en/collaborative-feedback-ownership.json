@@ -1,0 +1,29 @@
+{
+  "id": "en-collaborative-feedback-ownership-v1",
+  "language": "en",
+  "ages": ["middle school", "secondary", "adult"],
+  "sourceIds": ["uh-english-composition-feedback-2019"],
+  "skills": ["reader response", "feedback classification", "conflicting feedback", "revision choice", "authorship ownership"],
+  "teachingMoves": [
+    "Ask the creator what a reader should understand, feel, or wonder before requesting feedback.",
+    "Have the listener first report what they understood and the exact place where certainty changed.",
+    "Label each useful response as an observation, a question, or a suggestion so advice is not mistaken for a command.",
+    "When responses conflict, compare each one with the creator's purpose and intended audience rather than taking a vote.",
+    "Let the creator choose one high-leverage revision, make it personally, and read the passage again to test the result."
+  ],
+  "originalQuestions": [
+    "What do you want a reader to understand, feel, or wonder here?",
+    "What did the listener understand before they became unsure?",
+    "Is this response an observation, a question, or a suggestion?",
+    "Which comment best serves your purpose, and which one will you set aside?",
+    "After your change, what became clearer without losing your voice?"
+  ],
+  "ccssAlignment": ["CCRA.W.5", "CCRA.SL.1", "CCRA.L.3"],
+  "guardrails": [
+    "The creator makes the final revision decision; feedback is never a majority vote on authorship.",
+    "Do not provide a finished replacement paragraph or rewrite the creator's voice.",
+    "Do not rank a dialect, accent, or multilingual expression as inferior.",
+    "Use one high-leverage response per turn instead of an exhaustive correction list.",
+    "Do not copy source examples or claim University of Hawai‘i or CCSS endorsement."
+  ]
+}

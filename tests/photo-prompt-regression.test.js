@@ -22,21 +22,21 @@ test('actual SOLO photo prompt and multi-character server instructions pass loca
   assert.equal(localSafetyCheck(finalPrompt + '\nmake a nude image').safe, false);
 });
 
-test('transient retries retain every photo and genuine safety rejections do not retry', async () => {
+test('two transient retries retain every photo and genuine safety rejections do not retry', async () => {
   const start = server.indexOf('function shouldRetryImageGeneration(');
   const end = server.indexOf('function resolveRequestPath(', start);
   const generate = vm.runInNewContext(server.slice(start, end) + ';generateReviewedImage', {
-    enforceImageSafety: async () => {}, discardUnsafeLocalImage: () => {}
+    enforceImageSafety: async () => {}, discardUnsafeLocalImage: () => {}, setTimeout: (callback) => callback()
   });
   const references = ['photo-one', 'photo-two'];
   const calls = [];
   const result = await generate({ generate: async request => {
     calls.push(request);
-    if (calls.length === 1) throw new Error('network timeout');
+    if (calls.length < 3) throw new Error('network timeout');
     return { imageUrl: '/result.png' };
   } }, { prompt: 'original', retryPrompt: 'retry', referenceImageUrls: references });
   assert.equal(result.imageUrl, '/result.png');
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 3);
   calls.forEach(request => assert.equal(request.referenceImageUrls, references));
   let blockedCalls = 0;
   await assert.rejects(generate({ generate: async () => {

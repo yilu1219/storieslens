@@ -131,17 +131,24 @@ test("English clarity coaching uses the CC0 GSA source without making active voi
 
 test("English grammar coaching uses the public-domain 1920 Elements of Style with modern authorship guardrails", () => {
   const source = registry.sources.find((item) => item.id === "strunk-elements-style-1920");
+  const modernSource = registry.sources.find((item) => item.id === "excelsior-owl-grammar-essentials-2025");
   const module = loadModule("en", "sentence-grammar-integrity.json");
   const curriculum = buildEnglishCoachCurriculum({ action: "check", grade: 7, genre: "story" });
   assert.equal(source.status, "adopted");
+  assert.equal(modernSource.status, "adopted");
+  assert.match(modernSource.rights, /CC BY 4\.0/i);
   assert.match(source.rights, /public domain/i);
   assert(module.sourceIds.includes(source.id));
+  assert(module.sourceIds.includes(modernSource.id));
+  assert(module.skills.includes("recurring-error triage"));
   assert(module.skills.includes("modifier attachment"));
   assert(module.guardrails.some((item) => /dialect|multilingual/i.test(item)));
   assert(module.guardrails.some((item) => /one grammar pattern per turn/i.test(item)));
   assert(curriculum.methodNames.includes("Sentence grammar and meaning check"));
   assert(curriculum.knowledgeSources.some((title) => title.includes("The Elements of Style")));
+  assert(curriculum.knowledgeSources.some((title) => title.includes("Grammar Essentials")));
   assert.match(curriculum.prompt, /smallest corrected version/i);
+  assert.match(curriculum.prompt, /group repeated instances/i);
   assert.match(curriculum.prompt, /universal artistic rules/i);
 });
 
@@ -155,4 +162,79 @@ test("Chinese clarity coaching uses a public-domain material-focus-reader check"
   assert(module.guardrails.some((item) => /不替创作者/.test(item)));
   assert(curriculum.methodNames.includes("材料、主眼与读者复述"));
   assert.match(curriculum.prompt, /必要、可选与偏题/);
+});
+
+test("Chinese continuity coaching labels paragraph jobs without importing exam formulas", () => {
+  const source = registry.sources.find((item) => item.id === "wenzhang-guifan-structure");
+  const module = loadModule("zh", "paragraph-function-and-balance.json");
+  const curriculum = buildChineseCoachCurriculum({ action: "continuity", genre: "essay" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /public domain worldwide/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.skills.includes("段落功能"));
+  assert(module.guardrails.some((item) => /科举应试/.test(item)));
+  assert(curriculum.methodNames.includes("段落任务与篇章关节"));
+  assert.match(curriculum.prompt, /这一段在完成什么任务/);
+  assert.doesNotMatch(curriculum.prompt, /场屋程文|熟读暗记/);
+});
+
+test("English argument coaching uses Oregon State's CC BY inquiry and listening method", () => {
+  const source = registry.sources.find((item) => item.id === "oregon-state-good-argument-2022");
+  const module = loadModule("en", "argument-inquiry-and-listening.json");
+  const curriculum = buildEnglishCoachCurriculum({ action: "report", grade: 9, genre: "essay" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /CC BY 4\.0/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.skills.includes("ethical argument"));
+  assert(module.guardrails.some((item) => /invent evidence/i.test(item)));
+  assert(curriculum.methodNames.includes("Argument inquiry and ethical listening"));
+  assert(curriculum.knowledgeSources.some((title) => title.includes("A Dam Good Argument")));
+  assert.match(curriculum.prompt, /where does the real disagreement begin/i);
+  assert.match(curriculum.prompt, /never invent evidence/i);
+});
+
+test("Chinese screenplay coaching uses a bounded public-domain drama and dialogue lens", () => {
+  const source = registry.sources.find((item) => item.id === "xianqing-ouji-drama-craft");
+  const module = loadModule("zh", "drama-spine-and-dialogue.json");
+  const curriculum = buildChineseCoachCurriculum({ action: "dialogue", genre: "screenplay", creatorLevel: "developing" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /public domain worldwide/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.skills.includes("角色化对白"));
+  assert(module.guardrails.some((item) => /方言/.test(item)));
+  assert(curriculum.methodNames.includes("戏剧主线与角色对白"));
+  assert(curriculum.knowledgeSources.some((title) => title.includes("闲情偶寄")));
+  assert.match(curriculum.prompt, /遮住人物名字朗读/);
+  assert.match(curriculum.prompt, /不能依靠人物标签、方言高低或刻板身份/);
+});
+
+test("English continuity coaching treats peer feedback as evidence while the creator keeps authorship", () => {
+  const source = registry.sources.find((item) => item.id === "uh-english-composition-feedback-2019");
+  const module = loadModule("en", "collaborative-feedback-ownership.json");
+  const curriculum = buildEnglishCoachCurriculum({ action: "continuity", grade: 7, genre: "story" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /CC BY 4\.0/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.skills.includes("authorship ownership"));
+  assert(module.guardrails.some((item) => /final revision decision|majority vote/i.test(item)));
+  assert(curriculum.methodNames.includes("Collaborative feedback and creator choice"));
+  assert(curriculum.knowledgeSources.some((title) => title.includes("University of Hawai‘i")));
+  assert.match(curriculum.prompt, /observation, a question, or a suggestion/i);
+  assert.match(curriculum.prompt, /creator makes the final revision decision/i);
+});
+
+test("Chinese detail coaching uses a public-domain metaphor meaning check only from upper elementary", () => {
+  const source = registry.sources.find((item) => item.id === "wenze-metaphor-meaning");
+  const module = loadModule("zh", "metaphor-meaning-check.json");
+  const older = buildChineseCoachCurriculum({ action: "details", grade: 6, genre: "story" });
+  const younger = buildChineseCoachCurriculum({ action: "details", grade: 3, genre: "story" });
+  assert.equal(source.status, "adopted");
+  assert.match(source.rights, /public domain worldwide/i);
+  assert(module.sourceIds.includes(source.id));
+  assert(module.skills.includes("读者推断"));
+  assert(module.guardrails.some((item) => /不替创作者发明/.test(item)));
+  assert(older.methodNames.includes("比喻、意思与读者理解"));
+  assert(older.knowledgeSources.some((title) => title.includes("文则")));
+  assert.match(older.prompt, /这两个东西最像的地方是什么/);
+  assert(!younger.methodNames.includes("比喻、意思与读者理解"));
 });

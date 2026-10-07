@@ -1,0 +1,38 @@
+.squad-header-actions,
+.squad-header-actions nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.squad-locale-switch {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.squad-locale-switch button {
+  min-width: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  color: #567067;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.squad-locale-switch button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--green);
+}
+
+@media (max-width: 800px) {
+  .squad-header-actions,
+  .squad-header-actions nav {
+    gap: 10px;
+  }
+}

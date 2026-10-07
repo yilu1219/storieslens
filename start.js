@@ -35,6 +35,8 @@
   const titleSpeak = document.querySelector("[data-title-speak]");
   const titleVoiceStatus = document.querySelector("[data-title-voice-status]");
   const squadOutput = document.querySelector("[data-squad-output]");
+  const travelOutputChoice = document.querySelector("[data-travel-output-choice]");
+  const travelOutputButtons = [...document.querySelectorAll("[data-travel-output]")];
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
   const characterSpeak = document.querySelector("[data-character-speak]");
@@ -65,7 +67,17 @@
   const carriedSpark = document.querySelector("[data-carried-spark]");
   const carriedSparkImage = document.querySelector("[data-carried-spark-image]");
   const carriedSparkNote = document.querySelector("[data-carried-spark-note]");
+  const storyThemeEntry = document.querySelector("[data-story-theme-entry]");
+  const storyThemeButtons = [...document.querySelectorAll("[data-story-theme]")];
   const t = (text) => window.StoriesLensI18n?.t(text) || text;
+
+  const themeConfigs = {
+    travel: { origin: "picture", title: "我们的旅行故事", style: "ink-watercolor", heading: "先选书或电影，再上传一张旅行照", lede: "大家说或写一句当时发生了什么，就能开始共创。", seed: "说一句：照片在哪里拍的？当时发生了什么？", uploadTitle: "上传旅行照片", uploadButton: "＋ 选择旅行照片", uploadStatus: "照片会先删除位置和设备信息，并默认私密。", cta: "开始旅行故事共创", requirePhoto: true },
+    wuxia: { origin: "imagination", title: "我们的江湖故事", style: "ink-watercolor", heading: "先选书或电影，再开启你们的江湖", lede: "说说主角、门派或一次重要使命，就能开始共创。", seed: "谁走进了江湖？他想完成什么？遇到了什么困难？", cta: "开始武侠共创" },
+    fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
+    "my-story": { origin: "memory", title: "我们的故事", style: "storybook-watercolor", heading: "先选书或电影，再讲一个真实故事", lede: "家庭、校园、朋友或成长中的一件事，都可以成为开场。", seed: "这件事发生在哪里？和谁有关？为什么让你记得？", cta: "开始我的故事共创" },
+    free: { origin: "imagination", title: "我们的自由创作", style: "storybook-watercolor", heading: "先选书或电影，再说出你们的想法", lede: "没有固定主题，一句话就能开始。", seed: "你们最想一起创作一个怎样的故事？", cta: "开始自由共创" }
+  };
 
   const renderAgeGate = () => {
     const needsSupervision = ageGroup?.value === "under18";
@@ -78,8 +90,18 @@
   const requestedDna = startParams.get("dna")?.trim() || "";
   const requestedSource = startParams.get("source");
   const requestedStoryLanguage = startParams.get("storyLang");
+  let storyTheme = themeConfigs[startParams.get("theme")] ? startParams.get("theme") : "";
+  const chineseStudioRoute = startParams.get("from") === "chinese-studio" || requestedStoryLanguage === "zh";
+  if (chineseStudioRoute) {
+    window.StoriesLensI18n?.setLocale("zh");
+    document.documentElement.lang = "zh-CN";
+    const languageSwitcher = document.querySelector(".language-switcher");
+    if (languageSwitcher) languageSwitcher.hidden = true;
+    const backLink = document.querySelector(".back-link");
+    if (backLink) backLink.href = "chinese-studio.html";
+  }
   let mode = requestedMode === "squad" ? "squad" : "solo";
-  let step = requestedDna && (requestedMode === "solo" || requestedMode === "squad") ? 3 : requestedMode === "solo" || requestedMode === "squad" ? 2 : 1;
+  let step = storyTheme ? 3 : requestedDna && (requestedMode === "solo" || requestedMode === "squad") ? 3 : requestedMode === "solo" || requestedMode === "squad" ? 2 : 1;
   const sourceToOrigin = { work: "work", tell: "memory", inspiration: "imagination", picture: "picture", text: "work", voice: "memory", book: "imagination", movie: "imagination", idea: "imagination" };
   let origin = sourceToOrigin[requestedSource] || "imagination";
   let squadAction = "create";
@@ -104,9 +126,29 @@
   let homepageSpark = null;
   let storyLanguageTouched = ["en", "zh"].includes(requestedStoryLanguage);
   let squadStyleTouched = false;
+  document.body.classList.toggle("travel-quick-mode", Boolean(storyTheme));
 
   if (storyLanguage) storyLanguage.value = storyLanguageTouched ? requestedStoryLanguage : window.StoriesLensI18n?.locale === "zh" ? "zh" : "en";
   if (storySeed && requestedDna) storySeed.value = requestedDna;
+  const applyStoryTheme = () => {
+    const config = themeConfigs[storyTheme];
+    if (!config) return;
+    mode = "squad";
+    origin = config.origin;
+    squadAction = "create";
+    if (storyLanguage) storyLanguage.value = "zh";
+    if (creatorLevel) creatorLevel.value = "family";
+    if (squadTitle) squadTitle.value = config.title;
+    if (squadOutput) squadOutput.value = "book";
+    if (squadStyle) squadStyle.value = config.style;
+    if (storySeed) storySeed.placeholder = config.seed;
+    const workFileTitle = workFileField?.querySelector(".field-title > span");
+    const workFilePicker = workFileField?.querySelector(".work-file-picker");
+    if (workFileTitle) workFileTitle.textContent = config.uploadTitle || "可选：上传参考图片或作品";
+    if (workFilePicker?.firstChild) workFilePicker.firstChild.textContent = config.uploadButton || "＋ 选择文件";
+    if (workFileStatus) workFileStatus.textContent = config.uploadStatus || "可以上传图片、文字或作品作为灵感；默认私密。";
+  };
+  applyStoryTheme();
 
   const stepCopy = {
     1: {
@@ -117,9 +159,9 @@
     2: {
       label: "Choose a starting point",
       soloTitle: "What kind of story will you begin?",
-      squadTitle: "How will you join the adventure?",
+      squadTitle: "Choose how to co-create",
       soloLede: "Pick the easiest starting point. There is no wrong answer.",
-      squadLede: "Start a private squad with family or friends, or enter the Story Code they sent you."
+      squadLede: "Create a private group with family or friends, or use their Story Code to join."
     },
     3: {
       label: "Meet the creator",
@@ -140,10 +182,13 @@
     selectButton(modeButtons, mode, "modeChoice");
     selectButton(originButtons, origin, "origin");
     selectButton(squadButtons, squadAction, "squadAction");
+    selectButton(travelOutputButtons, squadOutput?.value || "book", "travelOutput");
     modePanel.hidden = step !== 1;
     soloOptions.hidden = step !== 2 || mode !== "solo";
     squadOptions.hidden = step !== 2 || mode !== "squad";
+    if (storyThemeEntry) storyThemeEntry.hidden = step !== 2 || mode !== "squad" || squadAction === "join" || storyLanguage?.value !== "zh";
     setupFields.hidden = step !== 3;
+    if (travelOutputChoice) travelOutputChoice.hidden = !storyTheme;
     const joining = mode === "squad" && squadAction === "join";
     const creatingSquad = mode === "squad" && !joining;
     ideaField.hidden = joining;
@@ -151,16 +196,18 @@
     if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
     if (squadTitle) squadTitle.required = creatingSquad;
     if (workFileField) workFileField.hidden = joining || (mode !== "squad" && origin !== "work");
+    creatorLevel?.closest("label")?.toggleAttribute("hidden", Boolean(storyTheme));
+    storyLanguage?.closest("label")?.toggleAttribute("hidden", Boolean(storyTheme));
     const copy = stepCopy[step];
     stepCurrent.textContent = String(step);
     stepLabel.textContent = t(copy.label);
-    stepTitle.textContent = t(step === 2 ? (mode === "solo" ? copy.soloTitle : copy.squadTitle) : copy.title);
-    stepLede.textContent = t(step === 2 ? (mode === "solo" ? copy.soloLede : copy.squadLede) : copy.lede);
+    stepTitle.textContent = storyTheme ? themeConfigs[storyTheme].heading : t(step === 2 ? (mode === "solo" ? copy.soloTitle : copy.squadTitle) : copy.title);
+    stepLede.textContent = storyTheme ? themeConfigs[storyTheme].lede : t(step === 2 ? (mode === "solo" ? copy.soloLede : copy.squadLede) : copy.lede);
     progressFill.style.width = `${(step / 3) * 100}%`;
     backButton.hidden = step === 1;
     nextButton.hidden = step === 3;
     continueButton.hidden = step !== 3;
-    continueButton.firstChild.textContent = `${t(mode === "solo" ? "Enter my Solo Story" : joining ? "Join this Story Squad" : "Create my Story Squad")} `;
+    continueButton.firstChild.textContent = `${storyTheme ? themeConfigs[storyTheme].cta : t(mode === "solo" ? "Enter my Solo Story" : joining ? "Join this Story Squad" : "Create my Story Squad")} `;
     error.textContent = "";
   };
 
@@ -177,6 +224,23 @@
   squadButtons.forEach((button) => button.addEventListener("click", () => {
     squadAction = button.dataset.squadAction;
     render();
+  }));
+
+  travelOutputButtons.forEach((button) => button.addEventListener("click", () => {
+    if (squadOutput) squadOutput.value = button.dataset.travelOutput;
+    render();
+  }));
+
+  storyThemeButtons.forEach((button) => button.addEventListener("click", () => {
+    storyTheme = button.dataset.storyTheme;
+    document.body.classList.add("travel-quick-mode");
+    step = 3;
+    storyLanguageTouched = true;
+    applyStoryTheme();
+    history.replaceState({}, "", `${location.pathname}?mode=squad&storyLang=zh&theme=${encodeURIComponent(storyTheme)}`);
+    render();
+    stepTitle.focus({ preventScroll: true });
+    window.StoriesLensAnalytics?.track("story_theme_squad_started", { language: "zh", theme: storyTheme });
   }));
 
   nextButton?.addEventListener("click", () => {
@@ -206,7 +270,7 @@
       card.setAttribute("aria-pressed", String(selected));
     });
     if (active && styleSummaryImage) styleSummaryImage.src = active.dataset.styleImage;
-    if (active && styleSummaryLabel) styleSummaryLabel.textContent = active.dataset.styleLabel;
+    if (active && styleSummaryLabel) styleSummaryLabel.textContent = t(active.dataset.styleLabel);
   };
 
   async function restoreHomepageSpark() {
@@ -322,10 +386,7 @@
     const wasSpeaking = button?.classList.contains("is-speaking");
     stopYuVoice();
     if (wasSpeaking) return;
-    // This shared route is the English entry experience. The selected story
-    // language controls the creator's dictation and destination studio, but it
-    // must not silently switch Yu's interface narration to Chinese.
-    const language = "en";
+    const language = chineseStudioRoute ? "zh" : "en";
     const utterance = new SpeechSynthesisUtterance(text);
     const lang = language === "zh" ? "zh-CN" : "en-US";
     if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(utterance, lang);
@@ -345,11 +406,13 @@
   yuReadButtons.forEach((button) => button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    speakAsYu(button.dataset.readEn, button);
+    speakAsYu(chineseStudioRoute ? button.dataset.readZh : button.dataset.readEn, button);
   }));
 
   yuReadPageButton?.addEventListener("click", () => {
-    const pageGuide = "Hello, I’m Yu. First tell me who is creating, then choose how you like to create and your story language. For a Story Squad, name your story, choose a book or film, and pick one picture style. Finally, type an idea, hold to speak, or add something you already made.";
+    const pageGuide = chineseStudioRoute
+      ? "你好，我是羽大师。先告诉我是谁在创作，再选择你喜欢的创作方式。亲友共创时，请给故事起名，选择做成书或电影，再挑一种画风。最后，你可以打字、按住说话，或上传已有作品。"
+      : "Hello, I’m Yu. First tell me who is creating, then choose how you like to create and your story language. For a Story Squad, name your story, choose a book or film, and pick one picture style. Finally, type an idea, hold to speak, or add something you already made.";
     speakAsYu(pageGuide, yuReadPageButton);
   });
 
@@ -750,6 +813,12 @@
       return;
     }
 
+    if (mode === "squad" && squadAction === "create" && themeConfigs[storyTheme]?.requirePhoto && !importedWork) {
+      error.textContent = "请先上传一张旅行照，再开始旅行故事共创。";
+      workFile?.focus();
+      return;
+    }
+
     if (seed && window.StoriesLensSafety && !window.StoriesLensSafety.check(seed).safe) {
       error.textContent = t(window.StoriesLensSafety.message);
       storySeed.focus();
@@ -803,7 +872,7 @@
       return;
     }
 
-    const setup = { mode, origin, squadAction, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
+    const setup = { mode, origin, squadAction, theme: storyTheme, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}`;

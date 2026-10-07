@@ -14,7 +14,7 @@ function readyEnvironment() {
     MEDIA_REQUIRED_REGIONS: "cn,us,intl",
     CHINA_ARK_API_KEY: "server-only-ark-key",
     CHINA_ARK_TEXT_MODEL: "doubao-seed-2-0-lite-260215",
-    CHINA_ARK_IMAGE_MODEL: "doubao-seedream-5-0-lite-260128",
+    CHINA_ARK_IMAGE_MODEL: "doubao-seedream-5-0-260128",
     CHINA_ARK_VIDEO_MODEL: "doubao-seedance-2-0-mini-260615",
     CHINA_ARK_VIDEO_ENABLED: "true",
     CHINA_ARK_VIDEO_COST_CNY_PER_SECOND: "0.20",

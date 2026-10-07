@@ -163,7 +163,8 @@ test("SOLO defaults to one adaptive continuation and keeps other creation paths 
   assert.match(script, /function startNextPage/);
   assert.match(script, /state\.bookScenes\.push/);
   assert.match(script, /approved Page 1 world-and-style anchor/);
-  assert.match(script, /movie-studio\.html\?project=/);
+  assert.match(script, /state\.outputType === 'film' \? 'movie-studio\.html' : 'book-studio\.html'/);
+  assert.match(script, /studio \+ '\?project=' \+ encodeURIComponent\(state\.projectId\)/);
   assert.match(css, /\.creation-stage-grid/);
   assert.match(css, /\.creation-stage-hear/);
   assert.match(css, /\.stage-overview-hear/);

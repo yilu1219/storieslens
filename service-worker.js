@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v102-book-studio-20260927";
+const VERSION = "storieslens-pwa-v103-zh-home-20260930";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -30,7 +30,7 @@ const APP_SHELL = [
   "/analytics.js",
   "/i18n.js?v=20260908-1",
   "/portal-home.css?v=20260916-6",
-  "/portal-home.js?v=20260916-43",
+  "/portal-home.js?v=20260930-zh-home-1",
   "/family-flow.css?v=20260916-6",
   "/chinese-studio.css?v=20260916-5",
   "/natural-voice.js?v=20260922-clear-energy-1",

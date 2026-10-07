@@ -22,8 +22,8 @@
   let existingWritingName = "";
   let preparedStoryLanguage = "";
   let recognition = null;
-  // The public homepage is the English flagship. Chinese is a distinct
-  // creative route—not an in-place translation of this page.
+  // The English flagship and the Chinese ink-style studio are intentionally
+  // separate home experiences. Chinese creation starts in chinese-studio.html.
   let homeLocale = "en";
 
   const homeCopy = {
@@ -314,7 +314,9 @@
         ? "image_and_voice"
         : (preparedImage ? "image" : (payload.seed ? "voice" : "language_only")))
     });
-    location.href = `start.html?from=homepage-magic&storyLang=${encodeURIComponent(preparedStoryLanguage)}`;
+    location.href = preparedStoryLanguage === "zh"
+      ? "chinese-studio.html?from=homepage-magic"
+      : "start.html?from=homepage-magic&storyLang=en";
   };
 
   uploadInput?.addEventListener("change", async (event) => {

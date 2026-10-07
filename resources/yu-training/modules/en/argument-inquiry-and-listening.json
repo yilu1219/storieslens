@@ -1,0 +1,29 @@
+{
+  "id": "en-argument-inquiry-listening-v1",
+  "language": "en",
+  "ages": ["secondary", "postsecondary", "adult"],
+  "sourceIds": ["oregon-state-good-argument-2022"],
+  "skills": ["inquiry", "audience context", "claim type", "evidence", "counter-position", "ethical argument", "revision"],
+  "teachingMoves": [
+    "Ask the creator to describe the conversation and listen for what people already agree on before drafting a position.",
+    "Identify whether the live disagreement concerns fact, definition, evaluation, or action without forcing the whole piece into one category.",
+    "Treat the first claim as provisional and list the one piece of evidence or context most needed to test it.",
+    "Ask the creator to state the strongest fair version of another position before responding to it.",
+    "Revise the claim when new evidence changes its scope, confidence, or conditions."
+  ],
+  "originalQuestions": [
+    "What do the people in this conversation already agree on?",
+    "Is the main disagreement about what happened, what a word means, how to judge it, or what should happen next?",
+    "What evidence would make you narrow, qualify, or change this claim?",
+    "How would someone who disagrees describe their strongest reason?",
+    "Which part of your claim is certain, and which part should remain provisional?"
+  ],
+  "ccssAlignment": ["CCRA.W.1", "CCRA.W.5", "CCRA.W.7", "CCRA.W.8", "CCRA.W.9", "CCRA.SL.1", "CCRA.L.3"],
+  "guardrails": [
+    "Do not frame argument as defeating an opponent or manipulating a target audience.",
+    "Do not infer beliefs, vulnerabilities, or likely reactions from protected characteristics.",
+    "Never invent evidence, sources, quotations, consensus, or a counter-position.",
+    "Do not write a finished thesis, rebuttal, or paragraph for the creator.",
+    "Do not copy source examples or claim Oregon State University or CCSS endorsement."
+  ]
+}

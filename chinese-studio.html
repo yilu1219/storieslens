@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Product invariant: this water-ink page is the permanent Chinese entrance; co-creation starts only after the user chooses 亲友共创. -->
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -12,7 +13,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
     <link rel="stylesheet" href="family-flow.css?v=20260916-6" />
-    <link rel="stylesheet" href="chinese-studio.css?v=20260916-5" />
+    <link rel="stylesheet" href="chinese-studio.css?v=20261001-creation-paths-1" />
     <link rel="stylesheet" href="yu-profile.css?v=20260915-3" />
     <link rel="stylesheet" href="pwa.css" />
     <title>中文创作馆 · 语镜故事</title>
@@ -43,7 +44,27 @@
           <div class="chinese-hero-art" role="img" aria-label="水墨山水中的创作者、书页与电影画格"></div>
         </div>
 
-        <form class="spark-form chinese-spark-form" data-create-form novalidate>
+        <section class="chinese-creation-paths" aria-labelledby="chinese-creation-paths-title">
+          <div class="chinese-creation-paths-heading">
+            <p>选择创作方式</p>
+            <h2 id="chinese-creation-paths-title">选择一个人写，或与他人共创。</h2>
+            <span>两种方式都可以继续做成书或电影。</span>
+          </div>
+          <nav class="chinese-creation-path-grid" aria-label="选择独立创作或亲友共创">
+            <a class="chinese-creation-path path-solo" href="#chinese-solo-start" data-chinese-mode="solo">
+              <small>01 · SOLO</small><strong>独立创作</strong>
+              <p>和羽大师一问一答，自己决定人物、文字与画面。</p>
+              <span>可选择：故事书／故事电影 <b aria-hidden="true">→</b></span>
+            </a>
+            <a class="chinese-creation-path path-squad" href="start.html?mode=squad&amp;storyLang=zh&amp;from=chinese-studio" data-chinese-mode="squad">
+              <small>02 · STORY SQUAD</small><strong>亲友共创</strong>
+              <p>邀请家人或朋友轮流续写，共用人物、世界和画面风格。</p>
+              <span>可选择：共创书／故事电影 <b aria-hidden="true">→</b></span>
+            </a>
+          </nav>
+        </section>
+
+        <form class="spark-form chinese-spark-form" id="chinese-solo-start" data-create-form novalidate>
           <div class="spark-heading">
             <div><span>第一步</span><strong>带来你的第一笔灵感</strong></div>
             <b>免费体验</b>

@@ -2,7 +2,7 @@
 
 ## 当前结论
 
-首发采用 Stripe 官方 Checkout Sessions API，不在 StoriesLens 页面里处理银行卡信息。网站服务器为每位已登录的成人账户创建独立订单和 Stripe Checkout Session；只有 Stripe 官方 webhook 通过原始请求签名验证，且账户、套餐、金额、币种和运行模式全部匹配后，才自动发放额度。成功页本身永远不能发额度。
+首发采用 Stripe 官方 Checkout Sessions API，不在 StoriesLens 页面里处理银行卡信息。网站服务器为每位已登录的成人账户创建独立订单和 Stripe Checkout Session；正式环境只接受后台配置的固定 Stripe Price ID。只有 Stripe 官方 webhook 通过原始请求签名验证，且账户、套餐、固定价格、金额、币种、Stripe Customer 和运行模式全部匹配后，才自动发放额度。成功页本身永远不能发额度。
 
 首发将自助产品保持为按项目付费，不做无限量订阅：
 
@@ -19,7 +19,8 @@ Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决
 - 每笔 Checkout Session 都绑定内部订单号、成人账户、地区、套餐和精确金额。
 - `checkout.session.completed` 与延迟支付成功通知只有通过 `Stripe-Signature` 原始请求验签后才履约。
 - Stripe 重复发送同一个 event 或用户反复刷新成功页，都不会重复加额度。
-- 退款事件会标记到后台等待人工审核，不会静默删除已经使用的创作成果。
+- 第一次完成付款后保存 Stripe Customer ID，后续订单复用同一位成人客户；不保存卡号。
+- 退款会按退款比例收回尚未使用的额度，已使用部分形成待人工处理的差额；争议发生时冻结本单剩余额度。
 
 ## Stripe 中需要创建的商品
 
@@ -65,13 +66,17 @@ Movie Pack 暂时保留为完成故事后的加购，不放在第一个结账决
 
 `https://www.storieslens.com/api/stripe/webhook`
 
-订阅至少以下事件：
+创建正式 webhook 时，把 endpoint 的 API version 设为与 Railway 的 `STRIPE_API_VERSION` 相同，并订阅以下事件：
 
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
 - `checkout.session.async_payment_failed`
 - `checkout.session.expired`
 - `charge.refunded`
+- `charge.dispute.created`
+- `charge.dispute.funds_withdrawn`
+- `charge.dispute.closed`
+- `charge.dispute.funds_reinstated`
 
 然后把 Secret key 与 webhook signing secret 写入 Railway：
 
@@ -80,9 +85,18 @@ STRIPE_SECRET_KEY=rk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_LIVE_MODE=false
 STRIPE_API_BASE_URL=https://api.stripe.com
+STRIPE_API_VERSION=2026-02-25.clover
+STRIPE_PRICE_STORY_PASS=price_...
+STRIPE_PRICE_COCREATE_PACK=price_...
+STRIPE_PRICE_TEACHER_CLASSROOM=price_...
+STRIPE_PRICE_GUIDED_SQUAD=price_...
+STRIPE_PRICE_MOVIE_30=price_...
+STRIPE_PRICE_MOVIE_60=price_...
 ```
 
-优先使用只授予 Checkout Sessions 写权限的受限密钥（`rk_test_...` / `rk_live_...`），不要给网站使用账户级标准密钥。先保持 `STRIPE_LIVE_MODE=false` 跑完测试卡、重复 webhook、延迟付款、失败、取消、退款和收据。正式开放时再同时切换到正式受限密钥、正式 webhook 的 `whsec_...`，并把 `STRIPE_LIVE_MODE=true`。不要把密钥、后台登录信息或真实付款数据提交进 Git。
+六个 `STRIPE_PRICE_...` 值来自 Stripe Dashboard 中对应的一次性 Price。测试和正式模式的 Price ID 不通用；切换到 live key 时必须同时换成 live Price ID。正式模式若缺少所选商品的固定 Price ID，服务器会拒绝创建订单，不会退回临时价格。
+
+优先使用具备 Checkout Sessions 所需最小权限的受限密钥（`rk_test_...` / `rk_live_...`），不要给网站使用账户级标准密钥。先保持 `STRIPE_LIVE_MODE=false` 跑完测试卡、重复 webhook、延迟付款、失败、取消、退款、争议和收据。正式开放时再同时切换到正式受限密钥、正式 webhook 的 `whsec_...`、正式 Price ID，并把 `STRIPE_LIVE_MODE=true`。不要把密钥、后台登录信息或真实付款数据提交进 Git。
 
 ## 上线收款前的硬门槛
 
@@ -91,6 +105,7 @@ STRIPE_API_BASE_URL=https://api.stripe.com
 - 用 Stripe 测试模式完整跑通一次：成功、取消、失败、退款、收据。
 - 确认你可以人工履行前 10 个订单，再开放真实付款。
 - 确认 Railway 的持久化卷正常；订单、webhook 幂等记录、额度流水不能存入临时文件系统。
+- 在 Stripe Dashboard 确认正式 Price 的币种与金额和代码一致：Story Pass `$19`、共创 `$39`、教师项目 `$79`、Story Squad 订金 `$49`、30 秒电影 `$39`、60 秒电影 `$69`。
 
 ## 最小成交实验
 

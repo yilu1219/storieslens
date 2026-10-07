@@ -59,6 +59,7 @@ const projectOutputHtml = htmlByFile["project-output.html"];
 const packageJson = JSON.parse(read("package.json"));
 const serverJs = read("server.js");
 const startJs = read("start.js");
+const startCss = read("start.css");
 const scriptJs = read("script.js");
 const envExample = read(".env.example");
 const ccssStandards = JSON.parse(read("resources/ccss/ela-standards.json"));
@@ -245,7 +246,9 @@ assert(!envExample.includes("AIMS"), "Environment example should not include ret
 assert(!envExample.includes("aimodelshow"), "Environment example should not include the retired aimodelshow URL");
 assert(envExample.includes("OPENROUTER_IMAGE_API_URL=https://openrouter.ai/api/v1/images"), "Environment example should include the OpenRouter image API URL");
 assert(envExample.includes("OPENROUTER_IMAGE_MODEL=bytedance-seed/seedream-4.5"), "Environment example should include the selected image model");
-assert(envExample.includes("IMAGE_SIZE=2560x1440"), "Environment example should use the minimum accepted 16:9 image size");
+assert(envExample.includes("IMAGE_SIZE=2K") && envExample.includes("IMAGE_RESOLUTION="), "Environment example should use one stable 2K image-size control");
+assert(envExample.includes("CHINA_ARK_IMAGE_MODEL=doubao-seedream-5-0-260128"), "Environment example should use the canonical Mainland Seedream 5.0 Lite model ID");
+assert(serverJs.includes('!imageRequest.size && imageRequest.resolution'), "Image requests should never send conflicting size and resolution controls");
 assert(envExample.includes("OPENROUTER_VIDEO_API_URL=https://openrouter.ai/api/v1/videos"), "Environment example should include the OpenRouter video API URL");
 assert(envExample.includes("OPENROUTER_VIDEO_MODEL=bytedance/seedance-2.0-fast"), "Environment example should include the selected video model");
 assert(envExample.includes("CHINA_ARK_VIDEO_MODEL=doubao-seedance-2-0-mini-260615"), "Environment example should include the cost-first Mainland Seedance Mini model");
@@ -408,7 +411,9 @@ assert(h5AppJs.includes("What problem are they facing right now?"), "English que
 assert(h5AppJs.includes("他现在遇到了什么困难或麻烦？"), "Chinese question two should use child-friendly language");
 assert(startHtml.includes('data-carried-spark') && startJs.includes("restoreHomepageSpark"), "Solo-or-group setup should visibly restore the homepage photo instead of asking for it again");
 assert(startJs.includes('sessionStorage.setItem("storieslens_imported_work"') && startJs.includes('origin = "picture"'), "The carried homepage photo should become the selected starting picture for either creation mode");
-assert(startJs.includes('const language = "en"') && startJs.includes("speakAsYu(button.dataset.readEn, button)"), "The shared solo-or-group route should keep Yu's interface narration in English even when the destination story language is Chinese");
+assert(startJs.includes('startParams.get("from") === "chinese-studio"') && startJs.includes('setLocale("zh")'), "The Chinese-studio route should open the shared setup in Chinese");
+assert(startJs.includes('chineseStudioRoute ? button.dataset.readZh : button.dataset.readEn'), "Yu should speak Chinese on the Chinese-studio route and keep English on the English route");
+assert(startHtml.includes("Choose how to co-create") && !startHtml.includes("How will you join the adventure? Start a private squad"), "Story Squad should ask for a co-creation method instead of framing setup as joining an adventure");
 assert(startJs.includes('solo-story?mode=solo&from=homepage-magic'), "A solo creator should continue with the same photo into the canonical new Story Studio");
 assert(read("squad-board.js").includes("StoriesLensSparkHandoff.load()"), "A Story Squad should recover a large homepage photo from IndexedDB when session storage is too small");
 assert.match(
@@ -417,14 +422,24 @@ assert.match(
   "Choosing a story language on the homepage should immediately enter the matching studio"
 );
 assert(
-  portalHomeJs.includes('let homeLocale = "en"'),
-  "The flagship homepage should always begin in English instead of restoring an in-place Chinese translation"
+  portalHomeJs.includes('applyHomeLocale("en")'),
+  "The English flagship should not replace the separate Chinese ink-style homepage"
 );
 assert.match(
   portalHomeJs,
   /button\.dataset\.homeLocale === "zh"[\s\S]*?preparedStoryLanguage = "zh"[\s\S]*?storeAndContinue\(\)/,
-  "The header Chinese control should route directly into the Chinese creative studio"
+  "The header Chinese control should enter the separate Chinese creative studio"
 );
+assert(portalHomeJs.includes('? "chinese-studio.html?from=homepage-magic"'), "Chinese work from the flagship should continue into the Chinese ink-style studio");
+assert(["travel", "wuxia", "fantasy", "my-story", "free"].every((theme) => startHtml.includes(`data-story-theme="${theme}"`)), "Chinese Story Squad should offer five focused creation themes");
+assert(startJs.includes("theme: storyTheme") && startJs.includes("story_theme_squad_started"), "Story Squad setup should preserve the selected Chinese theme and activation event");
+assert(startJs.includes("let step = storyTheme ? 3") && startJs.includes('title: "我们的旅行故事"'), "A selected Chinese theme should open directly in the minimal quick-start flow with safe defaults");
+assert(startCss.includes(".travel-quick-mode .squad-create-fields") && startCss.includes(".travel-quick-mode .start-visual"), "Travel quick start should hide deferred setup and the extra visual panel");
+assert(startHtml.includes('data-travel-output="book"') && startHtml.includes('data-travel-output="film"'), "Travel quick start should offer one direct book-or-film choice");
+assert(startJs.includes("travelOutputButtons") && startJs.includes("squadOutput.value = button.dataset.travelOutput"), "Travel book-or-film choice should reuse the existing shared-project output field");
+assert(startHtml.includes('data-style-card="japanese-handpainted"') && fs.existsSync(path.join(root, "assets/style-japanese-handpainted-v1.jpg")), "Story Squad should offer an original Japanese-inspired hand-painted style with a real reference image");
+assert(startHtml.includes("创作成品示例") && startHtml.includes("outcome-zh-ink-book-v1.png") && startHtml.includes("outcome-zh-cocreated-film-v1.png"), "Story Squad setup should show a finished book cover and film poster instead of a generic illustration");
+assert(serverJs.includes('"japanese-handpainted"') && read("platform-api.js").includes('"japanese-handpainted"'), "The new visual style should be accepted and translated into a generation prompt without naming an artist");
 [
   'data-studio-language="zh"',
   "中文创作馆",
@@ -436,6 +451,9 @@ assert.match(
   "data-chinese-idea-entry",
   "说或写下一个想法"
 ].forEach((token) => assert(chineseStudioHtml.includes(token), `Chinese studio should include: ${token}`));
+assert(chineseStudioHtml.includes('data-chinese-mode="solo"') && chineseStudioHtml.includes('href="#chinese-solo-start"'), "Chinese entrance should offer a native SOLO path without replacing its ink-style cover");
+assert(chineseStudioHtml.includes('data-chinese-mode="squad"') && chineseStudioHtml.includes('start.html?mode=squad&amp;storyLang=zh'), "Chinese entrance should offer the same Story Squad path in Chinese");
+assert(chineseStudioHtml.includes("两种方式都可以继续做成书或电影") && chineseStudioHtml.includes("故事书／故事电影") && chineseStudioHtml.includes("共创书／故事电影"), "Both Chinese creation paths should clearly offer book or film outcomes");
 assert(!chineseStudioHtml.includes("MAP"), "Chinese studio should not expose the English MAP learning profile");
 
 [

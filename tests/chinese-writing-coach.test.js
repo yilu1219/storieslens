@@ -41,8 +41,9 @@ test("beginning a story activates questions for ideation and character", () => {
 
 test("screenplay coaching combines scene and microfilm economy", () => {
   const methods = selectWritingMethods({ action: "scene", genre: "screenplay" });
-  assert.deepEqual(methods.map((method) => method.name), ["场景与电影化表达", "微电影叙事"]);
+  assert.deepEqual(methods.map((method) => method.name), ["戏剧主线与角色对白", "场景与电影化表达", "微电影叙事"]);
   const curriculum = buildChineseCoachCurriculum({ action: "scene", genre: "screenplay" });
+  assert.match(curriculum.prompt, /遮住人物名字朗读/);
   assert.match(curriculum.prompt, /进入状态、人物目的、可见行动、阻力/);
   assert.match(curriculum.prompt, /短片只保留一个中心人物/);
 });

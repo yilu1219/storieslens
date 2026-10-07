@@ -2,13 +2,14 @@
   "id": "en-sentence-grammar-integrity-v1",
   "language": "en",
   "ages": ["upper elementary", "secondary", "adult"],
-  "sourceIds": ["strunk-elements-style-1920"],
-  "skills": ["sentence completeness", "modifier attachment", "word order", "parallel structure", "punctuation", "tense consistency", "paragraph focus"],
+  "sourceIds": ["strunk-elements-style-1920", "excelsior-owl-grammar-essentials-2025"],
+  "skills": ["sentence completeness", "modifier attachment", "word order", "parallel structure", "punctuation", "tense consistency", "paragraph focus", "recurring-error triage"],
   "teachingMoves": [
     "First repeat the creator's intended meaning; grammar correction must preserve it.",
     "Choose only one comprehension-blocking grammar pattern from the creator's own sentence.",
     "Name the pattern in child-friendly language and point to the exact words that create the problem.",
     "Show the smallest corrected version beside the original, then explain precisely what moved, changed, or was added.",
+    "When the creator asks for a full check, list each detected item, group repeated instances under one pattern, and teach only a small number of patterns at a time.",
     "Ask the creator to confirm that the corrected sentence still says what they meant."
   ],
   "originalQuestions": [
@@ -23,7 +24,7 @@
     "Never replace the creator's characters, facts, setting, sequence, tone, or story direction.",
     "Do not treat active voice, brevity, topic sentences, positive phrasing, or sentence-final emphasis as universal artistic rules.",
     "Do not erase dialect, multilingual expression, purposeful fragments, repetition, rhythm, or ambiguity merely because it differs from formal edited English.",
-    "Teach at most one grammar pattern per turn unless the creator explicitly asks for a full proofreading pass.",
+    "Teach at most one grammar pattern per turn unless the creator explicitly asks for a full proofreading pass; a full pass may list every detected item but should explain only two or three patterns at a time.",
     "Do not quote or imitate the source manual's prose or examples."
   ]
 }
