@@ -75,6 +75,7 @@
     travel: { origin: "picture", title: "我们的旅行故事", style: "ink-watercolor", heading: "先选书或电影，再上传一张旅行照", lede: "大家说或写一句当时发生了什么，就能开始共创。", seed: "说一句：照片在哪里拍的？当时发生了什么？", uploadTitle: "上传旅行照片", uploadButton: "＋ 选择旅行照片", uploadStatus: "照片会先删除位置和设备信息，并默认私密。", cta: "开始旅行故事共创", requirePhoto: true },
     wuxia: { origin: "imagination", title: "我们的江湖故事", style: "ink-watercolor", heading: "先选书或电影，再开启你们的江湖", lede: "说说主角、门派或一次重要使命，就能开始共创。", seed: "谁走进了江湖？他想完成什么？遇到了什么困难？", cta: "开始武侠共创" },
     fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
+    lianhuanhua: { origin: "imagination", title: "我们的连环画", style: "comic", heading: "一起做一本中式连环画", lede: "一幅图讲一个小场景，大家接力把故事画完整。", seed: "第一幅画里有谁？他在哪里？正要做什么？", cta: "开始连环画共创", characterRules: "传统中国小人书风格，黑白钢笔线描，清晰轮廓，朴素写实，连续分镜；每幅只画一个明确动作，人物造型与服装始终一致；画面内不出现文字、对白框、标志或水印，文字排在画面外。" },
     "my-story": { origin: "memory", title: "我们的故事", style: "storybook-watercolor", heading: "先选书或电影，再讲一个真实故事", lede: "家庭、校园、朋友或成长中的一件事，都可以成为开场。", seed: "这件事发生在哪里？和谁有关？为什么让你记得？", cta: "开始我的故事共创" },
     free: { origin: "imagination", title: "我们的自由创作", style: "storybook-watercolor", heading: "先选书或电影，再说出你们的想法", lede: "没有固定主题，一句话就能开始。", seed: "你们最想一起创作一个怎样的故事？", cta: "开始自由共创" },
     "csl-classroom": {

@@ -431,7 +431,8 @@ assert.match(
   "The header Chinese control should enter the separate Chinese creative studio"
 );
 assert(portalHomeJs.includes('? "chinese-studio.html?from=homepage-magic"'), "Chinese work from the flagship should continue into the Chinese ink-style studio");
-assert(["travel", "wuxia", "fantasy", "my-story", "csl-classroom", "free"].every((theme) => startHtml.includes(`data-story-theme="${theme}"`)), "Chinese Story Squad should offer focused creation themes, including a Chinese-as-a-second-language classroom sample");
+assert(["travel", "wuxia", "fantasy", "lianhuanhua", "my-story", "csl-classroom", "free"].every((theme) => startHtml.includes(`data-story-theme="${theme}"`)), "Chinese Story Squad should offer focused creation themes, including Chinese lianhuanhua and a second-language classroom sample");
+assert(startJs.includes('title: "我们的连环画"') && startJs.includes("传统中国小人书风格") && startJs.includes("画面内不出现文字"), "Chinese lianhuanhua should reuse the stable comic generator with traditional sequential-art rules and text outside the image");
 assert(startJs.includes("theme: storyTheme") && startJs.includes("story_theme_squad_started"), "Story Squad setup should preserve the selected Chinese theme and activation event");
 assert(startJs.includes("let step = storyTheme ? 3") && startJs.includes('title: "我们的旅行故事"'), "A selected Chinese theme should open directly in the minimal quick-start flow with safe defaults");
 assert(startJs.includes('"csl-classroom"') && startJs.includes('title: "消失的茶馆菜单"') && startJs.includes("requestedInterfaceLanguage"), "The CSL teacher demo should preload one classroom story while allowing an English teacher interface around Chinese student writing");
