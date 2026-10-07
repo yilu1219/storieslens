@@ -29,4 +29,6 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(api.includes("coverImageUrl: storedSquad.visualAnchorImageUrl"), "the approved cast poster should become the assembled project cover");
   assert(api.includes('presenter: "StoriesLens Presents"') && api.includes("storyBackground: storedSquad.characterRules"), "the assembled project should retain exact poster text instead of asking the image model to spell it");
   assert(script.includes('squad.outputType === "film" ? "movie-studio.html" : "book-studio.html"'), "assembled books and films should open their matching studio");
+  assert(api.includes('theme: squad.theme || ""') && script.includes('theme: setup.theme'), "the selected creation theme should survive entry into the real private squad");
+  assert(script.includes("assets/yu-wuxia-master-v1.png") && script.includes("Speak as 小羽大侠") && script.includes("古琴声从哪里传来"), "a wuxia squad should show Hero Yu and keep both live and fallback guidance in the original guqin story world");
 });

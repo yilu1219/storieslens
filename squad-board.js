@@ -292,7 +292,13 @@
 
   function localMentorFallback(text, review) {
     const beat = activeStoryBeat(activeSquad);
-    if (!review) return { question: beat.prompt };
+    if (!review) {
+      if (activeSquad.theme === "wuxia" && activeSquad.language === "zh") {
+        const questions = ["少侠，古琴声从哪里传来？谁第一个听见了？", "琴声突然停下时，什么困难出现在主角面前？", "主角第一次用了什么办法？结果发生了什么？", "这场交锋中，哪个动作最能表现人物的性格？", "刀剑与古琴之间，主角最终做出了什么选择？", "最后一声琴音响起时，谁发生了改变？"];
+        return { question: questions[beat.index] || beat.prompt };
+      }
+      return { question: beat.prompt };
+    }
     const checked = window.StoriesLensMentorRevision?.basicCheck?.(mentorState.activeSentence, activeSquad.language) || { suggestion: mentorState.activeSentence, changed: false };
     return activeSquad.language === "zh"
       ? { reply: "我们先一起看最后一句。", strength: "你已经写出了一个可以继续发展的故事动作。", priority: checked.changed ? "让句末和标点更清楚。" : "保持这句话的意思，再检查它是否接住了前一位创作者。", microLesson: "共创续写要同时做到两件事：接住一个已有线索，再加入一个自己的新变化。", suggestion: checked.suggestion }
@@ -327,7 +333,7 @@
           storyDnaContext: approvedStoryContext(activeSquad),
           studentDraft: draft,
           selectedText: mentorState.activeSentence,
-          teacherInstructions: `Keep the language child-friendly. Guide this exact story beat with one short question: ${beat.prompt} Refer to the approved shared story, but never write the next plot event for the creator.`
+          teacherInstructions: `${activeSquad.theme === "wuxia" ? "Speak as 小羽大侠, a warm wuxia writing mentor. When useful, ask about the sound of the guqin, the rhythm of an action, the setting, the character's motive, or the choice behind the fight. Keep all action non-graphic and original; never imitate an existing film or filmmaker. " : ""}Keep the language child-friendly. Guide this exact story beat with one short question: ${beat.prompt} Refer to the approved shared story, but never write the next plot event for the creator.`
         })
       });
       renderMentorGuidance(response.result || {}, review);
@@ -488,6 +494,7 @@
         displayName: setup.displayName,
         language: setup.storyLanguage,
         outputType: setup.squadOutputType,
+        theme: setup.theme,
         visualStyle: setup.squadVisualStyle,
         characterRules: setup.squadCharacterRules,
         ageGroup: setup.ageGroup === "under18" ? "under18" : "mixed",
@@ -888,6 +895,14 @@
     $("[data-setup]").hidden = true;
     $("[data-board]").hidden = false;
     $("[data-squad-title]").textContent = squad.title;
+    const wuxiaMentor = squad.theme === "wuxia";
+    $("[data-squad-yu]").classList.toggle("is-wuxia", wuxiaMentor);
+    $("[data-yu-theme-image]").src = wuxiaMentor ? "assets/yu-wuxia-master-v1.png" : "assets/yu-mascot-logo-v2.png";
+    $("[data-yu-theme-image]").alt = wuxiaMentor ? ui("Hero Yu with a guqin and feather brush", "背着古琴、手持羽毛笔的小羽大侠") : "";
+    $("[data-yu-theme-title]").textContent = wuxiaMentor ? ui("Hero Yu enters the story", "小羽大侠与你共闯江湖") : ui("Yu is creating with us", "羽大师也在共创");
+    $("[data-yu-theme-copy]").textContent = wuxiaMentor
+      ? ui("He asks one focused question per scene so your team writes every motive, action and choice in its own words.", "他每一幕只问一个关键问题，帮大家用自己的话写清动机、动作与选择。")
+      : ui("Yu remembers the approved story, asks—not writes—and helps each creator strengthen their own part.", "羽大师记得已通过的故事，只提问、不代写，帮助每位创作者完善自己的部分。");
     const styleNames = {
       "storybook-watercolor": ui("Storybook watercolor", "绘本水彩"),
       "ink-watercolor": ui("Ink watercolor", "水墨水彩"),

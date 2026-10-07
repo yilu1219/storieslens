@@ -36,6 +36,7 @@
   const titleVoiceStatus = document.querySelector("[data-title-voice-status]");
   const squadOutput = document.querySelector("[data-squad-output]");
   const travelOutputChoice = document.querySelector("[data-travel-output-choice]");
+  const themeMentor = document.querySelector("[data-theme-mentor]");
   const travelOutputButtons = [...document.querySelectorAll("[data-travel-output]")];
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
@@ -73,7 +74,7 @@
 
   const themeConfigs = {
     travel: { origin: "picture", title: "我们的旅行故事", style: "ink-watercolor", heading: "先选书或电影，再上传一张旅行照", lede: "大家说或写一句当时发生了什么，就能开始共创。", seed: "说一句：照片在哪里拍的？当时发生了什么？", uploadTitle: "上传旅行照片", uploadButton: "＋ 选择旅行照片", uploadStatus: "照片会先删除位置和设备信息，并默认私密。", cta: "开始旅行故事共创", requirePhoto: true },
-    wuxia: { origin: "imagination", title: "我们的江湖故事", style: "ink-watercolor", heading: "先选书或电影，再开启你们的江湖", lede: "说说主角、门派或一次重要使命，就能开始共创。", seed: "谁走进了江湖？他想完成什么？遇到了什么困难？", cta: "开始武侠共创" },
+    wuxia: { origin: "imagination", title: "我们的江湖故事", style: "ink-watercolor", heading: "先选书或电影，再开启你们的江湖", lede: "古琴一响，故事开场。小羽大侠会用问题带大家写出人物、困难、选择和结局。", seed: "雨夜里，谁听见了古琴声？他为什么走进江湖？眼前出现了什么困难？", cta: "开始武侠共创", characterRules: "原创中国武侠世界，古琴是推动故事的重要道具；动作像舞蹈一样有节奏，衣袂与雨、竹林或水面呼应；人物年龄、脸型、发型、服装颜色、兵器和古琴始终一致；非血腥，不出现伤口；不复制现有电影人物、服装或镜头。" },
     fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
     lianhuanhua: { origin: "imagination", title: "我们的连环画", style: "comic", heading: "一起做一本中式连环画", lede: "一幅图讲一个小场景，大家接力把故事画完整。", seed: "第一幅画里有谁？他在哪里？正要做什么？", cta: "开始连环画共创", characterRules: "传统中国小人书风格，黑白钢笔线描，清晰轮廓，朴素写实，连续分镜；每幅只画一个明确动作，人物造型与服装始终一致；画面内不出现文字、对白框、标志或水印，文字排在画面外。" },
     "my-story": { origin: "memory", title: "我们的故事", style: "storybook-watercolor", heading: "先选书或电影，再讲一个真实故事", lede: "家庭、校园、朋友或成长中的一件事，都可以成为开场。", seed: "这件事发生在哪里？和谁有关？为什么让你记得？", cta: "开始我的故事共创" },
@@ -185,6 +186,7 @@
     if (workFileTitle) workFileTitle.textContent = config.uploadTitle || "可选：上传参考图片或作品";
     if (workFilePicker?.firstChild) workFilePicker.firstChild.textContent = config.uploadButton || "＋ 选择文件";
     if (workFileStatus) workFileStatus.textContent = config.uploadStatus || "可以上传图片、文字或作品作为灵感；默认私密。";
+    if (themeMentor) themeMentor.hidden = storyTheme !== "wuxia";
   };
   applyStoryTheme();
 

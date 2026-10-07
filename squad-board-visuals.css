@@ -743,6 +743,9 @@ body.candidate-open {
   filter: drop-shadow(0 7px 10px rgba(18, 74, 55, 0.14));
 }
 
+.squad-yu.is-wuxia .squad-yu-head { grid-template-columns: 88px 1fr; }
+.squad-yu.is-wuxia .squad-yu-head img { width: 88px; height: 88px; }
+
 .squad-yu-head strong,
 .squad-yu-head small {
   display: block;
