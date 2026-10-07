@@ -216,6 +216,17 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .wuxia-style-grid b { color: var(--start-ink); font-size: 16px; }
 .wuxia-style-grid small { margin-top: 3px; color: var(--start-muted); font-size: 12px; line-height: 1.35; }
 .wuxia-style-grid button:focus-visible { outline: 3px solid rgba(244, 203, 112, .78); outline-offset: 2px; }
+.wuxia-story-hints { display: grid; grid-column: 1 / -1; gap: 10px; padding: 16px; border: 1px solid rgba(22, 132, 91, .24); border-radius: 18px; background: #f3f8f2; font-family: var(--start-sans); }
+.wuxia-story-hints[hidden] { display: none; }
+.wuxia-story-hints > div:first-child { display: grid; gap: 2px; }
+.wuxia-story-hints > div:first-child span { color: var(--start-leaf-deep); font-size: 13px; font-weight: 900; letter-spacing: .08em; }
+.wuxia-story-hints > div:first-child strong { color: var(--start-ink); font-size: 17px; }
+.wuxia-hint-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.wuxia-hint-grid button { display: grid; gap: 3px; padding: 12px; text-align: left; border: 1px solid var(--start-line); border-radius: 12px; background: #fff; cursor: pointer; }
+.wuxia-hint-grid button:hover, .wuxia-hint-grid button[aria-pressed="true"] { border-color: var(--start-leaf); background: #e7f2e9; }
+.wuxia-hint-grid b { color: var(--start-ink); font-size: 15px; }
+.wuxia-hint-grid small { color: var(--start-muted); font-size: 12px; line-height: 1.35; }
+.wuxia-hint-grid button:focus-visible { outline: 3px solid rgba(244, 203, 112, .78); outline-offset: 2px; }
 .squad-create-fields { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; border: 1px solid rgba(22, 132, 91, 0.23); border-radius: 18px; background: #eef6ef; }
 .squad-create-fields[hidden] { display: none; }
 .squad-create-heading { display: grid; grid-column: 1 / -1; gap: 4px; padding-bottom: 4px; }
@@ -391,6 +402,7 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
   .travel-output-choice > div { grid-template-columns: 1fr; }
   .wuxia-style-heading { display: grid; gap: 2px; }
   .wuxia-style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wuxia-hint-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .theme-mentor { grid-template-columns: 88px 1fr; padding: 12px; }
   .theme-mentor > img { width: 88px; height: 88px; }
   .theme-mentor > button { grid-column: 1 / -1; width: 100%; }

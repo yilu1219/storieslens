@@ -39,6 +39,8 @@
   const themeMentor = document.querySelector("[data-theme-mentor]");
   const wuxiaStyleChoices = document.querySelector("[data-wuxia-style-choices]");
   const wuxiaStyleCards = [...document.querySelectorAll("[data-wuxia-style-card]")];
+  const wuxiaStoryHints = document.querySelector("[data-wuxia-story-hints]");
+  const wuxiaHintButtons = [...document.querySelectorAll("[data-wuxia-hint]")];
   const travelOutputButtons = [...document.querySelectorAll("[data-travel-output]")];
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
@@ -192,6 +194,7 @@
     if (workFileStatus) workFileStatus.textContent = config.uploadStatus || "可以上传图片、文字或作品作为灵感；默认私密。";
     if (themeMentor) themeMentor.hidden = storyTheme !== "wuxia";
     if (wuxiaStyleChoices) wuxiaStyleChoices.hidden = storyTheme !== "wuxia";
+    if (wuxiaStoryHints) wuxiaStoryHints.hidden = storyTheme !== "wuxia";
   };
   applyStoryTheme();
 
@@ -373,6 +376,13 @@
       option.classList.toggle("is-selected", selected);
       option.setAttribute("aria-pressed", String(selected));
     });
+  }));
+  wuxiaHintButtons.forEach((button) => button.addEventListener("click", () => {
+    if (!storySeed) return;
+    storySeed.value = button.dataset.wuxiaHint;
+    wuxiaHintButtons.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
+    storySeed.focus();
+    storySeed.setSelectionRange(storySeed.value.indexOf("________"), storySeed.value.indexOf("________") + 8);
   }));
 
   const clearStyleReference = () => {

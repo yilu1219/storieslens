@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20261007-wuxia-styles-1" />
+    <link rel="stylesheet" href="start.css?v=20261007-wuxia-hints-1" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -261,6 +261,15 @@
                 </aside>
               </section>
             </section>
+            <section class="wide wuxia-story-hints" data-wuxia-story-hints hidden>
+              <div><span>不知道怎么开头？</span><strong>选一个故事火花，再把空白处变成你自己的想法。</strong></div>
+              <div class="wuxia-hint-grid" role="group" aria-label="武侠故事开场提示">
+                <button type="button" data-wuxia-hint="雨夜里，主角听见一段只有他能听懂的古琴声。琴声正在告诉他：________。"><b>古琴密信</b><small>一段琴声藏着什么消息？</small></button>
+                <button type="button" data-wuxia-hint="清晨，山门中最重要的剑谱不见了，门口只留下________。"><b>消失的剑谱</b><small>是谁拿走了？留下了什么？</small></button>
+                <button type="button" data-wuxia-hint="两位少年站上擂台，却同时发现真正的任务不是输赢，而是________。"><b>擂台之外</b><small>比输赢更重要的是什么？</small></button>
+                <button type="button" data-wuxia-hint="天亮前，主角必须守住一座古桥，因为桥下藏着________。"><b>守桥到天明</b><small>桥下有什么不能失去的东西？</small></button>
+              </div>
+            </section>
             <label class="wide" data-idea-field>
               <span class="field-title"><span>Start your story</span><button type="button" class="yu-read-button" data-yu-read data-read-en="Type one idea, or hold the speak button while you tell me. One sentence is enough." data-read-zh="你可以打字写下一个想法，也可以按住说话按钮告诉我。一句话就够了。" aria-label="Hear Yu explain how to start">▶ Ask Yu</button></span>
               <div class="story-spark-box">
@@ -323,7 +332,7 @@
     <script src="i18n.js?v=20261007-zh-themes-1"></script>
     <script src="analytics.js"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="start.js?v=20261007-wuxia-styles-1"></script>
+    <script src="start.js?v=20261007-wuxia-hints-1"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

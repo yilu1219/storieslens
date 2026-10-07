@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v105-wuxia-styles-20261007";
+const VERSION = "storieslens-pwa-v106-wuxia-hints-20261007";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
