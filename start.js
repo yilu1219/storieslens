@@ -37,6 +37,8 @@
   const squadOutput = document.querySelector("[data-squad-output]");
   const travelOutputChoice = document.querySelector("[data-travel-output-choice]");
   const themeMentor = document.querySelector("[data-theme-mentor]");
+  const wuxiaStyleChoices = document.querySelector("[data-wuxia-style-choices]");
+  const wuxiaStyleCards = [...document.querySelectorAll("[data-wuxia-style-card]")];
   const travelOutputButtons = [...document.querySelectorAll("[data-travel-output]")];
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
@@ -151,6 +153,8 @@
   let homepageSpark = null;
   let storyLanguageTouched = ["en", "zh"].includes(requestedStoryLanguage);
   let squadStyleTouched = false;
+  let selectedWuxiaStyle = wuxiaStyleCards[0]?.dataset.wuxiaStyleCard || "ink-space";
+  let wuxiaTreatment = wuxiaStyleCards[0]?.dataset.treatment || "";
   document.body.classList.toggle("travel-quick-mode", Boolean(storyTheme));
 
   if (storyLanguage) storyLanguage.value = storyLanguageTouched ? requestedStoryLanguage : window.StoriesLensI18n?.locale === "zh" ? "zh" : "en";
@@ -187,6 +191,7 @@
     if (workFilePicker?.firstChild) workFilePicker.firstChild.textContent = config.uploadButton || "＋ 选择文件";
     if (workFileStatus) workFileStatus.textContent = config.uploadStatus || "可以上传图片、文字或作品作为灵感；默认私密。";
     if (themeMentor) themeMentor.hidden = storyTheme !== "wuxia";
+    if (wuxiaStyleChoices) wuxiaStyleChoices.hidden = storyTheme !== "wuxia";
   };
   applyStoryTheme();
 
@@ -357,6 +362,17 @@
     squadStyleTouched = true;
     renderStylePicker();
     stylePicker?.removeAttribute("open");
+  }));
+  wuxiaStyleCards.forEach((card) => card.addEventListener("click", () => {
+    selectedWuxiaStyle = card.dataset.wuxiaStyleCard;
+    wuxiaTreatment = card.dataset.treatment || "";
+    if (squadStyle) squadStyle.value = card.dataset.visualStyle;
+    squadStyleTouched = true;
+    wuxiaStyleCards.forEach((option) => {
+      const selected = option.dataset.wuxiaStyleCard === selectedWuxiaStyle;
+      option.classList.toggle("is-selected", selected);
+      option.setAttribute("aria-pressed", String(selected));
+    });
   }));
 
   const clearStyleReference = () => {
@@ -913,7 +929,7 @@
       return;
     }
 
-    const setup = { mode, origin, squadAction, theme: storyTheme, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
+    const setup = { mode, origin, squadAction, theme: storyTheme, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: [squadCharacterRules?.value.trim(), storyTheme === "wuxia" ? wuxiaTreatment : ""].filter(Boolean).join(" "), squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}${requestedInterfaceLanguage ? `&uiLang=${encodeURIComponent(requestedInterfaceLanguage)}` : ""}`;

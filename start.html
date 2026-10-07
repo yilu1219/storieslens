@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20261007-yu-wuxia-1" />
+    <link rel="stylesheet" href="start.css?v=20261007-wuxia-styles-1" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -111,6 +111,15 @@
               <div>
                 <button type="button" class="is-selected" data-travel-output="book" aria-pressed="true"><span aria-hidden="true">📖</span><b>共创一本书</b><small>边写边配图</small></button>
                 <button type="button" data-travel-output="film" aria-pressed="false"><span aria-hidden="true">🎬</span><b>共创一部电影</b><small>一起写成场景</small></button>
+              </div>
+            </section>
+            <section class="wide wuxia-style-choices" data-wuxia-style-choices hidden>
+              <div class="wuxia-style-heading"><span>选择一种江湖画风</span><strong>后面的每一幕都会延续它。</strong></div>
+              <div class="wuxia-style-grid" role="radiogroup" aria-label="选择武侠图片风格">
+                <button type="button" class="is-selected" data-wuxia-style-card="ink-space" data-visual-style="ink-watercolor" data-treatment="视觉基调：水墨留白，黑白墨韵，大面积留白，只用少量松石绿点色。" aria-pressed="true"><span class="wuxia-style-preview preview-ink" aria-hidden="true"></span><b>水墨留白</b><small>轻、静、有想象空间</small></button>
+                <button type="button" data-wuxia-style-card="blue-green" data-visual-style="ink-watercolor" data-treatment="视觉基调：传统青绿山水，石青石绿、层叠山峦和装饰云气，色彩古雅明亮。" aria-pressed="false"><span class="wuxia-style-preview preview-blue-green" aria-hidden="true"></span><b>青绿山水</b><small>山河壮阔、古雅明亮</small></button>
+                <button type="button" data-wuxia-style-card="gongbi" data-visual-style="storybook-watercolor" data-treatment="视觉基调：工笔重彩，细密线描、精致衣纹与典雅红青金配色，人物清晰稳定。" aria-pressed="false"><span class="wuxia-style-preview preview-gongbi" aria-hidden="true"></span><b>工笔重彩</b><small>细节精致、颜色华美</small></button>
+                <button type="button" data-wuxia-style-card="cinematic" data-visual-style="cinematic" data-treatment="视觉基调：原创武侠电影感，雨夜光影、空间纵深、衣袂与环境运动形成有节奏的画面。" aria-pressed="false"><span class="wuxia-style-preview preview-cinematic" aria-hidden="true"></span><b>武侠电影感</b><small>光影强烈、动作有气势</small></button>
               </div>
             </section>
             <section class="wide theme-mentor" data-theme-mentor hidden>
@@ -314,7 +323,7 @@
     <script src="i18n.js?v=20261007-zh-themes-1"></script>
     <script src="analytics.js"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="start.js?v=20261007-yu-wuxia-1"></script>
+    <script src="start.js?v=20261007-wuxia-styles-1"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

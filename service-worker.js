@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v104-yu-wuxia-20261007";
+const VERSION = "storieslens-pwa-v105-wuxia-styles-20261007";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
@@ -60,6 +60,7 @@ const APP_SHELL = [
   "/assets/app-icon-512.png",
   "/assets/yu-mascot-logo-v2.png",
   "/assets/yu-wuxia-master-v1.png",
+  "/assets/wuxia-style-choices-v1.png",
   "/assets/yu-feather-mark.svg",
   "/assets/storieslens-zh-seal-v2.png",
   "/assets/hero-zh-wuxia-ink-v1.png",
