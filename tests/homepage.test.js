@@ -411,8 +411,8 @@ assert(h5AppJs.includes("What problem are they facing right now?"), "English que
 assert(h5AppJs.includes("他现在遇到了什么困难或麻烦？"), "Chinese question two should use child-friendly language");
 assert(startHtml.includes('data-carried-spark') && startJs.includes("restoreHomepageSpark"), "Solo-or-group setup should visibly restore the homepage photo instead of asking for it again");
 assert(startJs.includes('sessionStorage.setItem("storieslens_imported_work"') && startJs.includes('origin = "picture"'), "The carried homepage photo should become the selected starting picture for either creation mode");
-assert(startJs.includes('startParams.get("from") === "chinese-studio"') && startJs.includes('setLocale("zh")'), "The Chinese-studio route should open the shared setup in Chinese");
-assert(startJs.includes('chineseStudioRoute ? button.dataset.readZh : button.dataset.readEn'), "Yu should speak Chinese on the Chinese-studio route and keep English on the English route");
+assert(startJs.includes('startParams.get("from") === "chinese-studio"') && startJs.includes('chineseStudioRoute ? "zh"'), "The Chinese-studio route should open the shared setup in Chinese");
+assert(startJs.includes('window.StoriesLensI18n?.locale === "zh" ? button.dataset.readZh : button.dataset.readEn'), "Yu should speak in the chosen interface language without changing the story language");
 assert(startHtml.includes("Choose how to co-create") && !startHtml.includes("How will you join the adventure? Start a private squad"), "Story Squad should ask for a co-creation method instead of framing setup as joining an adventure");
 assert(startJs.includes('solo-story?mode=solo&from=homepage-magic'), "A solo creator should continue with the same photo into the canonical new Story Studio");
 assert(read("squad-board.js").includes("StoriesLensSparkHandoff.load()"), "A Story Squad should recover a large homepage photo from IndexedDB when session storage is too small");
@@ -431,9 +431,10 @@ assert.match(
   "The header Chinese control should enter the separate Chinese creative studio"
 );
 assert(portalHomeJs.includes('? "chinese-studio.html?from=homepage-magic"'), "Chinese work from the flagship should continue into the Chinese ink-style studio");
-assert(["travel", "wuxia", "fantasy", "my-story", "free"].every((theme) => startHtml.includes(`data-story-theme="${theme}"`)), "Chinese Story Squad should offer five focused creation themes");
+assert(["travel", "wuxia", "fantasy", "my-story", "csl-classroom", "free"].every((theme) => startHtml.includes(`data-story-theme="${theme}"`)), "Chinese Story Squad should offer focused creation themes, including a Chinese-as-a-second-language classroom sample");
 assert(startJs.includes("theme: storyTheme") && startJs.includes("story_theme_squad_started"), "Story Squad setup should preserve the selected Chinese theme and activation event");
 assert(startJs.includes("let step = storyTheme ? 3") && startJs.includes('title: "我们的旅行故事"'), "A selected Chinese theme should open directly in the minimal quick-start flow with safe defaults");
+assert(startJs.includes('"csl-classroom"') && startJs.includes('title: "消失的茶馆菜单"') && startJs.includes("requestedInterfaceLanguage"), "The CSL teacher demo should preload one classroom story while allowing an English teacher interface around Chinese student writing");
 assert(startCss.includes(".travel-quick-mode .squad-create-fields") && startCss.includes(".travel-quick-mode .start-visual"), "Travel quick start should hide deferred setup and the extra visual panel");
 assert(startHtml.includes('data-travel-output="book"') && startHtml.includes('data-travel-output="film"'), "Travel quick start should offer one direct book-or-film choice");
 assert(startJs.includes("travelOutputButtons") && startJs.includes("squadOutput.value = button.dataset.travelOutput"), "Travel book-or-film choice should reuse the existing shared-project output field");

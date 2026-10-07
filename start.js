@@ -76,7 +76,26 @@
     wuxia: { origin: "imagination", title: "我们的江湖故事", style: "ink-watercolor", heading: "先选书或电影，再开启你们的江湖", lede: "说说主角、门派或一次重要使命，就能开始共创。", seed: "谁走进了江湖？他想完成什么？遇到了什么困难？", cta: "开始武侠共创" },
     fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
     "my-story": { origin: "memory", title: "我们的故事", style: "storybook-watercolor", heading: "先选书或电影，再讲一个真实故事", lede: "家庭、校园、朋友或成长中的一件事，都可以成为开场。", seed: "这件事发生在哪里？和谁有关？为什么让你记得？", cta: "开始我的故事共创" },
-    free: { origin: "imagination", title: "我们的自由创作", style: "storybook-watercolor", heading: "先选书或电影，再说出你们的想法", lede: "没有固定主题，一句话就能开始。", seed: "你们最想一起创作一个怎样的故事？", cta: "开始自由共创" }
+    free: { origin: "imagination", title: "我们的自由创作", style: "storybook-watercolor", heading: "先选书或电影，再说出你们的想法", lede: "没有固定主题，一句话就能开始。", seed: "你们最想一起创作一个怎样的故事？", cta: "开始自由共创" },
+    "csl-classroom": {
+      origin: "imagination",
+      title: "消失的茶馆菜单",
+      style: "ink-watercolor",
+      heading: "Make one Chinese story with your class",
+      lede: "Students can speak or type short Chinese sentences. Yu keeps the six scenes connected while every contribution stays credited.",
+      seed: "今天，Maya和同学来到杭州的一家茶馆。菜单上的汉字突然不见了。她们要怎样用中文找回菜单？",
+      cta: "Start the Chinese class story",
+      creatorLevel: "growing",
+      outputTitle: "Choose the class outcome",
+      bookLabel: "Make a shared book",
+      bookDetail: "Six short Chinese scenes",
+      filmLabel: "Make a shared film",
+      filmDetail: "Write scene by scene",
+      uploadTitle: "Optional: add a class photo or worksheet",
+      uploadButton: "＋ Choose a reference file",
+      uploadStatus: "The file stays private and identifying metadata is removed.",
+      characterRules: "Maya，12岁，正在学习中文，背蓝色书包，喜欢提问；林老师，温和，拿绿色笔记本；小羽，一只会提示中文词语的小猫头鹰。人物服装、年龄和颜色在每一页保持一致。"
+    }
   };
 
   const renderAgeGate = () => {
@@ -90,11 +109,15 @@
   const requestedDna = startParams.get("dna")?.trim() || "";
   const requestedSource = startParams.get("source");
   const requestedStoryLanguage = startParams.get("storyLang");
+  const requestedInterfaceLanguage = ["en", "zh"].includes(startParams.get("uiLang")) ? startParams.get("uiLang") : "";
   let storyTheme = themeConfigs[startParams.get("theme")] ? startParams.get("theme") : "";
-  const chineseStudioRoute = startParams.get("from") === "chinese-studio" || requestedStoryLanguage === "zh";
+  const chineseStudioRoute = startParams.get("from") === "chinese-studio";
+  const interfaceLanguage = chineseStudioRoute ? "zh" : requestedInterfaceLanguage || (requestedStoryLanguage === "zh" ? "zh" : "");
+  if (interfaceLanguage) {
+    window.StoriesLensI18n?.setLocale(interfaceLanguage);
+    document.documentElement.lang = interfaceLanguage === "zh" ? "zh-CN" : "en";
+  }
   if (chineseStudioRoute) {
-    window.StoriesLensI18n?.setLocale("zh");
-    document.documentElement.lang = "zh-CN";
     const languageSwitcher = document.querySelector(".language-switcher");
     if (languageSwitcher) languageSwitcher.hidden = true;
     const backLink = document.querySelector(".back-link");
@@ -137,10 +160,24 @@
     origin = config.origin;
     squadAction = "create";
     if (storyLanguage) storyLanguage.value = "zh";
-    if (creatorLevel) creatorLevel.value = "family";
+    if (creatorLevel) creatorLevel.value = config.creatorLevel || "family";
     if (squadTitle) squadTitle.value = config.title;
     if (squadOutput) squadOutput.value = "book";
     if (squadStyle) squadStyle.value = config.style;
+    if (squadCharacterRules && config.characterRules) squadCharacterRules.value = config.characterRules;
+    if (storySeed && config.seed && storyTheme === "csl-classroom") storySeed.value = config.seed;
+    const outputTitle = travelOutputChoice?.querySelector(":scope > strong");
+    const outputBook = travelOutputChoice?.querySelector('[data-travel-output="book"]');
+    const outputFilm = travelOutputChoice?.querySelector('[data-travel-output="film"]');
+    if (outputTitle && config.outputTitle) outputTitle.textContent = config.outputTitle;
+    if (outputBook && config.bookLabel) {
+      outputBook.querySelector("b").textContent = config.bookLabel;
+      outputBook.querySelector("small").textContent = config.bookDetail;
+    }
+    if (outputFilm && config.filmLabel) {
+      outputFilm.querySelector("b").textContent = config.filmLabel;
+      outputFilm.querySelector("small").textContent = config.filmDetail;
+    }
     if (storySeed) storySeed.placeholder = config.seed;
     const workFileTitle = workFileField?.querySelector(".field-title > span");
     const workFilePicker = workFileField?.querySelector(".work-file-picker");
@@ -237,7 +274,8 @@
     step = 3;
     storyLanguageTouched = true;
     applyStoryTheme();
-    history.replaceState({}, "", `${location.pathname}?mode=squad&storyLang=zh&theme=${encodeURIComponent(storyTheme)}`);
+    const uiQuery = requestedInterfaceLanguage ? `&uiLang=${encodeURIComponent(requestedInterfaceLanguage)}` : "";
+    history.replaceState({}, "", `${location.pathname}?mode=squad&storyLang=zh${uiQuery}&theme=${encodeURIComponent(storyTheme)}`);
     render();
     stepTitle.focus({ preventScroll: true });
     window.StoriesLensAnalytics?.track("story_theme_squad_started", { language: "zh", theme: storyTheme });
@@ -386,7 +424,7 @@
     const wasSpeaking = button?.classList.contains("is-speaking");
     stopYuVoice();
     if (wasSpeaking) return;
-    const language = chineseStudioRoute ? "zh" : "en";
+    const language = window.StoriesLensI18n?.locale === "zh" ? "zh" : "en";
     const utterance = new SpeechSynthesisUtterance(text);
     const lang = language === "zh" ? "zh-CN" : "en-US";
     if (window.StoriesLensNaturalVoice) window.StoriesLensNaturalVoice.configureUtterance(utterance, lang);
@@ -406,11 +444,11 @@
   yuReadButtons.forEach((button) => button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    speakAsYu(chineseStudioRoute ? button.dataset.readZh : button.dataset.readEn, button);
+    speakAsYu(window.StoriesLensI18n?.locale === "zh" ? button.dataset.readZh : button.dataset.readEn, button);
   }));
 
   yuReadPageButton?.addEventListener("click", () => {
-    const pageGuide = chineseStudioRoute
+    const pageGuide = window.StoriesLensI18n?.locale === "zh"
       ? "你好，我是羽大师。先告诉我是谁在创作，再选择你喜欢的创作方式。亲友共创时，请给故事起名，选择做成书或电影，再挑一种画风。最后，你可以打字、按住说话，或上传已有作品。"
       : "Hello, I’m Yu. First tell me who is creating, then choose how you like to create and your story language. For a Story Squad, name your story, choose a book or film, and pick one picture style. Finally, type an idea, hold to speak, or add something you already made.";
     speakAsYu(pageGuide, yuReadPageButton);
@@ -875,7 +913,7 @@
     const setup = { mode, origin, squadAction, theme: storyTheme, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: squadCharacterRules?.value.trim() || "", squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
-    const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}`;
+    const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}${requestedInterfaceLanguage ? `&uiLang=${encodeURIComponent(requestedInterfaceLanguage)}` : ""}`;
 
     if (mode === "solo") {
       window.location.href = homepageSpark

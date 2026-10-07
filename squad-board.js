@@ -82,7 +82,8 @@
   };
   const staticTextNodes = [];
   const staticAttributes = [];
-  let interfaceLocale = params.get("storyLang") === "zh" ? "zh" : (localStorage.getItem("storieslens_squad_setup_ui") || "en");
+  const requestedInterfaceLocale = ["en", "zh"].includes(params.get("uiLang")) ? params.get("uiLang") : "";
+  let interfaceLocale = requestedInterfaceLocale || (params.get("storyLang") === "zh" ? "zh" : (localStorage.getItem("storieslens_squad_setup_ui") || "en"));
   let localeSquadId = "";
   let interfaceLocaleManuallyChosen = false;
 
@@ -132,7 +133,7 @@
     if (!squad?.id || localeSquadId === squad.id) return;
     localeSquadId = squad.id;
     const saved = localStorage.getItem(`storieslens_squad_ui_${squad.id}`);
-    interfaceLocale = saved === "en" || saved === "zh" ? saved : (squad.language === "zh" ? "zh" : "en");
+    interfaceLocale = saved === "en" || saved === "zh" ? saved : requestedInterfaceLocale || (squad.language === "zh" ? "zh" : "en");
     applyInterfaceLocale();
   }
 

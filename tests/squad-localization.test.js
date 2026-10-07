@@ -12,6 +12,7 @@ test("Story Squad keeps interface language separate from story language", () => 
   const styles = read("squad-board-locale.css");
 
   assert(html.includes('data-squad-locale="en"') && html.includes('data-squad-locale="zh"'), "the board should expose one compact language switch");
+  assert(script.includes('params.get("uiLang")') && script.includes("requestedInterfaceLocale"), "a teacher link should be able to request an English interface without changing a Chinese story");
   assert(script.includes("storieslens_squad_ui_${squad.id}"), "each squad should remember its own interface language");
   assert(script.includes('localizedBeat(STORY_BEATS[index], squad.language)'), "creative prompts should continue to follow the project story language");
   assert(script.includes('ui("Owner", "发起人")') && script.includes('ui("Approve & share", "批准并共享")'), "dynamic controls should render in one interface language");
