@@ -568,8 +568,6 @@
     $("[data-cast-locked-note]").hidden = !viewer?.castLocked;
     if (!$('[data-cast-name]').value) $('[data-cast-name]').value = viewer?.castCharacterName || squad.viewer.displayName || "";
     const references = cast.filter((member) => member.castLocked && member.castReferenceImageUrl);
-    const posterTemplates = $("[data-wuxia-poster-templates]");
-    posterTemplates.hidden = !(squad.viewer?.role === "owner" && squad.theme === "wuxia" && squad.outputType === "film");
     const posterButton = $("[data-generate-cast-poster]");
     posterButton.hidden = squad.viewer?.role !== "owner";
     posterButton.disabled = references.length < 1;
@@ -762,10 +760,11 @@
     const wuxiaDirection = squad.theme === "wuxia"
       ? "Create an original Chinese wuxia story world: expressive heroes, flowing robes, a clear sword movement, wind through bamboo or an ancient courtyard, and a guqin as a story clue. Use strong silhouette, elegant negative space, rich cinematic color and a sense of moral choice. Keep all action non-graphic. Do not imitate any existing film, character, director, poster, or exact composition."
       : "";
+    const wuxiaTemplate = squad.theme === "wuxia" ? WUXIA_POSTER_TEMPLATES[selectedWuxiaPosterTemplate] || WUXIA_POSTER_TEMPLATES.heroes : "";
     const filmDirection = squad.outputType === "film"
       ? "Compose this as a polished, child-safe vertical A4 film-poster background in a 2:3 portrait frame. Keep all important faces and action safely inside the central print area, and leave calm darker breathing room at the top and bottom for StoriesLens to add the exact title and credits."
       : "";
-    return `Create the canonical visual reference for a child-safe shared story titled “${squad.title}”. Establish the recurring characters and world exactly from these locked rules: ${squad.characterRules || "a warm, imaginative world with memorable recurring characters"}. Show the main characters together in a clear full-scene composition so later illustrators can preserve faces, ages, hairstyles, clothing, signature objects, proportions and palette. ${wuxiaDirection} ${filmDirection} No written words, logos or watermarks.`;
+    return `Create the canonical visual reference for a child-safe shared story titled “${squad.title}”. Establish the recurring characters and world exactly from these locked rules: ${squad.characterRules || "a warm, imaginative world with memorable recurring characters"}. Show the main characters together in a clear full-scene composition so later illustrators can preserve faces, ages, hairstyles, clothing, signature objects, proportions and palette. ${wuxiaDirection} ${wuxiaTemplate} ${filmDirection} No written words, logos or watermarks.`;
   }
 
   function castPosterPrompt(squad, candidate) {
@@ -838,7 +837,14 @@
 
   function generateAnchorImage() {
     if (!activeSquad || activeSquad.viewer?.role !== "owner") return;
-    pendingVisual = { kind: "anchor", cardId: "", card: null, imageUrl: "" };
+    const characterCardIds = activeSquad.members
+      .filter((member) => member.status === "approved" && member.castLocked && member.castReferenceImageUrl)
+      .map((member) => member.id);
+    if (activeSquad.theme === "wuxia" && !characterCardIds.length) {
+      showNotice("请先在“人物与设置”中上传并确认至少一张角色照片或画作；封面会用它保留主角身份。", true);
+      return;
+    }
+    pendingVisual = { kind: "anchor", cardId: "", card: null, imageUrl: "", characterCardIds };
     generatePendingVisual();
   }
 
@@ -974,6 +980,7 @@
     const anchorStudio = $("[data-anchor-studio]");
     anchorStudio.hidden = !approved;
     const isFilm = squad.outputType === "film";
+    $("[data-wuxia-poster-templates]").hidden = !(owner && squad.theme === "wuxia");
     $("[data-anchor-eyebrow]").textContent = isFilm
       ? ui("FIRST, MAKE YOUR MOVIE POSTER", "先做一张电影海报")
       : ui("FIRST, MAKE YOUR STORY COVER", "先做一张故事封面");

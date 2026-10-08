@@ -28,6 +28,8 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes("generateCastPoster") && script.includes("personalPhotoConsentIds"), "the poster should combine consented cast references through the existing anchor generator");
   assert(html.includes("data-wuxia-poster-templates") && ["群侠长卷", "流金山河", "大漠镖影", "墨染江湖"].every((name) => html.includes(name)), "Wuxia film squads should offer four original poster moods before creating the first poster");
   assert(script.includes("WUXIA_POSTER_TEMPLATES") && script.includes("do not imitate any existing film"), "Wuxia poster prompts should use original high-level cinematic direction rather than copying an existing film poster");
+  assert(html.indexOf("data-wuxia-poster-templates") > html.indexOf("data-poster-title-form") && script.includes("wuxiaTemplate"), "Wuxia cover choices should appear immediately before the owner spends an image credit to generate the shared cover");
+  assert(script.includes("characterCardIds = activeSquad.members") && script.includes("封面会用它保留主角身份"), "Wuxia cover generation should use at least one locked character reference instead of inventing the hero");
   assert(script.includes('portraitPoster ? "2:3"') && script.includes('resolution: "2K"') && script.includes('data-poster-title-form'), "film posters should use the stable portrait generation request and persist the creator title");
   assert(api.includes("SQUAD_RENAME_FORBIDDEN") && api.includes("squad.title = title"), "only the owner should be able to save a poster title");
   assert(api.includes("castReferenceMatch") && api.includes("member.castReferenceMediaId = media.id"), "each approved member should save only their own private cast reference");
