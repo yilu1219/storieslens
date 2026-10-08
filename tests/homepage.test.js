@@ -441,13 +441,16 @@ assert(startHtml.includes("data-wuxia-story-hints") && ["古琴密信", "消失�
 assert(startHtml.includes("data-sports-story-hints") && ["开始前一分钟", "关键时刻", "团队的选择", "结束以后"].every((label) => startHtml.includes(label)) && startJs.includes('title: "我们的运动故事"') && startJs.includes("公开宣传前必须另行取得"), "Sports Story Squad should turn one consented activity photo into a private four-prompt team story without implying public media permission");
 assert(startHtml.includes('data-story-theme="history"') && startJs.includes('title: "我们的历史故事"') && startJs.includes("不要把想象写成已经证实的历史事实"), "History Story Squad should support imaginative co-creation while distinguishing invention from established history");
 assert(startJs.includes("theme: storyTheme") && startJs.includes("story_theme_squad_started"), "Story Squad setup should preserve the selected Chinese theme and activation event");
-assert(startJs.includes("let step = storyTheme ? 3") && startJs.includes('title: "我们的旅行故事"'), "A selected Chinese theme should open directly in the minimal quick-start flow with safe defaults");
+assert(startJs.includes("let step = storyTheme || outputRoute ? 3") && startJs.includes('title: "我们的旅行故事"'), "A selected Chinese theme should open directly in the minimal quick-start flow with safe defaults");
 assert(startJs.includes('"csl-classroom"') && startJs.includes('title: "消失的茶馆菜单"') && startJs.includes("requestedInterfaceLanguage"), "The CSL teacher demo should preload one classroom story while allowing an English teacher interface around Chinese student writing");
 assert(startCss.includes(".travel-quick-mode .squad-create-fields") && startCss.includes(".travel-quick-mode .start-visual"), "Travel quick start should hide deferred setup and the extra visual panel");
 assert(startHtml.includes('data-travel-output="book"') && startHtml.includes('data-travel-output="film"'), "Travel quick start should offer one direct book-or-film choice");
 assert(startJs.includes("travelOutputButtons") && startJs.includes("squadOutput.value = button.dataset.travelOutput"), "Travel book-or-film choice should reuse the existing shared-project output field");
 assert(startHtml.includes('data-style-card="japanese-handpainted"') && fs.existsSync(path.join(root, "assets/style-japanese-handpainted-v1.jpg")), "Story Squad should offer an original Japanese-inspired hand-painted style with a real reference image");
 assert(startHtml.includes("创作成品示例") && startHtml.includes("outcome-zh-ink-book-v1.png") && startHtml.includes("outcome-zh-cocreated-film-v1.png"), "Story Squad setup should show a finished book cover and film poster instead of a generic illustration");
+assert(startHtml.includes("output=book") && startHtml.includes("output=film"), "The book and film outcome cards should open their matching co-creation paths");
+assert(startJs.includes('startParams.get("output")') && startJs.includes("squadOutput.value = requestedOutput"), "A chosen outcome card should preselect its matching book or film format");
+assert(startJs.includes("storyTheme || outputRoute ? 3") && startJs.includes("开始共创一部电影") && startJs.includes("开始共创一本书"), "Outcome cards should skip the generic chooser and open the matching dedicated creation setup");
 assert(serverJs.includes('"japanese-handpainted"') && read("platform-api.js").includes('"japanese-handpainted"'), "The new visual style should be accepted and translated into a generation prompt without naming an artist");
 [
   'data-studio-language="zh"',

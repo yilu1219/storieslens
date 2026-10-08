@@ -5,7 +5,7 @@
   const originButtons = [...document.querySelectorAll("[data-origin]")];
   const squadButtons = [...document.querySelectorAll("[data-squad-action]")];
   const collaborationModeButtons = [...document.querySelectorAll("[data-collaboration-mode]")];
-  const collaborationModePicker = document.querySelector("[data-collaboration-mode-picker]");
+  const collaborationModePickers = [...document.querySelectorAll("[data-collaboration-mode-picker]")];
   const soloOptions = document.querySelector("[data-solo-options]");
   const squadOptions = document.querySelector("[data-squad-options]");
   const setupFields = document.querySelector(".setup-fields");
@@ -124,9 +124,11 @@
   const requestedDna = startParams.get("dna")?.trim() || "";
   const requestedSource = startParams.get("source");
   const requestedStoryLanguage = startParams.get("storyLang");
+  const requestedOutput = startParams.get("output");
   const requestedInterfaceLanguage = ["en", "zh"].includes(startParams.get("uiLang")) ? startParams.get("uiLang") : "";
   const requestedTheme = startParams.get("theme") === "sailing" ? "sports" : startParams.get("theme");
   let storyTheme = themeConfigs[requestedTheme] ? requestedTheme : "";
+  const outputRoute = requestedMode === "squad" && ["book", "film"].includes(requestedOutput);
   const chineseStudioRoute = startParams.get("from") === "chinese-studio";
   const interfaceLanguage = chineseStudioRoute ? "zh" : requestedInterfaceLanguage || (requestedStoryLanguage === "zh" ? "zh" : "");
   if (interfaceLanguage) {
@@ -140,7 +142,7 @@
     if (backLink) backLink.href = "chinese-studio.html";
   }
   let mode = requestedMode === "squad" ? "squad" : "solo";
-  let step = storyTheme ? 3 : requestedDna && (requestedMode === "solo" || requestedMode === "squad") ? 3 : requestedMode === "solo" || requestedMode === "squad" ? 2 : 1;
+  let step = storyTheme || outputRoute ? 3 : requestedDna && (requestedMode === "solo" || requestedMode === "squad") ? 3 : requestedMode === "solo" || requestedMode === "squad" ? 2 : 1;
   const sourceToOrigin = { work: "work", tell: "memory", inspiration: "imagination", picture: "picture", text: "work", voice: "memory", book: "imagination", movie: "imagination", idea: "imagination" };
   let origin = sourceToOrigin[requestedSource] || "imagination";
   let squadAction = "create";
@@ -213,6 +215,7 @@
     if (sportsStoryHints) sportsStoryHints.hidden = storyTheme !== "sports";
   };
   applyStoryTheme();
+  if (squadOutput && ["book", "film"].includes(requestedOutput)) squadOutput.value = requestedOutput;
 
   const stepCopy = {
     1: {
@@ -256,7 +259,7 @@
     if (travelOutputChoice) travelOutputChoice.hidden = !storyTheme;
     const joining = mode === "squad" && squadAction === "join";
     const creatingSquad = mode === "squad" && !joining;
-    if (collaborationModePicker) collaborationModePicker.hidden = !creatingSquad || (step !== 2 && step !== 3);
+    collaborationModePickers.forEach((picker) => { picker.hidden = !creatingSquad; });
     ideaField.hidden = joining;
     codeField.hidden = !joining;
     if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
@@ -267,8 +270,8 @@
     const copy = stepCopy[step];
     stepCurrent.textContent = String(step);
     stepLabel.textContent = t(copy.label);
-    stepTitle.textContent = storyTheme ? themeConfigs[storyTheme].heading : t(step === 2 ? (mode === "solo" ? copy.soloTitle : copy.squadTitle) : copy.title);
-    stepLede.textContent = storyTheme ? themeConfigs[storyTheme].lede : t(step === 2 ? (mode === "solo" ? copy.soloLede : copy.squadLede) : copy.lede);
+    stepTitle.textContent = storyTheme ? themeConfigs[storyTheme].heading : outputRoute ? (requestedOutput === "film" ? "开始共创一部电影" : "开始共创一本书") : t(step === 2 ? (mode === "solo" ? copy.soloTitle : copy.squadTitle) : copy.title);
+    stepLede.textContent = storyTheme ? themeConfigs[storyTheme].lede : outputRoute ? "先确定创作方式和故事火花，创建后再邀请伙伴加入。" : t(step === 2 ? (mode === "solo" ? copy.soloLede : copy.squadLede) : copy.lede);
     progressFill.style.width = `${(step / 3) * 100}%`;
     backButton.hidden = step === 1;
     nextButton.hidden = step === 3;

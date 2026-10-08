@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="home.css" />
-    <link rel="stylesheet" href="start.css?v=20261008-collaboration-mode-2" />
+    <link rel="stylesheet" href="start.css?v=20261008-output-links-1" />
     <link rel="stylesheet" href="pwa.css" />
   </head>
   <body class="start-page">
@@ -86,6 +86,13 @@
               <button class="origin-choice is-selected" type="button" data-squad-action="create" aria-pressed="true"><strong>Start a private squad</strong><small>Invite 1–5 family members or friends after setup</small></button>
               <button class="origin-choice" type="button" data-squad-action="join" aria-pressed="false"><strong>Join with a code</strong><small>Use the code from family or a friend</small></button>
             </div>
+            <section class="collaboration-mode-picker" data-collaboration-mode-picker>
+              <div class="field-title"><strong>Where are you creating?</strong></div>
+              <div class="story-origin-grid two-up collaboration-mode-grid">
+                <button class="origin-choice is-selected" type="button" data-collaboration-mode="family" aria-pressed="true"><strong>Family &amp; friends</strong><small>Play, draw tasks, and create together</small></button>
+                <button class="origin-choice" type="button" data-collaboration-mode="classroom" aria-pressed="false"><strong>Classroom</strong><small>Teacher can draw, assign, or open each scene</small></button>
+              </div>
+            </section>
             <section class="story-theme-entry" data-story-theme-entry hidden>
               <div><strong>选择一个共创主题</strong><small>点一个就开始，之后还能修改。</small></div>
               <div class="story-theme-grid">
@@ -102,14 +109,6 @@
             </section>
           </fieldset>
 
-          <section class="wide collaboration-mode-picker" data-collaboration-mode-picker hidden>
-            <div class="field-title"><strong>Where are you creating?</strong></div>
-            <div class="story-origin-grid two-up collaboration-mode-grid">
-              <button class="origin-choice is-selected" type="button" data-collaboration-mode="family" aria-pressed="true"><strong>Family &amp; friends</strong><small>Play, draw tasks, and create together</small></button>
-              <button class="origin-choice" type="button" data-collaboration-mode="classroom" aria-pressed="false"><strong>Classroom</strong><small>Teacher can draw, assign, or open each scene</small></button>
-            </div>
-          </section>
-
           <div class="setup-fields step-panel" data-step-panel="3" hidden>
             <div class="wide yu-listen-intro">
               <span class="yu-listen-mark" aria-hidden="true"><img src="assets/storieslens-logo.png" alt="" /></span>
@@ -121,6 +120,13 @@
               <div>
                 <button type="button" class="is-selected" data-travel-output="book" aria-pressed="true"><span aria-hidden="true">📖</span><b>共创一本书</b><small>边写边配图</small></button>
                 <button type="button" data-travel-output="film" aria-pressed="false"><span aria-hidden="true">🎬</span><b>共创一部电影</b><small>一起写成场景</small></button>
+              </div>
+            </section>
+            <section class="wide collaboration-mode-picker" data-collaboration-mode-picker>
+              <div class="field-title"><strong>Where are you creating?</strong></div>
+              <div class="story-origin-grid two-up collaboration-mode-grid">
+                <button class="origin-choice is-selected" type="button" data-collaboration-mode="family" aria-pressed="true"><strong>Family &amp; friends</strong><small>Play, draw tasks, and create together</small></button>
+                <button class="origin-choice" type="button" data-collaboration-mode="classroom" aria-pressed="false"><strong>Classroom</strong><small>Teacher can draw, assign, or open each scene</small></button>
               </div>
             </section>
             <section class="wide wuxia-style-choices" data-wuxia-style-choices hidden>
@@ -327,20 +333,20 @@
           <p>亲友共同写作，最后留下真正可以保存和分享的作品。</p>
         </header>
         <div class="outcome-cover-grid">
-          <figure class="outcome-cover outcome-book-cover">
+          <a class="outcome-cover outcome-book-cover" href="start.html?mode=squad&amp;storyLang=zh&amp;from=chinese-studio&amp;output=book" aria-label="进入共创书创建页">
             <div class="outcome-cover-art">
               <img src="assets/outcome-zh-ink-book-v1.png" alt="水墨故事书《鹤与云间书》封面示例" />
               <div class="outcome-cover-copy"><small>STORIESLENS 原创绘本</small><strong>鹤与云间书</strong><span>小羽和家人 · 共创</span></div>
             </div>
-            <figcaption><b>共创书</b><span>封面、内页与作者页</span></figcaption>
-          </figure>
-          <figure class="outcome-cover outcome-film-poster">
+            <div class="outcome-cover-caption"><b>共创书</b><span>封面、内页与作者页</span></div>
+          </a>
+          <a class="outcome-cover outcome-film-poster" href="start.html?mode=squad&amp;storyLang=zh&amp;from=chinese-studio&amp;output=film" aria-label="进入共创电影创建页">
             <div class="outcome-cover-art">
               <img src="assets/outcome-zh-cocreated-film-v1.png" alt="故事电影《云海之舟》海报示例" />
               <div class="outcome-cover-copy"><small>STORIESLENS PRESENTS</small><strong>云海之舟</strong><span>亲友共同编剧与创作</span></div>
             </div>
-            <figcaption><b>共创电影</b><span>海报、场景与片尾署名</span></figcaption>
-          </figure>
+            <div class="outcome-cover-caption"><b>共创电影</b><span>海报、场景与片尾署名</span></div>
+          </a>
         </div>
       </aside>
     </main>
@@ -352,7 +358,7 @@
     <script src="i18n.js?v=20261008-collaboration-mode-1"></script>
     <script src="analytics.js"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="start.js?v=20261008-collaboration-mode-2"></script>
+    <script src="start.js?v=20261008-output-links-1"></script>
     <script src="pwa.js"></script>
     <script src="platform-client.js"></script>
   </body>

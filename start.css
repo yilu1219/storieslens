@@ -357,8 +357,10 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .outcome-showcase h2 { margin: 0; color: var(--start-ink); font-family: var(--start-serif); font-size: clamp(30px, 3vw, 45px); line-height: 1.05; }
 .outcome-showcase header p { margin: 0; color: var(--start-muted); font-family: var(--start-sans); line-height: 1.55; }
 .outcome-cover-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.outcome-cover { min-width: 0; margin: 0; }
-.outcome-cover-art { position: relative; overflow: hidden; aspect-ratio: 3 / 4; border-radius: 18px; background: #16392f; box-shadow: 0 20px 36px rgba(29, 48, 39, .2); }
+.outcome-cover { min-width: 0; margin: 0; color: inherit; text-decoration: none; }
+.outcome-cover:focus-visible { outline: 4px solid rgba(15, 98, 68, .35); outline-offset: 5px; border-radius: 18px; }
+.outcome-cover-art { position: relative; overflow: hidden; aspect-ratio: 3 / 4; border-radius: 18px; background: #16392f; box-shadow: 0 20px 36px rgba(29, 48, 39, .2); transition: transform .18s ease, box-shadow .18s ease; }
+.outcome-cover:hover .outcome-cover-art { transform: translateY(-3px); box-shadow: 0 24px 42px rgba(29, 48, 39, .27); }
 .outcome-cover-art::after { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4, 19, 22, .66), transparent 34%, rgba(4, 19, 22, .78)); content: ""; }
 .outcome-cover-art img { width: 100%; height: 100%; object-fit: cover; }
 .outcome-book-cover img { object-position: center; }
@@ -367,9 +369,9 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .outcome-cover-copy small { font-family: var(--start-sans); font-size: 9px; font-weight: 800; letter-spacing: .12em; }
 .outcome-cover-copy strong { margin-top: auto; font-family: var(--start-serif); font-size: clamp(26px, 3vw, 40px); line-height: .95; }
 .outcome-cover-copy span { margin-top: 8px; font-family: var(--start-sans); font-size: 10px; font-weight: 700; }
-.outcome-cover figcaption { display: grid; gap: 2px; padding: 11px 4px 0; color: var(--start-ink); font-family: var(--start-sans); }
-.outcome-cover figcaption b { font-size: 15px; }
-.outcome-cover figcaption span { color: var(--start-muted); font-size: 12px; }
+.outcome-cover-caption { display: grid; gap: 2px; padding: 11px 4px 0; color: var(--start-ink); font-family: var(--start-sans); }
+.outcome-cover-caption b { font-size: 15px; }
+.outcome-cover-caption span { color: var(--start-muted); font-size: 12px; }
 
 /* Travel challenge: ask only for what is needed to begin; the rest stays editable inside the squad. */
 .travel-quick-mode .start-main { grid-template-columns: minmax(0, 780px); justify-content: center; }
