@@ -941,8 +941,11 @@
     };
     const storyLanguage = squad.language === "zh" ? ui("Chinese story", "中文故事") : ui("English story", "英文故事");
     const outputName = squad.outputType === "film" ? ui("Story film", "故事电影") : ui("Illustrated book", "绘本");
-    $("[data-squad-meta]").textContent = wuxiaMentor && squad.language === "zh"
-      ? `有人的地方，就有江湖 · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · 画风已锁定 · 先做海报，再认领一幕`
+    const wuxiaChinese = wuxiaMentor && squad.language === "zh";
+    $("[data-squad-tagline]").hidden = !wuxiaChinese;
+    $("[data-squad-tagline]").textContent = wuxiaChinese ? "有人的地方，就有江湖" : "";
+    $("[data-squad-details]").textContent = wuxiaChinese
+      ? `${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · 画风已锁定 · 先做海报，再认领一幕`
       : `${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "画风已锁定")} · ${ui("Start with the poster, then claim a scene", "先做海报，再认领一幕")}`;
     const owner = squad.viewer?.role === "owner";
     const approved = squad.viewer?.status === "approved";
