@@ -596,14 +596,16 @@
 }
 
 .project-opening-poster {
-  grid-template-columns: minmax(260px, .78fr) minmax(0, 1.22fr);
+  grid-template-columns: minmax(260px, 1fr) minmax(300px, 420px);
   margin-top: 0;
   background: linear-gradient(135deg, #eaf4ec, #fff2d2);
 }
 
 .project-opening-poster .anchor-frame {
+  width: min(100%, 420px);
+  justify-self: center;
   min-height: 0;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 210 / 297;
   background: #10291f;
 }
 
@@ -656,7 +658,8 @@
 .opening-poster-copy h4 {
   max-width: 780px;
   margin: auto;
-  font: 700 clamp(27px, 5vw, 68px)/.95 Georgia, serif;
+  font: 700 clamp(27px, 5vw, 68px)/.95 "STKaiti", "Kaiti SC", "KaiTi", "FZShuTi", "FZKai-Z03", "Songti SC", Georgia, serif;
+  letter-spacing: .08em;
 }
 
 .opening-poster-copy p {
@@ -674,6 +677,37 @@
   letter-spacing: .12em;
 }
 
+.poster-title-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.poster-title-form label {
+  display: grid;
+  gap: 5px;
+  color: #285f4b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.poster-title-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 13px;
+  border: 1px solid rgba(19, 114, 79, .28);
+  border-radius: 12px;
+  color: #153e31;
+  background: rgba(255, 255, 255, .88);
+  font: 700 18px/1.2 "STKaiti", "Kaiti SC", "KaiTi", "FZShuTi", "FZKai-Z03", "Songti SC", Georgia, serif;
+}
+
+.poster-title-form .secondary {
+  align-self: end;
+  min-height: 46px;
+}
+
 .has-loaded-squad .story-path,
 .has-loaded-squad .project-opening-poster {
   margin-left: 0;
@@ -683,6 +717,16 @@
 .has-loaded-squad .wall-column {
   border: 1px solid rgba(22, 64, 49, .14);
   border-radius: 22px;
+}
+
+@media (max-width: 620px) {
+  .project-opening-poster .anchor-frame {
+    width: min(100%, 330px);
+  }
+
+  .poster-title-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 body.candidate-open {

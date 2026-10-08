@@ -2058,6 +2058,28 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       return true;
     }
 
+    if (squadMatch && request.method === "PATCH") {
+      assertSameOrigin(request);
+      const squadId = cleanId(decodeURIComponent(squadMatch[1]));
+      const body = await readJsonBody(request, 4_000);
+      const title = cleanText(body.title, 120);
+      if (!title) {
+        sendJson(response, 400, { error: "Enter a title for this shared story." });
+        return true;
+      }
+      await enforceTextSafety(title);
+      const updated = store.mutate((database) => {
+        ensureSquadCollections(database);
+        const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
+        if (!squad) throw Object.assign(new Error("Only the project owner can rename this story."), { statusCode: 403, code: "SQUAD_RENAME_FORBIDDEN" });
+        squad.title = title;
+        squad.updatedAt = nowIso();
+        return publicSquad(database, squad, user.id);
+      });
+      sendJson(response, 200, { squad: updated });
+      return true;
+    }
+
     const approveMemberMatch = requestUrl.pathname.match(/^\/api\/squads\/([^/]+)\/members\/([^/]+)\/approve$/);
     if (approveMemberMatch && request.method === "POST") {
       assertSameOrigin(request);

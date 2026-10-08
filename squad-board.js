@@ -754,13 +754,16 @@
       ? "Create an original Chinese wuxia story world: expressive heroes, flowing robes, a clear sword movement, wind through bamboo or an ancient courtyard, and a guqin as a story clue. Use strong silhouette, elegant negative space, rich cinematic color and a sense of moral choice. Keep all action non-graphic. Do not imitate any existing film, character, director, poster, or exact composition."
       : "";
     const filmDirection = squad.outputType === "film"
-      ? "Compose this as a polished, child-safe film-poster background with an ensemble arranged clearly across a 16:9 frame. Leave calm darker breathing room near the top and bottom for StoriesLens to add the exact title and credits."
+      ? "Compose this as a polished, child-safe vertical A4 film-poster background in a 2:3 portrait frame. Keep all important faces and action safely inside the central print area, and leave calm darker breathing room at the top and bottom for StoriesLens to add the exact title and credits."
       : "";
     return `Create the canonical visual reference for a child-safe shared story titled “${squad.title}”. Establish the recurring characters and world exactly from these locked rules: ${squad.characterRules || "a warm, imaginative world with memorable recurring characters"}. Show the main characters together in a clear full-scene composition so later illustrators can preserve faces, ages, hairstyles, clothing, signature objects, proportions and palette. ${wuxiaDirection} ${filmDirection} No written words, logos or watermarks.`;
   }
 
   function castPosterPrompt(squad, candidate) {
-    return `Create a polished 16:9 Hollywood-blockbuster-style ensemble poster BACKGROUND for the child-safe shared story “${squad.title}”. Include every referenced protagonist exactly once, keep their identities separate and recognizable, and never blend or swap faces. Transform them into one coherent story world while preserving age, facial structure, skin tone, hairstyle, clothing colors and body proportions. Locked story plan: ${squad.characterRules || "a warm shared adventure"}. Cast notes:\n${candidate.castDescription || "Keep every referenced creator recognizable."}\nUse dramatic but welcoming cinematic light, place the ensemble across the center, and leave clean darker breathing room at the top and bottom for the website to add an exact title, cast names and date. No written title, captions, logos, watermarks, frames or interface symbols.`;
+    const format = squad.outputType === "film"
+      ? "vertical A4 film-poster background in a 2:3 portrait frame"
+      : "polished story-cover background in a 2:3 portrait frame";
+    return `Create a ${format} for the child-safe shared story “${squad.title}”. Include every referenced protagonist exactly once, keep their identities separate and recognizable, and never blend or swap faces. Transform them into one coherent story world while preserving age, facial structure, skin tone, hairstyle, clothing colors and body proportions. Locked story plan: ${squad.characterRules || "a warm shared adventure"}. Cast notes:\n${candidate.castDescription || "Keep every referenced creator recognizable."}\nUse dramatic but welcoming cinematic light, place the ensemble across the center, and leave clean darker breathing room at the top and bottom for the website to add an exact title, director, cast names and date. No written title, captions, logos, watermarks, frames or interface symbols.`;
   }
 
   function cardPrompt(squad, card) {
@@ -778,6 +781,7 @@
       ? ui("Only the project owner can see this candidate. Approve it to lock the visual reference for everyone.", "只有项目发起人能看到这张候选图。确认后，它将成为所有人的共同视觉参考。")
       : ui("Only you can see this candidate. Save it only when you are satisfied; contributors’ visuals still follow owner approval.", "只有你能看到这张候选图。满意后再保存；成员图片仍需发起人审核。 ");
     try {
+      const portraitPoster = sharedAnchor && activeSquad.outputType === "film";
       const result = await platform.api("/api/generate-image", {
         method: "POST",
         headers: { "Idempotency-Key": `squad-${candidate.kind}-${candidate.cardId || "anchor"}-${crypto.randomUUID()}` },
@@ -791,7 +795,8 @@
             : candidate.kind === "anchor"
             ? `${anchorPrompt(activeSquad)}${candidate.styleReferenceImageUrls?.length ? "\n\nA user-provided STYLE REFERENCE is included. Borrow only high-level palette, lighting, texture, brushwork and mood. Do not copy its characters, logos, readable text, exact composition, or any artist signature." : ""}`
             : cardPrompt(activeSquad, candidate.card),
-          aspectRatio: "16:9",
+          aspectRatio: portraitPoster ? "2:3" : "16:9",
+          ...(portraitPoster ? { size: "", resolution: "2K" } : {}),
           assetType: candidate.kind === "cast" ? "SQUAD_CAST_POSTER" : candidate.kind === "anchor" ? "SQUAD_VISUAL_ANCHOR" : "SQUAD_CONTRIBUTION_IMAGE",
           characterCardIds: candidate.characterCardIds || [],
           referenceImageUrls: [...(candidate.characterReferenceImageUrls || []), ...(candidate.styleReferenceImageUrls || [])],
@@ -961,6 +966,13 @@
       ? ui("Make the first poster for your shared film.", "为你们的共创电影做第一张海报。")
       : ui("Make the first cover for your shared book.", "为你们的共创图书做第一张封面。");
     $("[data-anchor-rules]").textContent = squad.characterRules || (squad.language === "zh" ? "尚未填写人物规则；小组长仍可先生成并确认视觉锚点。" : "No character rules were entered; the owner can still generate and approve a visual anchor.");
+    const posterTitleForm = $("[data-poster-title-form]");
+    posterTitleForm.hidden = !owner;
+    $("[data-poster-title]").value = squad.title;
+    $("[data-poster-title-label]").textContent = isFilm
+      ? ui("Give your film a name", "给电影起个名字")
+      : ui("Give your book a name", "给图书起个名字");
+    $("[data-anchor-format]").textContent = isFilm ? ui("A4 portrait · 2K", "A4 竖版 · 2K") : ui("Portrait cover · 2K", "竖版封面 · 2K");
     $("[data-anchor-style]").textContent = styleNames[squad.visualStyle] || squad.visualStyle;
     $("[data-generate-anchor]").hidden = !owner;
     $("[data-generate-anchor]").textContent = squad.visualAnchorReady
@@ -981,8 +993,11 @@
     posterCopy.hidden = !isFilm || !squad.visualAnchorImageUrl;
     $("[data-opening-poster-title]").textContent = squad.title;
     $("[data-opening-poster-subtitle]").textContent = styleNames[squad.visualStyle] || squad.visualStyle;
-    const castNames = squad.members.filter((member) => member.status === "approved").map((member) => member.castCharacterName || member.displayName).filter(Boolean);
-    $("[data-opening-poster-cast]").textContent = castNames.join(" · ") || ui("YOUR STORY SQUAD", "你们的故事小队");
+    const approvedMembers = squad.members.filter((member) => member.status === "approved").sort((a, b) => String(a.joinedAt || "").localeCompare(String(b.joinedAt || "")));
+    const director = approvedMembers[0]?.displayName || ui("YOUR STORY SQUAD", "你们的故事小队");
+    const castNames = approvedMembers.map((member) => member.castCharacterName || member.displayName).filter(Boolean);
+    $("[data-opening-poster-director]").textContent = ui(`DIRECTED BY ${director}`, `导演：${director}`);
+    $("[data-opening-poster-cast]").textContent = castNames.join(" · ");
     $("[data-opening-poster-date]").textContent = new Intl.DateTimeFormat(squad.language === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "long", day: "numeric" }).format(new Date());
     $("[data-anchor-approved]").textContent = isFilm ? ui("POSTER + VISUAL BIBLE · LOCKED", "海报与视觉设定 · 已锁定") : ui("VISUAL BIBLE · LOCKED", "视觉设定 · 已锁定");
     $("[data-anchor-approved]").hidden = !squad.visualAnchorReady;
@@ -1020,6 +1035,24 @@
     projectToolsOpen = !projectToolsOpen;
     document.body.classList.toggle("show-project-tools", projectToolsOpen);
     if (activeSquad) renderBoard(activeSquad);
+  });
+  $("[data-poster-title-form]").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!activeSquad) return;
+    const title = $("[data-poster-title]").value.trim();
+    const button = $("[data-save-poster-title]");
+    if (!title) return;
+    button.disabled = true;
+    try {
+      const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}`, { method: "PATCH", body: JSON.stringify({ title }) });
+      activeSquad = result.squad;
+      renderBoard(activeSquad);
+      toast(ui("Film title saved", "电影片名已保存"));
+    } catch (error) {
+      showNotice(error.message, true);
+    } finally {
+      button.disabled = false;
+    }
   });
   $("[data-yu-question]").addEventListener("click", () => askYu(false));
   $("[data-yu-review]").addEventListener("click", () => askYu(true));

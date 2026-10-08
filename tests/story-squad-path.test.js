@@ -16,6 +16,7 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(html.includes("data-cast-form") && html.includes("data-generate-cast-poster"), "each creator should add one private reference before the owner makes the shared cast poster");
   ["STORIESLENS PRESENTS", "data-cast-poster-title", "data-cast-poster-names", "data-cast-poster-date"].forEach((token) => assert(html.includes(token), `Hollywood poster template is missing ${token}`));
   assert(html.includes("data-project-tools-toggle") && html.includes("data-opening-poster-copy"), "a loaded squad should lead with one shared poster while keeping character settings available on demand");
+  assert(html.includes("data-poster-title-form") && html.includes("data-opening-poster-director") && html.includes("data-anchor-format"), "the owner should name the A4 poster and credit its first creator as director");
   assert(script.includes("has-loaded-squad") && script.includes("projectToolsOpen") && script.includes("Make our movie poster"), "the project board should enter a simplified poster-first co-creation view");
   assert(css.includes("body [hidden]{display:none!important}"), "hidden setup and join forms must never remain visible after a project loads");
   assert.strictEqual((script.match(/enTitle:/g) || []).length, 6, "the guided story path should contain exactly six core beats");
@@ -25,6 +26,8 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes("activeStoryBeat(activeSquad)"), "Yu should guide the scene the squad is currently making");
   assert(script.includes("/scenes/${sceneNumber}/claim") && api.includes("SQUAD_SCENE_ALREADY_CLAIMED"), "one approved creator should be able to claim the current scene without adding a separate task system");
   assert(script.includes("generateCastPoster") && script.includes("personalPhotoConsentIds"), "the poster should combine consented cast references through the existing anchor generator");
+  assert(script.includes('portraitPoster ? "2:3"') && script.includes('resolution: "2K"') && script.includes('data-poster-title-form'), "film posters should use the stable portrait generation request and persist the creator title");
+  assert(api.includes("SQUAD_RENAME_FORBIDDEN") && api.includes("squad.title = title"), "only the owner should be able to save a poster title");
   assert(api.includes("castReferenceMatch") && api.includes("member.castReferenceMediaId = media.id"), "each approved member should save only their own private cast reference");
   assert(api.includes("castLockMatch") && api.includes("member.castLockedAt = nowIso()"), "the owner should permanently confirm each project character card");
   assert(script.includes("data-lock-character") && script.includes("data-scene-character"), "the board should lock character cards and let creators choose who appears in each scene");

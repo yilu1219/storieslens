@@ -91,6 +91,12 @@ test("private squad supports approval, shared contributions and credited assembl
     assert.match(created.payload.squad.joinCode, /^SQ[A-F0-9]{10}$/);
     const squadId = created.payload.squad.id;
 
+    const renamed = await request(baseUrl, `/api/squads/${squadId}`, {
+      method: "PATCH", origin: true, cookies: [ownerCookie], body: { title: "The Lantern Film" }
+    });
+    assert.equal(renamed.response.status, 200);
+    assert.equal(renamed.payload.squad.title, "The Lantern Film");
+
     const incompletePhotoConsent = await request(baseUrl, `/api/squads/${squadId}/photo-consent`, {
       method: "POST", origin: true, cookies: [ownerCookie], body: { confirmedAdult: true }
     });
@@ -229,7 +235,7 @@ test("private squad supports approval, shared contributions and credited assembl
     assert.equal(assembled.payload.project.scenes[0].imageUrl, "/public/generated/leo-lantern-scene.png");
     assert.equal(assembled.payload.project.coverImageUrl, "/public/generated/lantern-team-anchor.png");
     assert.equal(assembled.payload.project.clientSnapshot.poster.presenter, "StoriesLens Presents");
-    assert.equal(assembled.payload.project.clientSnapshot.poster.title, "The Lantern Team");
+    assert.equal(assembled.payload.project.clientSnapshot.poster.title, "The Lantern Film");
     assert.equal(assembled.payload.project.clientSnapshot.credits[0].authorName, "Leo");
     assert.equal(assembled.payload.project.clientSnapshot.credits[0].yuGuided, true);
   } catch (error) {

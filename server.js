@@ -871,6 +871,7 @@ function buildImagePrompt(body) {
 
 function createImageGenerationRequest(body, overrides = {}) {
   const config = getImageConfig();
+  const hasBodyValue = (key) => Object.prototype.hasOwnProperty.call(body, key);
   const prompt = buildImagePrompt(body);
   if (!prompt) {
     throw new Error("Prompt is required");
@@ -890,8 +891,8 @@ function createImageGenerationRequest(body, overrides = {}) {
     retryPrompt: imageRetryPrompt(body, prompt),
     model: body.model || config.model,
     aspectRatio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
-    size: body.size || config.size,
-    resolution: body.resolution || config.resolution,
+    size: hasBodyValue("size") ? body.size : config.size,
+    resolution: hasBodyValue("resolution") ? body.resolution : config.resolution,
     referenceImageUrls,
     outputFormat: body.outputFormat || body.output_format || "png",
     projectId: overrides.projectId || body.projectId || "local",
@@ -965,11 +966,11 @@ class OpenRouterImageProvider {
     const payload = {
       model: imageRequest.model,
       prompt: imageRequest.prompt,
-      size: imageRequest.size,
       aspect_ratio: imageRequest.aspectRatio,
       response_format: "url"
     };
 
+    if (imageRequest.size) payload.size = imageRequest.size;
     if (!imageRequest.size && imageRequest.resolution) {
       payload.resolution = imageRequest.resolution;
     }
