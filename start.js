@@ -52,6 +52,7 @@
   const characterSpeak = document.querySelector("[data-character-speak]");
   const characterVoiceStatus = document.querySelector("[data-character-voice-status]");
   const characterFile = document.querySelector("[data-character-file]");
+  const characterBuilder = document.querySelector("[data-character-builder]");
   const characterBuilderTitle = document.querySelector("[data-character-builder-title]");
   const characterUploadLabel = document.querySelector("[data-character-upload-label]");
   const characterFileStatus = document.querySelector("[data-character-file-status]");
@@ -263,6 +264,7 @@
     ideaField.hidden = joining;
     codeField.hidden = !joining;
     if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
+    if (characterBuilder) characterBuilder.hidden = storyTheme === "wuxia";
     if (squadTitle) squadTitle.required = creatingSquad;
     const displayNameField = displayName?.closest("label");
     if (displayNameField) displayNameField.hidden = Boolean(storyTheme);
