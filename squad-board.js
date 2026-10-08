@@ -11,6 +11,7 @@
   let pendingVisual = null;
   let pendingCastReference = null;
   let pendingPosterReference = null;
+  let posterDetailsDirty = false;
   let mentorState = { guided: false, activeSentence: "", suggestion: "" };
   let projectToolsOpen = false;
   let selectedWuxiaPosterTemplate = "heroes";
@@ -846,6 +847,8 @@
         if (posterReference) posterReference.value = "";
         const posterReferenceStatus = $("[data-poster-reference-status]");
         if (posterReferenceStatus) posterReferenceStatus.textContent = ui("Optional: add a scene, palette, or composition reference.", "可选：上传场景、色彩或构图参考图。");
+        $("[data-poster-reference-preview]").hidden = true;
+        $("[data-poster-reference-image]").removeAttribute("src");
       }
       const image = $("[data-candidate-image]");
       image.src = candidate.imageUrl;
@@ -1021,8 +1024,10 @@
     const posterTitleForm = $("[data-poster-title-form]");
     posterTitleForm.hidden = !owner;
     $("[data-poster-prompt-fields]").hidden = !owner;
-    $("[data-poster-title]").value = squad.title;
-    $("[data-poster-director]").value = squad.posterDirector || squad.viewer?.displayName || "";
+    if (!posterDetailsDirty) {
+      $("[data-poster-title]").value = squad.title;
+      $("[data-poster-director]").value = squad.posterDirector || squad.viewer?.displayName || "";
+    }
     $("[data-poster-title-label]").textContent = isFilm
       ? ui("Give your film a name", "给电影起个名字")
       : ui("Give your book a name", "给图书起个名字");
@@ -1102,6 +1107,7 @@
     try {
       const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}`, { method: "PATCH", body: JSON.stringify({ title, posterDirector }) });
       activeSquad = result.squad;
+      posterDetailsDirty = false;
       renderBoard(activeSquad);
       toast(ui("Film title saved", "电影片名已保存"));
     } catch (error) {
@@ -1110,6 +1116,7 @@
       button.disabled = false;
     }
   });
+  $("[data-poster-title-form]").addEventListener("input", () => { posterDetailsDirty = true; });
   $("[data-yu-question]").addEventListener("click", () => askYu(false));
   $("[data-yu-review]").addEventListener("click", () => askYu(true));
   $("[data-yu-read]").addEventListener("click", speakYuGuidance);
@@ -1124,6 +1131,8 @@
   $("[data-poster-reference]").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
     pendingPosterReference = null;
+    $("[data-poster-reference-preview]").hidden = true;
+    $("[data-poster-reference-image]").removeAttribute("src");
     if (!file) return;
     const status = $("[data-poster-reference-status]");
     status.textContent = ui("Removing metadata and checking the reference…", "正在移除照片信息并检查参考图……");
@@ -1131,13 +1140,22 @@
       const safe = await window.StoriesLensArtworkSafety.processArtwork(file);
       if (safe.review?.checks?.realPerson) throw Object.assign(new Error("Use a confirmed character card for real-person photos."), { realPerson: true });
       pendingPosterReference = { dataUrl: safe.dataUrl };
-      status.textContent = ui("Reference ready. It will guide mood and composition only.", "参考图已准备好，只会用于画面气氛与构图参考。");
+      $("[data-poster-reference-image]").src = safe.dataUrl;
+      $("[data-poster-reference-preview]").hidden = false;
+      status.textContent = ui(`Reference ready: ${file.name}`, `参考图已上传：${file.name}`);
     } catch (error) {
       event.target.value = "";
       status.textContent = error.realPerson
         ? ui("For a real-person photo, add it as a consented character card in Characters & settings.", "真人照片请到“人物与设置”中完成授权并建立角色卡。")
         : ui("This reference could not be prepared safely. Try JPG or PNG.", "参考图无法安全处理，请尝试 JPG 或 PNG。");
     }
+  });
+  $("[data-poster-reference-remove]").addEventListener("click", () => {
+    pendingPosterReference = null;
+    $("[data-poster-reference]").value = "";
+    $("[data-poster-reference-preview]").hidden = true;
+    $("[data-poster-reference-image]").removeAttribute("src");
+    $("[data-poster-reference-status]").textContent = ui("Optional: add a scene, palette, or composition reference.", "可选：上传场景、色彩或构图参考图。");
   });
   $("[data-generate-anchor]").addEventListener("click", generateAnchorImage);
   $("[data-generate-cast-poster]").addEventListener("click", generateCastPoster);

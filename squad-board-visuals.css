@@ -742,8 +742,13 @@
 .poster-prompt-fields > label:first-child { display: grid; gap: 6px; color: #285f4b; font-size: 12px; font-weight: 900; }
 .poster-prompt-fields textarea { width: 100%; padding: 11px 13px; resize: vertical; border: 1px solid rgba(19, 114, 79, .28); border-radius: 12px; color: #153e31; background: rgba(255, 255, 255, .88); font: 500 15px/1.55 Arial, sans-serif; }
 .poster-prompt-fields small { color: #5e675c; line-height: 1.45; }
-.poster-reference-picker { position: relative; display: inline-flex; justify-content: center; width: fit-content; padding: 10px 14px; overflow: hidden; border: 1px solid #16845d; border-radius: 12px; color: #146547; background: #fff; font-weight: 900; cursor: pointer; }
-.poster-reference-picker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.poster-reference-field { display: grid; gap: 6px; color: #285f4b; font-size: 12px; font-weight: 900; }
+.poster-reference-field input { width: 100%; padding: 8px; border: 1px solid rgba(19, 114, 79, .28); border-radius: 12px; color: #285f4b; background: rgba(255, 255, 255, .88); }
+.poster-reference-field input::file-selector-button { margin-right: 10px; padding: 8px 12px; border: 0; border-radius: 9px; color: #fff; background: #16845d; font-weight: 800; cursor: pointer; }
+.poster-reference-preview { display: flex; gap: 10px; align-items: center; }
+.poster-reference-preview[hidden] { display: none; }
+.poster-reference-preview img { width: 88px; height: 66px; object-fit: cover; border: 1px solid rgba(19, 114, 79, .22); border-radius: 10px; }
+.poster-reference-preview button { padding: 8px 10px; border: 1px solid rgba(19, 114, 79, .28); border-radius: 9px; color: #146547; background: #fff; font-weight: 800; cursor: pointer; }
 .poster-cost-note { margin: -6px 0 12px !important; color: #285f4b !important; font-size: 12px; font-weight: 800; }
 
 .has-loaded-squad .story-path,

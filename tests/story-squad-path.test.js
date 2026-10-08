@@ -37,6 +37,7 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes("characterCardIds = activeSquad.members") && script.includes("封面会用它保留主角身份"), "Wuxia cover generation should use at least one locked character reference instead of inventing the hero");
   assert(script.includes('portraitPoster ? "2:3"') && script.includes('resolution: "2K"') && script.includes('data-poster-title-form'), "film posters should use the stable portrait generation request and persist the creator title");
   assert(script.includes("pendingPosterReference") && script.includes("CREATOR'S POSTER DIRECTION") && script.includes("posterDirector"), "poster generation should include the owner's prompt, safe reference and saved director credit");
+  assert(script.includes("posterDetailsDirty") && html.includes("data-poster-reference-preview") && script.includes("参考图已上传"), "live squad polling should not overwrite poster edits and a prepared reference should show an immediate preview");
   assert(html.includes("生成成功扣 1 个图片额度；失败或安全拦截不扣"), "the poster button should explain successful, failed and regenerated image allowance use");
   assert(api.includes("SQUAD_RENAME_FORBIDDEN") && api.includes("squad.title = title"), "only the owner should be able to save a poster title");
   assert(api.includes("castReferenceMatch") && api.includes("member.castReferenceMediaId = media.id"), "each approved member should save only their own private cast reference");

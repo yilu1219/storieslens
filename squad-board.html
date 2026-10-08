@@ -8,7 +8,7 @@
     <title>Private Story Squad · StoriesLens</title>
     <link rel="stylesheet" href="squad-board.css?v=20261008-wuxia-poster-2" />
     <link rel="stylesheet" href="squad-board-locale.css?v=20260930-1" />
-    <link rel="stylesheet" href="squad-board-visuals.css?v=20261008-poster-maker-1" />
+    <link rel="stylesheet" href="squad-board-visuals.css?v=20261008-poster-editor-2" />
   </head>
   <body>
     <header class="squad-header">
@@ -152,7 +152,8 @@
             </form>
             <div class="poster-prompt-fields" data-poster-prompt-fields>
               <label><span>Describe your poster · 描述你想要的海报</span><textarea data-poster-prompt maxlength="1200" rows="4" placeholder="例如：雨夜竹林，三位少侠背靠背，远处古琴与山门，青绿色电影光，人物表情坚定。"></textarea><small>羽大师会把这段描述与已选画风、故事设定和角色卡一起使用。</small></label>
-              <label class="poster-reference-picker"><span>＋ Upload a visual reference · 上传参考图</span><input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" data-poster-reference /></label>
+              <label class="poster-reference-field"><span>Upload a visual reference · 上传参考图</span><input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" data-poster-reference /></label>
+              <div class="poster-reference-preview" data-poster-reference-preview hidden><img data-poster-reference-image alt="海报参考图预览" /><button type="button" data-poster-reference-remove>移除参考图</button></div>
               <small data-poster-reference-status>可上传场景、色彩或构图参考；真人照片请先到“人物与设置”建立已授权角色卡。</small>
             </div>
             <section class="wuxia-poster-templates" data-wuxia-poster-templates hidden>
@@ -257,6 +258,6 @@
     <script src="artwork-upload-safety.js?v=20260930-cast-poster-1"></script>
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="squad-board.js?v=20261008-poster-maker-1"></script>
+    <script src="squad-board.js?v=20261008-poster-editor-2"></script>
   </body>
 </html>
