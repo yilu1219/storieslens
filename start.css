@@ -378,8 +378,8 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .travel-quick-mode .yu-listen-intro,
 .travel-quick-mode .squad-create-fields,
 .travel-quick-mode .theme-mentor,
-.travel-quick-mode .wuxia-style-choices,
 .travel-quick-mode .wuxia-story-hints { display: none !important; }
+.travel-quick-mode.wuxia-quick-mode .wuxia-style-choices { display: grid !important; }
 .wuxia-quick-mode [data-work-file-field] { display: none !important; }
 .travel-quick-mode .start-panel h1 { max-width: 680px; font-size: clamp(42px, 5vw, 62px); line-height: 1.04; }
 .travel-quick-mode .start-lede { margin-bottom: 24px; }
