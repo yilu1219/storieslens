@@ -179,7 +179,7 @@
     mode = "squad";
     origin = config.origin;
     squadAction = "create";
-    collaborationMode = storyTheme === "csl-classroom" ? "classroom" : "family";
+    if (storyTheme === "csl-classroom") collaborationMode = "classroom";
     if (storyLanguage) storyLanguage.value = "zh";
     if (creatorLevel) creatorLevel.value = config.creatorLevel || "family";
     if (squadTitle) squadTitle.value = config.title;
@@ -256,7 +256,7 @@
     if (travelOutputChoice) travelOutputChoice.hidden = !storyTheme;
     const joining = mode === "squad" && squadAction === "join";
     const creatingSquad = mode === "squad" && !joining;
-    if (collaborationModePicker) collaborationModePicker.hidden = !creatingSquad;
+    if (collaborationModePicker) collaborationModePicker.hidden = !creatingSquad || (step !== 2 && step !== 3);
     ideaField.hidden = joining;
     codeField.hidden = !joining;
     if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
