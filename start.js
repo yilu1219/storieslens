@@ -5,6 +5,7 @@
   const originButtons = [...document.querySelectorAll("[data-origin]")];
   const squadButtons = [...document.querySelectorAll("[data-squad-action]")];
   const collaborationModeButtons = [...document.querySelectorAll("[data-collaboration-mode]")];
+  const collaborationModePicker = document.querySelector("[data-collaboration-mode-picker]");
   const soloOptions = document.querySelector("[data-solo-options]");
   const squadOptions = document.querySelector("[data-squad-options]");
   const setupFields = document.querySelector(".setup-fields");
@@ -255,6 +256,7 @@
     if (travelOutputChoice) travelOutputChoice.hidden = !storyTheme;
     const joining = mode === "squad" && squadAction === "join";
     const creatingSquad = mode === "squad" && !joining;
+    if (collaborationModePicker) collaborationModePicker.hidden = !creatingSquad;
     ideaField.hidden = joining;
     codeField.hidden = !joining;
     if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
