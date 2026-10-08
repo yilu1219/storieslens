@@ -465,6 +465,13 @@
   background: #e4f1e7;
 }
 
+.scene-assignment-tools { grid-column: 1 / -1; display: grid; gap: 7px; margin-top: 3px; }
+.scene-assignment-tools > strong { color: #176247; font-size: 12px; }
+.scene-assignment-tools > button, .scene-assignment-tools label { min-height: 38px; }
+.scene-assignment-tools label { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+.scene-assignment-tools select { min-width: 0; padding: 7px 9px; border: 1px solid #b9d6c5; border-radius: 9px; color: #164a38; background: #fff; font-weight: 700; }
+.scene-assignment-tools button { padding: 8px 10px; border: 1px solid #16845d; border-radius: 10px; color: #fff; background: #16845d; font-weight: 800; cursor: pointer; }
+
 .next-beat-prompt {
   margin: 5px 0 0;
   color: #557068;

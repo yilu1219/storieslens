@@ -393,6 +393,7 @@ function publicSquad(database, squad, viewerId) {
     title: squad.title,
     language: squad.language,
     outputType: squad.outputType,
+    collaborationMode: squad.collaborationMode === "classroom" ? "classroom" : "family",
     theme: squad.theme || "",
     joinCode: isOwner ? squad.joinCode : "",
     status: squad.status,
@@ -1986,6 +1987,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
           title,
           language: body.language === "zh" ? "zh" : "en",
           outputType: body.outputType === "film" ? "film" : "book",
+          collaborationMode: body.collaborationMode === "classroom" ? "classroom" : "family",
           theme: ["sports", "sailing", "travel", "wuxia", "fantasy", "lianhuanhua", "my-story", "csl-classroom", "free"].includes(body.theme) ? body.theme : "",
           ageGroup: body.ageGroup === "under18" ? "under18" : "mixed",
           guardianConfirmed: body.guardianConfirmed === true,
@@ -2263,6 +2265,9 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const nextSceneNumber = Math.min(approvedSceneCount + 1, 6);
         if (sceneNumber !== nextSceneNumber || approvedSceneCount >= 6) throw Object.assign(new Error("This scene is not ready to claim yet."), { statusCode: 409, code: "SQUAD_SCENE_NOT_READY" });
         const existing = squad.sceneClaims.find((claim) => claim.sceneNumber === sceneNumber);
+        const assigneeMemberId = cleanId(body.assigneeMemberId);
+        const assignee = assigneeMemberId ? database.squadMembers.find((item) => item.id === assigneeMemberId && item.squadId === squad.id && item.status === "approved" && !item.removedAt) : member;
+        if (assigneeMemberId && (squad.ownerId !== user.id || !assignee)) throw Object.assign(new Error("Only the project owner can assign an approved student or group."), { statusCode: 403, code: "SQUAD_ASSIGNMENT_FORBIDDEN" });
         if (body.release === true) {
           const hasDraft = database.squadCards.some((card) => card.squadId === squad.id && card.sceneNumber === sceneNumber && !card.deletedAt);
           if (!existing || (existing.userId !== user.id && squad.ownerId !== user.id) || hasDraft) throw Object.assign(new Error("This scene claim cannot be released."), { statusCode: 409, code: "SQUAD_SCENE_CLAIM_LOCKED" });
@@ -2270,7 +2275,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         } else if (existing && existing.userId !== user.id) {
           throw Object.assign(new Error(`${existing.displayName} is already creating this scene.`), { statusCode: 409, code: "SQUAD_SCENE_ALREADY_CLAIMED" });
         } else if (!existing) {
-          squad.sceneClaims.push({ sceneNumber, userId: user.id, memberId: member.id, displayName: member.displayName, claimedAt: nowIso() });
+          squad.sceneClaims.push({ sceneNumber, userId: assignee.userId, memberId: assignee.id, displayName: assignee.displayName, claimedAt: nowIso() });
         }
         squad.updatedAt = nowIso();
         return publicSquad(database, squad, user.id);

@@ -25,6 +25,10 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   });
   assert(script.includes("activeStoryBeat(activeSquad)"), "Yu should guide the scene the squad is currently making");
   assert(script.includes("/scenes/${sceneNumber}/claim") && api.includes("SQUAD_SCENE_ALREADY_CLAIMED"), "one approved creator should be able to claim the current scene without adding a separate task system");
+  assert(script.includes("data-draw-scene") && script.includes("data-confirm-assignment") && script.includes("自由报名"), "teachers should be able to draw, assign, or leave each scene open for voluntary sign-up");
+  assert(read("start.html").includes('data-collaboration-mode="family"') && read("start.html").includes('data-collaboration-mode="classroom"'), "squad creators should choose family or classroom mode once during setup");
+  assert(script.includes('squad.collaborationMode === "classroom"') && api.includes('collaborationMode: squad.collaborationMode === "classroom"'), "classroom-only teacher assignment should follow the saved collaboration mode");
+  assert(api.includes("assigneeMemberId") && api.includes("SQUAD_ASSIGNMENT_FORBIDDEN"), "only the project owner should be able to assign an approved student or group to a scene");
   assert(script.includes("generateCastPoster") && script.includes("personalPhotoConsentIds"), "the poster should combine consented cast references through the existing anchor generator");
   assert(html.includes("data-wuxia-poster-templates") && ["群侠长卷", "流金山河", "大漠镖影", "墨染江湖"].every((name) => html.includes(name)), "Wuxia film squads should offer four original poster moods before creating the first poster");
   assert(script.includes("WUXIA_POSTER_TEMPLATES") && script.includes("do not imitate any existing film"), "Wuxia poster prompts should use original high-level cinematic direction rather than copying an existing film poster");

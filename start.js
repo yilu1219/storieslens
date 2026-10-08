@@ -4,6 +4,7 @@
   const modeButtons = [...document.querySelectorAll("[data-mode-choice]")];
   const originButtons = [...document.querySelectorAll("[data-origin]")];
   const squadButtons = [...document.querySelectorAll("[data-squad-action]")];
+  const collaborationModeButtons = [...document.querySelectorAll("[data-collaboration-mode]")];
   const soloOptions = document.querySelector("[data-solo-options]");
   const squadOptions = document.querySelector("[data-squad-options]");
   const setupFields = document.querySelector(".setup-fields");
@@ -142,6 +143,7 @@
   const sourceToOrigin = { work: "work", tell: "memory", inspiration: "imagination", picture: "picture", text: "work", voice: "memory", book: "imagination", movie: "imagination", idea: "imagination" };
   let origin = sourceToOrigin[requestedSource] || "imagination";
   let squadAction = "create";
+  let collaborationMode = "family";
   let importedWork = null;
   let sparkRecognition = null;
   let sparkListeningRequested = false;
@@ -176,6 +178,7 @@
     mode = "squad";
     origin = config.origin;
     squadAction = "create";
+    collaborationMode = storyTheme === "csl-classroom" ? "classroom" : "family";
     if (storyLanguage) storyLanguage.value = "zh";
     if (creatorLevel) creatorLevel.value = config.creatorLevel || "family";
     if (squadTitle) squadTitle.value = config.title;
@@ -242,6 +245,7 @@
     selectButton(modeButtons, mode, "modeChoice");
     selectButton(originButtons, origin, "origin");
     selectButton(squadButtons, squadAction, "squadAction");
+    selectButton(collaborationModeButtons, collaborationMode, "collaborationMode");
     selectButton(travelOutputButtons, squadOutput?.value || "book", "travelOutput");
     modePanel.hidden = step !== 1;
     soloOptions.hidden = step !== 2 || mode !== "solo";
@@ -283,6 +287,11 @@
 
   squadButtons.forEach((button) => button.addEventListener("click", () => {
     squadAction = button.dataset.squadAction;
+    render();
+  }));
+
+  collaborationModeButtons.forEach((button) => button.addEventListener("click", () => {
+    collaborationMode = button.dataset.collaborationMode;
     render();
   }));
 
@@ -964,6 +973,7 @@
     }
 
     const setup = { mode, origin, squadAction, theme: storyTheme, ageGroup: ageGroup?.value || "adult", supervisionConfirmed: ageGroup?.value === "under18" ? Boolean(supervisionConfirm?.checked) : false, privacy: "private", guardianApprovalRequired: ageGroup?.value === "under18", creatorLevel: creatorLevel?.value || "independent", storyLanguage: storyLanguage?.value || "en", displayName: name, seed, code, squadTitle: title, squadOutputType: squadOutput?.value || "book", squadVisualStyle: squadStyle?.value || (storyLanguage?.value === "zh" ? "ink-watercolor" : "storybook-watercolor"), squadCharacterRules: [squadCharacterRules?.value.trim(), storyTheme === "wuxia" ? wuxiaTreatment : ""].filter(Boolean).join(" "), squadGenerateAnchor: generateAnchor, characterReference: characterReference ? { type: characterReference.type, metadataRemoved: true, personalPhoto: characterReference.personalPhoto === true } : null, styleReference: styleReference ? { type: styleReference.type, metadataRemoved: true, permissionConfirmed: styleReferencePermission?.checked === true } : null, importedWork: importedWork ? { name: importedWork.name, type: importedWork.type, kind: importedWork.kind, safetyReviewed: importedWork.safetyReviewed === true, metadataRemoved: importedWork.metadataRemoved === true, personalPhoto: importedWork.personalPhoto === true } : null, createdAt: new Date().toISOString() };
+    setup.collaborationMode = collaborationMode;
     localStorage.setItem("storieslens_creator_setup", JSON.stringify(setup));
     window.StoriesLensAnalytics?.track("creator_setup_completed", { mode, origin, squadAction, ageGroup: setup.ageGroup, supervisionConfirmed: setup.supervisionConfirmed, creatorLevel: setup.creatorLevel, storyLanguage: setup.storyLanguage });
     const languageQuery = `storyLang=${encodeURIComponent(setup.storyLanguage)}${requestedInterfaceLanguage ? `&uiLang=${encodeURIComponent(requestedInterfaceLanguage)}` : ""}`;

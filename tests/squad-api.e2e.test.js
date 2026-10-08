@@ -85,9 +85,10 @@ test("private squad supports approval, shared contributions and credited assembl
     const memberCookie = await createAccount(invites.payload.codes[1], "Friend Parent");
     const created = await request(baseUrl, "/api/squads", {
       method: "POST", cookies: [ownerCookie],
-      body: { title: "The Lantern Team", displayName: "Mia", language: "en", outputType: "book", visualStyle: "storybook-watercolor", characterRules: "Leo has short black hair and carries a silver lantern.", ageGroup: "under18", guardianConfirmed: true }
+      body: { title: "The Lantern Team", displayName: "Mia", language: "en", outputType: "book", collaborationMode: "classroom", visualStyle: "storybook-watercolor", characterRules: "Leo has short black hair and carries a silver lantern.", ageGroup: "under18", guardianConfirmed: true }
     });
     assert.equal(created.response.status, 201);
+    assert.equal(created.payload.squad.collaborationMode, "classroom");
     assert.match(created.payload.squad.joinCode, /^SQ[A-F0-9]{10}$/);
     const squadId = created.payload.squad.id;
 
@@ -175,6 +176,12 @@ test("private squad supports approval, shared contributions and credited assembl
     const card = ownerWithCard.payload.squad.cards[0];
     const approvedCard = await request(baseUrl, `/api/squads/${squadId}/cards/${card.id}/approve`, { method: "POST", origin: true, cookies: [ownerCookie], body: {} });
     assert.equal(approvedCard.response.status, 200);
+
+    const teacherAssignedScene = await request(baseUrl, `/api/squads/${squadId}/scenes/2/claim`, {
+      method: "POST", origin: true, cookies: [ownerCookie], body: { assigneeMemberId: pendingMember.id }
+    });
+    assert.equal(teacherAssignedScene.response.status, 200);
+    assert.equal(teacherAssignedScene.payload.squad.sceneClaims.find((claim) => claim.sceneNumber === 2).displayName, "Leo");
 
     const memberView = await request(baseUrl, `/api/squads/${squadId}`, { cookies: [memberCookie] });
     assert.equal(memberView.payload.squad.cards[0].status, "approved");

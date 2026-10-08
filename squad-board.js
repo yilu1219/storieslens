@@ -202,19 +202,20 @@
     return { ...localizedBeat(STORY_BEATS[index], squad.language), index };
   }
 
-  async function claimStoryScene(sceneNumber, release = false) {
+  async function claimStoryScene(sceneNumber, { release = false, assigneeMemberId = "" } = {}) {
     try {
       const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}/scenes/${sceneNumber}/claim`, {
         method: "POST",
-        body: JSON.stringify({ release })
+        body: JSON.stringify({ release, assigneeMemberId })
       });
       activeSquad = result.squad;
       renderBoard(activeSquad);
-      if (!release) {
+      const claim = result.squad.sceneClaims?.find((item) => item.sceneNumber === sceneNumber);
+      if (!release && claim?.isMine) {
         $("[data-composer]").scrollIntoView({ behavior: "smooth", block: "start" });
         $("[data-card-text]").focus({ preventScroll: true });
       }
-      toast(release ? "Scene released · 已放回这一幕" : "This scene is yours · 这一幕由你创作");
+      toast(release ? "Scene released · 已放回这一幕" : claim?.isMine ? "This scene is yours · 这一幕由你创作" : `${claim?.displayName || "A creator"} was invited to create this scene · 已分配本幕任务`);
     } catch (error) {
       showNotice(error.message, true);
     }
@@ -251,10 +252,18 @@
             ? (claim.isMine ? ui("✓ You claimed this scene", "✓ 这一幕由你创作") : ui(`${claim.displayName} is creating`, `${claim.displayName} 正在创作`))
             : ui("Ready for one creator", "等待一位创作者认领")
           : ui("Waiting for the story", "等待前一幕");
+      const members = squad.members.filter((member) => member.status === "approved");
+      const owner = squad.viewer?.role === "owner";
+      const classroom = squad.collaborationMode === "classroom";
+      const assignmentTools = index === completed && !claim ? `<div class="scene-assignment-tools">
+        <strong>${ui("How should this scene begin?", "这一幕怎么开始？")}</strong>
+        <button type="button" data-claim-scene="${index + 1}">${ui("Sign up", "自由报名")}</button>
+        ${owner ? `<button type="button" data-draw-scene="${index + 1}">${ui("Yu draws a task", "羽大师抽签")}</button>${classroom ? `<label><select data-assign-scene="${index + 1}"><option value="">${ui("Teacher assigns a student/group", "老师分配学生／小组")}</option>${members.map((member) => `<option value="${escapeHtml(member.id)}">${escapeHtml(member.displayName)}</option>`).join("")}</select><button type="button" data-confirm-assignment="${index + 1}">${ui("Assign", "分配")}</button></label>` : ""}` : ""}
+      </div>` : "";
       return `<article class="story-beat ${state}">
         <span class="story-beat-number">${index + 1}</span>
         <div><strong>${escapeHtml(copy.title)}</strong><p>${escapeHtml(copy.prompt)}</p><small>${escapeHtml(status)}</small></div>
-        ${index === completed && !claim ? `<button type="button" data-claim-scene="${index + 1}">${ui("Claim this scene", "认领这一幕")}</button>` : ""}
+        ${assignmentTools}
         ${index === completed && claim?.isMine ? `<div class="scene-claim-actions"><button type="button" data-write-next>${ui("Write my scene", "开始创作")}</button><button class="scene-release" type="button" data-release-scene="${index + 1}">${ui("Release", "放回")}</button></div>` : ""}
       </article>`;
     }).join("");
@@ -269,7 +278,16 @@
       $("[data-card-text]").focus({ preventScroll: true });
     });
     document.querySelectorAll("[data-claim-scene]").forEach((button) => button.addEventListener("click", () => claimStoryScene(Number(button.dataset.claimScene))));
-    document.querySelectorAll("[data-release-scene]").forEach((button) => button.addEventListener("click", () => claimStoryScene(Number(button.dataset.releaseScene), true)));
+    document.querySelectorAll("[data-release-scene]").forEach((button) => button.addEventListener("click", () => claimStoryScene(Number(button.dataset.releaseScene), { release: true })));
+    document.querySelectorAll("[data-draw-scene]").forEach((button) => button.addEventListener("click", () => {
+      const members = squad.members.filter((member) => member.status === "approved");
+      const picked = members[Math.floor(Math.random() * members.length)];
+      if (picked) claimStoryScene(Number(button.dataset.drawScene), { assigneeMemberId: picked.id });
+    }));
+    document.querySelectorAll("[data-confirm-assignment]").forEach((button) => button.addEventListener("click", () => {
+      const assigneeMemberId = $(`[data-assign-scene="${button.dataset.confirmAssignment}"]`)?.value || "";
+      if (assigneeMemberId) claimStoryScene(Number(button.dataset.confirmAssignment), { assigneeMemberId });
+    }));
     if (completed < STORY_BEATS.length && currentClaim && !currentClaim.isMine) $("[data-composer]").hidden = true;
   }
 
@@ -506,6 +524,7 @@
         displayName: setup.displayName,
         language: setup.storyLanguage,
         outputType: setup.squadOutputType,
+        collaborationMode: setup.collaborationMode,
         theme: setup.theme,
         visualStyle: setup.squadVisualStyle,
         characterRules: setup.squadCharacterRules,
@@ -947,12 +966,13 @@
     };
     const storyLanguage = squad.language === "zh" ? ui("Chinese story", "中文故事") : ui("English story", "英文故事");
     const outputName = squad.outputType === "film" ? ui("Story film", "故事电影") : ui("Illustrated book", "绘本");
+    const collaborationName = squad.collaborationMode === "classroom" ? ui("Classroom", "课堂模式") : ui("Family & friends", "亲友模式");
     const wuxiaChinese = wuxiaMentor && squad.language === "zh";
     $("[data-squad-tagline]").hidden = !wuxiaChinese;
     $("[data-squad-tagline]").textContent = wuxiaChinese ? "有人的地方，就有江湖" : "";
     $("[data-squad-details]").textContent = wuxiaChinese
-      ? `${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · 画风已锁定 · 先做海报，再认领一幕`
-      : `${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "画风已锁定")} · ${ui("Start with the poster, then claim a scene", "先做海报，再认领一幕")}`;
+      ? `${collaborationName} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · 画风已锁定 · 先做海报，再认领一幕`
+      : `${collaborationName} · ${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "画风已锁定")} · ${ui("Start with the poster, then claim a scene", "先做海报，再认领一幕")}`;
     const owner = squad.viewer?.role === "owner";
     const approved = squad.viewer?.status === "approved";
     const assembled = Boolean(squad.assembledProjectId);
