@@ -11,6 +11,7 @@
   let pendingVisual = null;
   let pendingCastReference = null;
   let mentorState = { guided: false, activeSentence: "", suggestion: "" };
+  let projectToolsOpen = false;
   const STORY_BEATS = [
     { enTitle: "Meet the heroes", zhTitle: "认识主角", enPrompt: "Who is here, where are they, and what do they want?", zhPrompt: "谁在这里？他们在哪里？现在最想做什么？" },
     { enTitle: "Trouble arrives", zhTitle: "困难出现", enPrompt: "What is hard right now? Show the problem the heroes must face.", zhPrompt: "他们现在遇到了什么困难？让大家看见这个问题。" },
@@ -297,8 +298,8 @@
         const questions = ["少侠，古琴声从哪里传来？谁第一个听见了？", "琴声突然停下时，什么困难出现在主角面前？", "主角第一次用了什么办法？结果发生了什么？", "这场交锋中，哪个动作最能表现人物的性格？", "刀剑与古琴之间，主角最终做出了什么选择？", "最后一声琴音响起时，谁发生了改变？"];
         return { question: questions[beat.index] || beat.prompt };
       }
-      if (activeSquad.theme === "sailing" && activeSquad.language === "zh") {
-        const questions = ["船上有谁？比赛开始时，每个人正在做什么？", "风向、浪或航线发生了什么变化？", "大家第一次用了什么办法？结果怎样？", "谁注意到了一个重要细节？这个发现改变了什么？", "意见不同时，团队做出了什么选择？为什么？", "冲线以后，大家最想记住这次比赛里的什么？"];
+      if ((activeSquad.theme === "sports" || activeSquad.theme === "sailing") && activeSquad.language === "zh") {
+        const questions = ["比赛开始前，队伍里有谁？每个人准备做什么？", "场上发生了什么变化，让大家必须一起想办法？", "大家第一次试了什么配合？结果怎样？", "谁发现了一个重要细节？这个发现改变了什么？", "意见不同时，团队做出了什么选择？为什么？", "比赛结束后，大家最想记住这次经历里的什么？"];
         return { question: questions[beat.index] || beat.prompt };
       }
       return { question: beat.prompt };
@@ -337,7 +338,7 @@
           storyDnaContext: approvedStoryContext(activeSquad),
           studentDraft: draft,
           selectedText: mentorState.activeSentence,
-          teacherInstructions: `${activeSquad.theme === "wuxia" ? "Speak as 小羽大侠, a warm wuxia writing mentor. When useful, ask about the sound of the guqin, the rhythm of an action, the setting, the character's motive, or the choice behind the fight. Keep all action non-graphic and original; never imitate an existing film or filmmaker. " : activeSquad.theme === "sailing" ? "Guide this real sailing-team memory with one short question about wind, teamwork, role, decision, sensory detail, or what the group learned. Do not invent a disaster, unsafe maneuver, result, or achievement that the children did not report. " : ""}Keep the language child-friendly. Guide this exact story beat with one short question: ${beat.prompt} Refer to the approved shared story, but never write the next plot event for the creator.`
+          teacherInstructions: `${activeSquad.theme === "wuxia" ? "Speak as 小羽大侠, a warm wuxia writing mentor. When useful, ask about the sound of the guqin, the rhythm of an action, the setting, the character's motive, or the choice behind the fight. Keep all action non-graphic and original; never imitate an existing film or filmmaker. " : activeSquad.theme === "sports" || activeSquad.theme === "sailing" ? "Guide this real team-sports memory with one short question about teamwork, role, decision, sensory detail, or what the group learned. Do not invent an injury, dangerous maneuver, result, or achievement that the children did not report. " : ""}Keep the language child-friendly. Guide this exact story beat with one short question: ${beat.prompt} Refer to the approved shared story, but never write the next plot event for the creator.`
         })
       });
       renderMentorGuidance(response.result || {}, review);
@@ -749,7 +750,13 @@
   }
 
   function anchorPrompt(squad) {
-    return `Create the canonical visual reference for a child-safe shared story titled “${squad.title}”. Establish the recurring characters and world exactly from these locked rules: ${squad.characterRules || "a warm, imaginative world with memorable recurring characters"}. Show the main characters together in a clear full-scene composition so later illustrators can preserve faces, ages, hairstyles, clothing, signature objects, proportions and palette. No written words, logos or watermarks.`;
+    const wuxiaDirection = squad.theme === "wuxia"
+      ? "Create an original Chinese wuxia story world: expressive heroes, flowing robes, a clear sword movement, wind through bamboo or an ancient courtyard, and a guqin as a story clue. Use strong silhouette, elegant negative space, rich cinematic color and a sense of moral choice. Keep all action non-graphic. Do not imitate any existing film, character, director, poster, or exact composition."
+      : "";
+    const filmDirection = squad.outputType === "film"
+      ? "Compose this as a polished, child-safe film-poster background with an ensemble arranged clearly across a 16:9 frame. Leave calm darker breathing room near the top and bottom for StoriesLens to add the exact title and credits."
+      : "";
+    return `Create the canonical visual reference for a child-safe shared story titled “${squad.title}”. Establish the recurring characters and world exactly from these locked rules: ${squad.characterRules || "a warm, imaginative world with memorable recurring characters"}. Show the main characters together in a clear full-scene composition so later illustrators can preserve faces, ages, hairstyles, clothing, signature objects, proportions and palette. ${wuxiaDirection} ${filmDirection} No written words, logos or watermarks.`;
   }
 
   function castPosterPrompt(squad, candidate) {
@@ -896,6 +903,8 @@
 
   function renderBoard(squad) {
     syncInterfaceLocale(squad);
+    document.body.classList.add("has-loaded-squad");
+    document.body.classList.toggle("show-project-tools", projectToolsOpen);
     $("[data-setup]").hidden = true;
     $("[data-board]").hidden = false;
     $("[data-squad-title]").textContent = squad.title;
@@ -917,8 +926,7 @@
     };
     const storyLanguage = squad.language === "zh" ? ui("Chinese story", "中文故事") : ui("English story", "英文故事");
     const outputName = squad.outputType === "film" ? ui("Story film", "故事电影") : ui("Illustrated book", "绘本");
-    const anchorState = squad.visualAnchorReady ? ui("Visual anchor ready", "视觉设定已完成") : ui("Waiting for the first visual anchor", "等待首张视觉设定图");
-    $("[data-squad-meta]").textContent = `${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "风格由发起人锁定")} · ${anchorState}`;
+    $("[data-squad-meta]").textContent = `${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "画风已锁定")} · ${ui("Start with the poster, then claim a scene", "先做海报，再认领一幕")}`;
     const owner = squad.viewer?.role === "owner";
     const approved = squad.viewer?.status === "approved";
     const assembled = Boolean(squad.assembledProjectId);
@@ -936,18 +944,47 @@
     $("[data-code-banner]").hidden = !owner;
     $("[data-story-code]").textContent = squad.joinCode || "";
     $("[data-pending-banner]").hidden = approved;
+    const toolsButton = $("[data-project-tools-toggle]");
+    toolsButton.hidden = !approved;
+    toolsButton.setAttribute("aria-expanded", String(projectToolsOpen));
+    toolsButton.textContent = projectToolsOpen
+      ? ui("Hide characters & settings", "收起人物与设置")
+      : ui("Characters & settings", "人物与设置");
     $("[data-composer]").hidden = !approved;
     const anchorStudio = $("[data-anchor-studio]");
     anchorStudio.hidden = !approved;
+    const isFilm = squad.outputType === "film";
+    $("[data-anchor-eyebrow]").textContent = isFilm
+      ? ui("FIRST, MAKE YOUR MOVIE POSTER", "先做一张电影海报")
+      : ui("FIRST, MAKE YOUR STORY COVER", "先做一张故事封面");
+    $("[data-anchor-title]").textContent = isFilm
+      ? ui("Make the first poster for your shared film.", "为你们的共创电影做第一张海报。")
+      : ui("Make the first cover for your shared book.", "为你们的共创图书做第一张封面。");
     $("[data-anchor-rules]").textContent = squad.characterRules || (squad.language === "zh" ? "尚未填写人物规则；小组长仍可先生成并确认视觉锚点。" : "No character rules were entered; the owner can still generate and approve a visual anchor.");
     $("[data-anchor-style]").textContent = styleNames[squad.visualStyle] || squad.visualStyle;
     $("[data-generate-anchor]").hidden = !owner;
-    $("[data-generate-anchor]").textContent = squad.visualAnchorReady ? ui("Regenerate anchor", "重新生成设定图") : ui("Generate first visual anchor", "生成首张设定图");
+    $("[data-generate-anchor]").textContent = squad.visualAnchorReady
+      ? (isFilm ? ui("Make another poster", "重新生成电影海报") : ui("Make another cover", "重新生成故事封面"))
+      : (isFilm ? ui("Make our movie poster", "生成我们的电影海报") : ui("Make our story cover", "生成我们的故事封面"));
     const anchorImage = $("[data-anchor-image]");
     anchorImage.hidden = !squad.visualAnchorImageUrl;
     if (squad.visualAnchorImageUrl) anchorImage.src = squad.visualAnchorImageUrl;
     else anchorImage.removeAttribute("src");
     $("[data-anchor-empty]").hidden = Boolean(squad.visualAnchorImageUrl);
+    $("[data-anchor-empty-title]").textContent = isFilm
+      ? ui("Your shared movie poster begins here.", "你们的共创电影海报从这里开始。")
+      : ui("Your shared book cover begins here.", "你们的共创图书封面从这里开始。");
+    $("[data-anchor-empty-copy]").textContent = isFilm
+      ? ui("Yu will use the story, chosen look, and approved character cards to create the first image for your team.", "羽大师会用故事、已选画风和确认过的角色卡，为小组创作第一张海报。")
+      : ui("Yu will use the story, chosen look, and approved character cards to create the first image for your team.", "羽大师会用故事、已选画风和确认过的角色卡，为小组创作第一张封面。");
+    const posterCopy = $("[data-opening-poster-copy]");
+    posterCopy.hidden = !isFilm || !squad.visualAnchorImageUrl;
+    $("[data-opening-poster-title]").textContent = squad.title;
+    $("[data-opening-poster-subtitle]").textContent = styleNames[squad.visualStyle] || squad.visualStyle;
+    const castNames = squad.members.filter((member) => member.status === "approved").map((member) => member.castCharacterName || member.displayName).filter(Boolean);
+    $("[data-opening-poster-cast]").textContent = castNames.join(" · ") || ui("YOUR STORY SQUAD", "你们的故事小队");
+    $("[data-opening-poster-date]").textContent = new Intl.DateTimeFormat(squad.language === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "long", day: "numeric" }).format(new Date());
+    $("[data-anchor-approved]").textContent = isFilm ? ui("POSTER + VISUAL BIBLE · LOCKED", "海报与视觉设定 · 已锁定") : ui("VISUAL BIBLE · LOCKED", "视觉设定 · 已锁定");
     $("[data-anchor-approved]").hidden = !squad.visualAnchorReady;
     renderCastStudio(squad);
     renderStoryPath(squad, styleNames);
@@ -979,6 +1016,11 @@
     if (!interfaceLocaleManuallyChosen && !activeSquad) setInterfaceLocale(event.target.value, false);
   });
   document.querySelectorAll("[data-squad-locale]").forEach((button) => button.addEventListener("click", () => setInterfaceLocale(button.dataset.squadLocale)));
+  $("[data-project-tools-toggle]").addEventListener("click", () => {
+    projectToolsOpen = !projectToolsOpen;
+    document.body.classList.toggle("show-project-tools", projectToolsOpen);
+    if (activeSquad) renderBoard(activeSquad);
+  });
   $("[data-yu-question]").addEventListener("click", () => askYu(false));
   $("[data-yu-review]").addEventListener("click", () => askYu(true));
   $("[data-yu-read]").addEventListener("click", speakYuGuidance);

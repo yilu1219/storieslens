@@ -6,9 +6,9 @@
     <meta name="robots" content="noindex,nofollow" />
     <meta name="theme-color" content="#f1f5ed" />
     <title>Private Story Squad · StoriesLens</title>
-    <link rel="stylesheet" href="squad-board.css?v=20260916-1" />
+    <link rel="stylesheet" href="squad-board.css?v=20261008-poster-wall-1" />
     <link rel="stylesheet" href="squad-board-locale.css?v=20260930-1" />
-    <link rel="stylesheet" href="squad-board-visuals.css?v=20261007-yu-wuxia-1" />
+    <link rel="stylesheet" href="squad-board-visuals.css?v=20261008-poster-wall-1" />
   </head>
   <body>
     <header class="squad-header">
@@ -83,6 +83,7 @@
             <button class="secondary" data-squad-export="pdf" type="button" hidden>PDF · 可印刷</button>
             <button class="primary" data-squad-render type="button" hidden>Join final movie · 合成完整电影</button>
           </div>
+          <button class="secondary project-tools-toggle" type="button" data-project-tools-toggle aria-expanded="false">Characters &amp; settings · 人物与设置</button>
         </header>
 
         <div class="code-banner" data-code-banner hidden><span>Story Code · 故事码</span><strong data-story-code></strong><small>Send only to family, friends, classmates or invited workshop members.</small></div>
@@ -90,7 +91,7 @@
         <p class="notice" data-notice hidden></p>
         <p class="status-banner" data-final-output hidden></p>
 
-        <section class="story-dna-board" data-story-dna hidden>
+        <section class="story-dna-board project-tool-panel" data-story-dna hidden>
           <div>
             <span class="eyebrow">OUR SHARED STORY DNA · 共同故事蓝图</span>
             <h3 data-story-dna-title></h3>
@@ -103,7 +104,7 @@
           </div>
         </section>
 
-        <section class="cast-studio" data-cast-studio hidden>
+        <section class="cast-studio project-tool-panel" data-cast-studio hidden>
           <header>
             <div><span class="eyebrow">BECOME THE CHARACTERS · 成为故事主角</span><h3>Build our cast, then make one movie poster together.</h3><p>Each creator adds one private photo or drawing. Yu keeps every identity separate and turns the approved cast into the project’s shared visual reference.</p></div>
             <button class="primary" type="button" data-generate-cast-poster hidden>Create our cast poster · 生成全体角色海报</button>
@@ -139,27 +140,33 @@
           </figure>
         </section>
 
+        <section class="anchor-studio project-opening-poster" data-anchor-studio hidden>
+          <div class="anchor-studio-copy">
+            <span class="eyebrow" data-anchor-eyebrow>FIRST, MAKE YOUR MOVIE POSTER · 先做一张电影海报</span>
+            <h3 data-anchor-title>Create the first poster for your shared film.</h3>
+            <p data-anchor-rules></p>
+            <div class="anchor-facts"><span data-anchor-style></span><span>Only the owner’s allowance is used</span><span>Save only when satisfied</span></div>
+            <button class="primary" type="button" data-generate-anchor>Make our movie poster · 生成我们的电影海报</button>
+          </div>
+          <div class="anchor-frame" data-anchor-frame>
+            <img data-anchor-image alt="Approved character and world visual anchor" hidden />
+            <div class="opening-poster-copy" data-opening-poster-copy hidden>
+              <span>STORIESLENS PRESENTS</span>
+              <h4 data-opening-poster-title></h4>
+              <p data-opening-poster-subtitle></p>
+              <footer><strong data-opening-poster-cast></strong><small data-opening-poster-date></small></footer>
+            </div>
+            <div data-anchor-empty><strong data-anchor-empty-title>Your shared movie poster begins here.</strong><span data-anchor-empty-copy>Yu will use the story, chosen look, and approved character cards to create the first image for your team.</span></div>
+            <b data-anchor-approved hidden>APPROVED VISUAL BIBLE · 已锁定</b>
+          </div>
+        </section>
+
         <section class="story-path" data-story-path hidden>
           <header>
             <div><span class="eyebrow">OUR SIX-SCENE STORY PATH · 六幕共创路线</span><h3>One story. Six small turns. Everyone can add a part.</h3></div>
             <strong data-story-path-progress></strong>
           </header>
           <div class="story-beat-grid" data-story-beat-grid></div>
-        </section>
-
-        <section class="anchor-studio" data-anchor-studio hidden>
-          <div class="anchor-studio-copy">
-            <span class="eyebrow">CHARACTER &amp; WORLD LOCK · 人物与世界设定</span>
-            <h3>Create the visual reference everyone will follow.</h3>
-            <p data-anchor-rules></p>
-            <div class="anchor-facts"><span data-anchor-style></span><span>Only the owner’s allowance is used</span><span>Save only when satisfied</span></div>
-            <button class="primary" type="button" data-generate-anchor>Generate first visual anchor · 生成首张设定图</button>
-          </div>
-          <div class="anchor-frame" data-anchor-frame>
-            <img data-anchor-image alt="Approved character and world visual anchor" hidden />
-            <div data-anchor-empty><strong>No visual anchor yet.</strong><span>Generate, compare and approve one image before contributors illustrate their scenes.</span></div>
-            <b data-anchor-approved hidden>APPROVED VISUAL BIBLE · 已锁定</b>
-          </div>
         </section>
 
         <div class="board-layout">
@@ -230,6 +237,6 @@
     <script src="artwork-upload-safety.js?v=20260930-cast-poster-1"></script>
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="squad-board.js?v=20261007-yu-wuxia-1"></script>
+    <script src="squad-board.js?v=20261008-poster-wall-1"></script>
   </body>
 </html>

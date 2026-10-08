@@ -10,10 +10,14 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   const html = read("squad-board.html");
   const script = read("squad-board.js");
   const api = read("platform-api.js");
+  const css = read("squad-board.css");
 
   assert(html.includes("data-story-dna") && html.includes("data-story-path"), "the shared plan and six-scene route should be visible in the real squad board");
   assert(html.includes("data-cast-form") && html.includes("data-generate-cast-poster"), "each creator should add one private reference before the owner makes the shared cast poster");
   ["STORIESLENS PRESENTS", "data-cast-poster-title", "data-cast-poster-names", "data-cast-poster-date"].forEach((token) => assert(html.includes(token), `Hollywood poster template is missing ${token}`));
+  assert(html.includes("data-project-tools-toggle") && html.includes("data-opening-poster-copy"), "a loaded squad should lead with one shared poster while keeping character settings available on demand");
+  assert(script.includes("has-loaded-squad") && script.includes("projectToolsOpen") && script.includes("Make our movie poster"), "the project board should enter a simplified poster-first co-creation view");
+  assert(css.includes("body [hidden]{display:none!important}"), "hidden setup and join forms must never remain visible after a project loads");
   assert.strictEqual((script.match(/enTitle:/g) || []).length, 6, "the guided story path should contain exactly six core beats");
   ["Meet the heroes", "Trouble arrives", "The first try", "A bigger surprise", "The brave choice", "The ending"].forEach((beat) => {
     assert(script.includes(beat), `missing shared-story beat: ${beat}`);
@@ -31,5 +35,5 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes('squad.outputType === "film" ? "movie-studio.html" : "book-studio.html"'), "assembled books and films should open their matching studio");
   assert(api.includes('theme: squad.theme || ""') && script.includes('theme: setup.theme'), "the selected creation theme should survive entry into the real private squad");
   assert(script.includes("assets/yu-wuxia-master-v1.png") && script.includes("Speak as 小羽大侠") && script.includes("古琴声从哪里传来"), "a wuxia squad should show Hero Yu and keep both live and fallback guidance in the original guqin story world");
-  assert(script.includes('activeSquad.theme === "sailing"') && script.includes("风向、浪或航线") && script.includes("Do not invent a disaster"), "a sailing squad should ask about authentic teamwork and never invent unsafe or unreported race events");
+  assert(script.includes('activeSquad.theme === "sports"') && script.includes("团队做出了什么选择") && script.includes("Do not invent an injury"), "a sports squad should ask about authentic teamwork and never invent unsafe or unreported events");
 });

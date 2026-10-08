@@ -557,6 +557,134 @@
   letter-spacing: .08em;
 }
 
+/* The loaded project starts with one clear decision: make the shared cover or poster. */
+.has-loaded-squad .squad-intro {
+  display: none;
+}
+
+.has-loaded-squad .squad-shell {
+  padding-top: 26px;
+}
+
+.has-loaded-squad .board-app {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.has-loaded-squad .board-head {
+  margin-bottom: 18px;
+  border: 1px solid rgba(22, 64, 49, .16);
+  border-radius: 22px;
+  background: rgba(255, 253, 250, .92);
+  box-shadow: 0 14px 34px rgba(28, 50, 40, .08);
+}
+
+.project-tools-toggle {
+  flex: 0 0 auto;
+}
+
+.has-loaded-squad:not(.show-project-tools) .project-tool-panel,
+.has-loaded-squad:not(.show-project-tools) .member-panel {
+  display: none;
+}
+
+.has-loaded-squad:not(.show-project-tools) .board-layout {
+  grid-template-columns: 1fr;
+  min-height: 0;
+}
+
+.project-opening-poster {
+  grid-template-columns: minmax(260px, .78fr) minmax(0, 1.22fr);
+  margin-top: 0;
+  background: linear-gradient(135deg, #eaf4ec, #fff2d2);
+}
+
+.project-opening-poster .anchor-frame {
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  background: #10291f;
+}
+
+.project-opening-poster .anchor-frame img {
+  min-height: 0;
+}
+
+.project-opening-poster .anchor-frame::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(3, 12, 10, .64), transparent 35%, transparent 54%, rgba(3, 12, 10, .88));
+}
+
+.project-opening-poster .anchor-frame > [data-anchor-empty] {
+  position: relative;
+  z-index: 1;
+  color: #dfeae3;
+}
+
+.project-opening-poster .anchor-frame > [data-anchor-empty] strong {
+  color: #fff;
+}
+
+.opening-poster-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0 !important;
+  padding: clamp(16px, 3vw, 34px) !important;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, .88);
+}
+
+.opening-poster-copy[hidden] {
+  display: none !important;
+}
+
+.opening-poster-copy > span,
+.opening-poster-copy footer small {
+  font: 900 clamp(8px, 1.1vw, 13px)/1.2 Arial, sans-serif;
+  letter-spacing: .21em;
+}
+
+.opening-poster-copy h4 {
+  max-width: 780px;
+  margin: auto;
+  font: 700 clamp(27px, 5vw, 68px)/.95 Georgia, serif;
+}
+
+.opening-poster-copy p {
+  margin: -18px auto auto;
+  font: italic clamp(11px, 1.25vw, 16px)/1.35 Georgia, serif;
+}
+
+.opening-poster-copy footer {
+  display: grid;
+  gap: 5px;
+}
+
+.opening-poster-copy footer strong {
+  font: 900 clamp(9px, 1.25vw, 15px)/1.25 Arial, sans-serif;
+  letter-spacing: .12em;
+}
+
+.has-loaded-squad .story-path,
+.has-loaded-squad .project-opening-poster {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.has-loaded-squad .wall-column {
+  border: 1px solid rgba(22, 64, 49, .14);
+  border-radius: 22px;
+}
+
 body.candidate-open {
   overflow: hidden;
 }
