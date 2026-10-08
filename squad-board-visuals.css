@@ -513,6 +513,29 @@
   font-weight: 800;
 }
 
+.wuxia-poster-templates {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid rgba(122, 69, 31, .25);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff7e6, #eef4ea);
+}
+
+.wuxia-poster-templates > div:first-child { display: grid; gap: 4px; }
+.wuxia-poster-templates strong { font: 700 20px/1.2 "STKaiti", "Kaiti SC", Georgia, serif; }
+.wuxia-poster-templates small { color: #5e675c; font-size: 12px; }
+.wuxia-poster-template-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.wuxia-poster-template-grid button { display: grid; gap: 6px; padding: 8px; border: 1px solid rgba(41, 77, 58, .2); border-radius: 12px; color: #203b2d; background: #fffdf8; text-align: left; cursor: pointer; }
+.wuxia-poster-template-grid button.is-selected { border: 2px solid #0c7650; box-shadow: 0 0 0 2px rgba(12, 118, 80, .12); }
+.wuxia-poster-template-grid b { font: 800 16px/1.15 "STKaiti", "Kaiti SC", Georgia, serif; }
+.poster-template-preview { display: block; height: 56px; border-radius: 8px; }
+.poster-template-heroes { background: linear-gradient(135deg, #16150f, #6c432b 55%, #d7a956); }
+.poster-template-gold { background: radial-gradient(circle at 50% 15%, #ffe6a5, transparent 28%), linear-gradient(135deg, #5e3929, #c79542 58%, #283e37); }
+.poster-template-desert { background: linear-gradient(160deg, #e2b064, #a3552f 55%, #34251e); }
+.poster-template-ink { background: radial-gradient(ellipse at 60% 65%, #d7c3a1 0 7%, transparent 8%), linear-gradient(145deg, #f0eee5, #9da8a0 48%, #242d2b 49%); }
+
 .anchor-frame {
   position: relative;
   min-height: 230px;
@@ -720,6 +743,7 @@
 }
 
 @media (max-width: 620px) {
+  .wuxia-poster-template-grid { grid-template-columns: 1fr 1fr; }
   .project-opening-poster .anchor-frame {
     width: min(100%, 330px);
   }

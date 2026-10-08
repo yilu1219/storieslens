@@ -110,6 +110,15 @@
             <button class="primary" type="button" data-generate-cast-poster hidden>Create our cast poster · 生成全体角色海报</button>
           </header>
           <div class="cast-grid" data-cast-grid></div>
+          <section class="wuxia-poster-templates" data-wuxia-poster-templates hidden>
+            <div><span class="eyebrow">先选海报气氛</span><strong>上传角色照片后，选一种原创江湖大片感觉。</strong><small>参考群像、山河、水墨与大漠的电影语言；不会复制任何现有电影、人物或海报。</small></div>
+            <div class="wuxia-poster-template-grid" role="radiogroup" aria-label="选择武侠电影海报气氛">
+              <button class="is-selected" type="button" data-wuxia-poster-template="heroes" aria-pressed="true"><span class="poster-template-preview poster-template-heroes" aria-hidden="true"></span><b>群侠长卷</b><small>多人亮相 · 山河暮色</small></button>
+              <button type="button" data-wuxia-poster-template="gold" aria-pressed="false"><span class="poster-template-preview poster-template-gold" aria-hidden="true"></span><b>流金山河</b><small>主角居中 · 金色史诗</small></button>
+              <button type="button" data-wuxia-poster-template="desert" aria-pressed="false"><span class="poster-template-preview poster-template-desert" aria-hidden="true"></span><b>大漠镖影</b><small>风沙远路 · 伙伴同行</small></button>
+              <button type="button" data-wuxia-poster-template="ink" aria-pressed="false"><span class="poster-template-preview poster-template-ink" aria-hidden="true"></span><b>墨染江湖</b><small>孤侠剪影 · 水墨留白</small></button>
+            </div>
+          </section>
           <form class="cast-reference-form" data-cast-form>
             <div><strong>Add yourself to the story · 把自己加入故事</strong><small>Upload a photo or drawing, then describe the character you will play.</small></div>
             <label>Character name · 角色名字<input data-cast-name maxlength="60" required /></label>

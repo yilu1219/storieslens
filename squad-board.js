@@ -12,6 +12,13 @@
   let pendingCastReference = null;
   let mentorState = { guided: false, activeSentence: "", suggestion: "" };
   let projectToolsOpen = false;
+  let selectedWuxiaPosterTemplate = "heroes";
+  const WUXIA_POSTER_TEMPLATES = {
+    heroes: "Original wuxia ensemble poster: arrange the confirmed heroes in a rising diagonal through misty mountain dusk, with strong readable faces, flowing robes, a distant ancient pass, warm amber light and elegant wind movement.",
+    gold: "Original grand wuxia poster: place one confirmed protagonist with a calm, determined gaze in the center, with companions and a vast layered mountain-and-cloud world behind them; muted gold, umber and jade palette, ceremonial scale and clean heroic composition.",
+    desert: "Original wuxia adventure poster: place the confirmed heroes on an ancient desert road with wind-lifted dust, distant riders and a low sun; rich ochre, ink and copper palette, a protective journey and a powerful but non-violent ensemble silhouette.",
+    ink: "Original ink-wash wuxia poster: feature the confirmed hero or heroes against monumental brush-ink mountains, rain or mist, one clear sword silhouette and a small vermilion accent; bold negative space, expressive faces and restrained cinematic drama."
+  };
   const STORY_BEATS = [
     { enTitle: "Meet the heroes", zhTitle: "认识主角", enPrompt: "Who is here, where are they, and what do they want?", zhPrompt: "谁在这里？他们在哪里？现在最想做什么？" },
     { enTitle: "Trouble arrives", zhTitle: "困难出现", enPrompt: "What is hard right now? Show the problem the heroes must face.", zhPrompt: "他们现在遇到了什么困难？让大家看见这个问题。" },
@@ -561,10 +568,12 @@
     $("[data-cast-locked-note]").hidden = !viewer?.castLocked;
     if (!$('[data-cast-name]').value) $('[data-cast-name]').value = viewer?.castCharacterName || squad.viewer.displayName || "";
     const references = cast.filter((member) => member.castLocked && member.castReferenceImageUrl);
+    const posterTemplates = $("[data-wuxia-poster-templates]");
+    posterTemplates.hidden = !(squad.viewer?.role === "owner" && squad.theme === "wuxia" && squad.outputType === "film");
     const posterButton = $("[data-generate-cast-poster]");
     posterButton.hidden = squad.viewer?.role !== "owner";
-    posterButton.disabled = references.length < 2;
-    posterButton.textContent = squad.visualAnchorImageUrl ? ui("Regenerate our cast poster", "重新生成角色海报") : references.length < 2 ? ui("Confirm at least 2 character cards", "请先确认至少2张角色卡") : ui("Create our cast poster", "生成全体角色海报");
+    posterButton.disabled = references.length < 1;
+    posterButton.textContent = squad.visualAnchorImageUrl ? ui("Regenerate our cast poster", "重新生成角色海报") : references.length < 1 ? ui("Confirm a character card first", "请先确认一张角色卡") : ui("Create our cast poster", "生成全体角色海报");
     document.querySelectorAll("[data-lock-character]").forEach((button) => button.addEventListener("click", async () => {
       if (!window.confirm(ui("Confirm this permanent character card? It cannot be replaced after locking.", "确认锁定这张角色卡吗？锁定后不能再替换。"))) return;
       button.disabled = true;
@@ -635,7 +644,7 @@
 
   async function generateCastPoster() {
     const members = activeSquad.members.filter((member) => member.status === "approved" && member.castReferenceImageUrl);
-    if (members.length < 2) return;
+    if (!members.length) return;
     const button = $("[data-generate-cast-poster]");
     button.disabled = true;
     try {
@@ -763,7 +772,8 @@
     const format = squad.outputType === "film"
       ? "vertical A4 film-poster background in a 2:3 portrait frame"
       : "polished story-cover background in a 2:3 portrait frame";
-    return `Create a ${format} for the child-safe shared story “${squad.title}”. Include every referenced protagonist exactly once, keep their identities separate and recognizable, and never blend or swap faces. Transform them into one coherent story world while preserving age, facial structure, skin tone, hairstyle, clothing colors and body proportions. Locked story plan: ${squad.characterRules || "a warm shared adventure"}. Cast notes:\n${candidate.castDescription || "Keep every referenced creator recognizable."}\nUse dramatic but welcoming cinematic light, place the ensemble across the center, and leave clean darker breathing room at the top and bottom for the website to add an exact title, director, cast names and date. No written title, captions, logos, watermarks, frames or interface symbols.`;
+    const wuxiaTemplate = squad.theme === "wuxia" ? ` ${WUXIA_POSTER_TEMPLATES[selectedWuxiaPosterTemplate] || WUXIA_POSTER_TEMPLATES.heroes} Keep every action non-graphic and do not imitate any existing film, filmmaker, character, poster, title treatment or exact composition.` : "";
+    return `Create a ${format} for the child-safe shared story “${squad.title}”. Include every referenced protagonist exactly once, keep their identities separate and recognizable, and never blend or swap faces. Transform them into one coherent story world while preserving age, facial structure, skin tone, hairstyle, clothing colors and body proportions. Locked story plan: ${squad.characterRules || "a warm shared adventure"}. Cast notes:\n${candidate.castDescription || "Keep every referenced creator recognizable."}${wuxiaTemplate}\nUse dramatic but welcoming cinematic light, place the ensemble across the center, and leave clean darker breathing room at the top and bottom for the website to add an exact title, director, cast names and date. No written title, captions, logos, watermarks, frames or interface symbols.`;
   }
 
   function cardPrompt(squad, card) {
@@ -1057,6 +1067,14 @@
   $("[data-yu-question]").addEventListener("click", () => askYu(false));
   $("[data-yu-review]").addEventListener("click", () => askYu(true));
   $("[data-yu-read]").addEventListener("click", speakYuGuidance);
+  document.querySelectorAll("[data-wuxia-poster-template]").forEach((button) => button.addEventListener("click", () => {
+    selectedWuxiaPosterTemplate = button.dataset.wuxiaPosterTemplate || "heroes";
+    document.querySelectorAll("[data-wuxia-poster-template]").forEach((option) => {
+      const selected = option === button;
+      option.classList.toggle("is-selected", selected);
+      option.setAttribute("aria-pressed", String(selected));
+    });
+  }));
   $("[data-generate-anchor]").addEventListener("click", generateAnchorImage);
   $("[data-generate-cast-poster]").addEventListener("click", generateCastPoster);
   $("[data-cast-form]").addEventListener("submit", saveCastReference);

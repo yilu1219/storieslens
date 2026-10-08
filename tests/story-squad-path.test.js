@@ -26,6 +26,8 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes("activeStoryBeat(activeSquad)"), "Yu should guide the scene the squad is currently making");
   assert(script.includes("/scenes/${sceneNumber}/claim") && api.includes("SQUAD_SCENE_ALREADY_CLAIMED"), "one approved creator should be able to claim the current scene without adding a separate task system");
   assert(script.includes("generateCastPoster") && script.includes("personalPhotoConsentIds"), "the poster should combine consented cast references through the existing anchor generator");
+  assert(html.includes("data-wuxia-poster-templates") && ["群侠长卷", "流金山河", "大漠镖影", "墨染江湖"].every((name) => html.includes(name)), "Wuxia film squads should offer four original poster moods before creating the first poster");
+  assert(script.includes("WUXIA_POSTER_TEMPLATES") && script.includes("do not imitate any existing film"), "Wuxia poster prompts should use original high-level cinematic direction rather than copying an existing film poster");
   assert(script.includes('portraitPoster ? "2:3"') && script.includes('resolution: "2K"') && script.includes('data-poster-title-form'), "film posters should use the stable portrait generation request and persist the creator title");
   assert(api.includes("SQUAD_RENAME_FORBIDDEN") && api.includes("squad.title = title"), "only the owner should be able to save a poster title");
   assert(api.includes("castReferenceMatch") && api.includes("member.castReferenceMediaId = media.id"), "each approved member should save only their own private cast reference");
