@@ -10,6 +10,7 @@
   let pollTimer = null;
   let pendingVisual = null;
   let pendingCastReference = null;
+  let pendingPosterReference = null;
   let mentorState = { guided: false, activeSentence: "", suggestion: "" };
   let projectToolsOpen = false;
   let selectedWuxiaPosterTemplate = "heroes";
@@ -73,8 +74,8 @@
     "Your image is ready to review.": "你的图片可以检查了。",
     "This candidate is not on the squad wall yet.": "这张候选图还没有发布到共创墙。",
     "Yu is creating your image…": "羽大师正在创作图片……",
-    "One image allowance is used for each attempt.": "每次尝试使用一个图片额度。",
-    "Regenerating creates a new image and uses another allowance. Nothing is shared until you choose “save to squad.”": "重新生成会创建新图片并再使用一个额度。只有选择“保存到小组”后才会共享。"
+    "One image allowance is reserved and charged only if generation succeeds.": "会先预留一个图片额度，只有生成成功才会扣除。",
+    "A successful regeneration uses another allowance. Failed or safety-blocked requests are refunded. Nothing is shared until you choose “save to squad.”": "重新生成成功会再扣一个额度；生成失败或安全拦截会退回额度。只有选择“保存到小组”后才会共享。"
   };
   const ATTRIBUTE_ZH = {
     "Our Moonlight Adventure": "我们的月光冒险",
@@ -821,7 +822,7 @@
           prompt: candidate.kind === "cast"
             ? castPosterPrompt(activeSquad, candidate)
             : candidate.kind === "anchor"
-            ? `${anchorPrompt(activeSquad)}${candidate.styleReferenceImageUrls?.length ? "\n\nA user-provided STYLE REFERENCE is included. Borrow only high-level palette, lighting, texture, brushwork and mood. Do not copy its characters, logos, readable text, exact composition, or any artist signature." : ""}`
+            ? `${anchorPrompt(activeSquad)}${candidate.customPrompt ? `\n\nCREATOR'S POSTER DIRECTION: ${candidate.customPrompt}` : ""}${candidate.styleReferenceImageUrls?.length ? "\n\nA user-provided STYLE REFERENCE is included. Borrow only high-level palette, lighting, texture, brushwork and mood. Do not copy its characters, logos, readable text, exact composition, or any artist signature." : ""}`
             : cardPrompt(activeSquad, candidate.card),
           aspectRatio: portraitPoster ? "2:3" : "16:9",
           ...(portraitPoster ? { size: "", resolution: "2K" } : {}),
@@ -840,6 +841,11 @@
         candidate.styleReferenceImageUrls = [];
         sessionStorage.removeItem("storieslens_character_reference");
         sessionStorage.removeItem("storieslens_style_reference");
+        pendingPosterReference = null;
+        const posterReference = $("[data-poster-reference]");
+        if (posterReference) posterReference.value = "";
+        const posterReferenceStatus = $("[data-poster-reference-status]");
+        if (posterReferenceStatus) posterReferenceStatus.textContent = ui("Optional: add a scene, palette, or composition reference.", "可选：上传场景、色彩或构图参考图。");
       }
       const image = $("[data-candidate-image]");
       image.src = candidate.imageUrl;
@@ -863,7 +869,11 @@
       showNotice("请先在“人物与设置”中上传并确认至少一张角色照片或画作；封面会用它保留主角身份。", true);
       return;
     }
-    pendingVisual = { kind: "anchor", cardId: "", card: null, imageUrl: "", characterCardIds };
+    pendingVisual = {
+      kind: "anchor", cardId: "", card: null, imageUrl: "", characterCardIds,
+      customPrompt: $("[data-poster-prompt]")?.value.trim() || "",
+      styleReferenceImageUrls: pendingPosterReference?.dataUrl ? [pendingPosterReference.dataUrl] : []
+    };
     generatePendingVisual();
   }
 
@@ -1010,10 +1020,13 @@
     $("[data-anchor-rules]").textContent = squad.characterRules || (squad.language === "zh" ? "尚未填写人物规则；小组长仍可先生成并确认视觉锚点。" : "No character rules were entered; the owner can still generate and approve a visual anchor.");
     const posterTitleForm = $("[data-poster-title-form]");
     posterTitleForm.hidden = !owner;
+    $("[data-poster-prompt-fields]").hidden = !owner;
     $("[data-poster-title]").value = squad.title;
+    $("[data-poster-director]").value = squad.posterDirector || squad.viewer?.displayName || "";
     $("[data-poster-title-label]").textContent = isFilm
       ? ui("Give your film a name", "给电影起个名字")
       : ui("Give your book a name", "给图书起个名字");
+    $("[data-poster-director-label]").textContent = isFilm ? ui("Director", "导演") : ui("Lead creator", "主编");
     $("[data-anchor-format]").textContent = isFilm ? ui("A4 portrait · 2K", "A4 竖版 · 2K") : ui("Portrait cover · 2K", "竖版封面 · 2K");
     $("[data-anchor-style]").textContent = styleNames[squad.visualStyle] || squad.visualStyle;
     $("[data-generate-anchor]").hidden = !owner;
@@ -1036,7 +1049,7 @@
     $("[data-opening-poster-title]").textContent = squad.title;
     $("[data-opening-poster-subtitle]").textContent = styleNames[squad.visualStyle] || squad.visualStyle;
     const approvedMembers = squad.members.filter((member) => member.status === "approved").sort((a, b) => String(a.joinedAt || "").localeCompare(String(b.joinedAt || "")));
-    const director = approvedMembers[0]?.displayName || ui("YOUR STORY SQUAD", "你们的故事小队");
+    const director = squad.posterDirector || approvedMembers[0]?.displayName || ui("YOUR STORY SQUAD", "你们的故事小队");
     const castNames = approvedMembers.map((member) => member.castCharacterName || member.displayName).filter(Boolean);
     $("[data-opening-poster-director]").textContent = ui(`DIRECTED BY ${director}`, `导演：${director}`);
     $("[data-opening-poster-cast]").textContent = castNames.join(" · ");
@@ -1082,11 +1095,12 @@
     event.preventDefault();
     if (!activeSquad) return;
     const title = $("[data-poster-title]").value.trim();
+    const posterDirector = $("[data-poster-director]").value.trim();
     const button = $("[data-save-poster-title]");
     if (!title) return;
     button.disabled = true;
     try {
-      const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}`, { method: "PATCH", body: JSON.stringify({ title }) });
+      const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}`, { method: "PATCH", body: JSON.stringify({ title, posterDirector }) });
       activeSquad = result.squad;
       renderBoard(activeSquad);
       toast(ui("Film title saved", "电影片名已保存"));
@@ -1107,6 +1121,24 @@
       option.setAttribute("aria-pressed", String(selected));
     });
   }));
+  $("[data-poster-reference]").addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    pendingPosterReference = null;
+    if (!file) return;
+    const status = $("[data-poster-reference-status]");
+    status.textContent = ui("Removing metadata and checking the reference…", "正在移除照片信息并检查参考图……");
+    try {
+      const safe = await window.StoriesLensArtworkSafety.processArtwork(file);
+      if (safe.review?.checks?.realPerson) throw Object.assign(new Error("Use a confirmed character card for real-person photos."), { realPerson: true });
+      pendingPosterReference = { dataUrl: safe.dataUrl };
+      status.textContent = ui("Reference ready. It will guide mood and composition only.", "参考图已准备好，只会用于画面气氛与构图参考。");
+    } catch (error) {
+      event.target.value = "";
+      status.textContent = error.realPerson
+        ? ui("For a real-person photo, add it as a consented character card in Characters & settings.", "真人照片请到“人物与设置”中完成授权并建立角色卡。")
+        : ui("This reference could not be prepared safely. Try JPG or PNG.", "参考图无法安全处理，请尝试 JPG 或 PNG。");
+    }
+  });
   $("[data-generate-anchor]").addEventListener("click", generateAnchorImage);
   $("[data-generate-cast-poster]").addEventListener("click", generateCastPoster);
   $("[data-cast-form]").addEventListener("submit", saveCastReference);

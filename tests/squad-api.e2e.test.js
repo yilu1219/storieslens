@@ -93,10 +93,11 @@ test("private squad supports approval, shared contributions and credited assembl
     const squadId = created.payload.squad.id;
 
     const renamed = await request(baseUrl, `/api/squads/${squadId}`, {
-      method: "PATCH", origin: true, cookies: [ownerCookie], body: { title: "The Lantern Film" }
+      method: "PATCH", origin: true, cookies: [ownerCookie], body: { title: "The Lantern Film", posterDirector: "Mia Chen" }
     });
     assert.equal(renamed.response.status, 200);
     assert.equal(renamed.payload.squad.title, "The Lantern Film");
+    assert.equal(renamed.payload.squad.posterDirector, "Mia Chen");
 
     const incompletePhotoConsent = await request(baseUrl, `/api/squads/${squadId}/photo-consent`, {
       method: "POST", origin: true, cookies: [ownerCookie], body: { confirmedAdult: true }

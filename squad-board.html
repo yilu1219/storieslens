@@ -8,7 +8,7 @@
     <title>Private Story Squad · StoriesLens</title>
     <link rel="stylesheet" href="squad-board.css?v=20261008-wuxia-poster-2" />
     <link rel="stylesheet" href="squad-board-locale.css?v=20260930-1" />
-    <link rel="stylesheet" href="squad-board-visuals.css?v=20261008-scene-choice-1" />
+    <link rel="stylesheet" href="squad-board-visuals.css?v=20261008-poster-maker-1" />
   </head>
   <body>
     <header class="squad-header">
@@ -147,8 +147,14 @@
             <p data-anchor-rules></p>
             <form class="poster-title-form" data-poster-title-form>
               <label><span data-poster-title-label>Give your film a name · 给电影起个名字</span><input data-poster-title maxlength="120" required /></label>
-              <button class="secondary" type="submit" data-save-poster-title>Save title · 保存片名</button>
+              <label><span data-poster-director-label>Director · 导演</span><input data-poster-director maxlength="80" placeholder="填写导演姓名" /></label>
+              <button class="secondary" type="submit" data-save-poster-title>Save details · 保存信息</button>
             </form>
+            <div class="poster-prompt-fields" data-poster-prompt-fields>
+              <label><span>Describe your poster · 描述你想要的海报</span><textarea data-poster-prompt maxlength="1200" rows="4" placeholder="例如：雨夜竹林，三位少侠背靠背，远处古琴与山门，青绿色电影光，人物表情坚定。"></textarea><small>羽大师会把这段描述与已选画风、故事设定和角色卡一起使用。</small></label>
+              <label class="poster-reference-picker"><span>＋ Upload a visual reference · 上传参考图</span><input type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" data-poster-reference /></label>
+              <small data-poster-reference-status>可上传场景、色彩或构图参考；真人照片请先到“人物与设置”建立已授权角色卡。</small>
+            </div>
             <section class="wuxia-poster-templates" data-wuxia-poster-templates hidden>
               <div><span class="eyebrow">先选封面江湖画风</span><strong>再用你们已经确认的角色，生成第一张故事封面。</strong><small>四种原创电影气氛；真人角色的脸、年龄感与人数会作为私密参考保留。</small></div>
               <div class="wuxia-poster-template-grid" role="radiogroup" aria-label="选择武侠故事封面画风">
@@ -159,6 +165,7 @@
               </div>
             </section>
             <div class="anchor-facts"><span data-anchor-style></span><span data-anchor-format>A4 portrait · 2K</span><span>Only the owner’s allowance is used</span><span>Save only when satisfied</span></div>
+            <p class="poster-cost-note" data-poster-cost-note>生成成功扣 1 个图片额度；失败或安全拦截不扣。重新生成成功会再扣 1 个额度。</p>
             <button class="primary" type="button" data-generate-anchor>Make our movie poster · 生成我们的电影海报</button>
           </div>
           <div class="anchor-frame" data-anchor-frame>
@@ -235,12 +242,12 @@
           <h2 id="visual-candidate-title" data-candidate-title>Your image is ready to review.</h2>
           <p data-candidate-note>This candidate is not on the squad wall yet.</p>
         </div>
-        <div class="visual-candidate-media"><div class="candidate-loading" data-candidate-loading><span></span><strong>Yu is creating your image…</strong><small>One image allowance is used for each attempt.</small></div><img data-candidate-image alt="Generated visual candidate" hidden /></div>
+        <div class="visual-candidate-media"><div class="candidate-loading" data-candidate-loading><span></span><strong>Yu is creating your image…</strong><small>One image allowance is reserved and charged only if generation succeeds.</small></div><img data-candidate-image alt="Generated visual candidate" hidden /></div>
         <div class="visual-candidate-actions">
           <button class="secondary" type="button" data-candidate-regenerate disabled>Not yet—regenerate · 不满意，重新生成</button>
           <button class="primary" type="button" data-candidate-accept disabled>I’m happy—save to squad · 满意，保存到小组</button>
         </div>
-        <small class="candidate-cost-note">Regenerating creates a new image and uses another allowance. Nothing is shared until you choose “save to squad.”</small>
+        <small class="candidate-cost-note">A successful regeneration uses another allowance. Failed or safety-blocked requests are refunded. Nothing is shared until you choose “save to squad.”</small>
       </div>
     </section>
 
@@ -250,6 +257,6 @@
     <script src="artwork-upload-safety.js?v=20260930-cast-poster-1"></script>
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="squad-board.js?v=20261008-collaboration-mode-1"></script>
+    <script src="squad-board.js?v=20261008-poster-maker-1"></script>
   </body>
 </html>

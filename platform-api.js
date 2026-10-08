@@ -391,6 +391,7 @@ function publicSquad(database, squad, viewerId) {
   return {
     id: squad.id,
     title: squad.title,
+    posterDirector: squad.posterDirector || "",
     language: squad.language,
     outputType: squad.outputType,
     collaborationMode: squad.collaborationMode === "classroom" ? "classroom" : "family",
@@ -2065,16 +2066,18 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       const squadId = cleanId(decodeURIComponent(squadMatch[1]));
       const body = await readJsonBody(request, 4_000);
       const title = cleanText(body.title, 120);
+      const posterDirector = cleanText(body.posterDirector, 80);
       if (!title) {
         sendJson(response, 400, { error: "Enter a title for this shared story." });
         return true;
       }
-      await enforceTextSafety(title);
+      await enforceTextSafety([title, posterDirector].filter(Boolean).join("\n"));
       const updated = store.mutate((database) => {
         ensureSquadCollections(database);
         const squad = database.squads.find((item) => item.id === squadId && item.ownerId === user.id && !item.deletedAt);
         if (!squad) throw Object.assign(new Error("Only the project owner can rename this story."), { statusCode: 403, code: "SQUAD_RENAME_FORBIDDEN" });
         squad.title = title;
+        squad.posterDirector = posterDirector;
         squad.updatedAt = nowIso();
         return publicSquad(database, squad, user.id);
       });
@@ -2453,6 +2456,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
               presenter: "StoriesLens Presents",
               createdAt: storedSquad.createdAt,
               title: storedSquad.title,
+              director: storedSquad.posterDirector || nextDatabase.squadMembers.find((member) => member.squadId === storedSquad.id && member.role === "owner")?.displayName || "",
               storyBackground: storedSquad.characterRules || "",
               castNames: nextDatabase.squadMembers.filter((member) => member.squadId === storedSquad.id && member.status === "approved" && member.castReferenceMediaId && !member.removedAt).map((member) => member.castCharacterName || member.displayName)
             },

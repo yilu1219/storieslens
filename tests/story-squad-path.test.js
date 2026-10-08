@@ -16,7 +16,7 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(html.includes("data-cast-form") && html.includes("data-generate-cast-poster"), "each creator should add one private reference before the owner makes the shared cast poster");
   ["STORIESLENS PRESENTS", "data-cast-poster-title", "data-cast-poster-names", "data-cast-poster-date"].forEach((token) => assert(html.includes(token), `Hollywood poster template is missing ${token}`));
   assert(html.includes("data-project-tools-toggle") && html.includes("data-opening-poster-copy"), "a loaded squad should lead with one shared poster while keeping character settings available on demand");
-  assert(html.includes("data-poster-title-form") && html.includes("data-opening-poster-director") && html.includes("data-anchor-format"), "the owner should name the A4 poster and credit its first creator as director");
+  assert(html.includes("data-poster-title-form") && html.includes("data-poster-director") && html.includes("data-poster-prompt") && html.includes("data-poster-reference") && html.includes("data-opening-poster-director") && html.includes("data-anchor-format"), "the owner should name the A4 poster, add a director, prompt and safe reference, and credit its director");
   assert(script.includes("has-loaded-squad") && script.includes("projectToolsOpen") && script.includes("Make our movie poster"), "the project board should enter a simplified poster-first co-creation view");
   assert(css.includes("body [hidden]{display:none!important}"), "hidden setup and join forms must never remain visible after a project loads");
   assert.strictEqual((script.match(/enTitle:/g) || []).length, 6, "the guided story path should contain exactly six core beats");
@@ -36,6 +36,8 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(html.indexOf("data-wuxia-poster-templates") > html.indexOf("data-poster-title-form") && script.includes("wuxiaTemplate"), "Wuxia cover choices should appear immediately before the owner spends an image credit to generate the shared cover");
   assert(script.includes("characterCardIds = activeSquad.members") && script.includes("封面会用它保留主角身份"), "Wuxia cover generation should use at least one locked character reference instead of inventing the hero");
   assert(script.includes('portraitPoster ? "2:3"') && script.includes('resolution: "2K"') && script.includes('data-poster-title-form'), "film posters should use the stable portrait generation request and persist the creator title");
+  assert(script.includes("pendingPosterReference") && script.includes("CREATOR'S POSTER DIRECTION") && script.includes("posterDirector"), "poster generation should include the owner's prompt, safe reference and saved director credit");
+  assert(html.includes("生成成功扣 1 个图片额度；失败或安全拦截不扣"), "the poster button should explain successful, failed and regenerated image allowance use");
   assert(api.includes("SQUAD_RENAME_FORBIDDEN") && api.includes("squad.title = title"), "only the owner should be able to save a poster title");
   assert(api.includes("castReferenceMatch") && api.includes("member.castReferenceMediaId = media.id"), "each approved member should save only their own private cast reference");
   assert(api.includes("castLockMatch") && api.includes("member.castLockedAt = nowIso()"), "the owner should permanently confirm each project character card");
