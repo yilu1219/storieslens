@@ -264,6 +264,9 @@
     codeField.hidden = !joining;
     if (squadCreateFields) squadCreateFields.hidden = !creatingSquad;
     if (squadTitle) squadTitle.required = creatingSquad;
+    const displayNameField = displayName?.closest("label");
+    if (displayNameField) displayNameField.hidden = Boolean(storyTheme);
+    if (displayName) displayName.required = !storyTheme;
     if (workFileField) workFileField.hidden = joining || (mode !== "squad" && origin !== "work");
     creatorLevel?.closest("label")?.toggleAttribute("hidden", Boolean(storyTheme));
     storyLanguage?.closest("label")?.toggleAttribute("hidden", Boolean(storyTheme));
@@ -906,7 +909,7 @@
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const name = displayName.value.trim() || (mode === "squad" && storyTheme === "wuxia" ? "江湖伙伴" : "");
+    const name = displayName.value.trim() || (mode === "squad" && storyTheme ? (storyTheme === "wuxia" ? "江湖伙伴" : "共创伙伴") : "");
     const code = storyCode.value.trim().toUpperCase();
     const seed = storySeed.value.trim();
     const title = squadTitle?.value.trim() || "";

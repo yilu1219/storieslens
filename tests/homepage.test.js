@@ -451,6 +451,7 @@ assert(startHtml.includes("创作成品示例") && startHtml.includes("outcome-z
 assert(startHtml.includes("output=book") && startHtml.includes("output=film"), "The book and film outcome cards should open their matching co-creation paths");
 assert(startJs.includes('startParams.get("output")') && startJs.includes("squadOutput.value = requestedOutput"), "A chosen outcome card should preselect its matching book or film format");
 assert(startJs.includes("storyTheme || outputRoute ? 3") && startJs.includes("开始共创一部电影") && startJs.includes("开始共创一本书"), "Outcome cards should skip the generic chooser and open the matching dedicated creation setup");
+assert(startJs.includes("displayNameField.hidden = Boolean(storyTheme)") && startJs.includes('storyTheme === "wuxia" ? "江湖伙伴" : "共创伙伴"'), "Themed squad quick starts should remove the display-name block without blocking project creation");
 assert(serverJs.includes('"japanese-handpainted"') && read("platform-api.js").includes('"japanese-handpainted"'), "The new visual style should be accepted and translated into a generation prompt without naming an artist");
 [
   'data-studio-language="zh"',
