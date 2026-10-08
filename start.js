@@ -42,8 +42,8 @@
   const wuxiaStoryHints = document.querySelector("[data-wuxia-story-hints]");
   const wuxiaHintButtons = [...document.querySelectorAll("[data-wuxia-hint]")];
   const wuxiaPhotoJump = document.querySelector("[data-wuxia-photo-jump]");
-  const sailingStoryHints = document.querySelector("[data-sailing-story-hints]");
-  const sailingHintButtons = [...document.querySelectorAll("[data-sailing-hint]")];
+  const sportsStoryHints = document.querySelector("[data-sports-story-hints]");
+  const sportsHintButtons = [...document.querySelectorAll("[data-sports-hint]")];
   const travelOutputButtons = [...document.querySelectorAll("[data-travel-output]")];
   const squadStyle = document.querySelector("[data-squad-style]");
   const squadCharacterRules = document.querySelector("[data-squad-character-rules]");
@@ -82,8 +82,9 @@
   const t = (text) => window.StoriesLensI18n?.t(text) || text;
 
   const themeConfigs = {
-    sailing: { origin: "picture", title: "我们的帆船故事", style: "cinematic", heading: "先选书或电影，再上传一张帆船照片", lede: "一张比赛照，六段接力，最后成为属于团队的故事书或电影。", seed: "比赛开始前，大家最期待什么？海上的哪个瞬间改变了计划？你们怎样一起完成？", uploadTitle: "上传一张帆船比赛照片", uploadButton: "＋ 选择帆船照片", uploadStatus: "请先取得照片中孩子监护人的私密创作许可；默认私密，不会自动用于宣传。", cta: "开始帆船共创", requirePhoto: true, characterRules: "以已获监护人许可的比赛照片作为人物与帆船参考；人物面貌、发型、救生衣颜色、船体与船帆颜色始终一致；保持帆船运动基本动作与装备合理；不添加危险行为或灾难；画面中不显示学校全名、联系方式、赛事号码、标志或水印；公开宣传前必须另行取得每位孩子监护人的公开使用许可。" },
+    sports: { origin: "picture", title: "我们的运动故事", style: "cinematic", heading: "先选书或电影，再上传一张运动照片", lede: "一张运动照，六段接力，最后成为属于团队的故事书或电影。", seed: "比赛开始前，大家最期待什么？哪个瞬间改变了计划？你们怎样一起完成？", uploadTitle: "上传一张运动照片", uploadButton: "＋ 选择运动照片", uploadStatus: "请先取得照片中孩子监护人的私密创作许可；默认私密，不会自动用于宣传。", cta: "开始运动故事共创", requirePhoto: true, characterRules: "以已获监护人许可的运动照片作为人物、服装与器材参考；人物面貌、发型、队服颜色与器材始终一致；保持运动动作、场地与安全装备合理；不添加危险行为或灾难；画面中不显示学校全名、联系方式、赛事号码、标志或水印；公开宣传前必须另行取得每位孩子监护人的公开使用许可。" },
     travel: { origin: "picture", title: "我们的旅行故事", style: "ink-watercolor", heading: "先选书或电影，再上传一张旅行照", lede: "大家说或写一句当时发生了什么，就能开始共创。", seed: "说一句：照片在哪里拍的？当时发生了什么？", uploadTitle: "上传旅行照片", uploadButton: "＋ 选择旅行照片", uploadStatus: "照片会先删除位置和设备信息，并默认私密。", cta: "开始旅行故事共创", requirePhoto: true },
+    history: { origin: "imagination", title: "我们的历史故事", style: "ink-watercolor", heading: "先选书或电影，再走进一个时代", lede: "从一个真实时代、人物或文物出发，一起写出当时的人会怎样选择。", seed: "你们想走进哪个时代？谁在什么地方遇到了怎样的选择？", cta: "开始历史故事共创", characterRules: "尊重选定时代的基本史实、服饰、建筑与器物；虚构人物可以参与故事，但不要把想象写成已经证实的历史事实；人物年龄、外貌、服装颜色与随身物品始终一致；画面内不出现现代物品、标志或水印。" },
     wuxia: { origin: "imagination", title: "我们的江湖故事", style: "cinematic", heading: "先选书或电影，再开启你们的江湖", lede: "古琴一响，故事开场。小羽大侠会用问题带大家写出人物、困难、选择和结局。", seed: "雨夜里，谁听见了古琴声？他为什么走进江湖？眼前出现了什么困难？", cta: "开始武侠共创", characterRules: "原创写实中国武侠电影世界，人物面孔清晰凌厉，打斗是有节奏的非血腥武术编排；古琴是推动故事的重要道具；衣袂与雨、竹林、水面或山河呼应；人物年龄、脸型、发型、服装颜色、兵器和古琴始终一致；不出现伤口或血腥；不复制现有电影人物、服装或镜头。" },
     fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
     lianhuanhua: { origin: "imagination", title: "我们的连环画", style: "comic", heading: "一起做一本中式连环画", lede: "一幅图讲一个小场景，大家接力把故事画完整。", seed: "第一幅画里有谁？他在哪里？正要做什么？", cta: "开始连环画共创", characterRules: "传统中国小人书风格，黑白钢笔线描，清晰轮廓，朴素写实，连续分镜；每幅只画一个明确动作，人物造型与服装始终一致；画面内不出现文字、对白框、标志或水印，文字排在画面外。" },
@@ -122,7 +123,8 @@
   const requestedSource = startParams.get("source");
   const requestedStoryLanguage = startParams.get("storyLang");
   const requestedInterfaceLanguage = ["en", "zh"].includes(startParams.get("uiLang")) ? startParams.get("uiLang") : "";
-  let storyTheme = themeConfigs[startParams.get("theme")] ? startParams.get("theme") : "";
+  const requestedTheme = startParams.get("theme") === "sailing" ? "sports" : startParams.get("theme");
+  let storyTheme = themeConfigs[requestedTheme] ? requestedTheme : "";
   const chineseStudioRoute = startParams.get("from") === "chinese-studio";
   const interfaceLanguage = chineseStudioRoute ? "zh" : requestedInterfaceLanguage || (requestedStoryLanguage === "zh" ? "zh" : "");
   if (interfaceLanguage) {
@@ -204,7 +206,7 @@
     if (wuxiaStoryHints) wuxiaStoryHints.hidden = storyTheme !== "wuxia";
     if (characterBuilderTitle && storyTheme === "wuxia") characterBuilderTitle.firstChild.textContent = "把自己变成江湖主角 ";
     if (characterUploadLabel && storyTheme === "wuxia") characterUploadLabel.textContent = "＋ 上传真人照片或人物画";
-    if (sailingStoryHints) sailingStoryHints.hidden = storyTheme !== "sailing";
+    if (sportsStoryHints) sportsStoryHints.hidden = storyTheme !== "sports";
   };
   applyStoryTheme();
 
@@ -398,10 +400,10 @@
     storySeed.focus();
     storySeed.setSelectionRange(storySeed.value.indexOf("________"), storySeed.value.indexOf("________") + 8);
   }));
-  sailingHintButtons.forEach((button) => button.addEventListener("click", () => {
+  sportsHintButtons.forEach((button) => button.addEventListener("click", () => {
     if (!storySeed) return;
-    storySeed.value = button.dataset.sailingHint;
-    sailingHintButtons.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
+    storySeed.value = button.dataset.sportsHint;
+    sportsHintButtons.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
     storySeed.focus();
     const blank = storySeed.value.indexOf("________");
     if (blank >= 0) storySeed.setSelectionRange(blank, blank + 8);
@@ -903,7 +905,7 @@
     }
 
     if (mode === "squad" && squadAction === "create" && themeConfigs[storyTheme]?.requirePhoto && !importedWork) {
-      error.textContent = storyTheme === "sailing" ? "请先上传一张已获监护人许可的帆船比赛照片，再开始团队共创。" : "请先上传一张旅行照，再开始旅行故事共创。";
+      error.textContent = storyTheme === "sports" ? "请先上传一张已获监护人许可的运动照片，再开始团队共创。" : "请先上传一张旅行照，再开始旅行故事共创。";
       workFile?.focus();
       return;
     }

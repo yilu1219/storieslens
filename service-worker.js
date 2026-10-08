@@ -1,4 +1,4 @@
-const VERSION = "storieslens-pwa-v107-sailing-squad-20261007";
+const VERSION = "storieslens-pwa-v108-sports-history-20261008";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const APP_SHELL = [
