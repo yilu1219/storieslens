@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-10-06",
+  "lastReviewed": "2026-10-08",
   "sources": [
     {
       "id": "ies-elementary-writing-2018",
@@ -507,6 +507,51 @@
       "skills": ["阅读与写作联系", "普通文写作", "记叙", "论说"],
       "credibility": "high as modern Chinese writing pedagogy, but the available page is insufficient for ingestion under the repository rights policy",
       "rejectionReason": "Quarantined until a stable edition and explicit work-level rights basis are verified. No text, examples, or teaching rules entered Yu."
+    },
+    {
+      "id": "readwritethink-write-alouds",
+      "status": "rejected",
+      "language": "en",
+      "title": "Write Alouds",
+      "authorOrInstitution": "ReadWriteThink; National Council of Teachers of English",
+      "published": "current web edition reviewed 2026",
+      "retrieved": "2026-10-08",
+      "url": "https://www.readwritethink.org/professional-development/strategy-guides/write-alouds",
+      "rights": "ReadWriteThink's legal notice permits limited non-commercial classroom and instructional use and otherwise reserves rights; it does not grant commercial AI-training or product-reuse permission.",
+      "ages": ["K-12"],
+      "skills": ["modeled writing", "metacognition", "dialogue", "teacher demonstration"],
+      "credibility": "high for classroom literacy practice; published by NCTE through ReadWriteThink",
+      "rejectionReason": "Rejected for commercial ingestion because the site's permission is limited to non-commercial classroom use. The modeled-writing idea also overlaps the adopted IES Model-Practice-Reflect guidance. No text, examples, or teaching rules entered Yu."
+    },
+    {
+      "id": "lao-she-three-years-writing-1941",
+      "status": "quarantined",
+      "language": "zh",
+      "title": "《三年写作自述》",
+      "authorOrInstitution": "老舍（1899—1966）；核查页面为中文维基文库",
+      "published": "1941-01-01",
+      "retrieved": "2026-10-08",
+      "url": "https://zh.wikisource.org/zh-hans/三年寫作自述",
+      "rights": "The Wikisource page is available under CC BY-SA 4.0, but that site license does not by itself establish that the underlying 1941 work is public domain for commercial reuse in every relevant jurisdiction, including the United States.",
+      "ages": ["secondary", "adult"],
+      "skills": ["collaborative drama writing", "read-aloud revision", "rhythm", "self-evaluation"],
+      "credibility": "high as a primary author reflection on writing and revision",
+      "rejectionReason": "Quarantined until a jurisdictionally sufficient work-level rights basis is documented. No prose, examples, or teaching rules entered Yu."
+    },
+    {
+      "id": "zhu-zhiqing-recitation-teaching-1946",
+      "status": "quarantined",
+      "language": "zh",
+      "title": "《诵读教学》",
+      "authorOrInstitution": "朱自清（1898—1948）；核查页面为中文维基文库",
+      "published": "1946",
+      "retrieved": "2026-10-08",
+      "url": "https://zh.wikisource.org/zh-hans/誦讀教學",
+      "rights": "The Wikisource page is available under CC BY-SA 4.0, but that site license does not by itself establish that the underlying 1946 work is public domain for commercial reuse in every relevant jurisdiction, including the United States.",
+      "ages": ["secondary", "adult"],
+      "skills": ["read-aloud", "meaning and rhythm", "spoken-written connection", "dialect awareness"],
+      "credibility": "high as a primary modern Chinese-language education essay",
+      "rejectionReason": "Quarantined until a jurisdictionally sufficient work-level rights basis is documented. No prose, examples, or teaching rules entered Yu."
     }
   ]
 }
