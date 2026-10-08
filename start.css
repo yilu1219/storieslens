@@ -392,8 +392,10 @@ html[lang] .start-header .language-switcher button[aria-pressed="true"] { color:
 .travel-output-choice button b { font-size: 18px; }
 .travel-output-choice button small { color: var(--start-muted); font-size: 14px; }
 .travel-output-choice button.is-selected { border: 2px solid var(--start-leaf); background: #eaf5ec; box-shadow: 0 8px 18px rgba(15, 98, 68, .12); }
-.travel-quick-mode .age-gate-field,
-.travel-quick-mode .setup-fields > label:has([data-display-name]) { padding: 15px; border: 1px solid var(--start-line); border-radius: 16px; background: #fbf8f1; }
+.travel-quick-mode .age-gate-field { padding: 15px; border: 1px solid var(--start-line); border-radius: 16px; background: #fbf8f1; }
+.travel-quick-mode .setup-fields > label:has([data-display-name]),
+.travel-quick-mode.wuxia-quick-mode [data-character-builder],
+.travel-quick-mode.wuxia-quick-mode .wuxia-photo-callout { display: none !important; }
 .travel-quick-mode [data-work-file-field],
 .travel-quick-mode [data-idea-field] { padding: 18px; border: 1px solid rgba(22, 132, 91, .24); border-radius: 18px; background: #eef6ef; }
 .travel-quick-mode [data-work-file-field] { order: 1; }

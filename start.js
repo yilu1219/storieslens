@@ -892,7 +892,7 @@
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const name = displayName.value.trim();
+    const name = displayName.value.trim() || (mode === "squad" && storyTheme === "wuxia" ? "江湖伙伴" : "");
     const code = storyCode.value.trim().toUpperCase();
     const seed = storySeed.value.trim();
     const title = squadTitle?.value.trim() || "";

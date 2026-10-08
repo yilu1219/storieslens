@@ -922,8 +922,8 @@
     document.body.classList.toggle("show-project-tools", projectToolsOpen);
     $("[data-setup]").hidden = true;
     $("[data-board]").hidden = false;
-    $("[data-squad-title]").textContent = squad.title;
     const wuxiaMentor = squad.theme === "wuxia";
+    $("[data-squad-title]").textContent = wuxiaMentor && squad.language === "zh" ? "我们的武侠故事" : squad.title;
     $("[data-squad-yu]").classList.toggle("is-wuxia", wuxiaMentor);
     $("[data-yu-theme-image]").src = wuxiaMentor ? "assets/yu-wuxia-master-v1.png" : "assets/yu-mascot-logo-v2.png";
     $("[data-yu-theme-image]").alt = wuxiaMentor ? ui("Hero Yu with a guqin and feather brush", "背着古琴、手持羽毛笔的小羽大侠") : "";
@@ -941,7 +941,9 @@
     };
     const storyLanguage = squad.language === "zh" ? ui("Chinese story", "中文故事") : ui("English story", "英文故事");
     const outputName = squad.outputType === "film" ? ui("Story film", "故事电影") : ui("Illustrated book", "绘本");
-    $("[data-squad-meta]").textContent = `${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "画风已锁定")} · ${ui("Start with the poster, then claim a scene", "先做海报，再认领一幕")}`;
+    $("[data-squad-meta]").textContent = wuxiaMentor && squad.language === "zh"
+      ? `有人的地方，就有江湖 · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · 画风已锁定 · 先做海报，再认领一幕`
+      : `${storyLanguage} · ${outputName} · ${styleNames[squad.visualStyle] || squad.visualStyle} · ${ui("Style locked by owner", "画风已锁定")} · ${ui("Start with the poster, then claim a scene", "先做海报，再认领一幕")}`;
     const owner = squad.viewer?.role === "owner";
     const approved = squad.viewer?.status === "approved";
     const assembled = Boolean(squad.assembledProjectId);
