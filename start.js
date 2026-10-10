@@ -88,7 +88,7 @@
     sports: { origin: "picture", title: "我们的运动故事", style: "cinematic", heading: "先选书或电影，再上传一张运动照片", lede: "一张运动照，六段接力，最后成为属于团队的故事书或电影。", seed: "比赛开始前，大家最期待什么？哪个瞬间改变了计划？你们怎样一起完成？", uploadTitle: "上传一张运动照片", uploadButton: "＋ 选择运动照片", uploadStatus: "请先取得照片中孩子监护人的私密创作许可；默认私密，不会自动用于宣传。", cta: "开始运动故事共创", requirePhoto: true, characterRules: "以已获监护人许可的运动照片作为人物、服装与器材参考；人物面貌、发型、队服颜色与器材始终一致；保持运动动作、场地与安全装备合理；不添加危险行为或灾难；画面中不显示学校全名、联系方式、赛事号码、标志或水印；公开宣传前必须另行取得每位孩子监护人的公开使用许可。" },
     travel: { origin: "picture", title: "我们的旅行故事", style: "ink-watercolor", heading: "先选书或电影，再上传一张旅行照", lede: "大家说或写一句当时发生了什么，就能开始共创。", seed: "说一句：照片在哪里拍的？当时发生了什么？", uploadTitle: "上传旅行照片", uploadButton: "＋ 选择旅行照片", uploadStatus: "照片会先删除位置和设备信息，并默认私密。", cta: "开始旅行故事共创", requirePhoto: true },
     history: { origin: "imagination", title: "我们的历史故事", style: "ink-watercolor", heading: "先选书或电影，再走进一个时代", lede: "从一个真实时代、人物或文物出发，一起写出当时的人会怎样选择。", seed: "你们想走进哪个时代？谁在什么地方遇到了怎样的选择？", cta: "开始历史故事共创", characterRules: "尊重选定时代的基本史实、服饰、建筑与器物；虚构人物可以参与故事，但不要把想象写成已经证实的历史事实；人物年龄、外貌、服装颜色与随身物品始终一致；画面内不出现现代物品、标志或水印。" },
-    wuxia: { origin: "imagination", title: "我们的江湖故事", style: "cinematic", heading: "先选书或电影，再开启你们的江湖", lede: "古琴一响，故事开场。小羽大侠会用问题带大家写出人物、困难、选择和结局。", seed: "雨夜里，谁听见了古琴声？他为什么走进江湖？眼前出现了什么困难？", cta: "开始武侠共创", characterRules: "原创写实中国武侠电影世界，人物面孔清晰凌厉，打斗是有节奏的非血腥武术编排；古琴是推动故事的重要道具；衣袂与雨、竹林、水面或山河呼应；人物年龄、脸型、发型、服装颜色、兵器和古琴始终一致；不出现伤口或血腥；不复制现有电影人物、服装或镜头。" },
+    wuxia: { origin: "imagination", title: "我们的江湖故事", style: "cinematic", heading: "先选书或电影，再开启你们的江湖", lede: "古琴一响，故事开场。小羽大侠会用问题带大家写出人物、困难、选择和结局。", seed: "雨夜里，谁听见了古琴声？他为什么走进江湖？眼前出现了什么困难？", cta: "开始武侠共创", uploadTitle: "可选：上传文字或图片", uploadButton: "＋ 上传文字、图片或作品", uploadStatus: "可上传 TXT、MD、DOCX、JPG、PNG、WEBP 或 HEIC；默认私密，图片会先移除位置和设备信息。", characterRules: "原创写实中国武侠电影世界，人物面孔清晰凌厉，打斗是有节奏的非血腥武术编排；古琴是推动故事的重要道具；衣袂与雨、竹林、水面或山河呼应；人物年龄、脸型、发型、服装颜色、兵器和古琴始终一致；不出现伤口或血腥；不复制现有电影人物、服装或镜头。" },
     fantasy: { origin: "imagination", title: "我们的奇幻冒险", style: "japanese-handpainted", heading: "先选书或电影，再打开奇幻世界", lede: "说说神兽、秘境或一次穿越，就能开始共创。", seed: "谁进入了奇幻世界？那里有什么不可思议的事？", cta: "开始奇幻共创" },
     lianhuanhua: { origin: "imagination", title: "我们的连环画", style: "comic", heading: "一起做一本中式连环画", lede: "一幅图讲一个小场景，大家接力把故事画完整。", seed: "第一幅画里有谁？他在哪里？正要做什么？", cta: "开始连环画共创", characterRules: "传统中国小人书风格，黑白钢笔线描，清晰轮廓，朴素写实，连续分镜；每幅只画一个明确动作，人物造型与服装始终一致；画面内不出现文字、对白框、标志或水印，文字排在画面外。" },
     "my-story": { origin: "memory", title: "我们的故事", style: "storybook-watercolor", heading: "先选书或电影，再讲一个真实故事", lede: "家庭、校园、朋友或成长中的一件事，都可以成为开场。", seed: "这件事发生在哪里？和谁有关？为什么让你记得？", cta: "开始我的故事共创" },
@@ -539,7 +539,7 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       sparkListeningRequested = false;
-      if (sparkVoiceStatus) sparkVoiceStatus.textContent = t("Voice typing is unavailable in this browser. You can still type or upload your work.");
+      if (sparkVoiceStatus) sparkVoiceStatus.textContent = storyLanguage?.value === "zh" ? "当前浏览器暂不支持实时语音转写。请使用 Chrome 并允许麦克风，或直接输入／上传文字或图片。" : "Live voice typing is unavailable here. Use Chrome with microphone permission, or type or upload your work.";
       storySeed?.focus();
       return;
     }
