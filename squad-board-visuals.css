@@ -933,6 +933,22 @@ body.candidate-open {
   cursor: wait;
 }
 
+.composer-character-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 14px;
+  border: 1px dashed rgba(19, 114, 79, .36);
+  border-radius: 14px;
+  background: #f5fbf4;
+}
+.composer-character-action strong,
+.composer-character-action small { display: block; }
+.composer-character-action small { color: #5a7167; font-size: 12px; }
+.composer-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.composer-actions .primary { flex: 1 1 260px; }
+
 .visual-review {
   display: block;
   margin: -4px 0 12px;

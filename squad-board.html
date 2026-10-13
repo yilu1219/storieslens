@@ -8,7 +8,7 @@
     <title>Private Story Squad · StoriesLens</title>
     <link rel="stylesheet" href="squad-board.css?v=20261008-wuxia-poster-2" />
     <link rel="stylesheet" href="squad-board-locale.css?v=20260930-1" />
-    <link rel="stylesheet" href="squad-board-visuals.css?v=20261008-poster-editor-2" />
+    <link rel="stylesheet" href="squad-board-visuals.css?v=20261013-write-and-illustrate-1" />
   </head>
   <body>
     <header class="squad-header">
@@ -220,14 +220,21 @@
                 </div>
               </section>
               <textarea data-card-text maxlength="6000" placeholder="Write a scene, a line of dialogue, a memory, or the next event…"></textarea>
+             <div class="composer-character-action" data-composer-character-action hidden>
+                <div><strong>Become a hero first · 先让自己成为主角</strong><small>Upload one private character photo or drawing. Once confirmed, future images follow this character card. · 上传一张私密角色照片或画作；确认后，后面的画面都会参考这张角色卡。</small></div>
+                <button class="secondary" type="button" data-open-character-setup>＋ Upload my character photo · 上传我的角色照片</button>
+              </div>
               <div class="record-row">
                 <button class="record" data-record type="button">● Record voice · 录音</button>
                 <button class="secondary" data-stop type="button" disabled>Stop · 停止</button>
                 <span data-record-status>Optional: add your own narration.</span>
               </div>
               <audio data-record-preview controls hidden></audio>
-              <button class="primary" type="submit">Post to our story wall · 发布到共创墙</button>
-              <small>Yu teaches and suggests; you decide every word. Contributors’ posts wait for owner approval, and the author name remains attached.</small>
+             <div class="composer-actions">
+                <button class="primary" type="submit" data-post-and-illustrate>Write & make this scene image · 写完并生成这一幕画面</button>
+                <button class="secondary" type="submit">Post words only · 只发布文字</button>
+              </div>
+              <small>Save your words first, then create an image candidate. It reaches the wall only after you save it. A successful generation uses your image allowance; failed or safety-blocked attempts do not. Members’ work still needs owner approval and always keeps its credit. · 先保存你的文字，再生成候选画面；满意后才会保存到共创墙。成功生成会使用你的图片额度，失败或安全拦截不扣。成员作品仍需发起人审核，并始终保留作者署名。</small>
             </form>
             <div class="story-wall" data-story-wall></div>
           </div>
@@ -258,6 +265,6 @@
     <script src="artwork-upload-safety.js?v=20260930-cast-poster-1"></script>
     <script src="spark-handoff.js?v=20260920-mode-choice-1"></script>
     <script src="natural-voice.js?v=20260922-clear-energy-1"></script>
-    <script src="squad-board.js?v=20261008-poster-editor-2"></script>
+    <script src="squad-board.js?v=20261013-write-and-illustrate-1"></script>
   </body>
 </html>

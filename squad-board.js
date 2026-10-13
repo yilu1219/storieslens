@@ -1010,6 +1010,8 @@
       ? ui("Hide characters & settings", "收起人物与设置")
       : ui("Characters & settings", "人物与设置");
     $("[data-composer]").hidden = !approved;
+    const viewerMember = squad.members.find((member) => member.isViewer);
+    $("[data-composer-character-action]").hidden = !approved || activeStoryBeat(squad).index !== 0 || Boolean(viewerMember?.castLocked);
     const anchorStudio = $("[data-anchor-studio]");
     anchorStudio.hidden = !approved;
     const isFilm = squad.outputType === "film";
@@ -1201,6 +1203,13 @@
     $("[data-yu-feedback]").hidden = true;
     toast(activeSquad?.language === "zh" ? "保留你的原文" : "Your original words are staying");
   });
+  $("[data-open-character-setup]").addEventListener("click", () => {
+    if (!activeSquad) return;
+    projectToolsOpen = true;
+    renderBoard(activeSquad);
+    $("[data-cast-studio]").scrollIntoView({ behavior: "smooth", block: "start" });
+    $("[data-cast-name]").focus({ preventScroll: true });
+  });
 
   $("[data-create-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1287,29 +1296,35 @@
   $("[data-composer]").addEventListener("submit", async (event) => {
     event.preventDefault();
     const text = $("[data-card-text]").value.trim();
-    if (!text && !recordedBlob) {
-      showNotice("Write something or record your voice first. · 请先写下内容或录音。", true);
-      return;
-    }
-    const submit = event.submitter;
-    submit.disabled = true;
+   if (!text && !recordedBlob) {
+     showNotice("Write something or record your voice first. · 请先写下内容或录音。", true);
+     return;
+   }
+   const submit = event.submitter;
+    const illustrateNow = submit?.matches("[data-post-and-illustrate]");
+   submit.disabled = true;
     try {
       let audioMediaId = "";
       if (recordedBlob) {
         const media = await platform.api("/api/media", { method: "POST", body: JSON.stringify({ squadId: activeSquad.id, dataUrl: await blobToDataUrl(recordedBlob) }) });
         audioMediaId = media.media.id;
-      }
-      const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}/cards`, { method: "POST", body: JSON.stringify({ text, audioMediaId, yuGuided: mentorState.guided }) });
-      activeSquad = result.squad;
-      $("[data-card-text]").value = "";
+     }
+     const result = await platform.api(`/api/squads/${encodeURIComponent(activeSquad.id)}/cards`, { method: "POST", body: JSON.stringify({ text, audioMediaId, yuGuided: mentorState.guided }) });
+     activeSquad = result.squad;
+      const newCard = [...activeSquad.cards].reverse().find((card) => card.canEdit);
+     $("[data-card-text]").value = "";
       recordedBlob = null;
       $("[data-record-preview]").hidden = true;
       $("[data-record-preview]").removeAttribute("src");
       $("[data-record-status]").textContent = ui("Optional: add your own narration.", "可选：加入你自己的旁白。");
-      resetMentorPanel();
-      renderBoard(activeSquad);
-      toast(activeSquad.viewer.role === "owner" ? "Posted to the wall · 已发布" : "Sent for owner approval · 已提交审核");
-    } catch (error) { showNotice(error.message, true); }
+     resetMentorPanel();
+     renderBoard(activeSquad);
+     toast(activeSquad.viewer.role === "owner" ? "Posted to the wall · 已发布" : "Sent for owner approval · 已提交审核");
+      if (illustrateNow && newCard) {
+        const imageButton = document.querySelector(`[data-generate-card-image="${newCard.id}"]`);
+        if (imageButton) generateCardImage(activeSquad, imageButton);
+      }
+   } catch (error) { showNotice(error.message, true); }
     finally { submit.disabled = false; }
   });
 

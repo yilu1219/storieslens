@@ -8,9 +8,10 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 test("Story Squad guides one shared story through six child-friendly scenes", () => {
   const html = read("squad-board.html");
-  const script = read("squad-board.js");
-  const api = read("platform-api.js");
-  const css = read("squad-board.css");
+ const script = read("squad-board.js");
+ const api = read("platform-api.js");
+ const css = read("squad-board.css");
+  const visuals = read("squad-board-visuals.css");
 
   assert(html.includes("data-story-dna") && html.includes("data-story-path"), "the shared plan and six-scene route should be visible in the real squad board");
   assert(html.includes("data-cast-form") && html.includes("data-generate-cast-poster"), "each creator should add one private reference before the owner makes the shared cast poster");
@@ -43,8 +44,11 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(api.includes("SQUAD_RENAME_FORBIDDEN") && api.includes("squad.title = title"), "only the owner should be able to save a poster title");
   assert(api.includes("castReferenceMatch") && api.includes("member.castReferenceMediaId = media.id"), "each approved member should save only their own private cast reference");
   assert(api.includes("castLockMatch") && api.includes("member.castLockedAt = nowIso()"), "the owner should permanently confirm each project character card");
-  assert(script.includes("data-lock-character") && script.includes("data-scene-character"), "the board should lock character cards and let creators choose who appears in each scene");
-  assert(api.includes("characterCardIds") && api.includes("characterReferences.push"), "scene generation should resolve only selected locked character cards on the server");
+ assert(script.includes("data-lock-character") && script.includes("data-scene-character"), "the board should lock character cards and let creators choose who appears in each scene");
+  assert(html.includes("data-post-and-illustrate") && script.includes("illustrateNow") && script.includes("generateCardImage(activeSquad, imageButton)"), "creators should be able to write, then immediately generate a private candidate illustration for that same scene");
+  assert(html.includes("data-open-character-setup") && script.includes("data-composer-character-action") && script.includes("[data-cast-studio]"), "the first scene should lead a new creator to the existing private character-card flow");
+  assert(visuals.includes(".composer-actions") && visuals.includes(".composer-character-action"), "the write-and-illustrate choice should remain clear and usable");
+ assert(api.includes("characterCardIds") && api.includes("characterReferences.push"), "scene generation should resolve only selected locked character cards on the server");
   assert(read("server.js").includes("ONLY THESE CHARACTERS APPEAR IN THIS SCENE") && read("server.js").includes("do not add anyone else"), "image prompts should exclude unselected recurring characters");
   assert(api.includes("coverImageUrl: storedSquad.visualAnchorImageUrl"), "the approved cast poster should become the assembled project cover");
   assert(api.includes('presenter: "StoriesLens Presents"') && api.includes("storyBackground: storedSquad.characterRules"), "the assembled project should retain exact poster text instead of asking the image model to spell it");
