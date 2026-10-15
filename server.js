@@ -5,6 +5,7 @@ const path = require("path");
 const { checkImageSafety, checkTextSafety, imageRequestSafetyText, imageRetryPrompt, localSafetyCheck } = require("./content-safety");
 const { reviewArtworkImage, isSupportedSanitizedArtwork } = require("./artwork-safety-server");
 const { convertHeicBuffer, parseHeicDataUrl } = require("./heic-conversion");
+const { safeHttpHeader } = require("./http-header-safety");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
 const { createPlatformApi } = require("./platform-api");
 const { applyDeclaredGrammarChanges, cleanGrammarChanges, grammarSuggestionNeedsRepair } = require("./grammar-review");
@@ -454,7 +455,7 @@ function getImageConfig() {
     openRouterApiKey: getConfigValue("OPENROUTER_API_KEY", "openrouter.apiKey"),
     openRouterImageApiUrl: getConfigValue("OPENROUTER_IMAGE_API_URL", "openrouter.imageApiUrl") || `${baseUrl}/images`,
     siteUrl: process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
-    siteTitle: process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+    siteTitle: safeHttpHeader(process.env.OPENROUTER_SITE_TITLE, "StoriesLens")
   };
 }
 
@@ -481,7 +482,7 @@ function getVideoConfig() {
     openRouterApiKey: getConfigValue("OPENROUTER_API_KEY", "openrouter.apiKey"),
     openRouterVideoApiUrl: getConfigValue("OPENROUTER_VIDEO_API_URL", "openrouter.videoApiUrl") || `${baseUrl}/videos`,
     siteUrl: process.env.OPENROUTER_SITE_URL || "http://localhost:3000",
-    siteTitle: process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+    siteTitle: safeHttpHeader(process.env.OPENROUTER_SITE_TITLE, "StoriesLens")
   };
 }
 
@@ -1704,7 +1705,7 @@ function textProviderHeaders(provider) {
   const headers = { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" };
   if (provider.provider === "OPENROUTER") {
     headers["HTTP-Referer"] = process.env.OPENROUTER_SITE_URL || "http://localhost:3000";
-    headers["X-Title"] = process.env.OPENROUTER_SITE_TITLE || "StoriesLens";
+    headers["X-Title"] = safeHttpHeader(process.env.OPENROUTER_SITE_TITLE, "StoriesLens");
   }
   return headers;
 }

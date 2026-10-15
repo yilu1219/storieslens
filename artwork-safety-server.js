@@ -1,4 +1,5 @@
 const { checkImageSafety } = require("./content-safety");
+const { safeHttpHeader } = require("./http-header-safety");
 
 const REVIEW_SCHEMA = {
   type: "object",
@@ -47,7 +48,7 @@ async function classifyArtworkWithOpenRouter(imageDataUrl, apiKey) {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
       "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "https://www.storieslens.com",
-      "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+      "X-Title": safeHttpHeader(process.env.OPENROUTER_SITE_TITLE, "StoriesLens")
     },
     body: JSON.stringify({
       model: process.env.OPENROUTER_ARTWORK_REVIEW_MODEL || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",

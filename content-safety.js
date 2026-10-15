@@ -16,6 +16,7 @@ const STRICT_SCORE_THRESHOLDS = {
   "harassment/threatening": 0.03,
   "illicit/violent": 0.02
 };
+const { safeHttpHeader } = require("./http-header-safety");
 
 function isModerationResultBlocked(result = {}) {
   if (result.flagged === true) return true;
@@ -165,7 +166,7 @@ async function callOpenRouterSafety(input, { image = false } = {}) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "https://www.storieslens.com",
-        "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+        "X-Title": safeHttpHeader(process.env.OPENROUTER_SITE_TITLE, "StoriesLens")
       },
       body: JSON.stringify({
         model: process.env.OPENROUTER_SAFETY_MODEL || "openai/gpt-4o-mini",
