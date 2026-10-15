@@ -299,7 +299,7 @@ async function handleWritingImageExtraction(request, response) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "https://www.storieslens.com",
-        "X-Title": process.env.OPENROUTER_SITE_TITLE || "StoriesLens"
+        "X-Title": safeHttpHeader(process.env.OPENROUTER_SITE_TITLE, "StoriesLens")
       },
       body: JSON.stringify({
         model,
