@@ -531,6 +531,11 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
     return database.projects.find((project) => project.id === projectId && project.ownerId === user.id && !project.deletedAt);
   }
 
+  function hasLockedCastForEveryCreator(database, squadId) {
+    const creators = database.squadMembers.filter((member) => member.squadId === squadId && member.status === "approved" && !member.removedAt);
+    return creators.length > 0 && creators.every((member) => Boolean(member.castLockedAt && member.castReferenceMediaId));
+  }
+
   async function loadProjectImage(database, user, project, rawUrl) {
     const imageUrl = cleanUrl(rawUrl);
     if (!imageUrl) return null;
@@ -2263,6 +2268,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
         const member = squad ? squadMembership(database, squad.id, user.id) : null;
         if (!squad || !member || member.status !== "approved") throw Object.assign(new Error("Join and receive owner approval before claiming a scene."), { statusCode: 403, code: "SQUAD_APPROVAL_REQUIRED" });
+        if (!hasLockedCastForEveryCreator(database, squad.id)) throw Object.assign(new Error("Every approved creator needs a locked character card before the story begins."), { statusCode: 409, code: "SQUAD_CAST_REQUIRED" });
         squad.sceneClaims ||= [];
         const approvedSceneCount = database.squadCards.filter((card) => card.squadId === squad.id && card.status === "approved" && !card.deletedAt).length;
         const nextSceneNumber = Math.min(approvedSceneCount + 1, 6);
@@ -2304,6 +2310,7 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
         const squad = database.squads.find((item) => item.id === squadId && !item.deletedAt);
         const member = squad ? squadMembership(database, squad.id, user.id) : null;
         if (!squad || !member || member.status !== "approved") throw Object.assign(new Error("The project owner must approve you before you can post."), { statusCode: 403, code: "SQUAD_APPROVAL_REQUIRED" });
+        if (!hasLockedCastForEveryCreator(database, squad.id)) throw Object.assign(new Error("Every approved creator needs a locked character card before the story begins."), { statusCode: 409, code: "SQUAD_CAST_REQUIRED" });
         const approvedSceneCount = database.squadCards.filter((card) => card.squadId === squad.id && card.status === "approved" && !card.deletedAt).length;
         const sceneNumber = approvedSceneCount < 6 ? approvedSceneCount + 1 : 0;
         if (sceneNumber) {

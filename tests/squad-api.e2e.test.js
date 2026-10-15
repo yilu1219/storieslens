@@ -158,6 +158,29 @@ test("private squad supports approval, shared contributions and credited assembl
     assert.equal(blockedReplacement.response.status, 409);
     assert.equal(blockedReplacement.payload.code, "SQUAD_CHARACTER_CARD_LOCKED");
 
+    const blockedBeforeFullCast = await request(baseUrl, `/api/squads/${squadId}/scenes/1/claim`, {
+      method: "POST", origin: true, cookies: [memberCookie], body: {}
+    });
+    assert.equal(blockedBeforeFullCast.response.status, 409);
+    assert.equal(blockedBeforeFullCast.payload.code, "SQUAD_CAST_REQUIRED");
+
+    const ownerMember = lockedCharacter.payload.squad.members.find((member) => member.role === "owner");
+    const ownerDatabase = JSON.parse(fs.readFileSync(databasePath, "utf8"));
+    const storedOwner = ownerDatabase.squadMembers.find((member) => member.id === ownerMember.id);
+    const ownerMediaId = "mia-character-card";
+    const ownerMediaPath = path.join(dataDirectory, "media", `${ownerMediaId}.png`);
+    fs.writeFileSync(ownerMediaPath, mediaBuffer);
+    ownerDatabase.media.push({ id: ownerMediaId, ownerId: storedOwner.userId, projectId: "", squadId, kind: "image", mimeType: "image/png", bytes: mediaBuffer.length, storageProvider: "local", storageRegion: "local", storageKey: `${ownerMediaId}.png`, filePath: ownerMediaPath, private: true, metadataRemoved: true, containsRealPerson: false, personalPhotoConsentId: "", createdAt: new Date().toISOString() });
+    fs.writeFileSync(databasePath, JSON.stringify(ownerDatabase, null, 2));
+    const savedOwnerCharacter = await request(baseUrl, `/api/squads/${squadId}/cast-reference`, {
+      method: "POST", origin: true, cookies: [ownerCookie], body: { mediaId: ownerMediaId, characterName: "Mia", description: "A brave storyteller with a lantern." }
+    });
+    assert.equal(savedOwnerCharacter.response.status, 200);
+    const lockedOwnerCharacter = await request(baseUrl, `/api/squads/${squadId}/cast-reference/${ownerMember.id}/lock`, {
+      method: "POST", origin: true, cookies: [ownerCookie], body: {}
+    });
+    assert.equal(lockedOwnerCharacter.response.status, 200);
+
     const claimedScene = await request(baseUrl, `/api/squads/${squadId}/scenes/1/claim`, {
       method: "POST", origin: true, cookies: [memberCookie], body: {}
     });
