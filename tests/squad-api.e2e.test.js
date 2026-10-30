@@ -158,11 +158,11 @@ test("private squad supports approval, shared contributions and credited assembl
     assert.equal(blockedReplacement.response.status, 409);
     assert.equal(blockedReplacement.payload.code, "SQUAD_CHARACTER_CARD_LOCKED");
 
-    const blockedBeforeFullCast = await request(baseUrl, `/api/squads/${squadId}/scenes/1/claim`, {
+    const claimedBeforeFullCast = await request(baseUrl, `/api/squads/${squadId}/scenes/1/claim`, {
       method: "POST", origin: true, cookies: [memberCookie], body: {}
     });
-    assert.equal(blockedBeforeFullCast.response.status, 409);
-    assert.equal(blockedBeforeFullCast.payload.code, "SQUAD_CAST_REQUIRED");
+    assert.equal(claimedBeforeFullCast.response.status, 200, "writing should never wait for every optional character card");
+    assert.equal(claimedBeforeFullCast.payload.squad.sceneClaims[0].sceneNumber, 1);
 
     const ownerMember = lockedCharacter.payload.squad.members.find((member) => member.role === "owner");
     const ownerDatabase = JSON.parse(fs.readFileSync(databasePath, "utf8"));
@@ -181,12 +181,7 @@ test("private squad supports approval, shared contributions and credited assembl
     });
     assert.equal(lockedOwnerCharacter.response.status, 200);
 
-    const claimedScene = await request(baseUrl, `/api/squads/${squadId}/scenes/1/claim`, {
-      method: "POST", origin: true, cookies: [memberCookie], body: {}
-    });
-    assert.equal(claimedScene.response.status, 200);
-    assert.equal(claimedScene.payload.squad.sceneClaims[0].sceneNumber, 1);
-    assert.equal(claimedScene.payload.squad.sceneClaims[0].isMine, true);
+    assert.equal(claimedBeforeFullCast.payload.squad.sceneClaims[0].isMine, true);
 
     const posted = await request(baseUrl, `/api/squads/${squadId}/cards`, {
       method: "POST", cookies: [memberCookie], body: { text: "Leo finds a silver feather beside the lantern.", yuGuided: true }

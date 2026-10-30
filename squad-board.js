@@ -257,12 +257,11 @@
       const members = squad.members.filter((member) => member.status === "approved");
       const owner = squad.viewer?.role === "owner";
       const classroom = squad.collaborationMode === "classroom";
-      const castReady = members.length > 0 && members.every((member) => member.castLocked && member.castReferenceImageUrl);
-      const assignmentTools = index === completed && !claim && castReady ? `<div class="scene-assignment-tools">
+      const assignmentTools = index === completed && !claim ? `<div class="scene-assignment-tools">
         <strong>${ui("How should this scene begin?", "这一幕怎么开始？")}</strong>
         <button type="button" data-claim-scene="${index + 1}">${ui("Sign up", "自由报名")}</button>
         ${owner ? `<button type="button" data-draw-scene="${index + 1}">${ui("Yu draws a task", "羽大师抽签")}</button>${classroom ? `<label><select data-assign-scene="${index + 1}"><option value="">${ui("Teacher assigns a student/group", "老师分配学生／小组")}</option>${members.map((member) => `<option value="${escapeHtml(member.id)}">${escapeHtml(member.displayName)}</option>`).join("")}</select><button type="button" data-confirm-assignment="${index + 1}">${ui("Assign", "分配")}</button></label>` : ""}` : ""}
-      </div>` : index === completed && !castReady ? `<small class="scene-cast-required">${ui("Each approved creator locks one character card before the story begins.", "请先让每位已批准创作者锁定一张角色卡，再开始共同写故事。")}</small>` : "";
+      </div>` : "";
       return `<article class="story-beat ${state}">
         <span class="story-beat-number">${index + 1}</span>
         <div><strong>${escapeHtml(copy.title)}</strong><p>${escapeHtml(copy.prompt)}</p><small>${escapeHtml(status)}</small></div>
@@ -592,8 +591,8 @@
     $("[data-cast-locked-note]").hidden = !viewer?.castLocked;
     if (!$('[data-cast-name]').value) $('[data-cast-name]').value = viewer?.castCharacterName || squad.viewer.displayName || "";
     $("[data-cast-progress]").textContent = castReady
-      ? ui(`✓ All ${cast.length} character cards are locked. You can write together.`, `✓ ${cast.length} 位创作者的角色卡均已锁定，可以一起写故事了。`)
-      : ui(`${references.length} / ${cast.length} character cards locked. Everyone completes one before writing begins.`, `${references.length} / ${cast.length} 张角色卡已锁定；每位创作者完成一张后，才一起开始写故事。`);
+      ? ui(`✓ All ${cast.length} character cards are locked. Your visuals can stay consistent.`, `✓ ${cast.length} 位创作者的角色卡均已锁定，后续画面会更一致。`)
+      : ui(`${references.length} / ${cast.length} character cards locked. Start writing now; add cards before an image needs that person.`, `${references.length} / ${cast.length} 张角色卡已锁定。现在就能开写；需要让某人出现在图片中前，再补好他的角色卡。`);
     const posterButton = $("[data-generate-cast-poster]");
     posterButton.hidden = squad.viewer?.role !== "owner";
     posterButton.disabled = !castReady;
@@ -1014,9 +1013,7 @@
     toolsButton.textContent = projectToolsOpen
       ? ui("Hide characters & settings", "收起人物与设置")
       : ui("Characters & settings", "人物与设置");
-    const approvedCreators = squad.members.filter((member) => member.status === "approved");
-    const castReady = approvedCreators.length > 0 && approvedCreators.every((member) => member.castLocked && member.castReferenceImageUrl);
-    $("[data-composer]").hidden = !approved || !castReady;
+    $("[data-composer]").hidden = !approved;
     const viewerMember = squad.members.find((member) => member.isViewer);
     $("[data-composer-character-action]").hidden = !approved || activeStoryBeat(squad).index !== 0 || Boolean(viewerMember?.castLocked);
     const anchorStudio = $("[data-anchor-studio]");

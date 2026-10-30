@@ -27,6 +27,7 @@ test("Story Squad guides one shared story through six child-friendly scenes", ()
   assert(script.includes("activeStoryBeat(activeSquad)"), "Yu should guide the scene the squad is currently making");
   assert(script.includes("/scenes/${sceneNumber}/claim") && api.includes("SQUAD_SCENE_ALREADY_CLAIMED"), "one approved creator should be able to claim the current scene without adding a separate task system");
   assert(script.includes("data-draw-scene") && script.includes("data-confirm-assignment") && script.includes("自由报名"), "teachers should be able to draw, assign, or leave each scene open for voluntary sign-up");
+  assert(!api.includes("SQUAD_CAST_REQUIRED") && script.includes('$("[data-composer]").hidden = !approved'), "writing should begin without waiting for every optional character card");
   assert(read("start.html").includes('data-collaboration-mode="family"') && read("start.html").includes('data-collaboration-mode="classroom"'), "squad creators should choose family or classroom mode once during setup");
   assert(read("start.html").includes('<label class="work-file-picker">') && !read("start.css").includes('.wuxia-quick-mode [data-work-file-field]'), "Wuxia squads should offer a working direct upload for text or images");
   assert(read("start.html").indexOf("data-collaboration-mode-picker") < read("start.html").indexOf('class="setup-fields step-panel"'), "family and classroom modes should be visible before the detailed setup screen");
