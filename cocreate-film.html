@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta name="description" content="Invite someone to add scenes and make a short co-created film together. Preview is free." />
+    <title>共创电影 · StoriesLens</title>
+    <link rel="stylesheet" href="parent-book.css?v=20261110-3" />
+    <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
+    <link rel="stylesheet" href="cocreate-film.css?v=20261110-3" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to co-create film</a>
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <img src="assets/storieslens-logo.png" alt="" width="40" height="40" />
+        <span><strong class="brand-name">StoriesLens</strong><small data-i18n="brand-sub">共创电影</small></span>
+      </a>
+      <div class="topbar-actions">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-locale="zh" aria-pressed="true">中文</button>
+          <button type="button" data-locale="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      <p class="kicker" data-i18n="kicker">CO-CREATE A FILM · 共创电影</p>
+      <h1 data-i18n="title">邀请同伴一起加场景，一键做成短片</h1>
+      <p class="lede" data-i18n="lede">创建一个私密小组，把链接或短码发给另一部手机上的朋友。每人可以写下场景、选配照片，再一键做成可播放的电影。不需要走羽大师写作辅导。预览和这部短片今天免费。</p>
+      <p class="status" data-status role="status" aria-live="polite"></p>
+      <p class="pay-unavailable" data-video-note></p>
+
+      <section class="card" data-create-card>
+        <h2 class="kicker" data-i18n="create-kicker">创建私密共创小组</h2>
+        <div class="fields">
+          <label class="field"><span data-i18n="title-label">电影标题</span><input data-title maxlength="80" /></label>
+          <label class="field"><span data-i18n="style-label">风格（选填）</span><input data-style maxlength="120" /></label>
+          <label class="field"><span data-i18n="name-label">你的署名</span><input data-display-name maxlength="40" /></label>
+        </div>
+        <label class="check"><input type="checkbox" data-adult-confirm /><span data-i18n="adult-confirm">我是成年人，负责组织这个小组。孩子可以一起加场景，但不会在这里付款。</span></label>
+        <div class="actions" style="margin-top:14px">
+          <button class="primary" type="button" data-create data-i18n="create">创建并得到分享链接</button>
+        </div>
+      </section>
+
+      <section class="card" data-join-card hidden>
+        <h2 class="kicker" data-i18n="join-kicker">加入这部共创电影</h2>
+        <p data-join-lede></p>
+        <label class="field"><span data-i18n="name-label">你的署名</span><input data-join-name maxlength="40" /></label>
+        <label class="check"><input type="checkbox" data-join-adult /><span data-i18n="join-adult">我已了解这是私密共创。署名请用名字或昵称，不要写完整法定姓名。</span></label>
+        <div class="actions" style="margin-top:14px">
+          <button class="primary" type="button" data-join data-i18n="join">加入小组</button>
+        </div>
+      </section>
+
+      <section class="card" data-group-card hidden>
+        <h2 class="kicker" data-group-title></h2>
+        <p data-group-meta></p>
+        <div class="share-box" data-share-box>
+          <span data-i18n="share-ready">把这条私密链接或短码发给同伴。不会出现在公开目录或搜索结果。</span>
+          <strong data-share-url></strong>
+          <code data-share-code></code>
+          <div class="actions-row" style="margin-top:12px">
+            <button class="secondary" type="button" data-copy-share data-i18n="copy-share">复制链接</button>
+          </div>
+        </div>
+
+        <ol class="scene-list" data-scene-list></ol>
+
+        <h3 class="kicker" data-i18n="add-kicker">添加一个场景</h3>
+        <label class="field"><span data-i18n="scene-label">动作或对白</span><textarea data-scene-text maxlength="400" rows="4"></textarea></label>
+        <div class="upload-row">
+          <label class="upload-btn"><input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" data-scene-image /><span data-i18n="photo">可选：添加一张照片</span></label>
+        </div>
+        <p class="notice" data-i18n="safety-notice">请不要上传身份证、学生证，或带有电话、地址、邮箱、二维码的画面。如果照片里有其他人的脸，请确认你是成年人，并且已经得到使用许可。</p>
+        <label class="check"><input type="checkbox" data-photo-consent /><span data-i18n="photo-consent">如使用照片：我是成年人，并已获得使用这些照片的许可，不会在未同意时上传他人的脸。</span></label>
+        <p class="notice" data-image-name></p>
+        <div class="actions" style="margin-top:14px">
+          <button class="secondary" type="button" data-add-scene data-i18n="add-scene">加入这一场</button>
+          <button class="primary" type="button" data-make-film data-i18n="make-film">一键做成电影</button>
+        </div>
+      </section>
+
+      <section class="card preview-stage" data-film-card hidden>
+        <h2 class="kicker" data-i18n="film-kicker">成片预览</h2>
+        <p data-film-mode></p>
+        <div class="film-frame">
+          <video data-film-video controls playsinline></video>
+        </div>
+        <p class="notice" data-film-help></p>
+        <div class="actions">
+          <button class="primary" type="button" data-download-film data-i18n="download-film">保存或分享这部短片</button>
+        </div>
+        <p class="adult-note" data-i18n="pay-note">预览和这部短片今天免费。付费电影包还没有接到这条线上。成功页本身不会被当成已付款，这里也没有给孩子使用的付款表单。</p>
+      </section>
+
+      <p class="trust">
+        <span data-i18n="trust-private">默认私密 · 不公开列表</span>
+        <span data-i18n="trust-free">创建、加入和预览免费</span>
+      </p>
+    </main>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
+    <script src="parent-book-safety.js?v=20261110-1"></script>
+    <script src="cocreate-film.js?v=20261110-3"></script>
+  </body>
+</html>

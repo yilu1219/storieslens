@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta name="description" content="Teachers upload student work photos and turn them into a private class ebook that parents can open on another phone." />
+    <title>教师班级出书 · StoriesLens</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
+    <link rel="stylesheet" href="parent-book.css?v=20261110-2" />
+    <link rel="stylesheet" href="family-book-ui.css?v=20261110-2" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to teacher book</a>
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <img src="assets/storieslens-logo.png" alt="" width="40" height="40" />
+        <span><strong class="brand-name">StoriesLens</strong><small data-i18n="brand-sub">教师班级出书</small></span>
+      </a>
+      <div class="topbar-actions">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-locale="zh" aria-pressed="true">中文</button>
+          <button type="button" data-locale="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      <p class="kicker" data-i18n="kicker">FOR TEACHERS · 教师出书</p>
+      <h1 data-i18n="title">上传学生作业，做成可分享给家长的班级电子书</h1>
+      <p class="lede" data-i18n="lede">教师免费上传作业照片，预览班级书，再生成私密链接或短码发给家长。家长可免费翻阅；正式电子版 ¥19.9（约 $2.99），印刷版 ¥129（约 $17.99）。不需要走羽大师写作辅导，也不在这里给孩子结账。</p>
+
+      <section class="card">
+        <h2 class="kicker" data-i18n="details-kicker">班级信息</h2>
+        <div class="fields">
+          <label class="field"><span data-i18n="class-label">班级名称</span><input data-class-name maxlength="80" /></label>
+          <label class="field"><span data-i18n="teacher-label">教师姓名（选填）</span><input data-teacher-name maxlength="80" /></label>
+          <label class="field"><span data-i18n="title-label">书名</span><input data-title maxlength="80" /></label>
+        </div>
+        <div class="upload-row">
+          <label class="upload-btn"><input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" multiple data-album /><span data-i18n="album">从相册选择作业照片</span></label>
+          <label class="upload-btn"><input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" capture="environment" data-camera /><span data-i18n="camera">拍照上传</span></label>
+        </div>
+        <p class="notice" data-i18n="safety-notice">请上传学生作业、画作或作文照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。每页署名请用名字或首字母，不要写完整法定姓名或学号。</p>
+        <p class="adult-note" data-i18n="adult-note">这条线给教师或成年人使用。学生和家长预览不需要付款；付费下载或印刷由家长在自己的手机上完成。</p>
+        <div class="thumbs" data-thumbs></div>
+        <p class="status" data-status role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card preview-stage" data-preview-card hidden>
+        <h2 class="kicker" data-i18n="preview-kicker">预览班级书</h2>
+        <div class="book-frame"><img data-page-image alt="" /></div>
+        <div class="pager">
+          <button type="button" data-prev data-i18n="prev">上一页</button>
+          <span class="page-label" data-page-label></span>
+          <button type="button" data-next data-i18n="next">下一页</button>
+        </div>
+        <div class="actions">
+          <button class="secondary" type="button" data-download-preview data-i18n="download-preview">下载教师预览 A5 PDF</button>
+          <button class="primary" type="button" data-create-share data-i18n="create-share">生成家长私密链接</button>
+        </div>
+        <div class="share-box" data-share-box hidden>
+          <span data-i18n="share-ready">私密链接已生成。不会出现在公开目录或搜索结果。</span>
+          <strong data-share-url></strong>
+          <code data-share-code></code>
+          <div class="actions-row" style="margin-top:12px">
+            <button class="secondary" type="button" data-copy-share data-i18n="copy-share">复制链接</button>
+            <button class="secondary" type="button" data-open-share data-i18n="open-share">打开家长页</button>
+          </div>
+        </div>
+      </section>
+      <p class="trust">
+        <span data-i18n="trust-private">默认私密 · 不公开列表</span>
+        <span data-i18n="trust-free">教师预览免费 · 家长付费下载或印刷</span>
+      </p>
+    </main>
+    <div class="print-root" data-print-root aria-hidden="true"></div>
+    <script src="vendor/pdf-lib.min.js"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
+    <script src="parent-book-safety.js?v=20261110-1"></script>
+    <script src="teacher-book.js?v=20261110-2"></script>
+  </body>
+</html>
