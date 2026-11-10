@@ -6,6 +6,14 @@ function stripeObjectId(value, prefix) {
   return new RegExp(`^${prefix}_(?:test_|live_)?[A-Za-z0-9]+$`).test(id) ? id : "";
 }
 
+function priceIdForOffer(offer, env = process.env) {
+  if (!offer) return "";
+  const primary = stripeObjectId(env[offer.priceEnv], "price");
+  if (primary) return primary;
+  if (offer.priceEnvFallback) return stripeObjectId(env[offer.priceEnvFallback], "price");
+  return "";
+}
+
 function publicOrigin(value, env = process.env) {
   const raw = String(value || env.PUBLIC_BASE_URL || "").trim();
   if (!raw) return "";
@@ -26,7 +34,7 @@ function familyCheckoutStatus(env = process.env) {
   const origin = publicOrigin(env.PUBLIC_BASE_URL, env);
   const offers = listFamilyBookOffers().map((offer) => {
     const full = getFamilyBookOffer(offer.id);
-    const priceId = stripeObjectId(env[full.priceEnv], "price");
+    const priceId = priceIdForOffer(full, env);
     let checkoutReady = Boolean(keyMode) && Boolean(origin) && (keyMode === "test" || Boolean(priceId));
     if (liveExpected && keyMode !== "live") checkoutReady = false;
     if (!liveExpected && keyMode === "live") checkoutReady = false;
@@ -44,10 +52,10 @@ function familyCheckoutStatus(env = process.env) {
     offers,
     noticeZh: configured
       ? "付款由 Stripe 托管结账完成。成功页本身不会解锁下载或印刷订单，必须等服务器确认付款。"
-      : "预览和短片仍然免费。电子版 ¥19.9（约 $2.99）、印刷版 ¥129（约 $17.99）需要确认付款后才能完成。当前还没有接通可用的收款，因此不会把订单标记为已支付，也不会假装已经下单成功。",
+      : "预览和短片仍然免费。电子版 ¥19.9（约 $2.99）。印刷请先选择：软壳 ¥129（约 $17.99），精美硬壳 ¥199（约 $27.99）。需要服务器确认付款后才能完成。当前还没有接通可用的收款，因此不会把订单标记为已支付，也不会假装已经下单成功。",
     noticeEn: configured
       ? "Payment uses Stripe hosted checkout. A success page alone will not unlock a download or print order; the server must confirm the payment."
-      : "Preview and the short film stay free. The digital edition at ¥19.9 (about $2.99) and the printed book at ¥129 (about $17.99) require a confirmed payment. Checkout is not connected yet, so an order will not be marked paid and we will not pretend it succeeded."
+      : "Preview and the short film stay free. The digital edition is ¥19.9 (about $2.99). Printed books are a choice: softcover ¥129 (about $17.99) or premium hardcover ¥199 (about $27.99). Each requires a confirmed payment. Checkout is not connected yet, so an order will not be marked paid and we will not pretend it succeeded."
   };
 }
 
@@ -71,6 +79,7 @@ module.exports = {
   entitlementFromQuery,
   familyCheckoutStatus,
   offerCheckoutReady,
+  priceIdForOffer,
   publicOrigin,
   stripeObjectId
 };
@@ -94,7 +103,7 @@ async function createFamilyCheckoutSession({ env = process.env, order, offer, su
   const secretKey = String(env.STRIPE_SECRET_KEY || "").trim();
   const keyMode = secretKey.match(/^(?:sk|rk)_(test|live)_/)?.[1];
   const origin = publicOrigin(env.PUBLIC_BASE_URL, env);
-  const priceId = stripeObjectId(env[offer.priceEnv], "price");
+  const priceId = priceIdForOffer(offer, env);
   if (keyMode === "live" && !priceId) {
     throw Object.assign(new Error("This live Stripe product price is not configured yet."), { statusCode: 503, code: "STRIPE_PRICE_NOT_CONFIGURED" });
   }
@@ -124,6 +133,7 @@ async function createFamilyCheckoutSession({ env = process.env, order, offer, su
   form.set("line_items[0][quantity]", "1");
   form.set("metadata[order_id]", order.id);
   form.set("metadata[offer_id]", offer.id);
+  form.set("metadata[cover]", offer.cover || "");
   form.set("metadata[family_book]", "1");
   form.set("payment_intent_data[metadata][order_id]", order.id);
   const apiVersion = String(env.STRIPE_API_VERSION || "").trim();

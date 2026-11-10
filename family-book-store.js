@@ -202,9 +202,18 @@ function createFamilyBookStore({ root } = {}) {
     if (adultConfirmed !== true) throw Object.assign(new Error("adult_confirmation_required"), { statusCode: 400, reasonCode: "adult_confirmation_required" });
     const email = String(contact?.email || "").trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error("adult_email_required"), { statusCode: 400, reasonCode: "adult_email_required" });
+    const phone = String(shipping?.phone || contact?.phone || "").trim();
     if (offer.kind === "print") {
-      const required = ["name", "line1", "city", "country"];
-      if (required.some((key) => !String(shipping?.[key] || "").trim())) {
+      const address = {
+        name: shipping?.name,
+        phone,
+        line1: shipping?.line1,
+        city: shipping?.city,
+        region: shipping?.region,
+        postal: shipping?.postal,
+        country: shipping?.country
+      };
+      if (Object.values(address).some((value) => !String(value || "").trim())) {
         throw Object.assign(new Error("shipping_required"), { statusCode: 400, reasonCode: "shipping_required" });
       }
     }
@@ -223,10 +232,11 @@ function createFamilyBookStore({ root } = {}) {
       contact: {
         name: String(contact?.name || "").trim().slice(0, 80),
         email,
-        phone: String(contact?.phone || "").trim().slice(0, 40)
+        phone: String(contact?.phone || phone || "").trim().slice(0, 40)
       },
       shipping: offer.kind === "print" ? {
         name: String(shipping.name || "").trim().slice(0, 80),
+        phone: phone.slice(0, 40),
         line1: String(shipping.line1 || "").trim().slice(0, 160),
         line2: String(shipping.line2 || "").trim().slice(0, 160),
         city: String(shipping.city || "").trim().slice(0, 80),
@@ -234,6 +244,11 @@ function createFamilyBookStore({ root } = {}) {
         postal: String(shipping.postal || "").trim().slice(0, 20),
         country: String(shipping.country || "").trim().slice(0, 80)
       } : null,
+      cover: offer.cover || "",
+      deliveryEmail: "",
+      deliveryEmailUpdatedAt: "",
+      emailSentAt: "",
+      emailSendCount: 0,
       createdAt: new Date().toISOString(),
       paidAt: "",
       stripeSessionId: "",
@@ -273,8 +288,11 @@ function createFamilyBookStore({ root } = {}) {
       paidAt: order.paidAt || "",
       grantToken: order.paid ? order.grantToken : "",
       fulfillment: order.fulfillment,
+      cover: order.cover || "",
       shareToken: order.shareToken || "",
       contactEmail: order.contact?.email || "",
+      deliveryEmail: order.paid === true ? (order.deliveryEmail || "") : "",
+      emailSent: order.paid === true && Boolean(order.emailSentAt),
       shipping: order.shipping,
       createdAt: order.createdAt
     };
@@ -313,9 +331,37 @@ function createFamilyBookStore({ root } = {}) {
   }
 
   function paidOrderForDownload(orderId, grantToken) {
+    if (!grantToken) return null;
     const entitlement = getEntitlement({ orderId, grantToken });
     if (!entitlement.paid) return null;
     return loadOrder(orderId);
+  }
+
+  function isDeliveryEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+  }
+
+  function saveDeliveryEmail(orderId, grantToken, email) {
+    const order = paidOrderForDownload(orderId, grantToken);
+    if (!order) return null;
+    if (order.kind !== "digital") {
+      throw Object.assign(new Error("This paid order is a manual print request, not an emailed PDF."), { statusCode: 400, code: "not_digital" });
+    }
+    const cleaned = String(email || "").trim().slice(0, 120);
+    if (!isDeliveryEmail(cleaned)) {
+      throw Object.assign(new Error("A delivery email is required before the official PDF can be sent."), { statusCode: 400, code: "delivery_email_required" });
+    }
+    order.deliveryEmail = cleaned;
+    order.deliveryEmailUpdatedAt = new Date().toISOString();
+    return publicOrder(saveOrder(order));
+  }
+
+  function markDeliveryEmailSent(orderId) {
+    const order = loadOrder(orderId);
+    if (!order || order.paid !== true || !order.deliveryEmail) return null;
+    order.emailSentAt = new Date().toISOString();
+    order.emailSendCount = Number(order.emailSendCount || 0) + 1;
+    return saveOrder(order);
   }
 
   return {
@@ -329,9 +375,11 @@ function createFamilyBookStore({ root } = {}) {
     getShareByToken,
     listShareIndex,
     loadOrder,
+    markDeliveryEmailSent,
     markOrderPaid,
     paidOrderForDownload,
     publicOrder,
+    saveDeliveryEmail,
     publicShare
   };
 }

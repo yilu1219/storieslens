@@ -8,7 +8,7 @@
     <meta name="description" content="A private StoriesLens class or family book. This page is not listed publicly." />
     <title>私密班级书 · StoriesLens</title>
     <link rel="stylesheet" href="parent-book.css?v=20261110-2" />
-    <link rel="stylesheet" href="family-book-ui.css?v=20261110-2" />
+    <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
     <header class="topbar">
@@ -43,17 +43,24 @@
           </div>
           <div class="price-card">
             <b data-i18n="price-digital">电子版 A5 PDF · ¥19.9（约 $2.99）</b>
-            <p data-i18n="price-digital-copy">确认付款后才能下载正式 A5 电子版。成功页本身不会解锁文件。</p>
+            <p data-i18n="price-digital-copy">服务器确认付款后，需要你再确认接收邮箱，正式 A5 PDF 才会发到这个邮箱。成功页或链接参数不会发信，也不会解锁下载。</p>
             <label class="field" style="margin-top:12px"><span data-i18n="contact-email">成人邮箱</span><input type="email" data-contact-email autocomplete="email" /></label>
             <label class="check"><input type="checkbox" data-adult-confirm /><span data-i18n="adult-confirm">我是家长或成年人，孩子不会在此付款。</span></label>
             <button class="primary" type="button" data-buy-digital data-i18n="buy-digital" style="margin-top:12px;width:100%">购买电子版</button>
           </div>
           <div class="price-card">
-            <b data-i18n="price-print">印刷成书 · ¥129（约 $17.99）</b>
-            <p data-i18n="price-print-copy">确认付款后，我们会按你留下的地址人工安排首批印刷和寄送。没有自动物流跟踪，也不假装已对接印刷厂。</p>
+            <b data-i18n="price-print">印刷成书</b>
+            <p data-i18n="price-print-copy">请先选择精美硬壳或软壳。确认付款后，我们按你留下的地址人工安排首批印刷和寄送。没有自动物流跟踪，也不假装已对接印刷厂。</p>
             <div class="checkout-form">
+              <fieldset class="cover-choice">
+                <legend data-i18n="cover-legend">先选择封面</legend>
+                <label class="check"><input type="radio" name="share-print-cover" value="family-print-hardcover" data-cover-option /><span data-i18n="cover-hardcover">精美硬壳 · ¥199（约 $27.99）</span></label>
+                <label class="check"><input type="radio" name="share-print-cover" value="family-print-softcover" data-cover-option /><span data-i18n="cover-softcover">软壳 · ¥129（约 $17.99）</span></label>
+              </fieldset>
+              <p data-print-price></p>
               <label class="field"><span data-i18n="contact-name">成人姓名</span><input data-contact-name autocomplete="name" /></label>
-              <label class="field"><span data-i18n="ship-line1">收件地址</span><input data-ship-line1 autocomplete="address-line1" /></label>
+              <label class="field"><span data-i18n="contact-phone">成人电话</span><input data-ship-phone autocomplete="tel" maxlength="40" /></label>
+              <label class="field"><span data-i18n="ship-line1">街道地址</span><input data-ship-line1 autocomplete="address-line1" /></label>
               <label class="field"><span data-i18n="ship-city">城市</span><input data-ship-city autocomplete="address-level2" /></label>
               <label class="field"><span data-i18n="ship-region">省/州</span><input data-ship-region autocomplete="address-level1" /></label>
               <label class="field"><span data-i18n="ship-postal">邮编</span><input data-ship-postal autocomplete="postal-code" /></label>
@@ -63,12 +70,17 @@
           </div>
           <p class="pay-unavailable" data-pay-note></p>
           <p class="pay-unlocked" data-pay-unlocked hidden></p>
+          <div class="checkout-form" data-delivery-box hidden>
+            <label class="field"><span data-i18n="delivery-email">接收正式 PDF 的邮箱</span><input type="email" data-delivery-email autocomplete="email" maxlength="120" required /></label>
+            <p data-i18n="delivery-email-copy">请确认这个邮箱。我们只在服务器确认付款之后，把正式 A5 PDF 发到这里。成功页不会自动发信。</p>
+            <button class="primary" type="button" data-send-book-email data-i18n="send-book-email">确认邮箱并发送正式 PDF</button>
+          </div>
           <div class="actions" data-paid-actions hidden>
             <button class="primary" type="button" data-download-pdf data-i18n="download-pdf">下载已购买的 A5 PDF</button>
           </div>
         </section>
       </section>
     </main>
-    <script src="book-share.js?v=20261110-2"></script>
+    <script src="book-share.js?v=20261110-3"></script>
   </body>
 </html>

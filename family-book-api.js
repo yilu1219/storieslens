@@ -3,9 +3,34 @@ const { createFamilyBookStore } = require("./family-book-store");
 const { familyCheckoutStatus, entitlementFromQuery, createFamilyCheckoutSession, retrieveStripeCheckoutSession } = require("./family-book-payments");
 const { getFamilyBookOffer } = require("./family-book-catalog");
 const { inspectParentBookRequest } = require("./parent-book-safety");
+const { mailConfigured, sendPaidBookPdf } = require("./family-book-mail");
 
-function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl } = {}) {
+function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch } = {}) {
   const books = store || createFamilyBookStore();
+
+  async function officialPdfForOrder(order, body) {
+    let pages = [];
+    if (order.shareToken) {
+      const share = books.getShareByToken(order.shareToken, { includePages: true });
+      if (!share?.pages?.length) {
+        throw Object.assign(new Error("The saved book for this paid order is no longer available."), { statusCode: 409, code: "book_unavailable" });
+      }
+      pages = share.pages;
+    } else {
+      pages = Array.isArray(body.pages) ? body.pages : [];
+    }
+    const inspection = inspectParentBookRequest({ title: body.title, pages });
+    if (inspection.blocked) {
+      throw Object.assign(new Error("This photo cannot be used."), { statusCode: 422, reasonCode: inspection.reasonCode });
+    }
+    return buildParentBookPdf({
+      title: body.title || order.offerId,
+      childName: body.authorName || body.childName,
+      language: body.language || order.locale,
+      pages,
+      filenameHint: body.title
+    });
+  }
 
   function noIndex(response) {
     response.setHeader?.("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -77,7 +102,7 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
         }
         const offer = getFamilyBookOffer(body.offerId);
         if (!offer) {
-          sendJson(response, 400, { error: "Choose the digital or printed family book.", paid: false });
+          sendJson(response, 400, { error: "Choose the digital edition, softcover, or premium hardcover.", paid: false });
           return true;
         }
         const order = books.createOrder({
@@ -160,30 +185,24 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
         const body = await readJsonBody(request, 28_000_000);
         const order = books.paidOrderForDownload(body.orderId, body.grantToken);
         if (!order) {
-          sendJson(response, 402, { paid: false, error: "This download is not unlocked. A success page is not proof of payment." });
+          sendJson(response, 402, { paid: false, sent: false, error: "This download is not unlocked. A success page is not proof of payment." });
           return true;
         }
         if (order.kind !== "digital") {
           sendJson(response, 400, { error: "This paid order is a manual print request, not a digital download." });
           return true;
         }
-        let pages = Array.isArray(body.pages) ? body.pages : [];
-        if ((!pages.length) && order.shareToken) {
-          const share = books.getShareByToken(order.shareToken, { includePages: true });
-          pages = share?.pages || [];
-        }
-        const inspection = inspectParentBookRequest({ title: body.title, pages });
-        if (inspection.blocked) {
-          sendJson(response, 422, { error: "This photo cannot be used.", reasonCode: inspection.reasonCode });
+        if (!order.deliveryEmail) {
+          sendJson(response, 409, {
+            paid: true,
+            sent: false,
+            code: "delivery_email_required",
+            error: "Confirm a delivery email before downloading the official PDF. A success page does not send the file.",
+            errorZh: "请先确认接收邮箱，再下载正式 PDF。成功页不会发信。"
+          });
           return true;
         }
-        const result = await buildParentBookPdf({
-          title: body.title || order.offerId,
-          childName: body.authorName || body.childName,
-          language: body.language || order.locale,
-          pages,
-          filenameHint: body.title
-        });
+        const result = await officialPdfForOrder(order, body);
         sendBinary(response, {
           buffer: result.buffer,
           contentType: "application/pdf",
@@ -191,7 +210,70 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
           fallbackName: "storieslens-book.pdf"
         });
       } catch (error) {
-        sendJson(response, error.statusCode || 400, { error: error.message || "download_failed", paid: false });
+        sendJson(response, error.statusCode || 400, { error: error.message || "download_failed", paid: false, code: error.code || error.reasonCode });
+      }
+      return true;
+    }
+
+    if (pathName === "/api/family-book/email" && request.method === "POST") {
+      if (consumeRateLimit && !consumeRateLimit(request, response, { bucket: "family-book-email", limit: 8, windowMs: 60 * 60 * 1000 })) return true;
+      let emailSaved = false;
+      let paidOrderId = "";
+      try {
+        const body = await readJsonBody(request, 28_000_000);
+        const order = books.paidOrderForDownload(body.orderId, body.grantToken);
+        if (!order) {
+          sendJson(response, 402, {
+            paid: false,
+            sent: false,
+            emailSaved: false,
+            error: "The official PDF is not emailed until the server confirms payment. A success page or query string is not proof."
+          });
+          return true;
+        }
+        paidOrderId = order.id;
+        const saved = books.saveDeliveryEmail(order.id, body.grantToken, body.email);
+        emailSaved = true;
+        if (!mailConfigured(env)) {
+          sendJson(response, 503, {
+            paid: true,
+            sent: false,
+            emailSaved: true,
+            code: "EMAIL_NOT_CONFIGURED",
+            deliveryEmail: saved.deliveryEmail,
+            error: "Email delivery is not configured. Payment is confirmed and the address is saved, but the PDF was not sent.",
+            errorZh: "付款已确认，邮箱也已保存。服务器还没接通发信，正式 PDF 这次没有发出。"
+          });
+          return true;
+        }
+        const latest = books.loadOrder(order.id);
+        const result = await officialPdfForOrder(latest, body);
+        await sendPaidBookPdf({
+          env,
+          fetchImpl,
+          to: latest.deliveryEmail,
+          filename: result.filename,
+          pdfBuffer: result.buffer,
+          title: body.title || latest.offerId,
+          orderId: latest.id,
+          attempt: Number(latest.emailSendCount || 0) + 1
+        });
+        books.markDeliveryEmailSent(latest.id);
+        sendJson(response, 200, {
+          paid: true,
+          sent: true,
+          emailSaved: true,
+          deliveryEmail: latest.deliveryEmail
+        });
+      } catch (error) {
+        if (!emailSaved && paidOrderId) emailSaved = Boolean(books.loadOrder(paidOrderId)?.deliveryEmail);
+        sendJson(response, error.statusCode || 400, {
+          paid: Boolean(paidOrderId),
+          sent: false,
+          emailSaved,
+          code: error.code || error.reasonCode || "email_failed",
+          error: error.message || "email_failed"
+        });
       }
       return true;
     }

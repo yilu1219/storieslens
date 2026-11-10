@@ -4,7 +4,7 @@ A mobile-first chain now lives in `/workspace/StoriesLens/app` so Yi can walk it
 
 1. Parents upload phone photos, get an auto cover, fill an author name and an editable author-intro, review optional suggestions, preview the book, and make a free short film.
 2. Teachers upload student work, preview a class ebook, and share a private link or short code with parents.
-3. Official digital A5 PDF download (¥19.9 / about $2.99) and print orders (¥129 / about $17.99) require a confirmed server-side payment. Preview and the short film stay free.
+3. Official digital A5 PDF (¥19.9 / about $2.99) is emailed only after the server confirms payment and the buyer confirms a delivery email. Printed books are chosen before checkout: softcover ¥129 (about $17.99) or premium hardcover ¥199 (about $27.99). Preview and the short film stay free.
 
 ## How to run locally
 
@@ -30,26 +30,31 @@ cd /workspace/StoriesLens/app
 node --test tests/parent-book.test.js tests/family-book.test.js
 ```
 
-These cover A5 page size without LibreOffice, artwork/homework allow rules, ID/contact blocks, optional suggestions, ¥19.9 / ¥129 catalog prices, unconfigured checkout, entitlement that never unlocks from a success query, unpaid official PDF (402), paid download after a server-side grant, private share token + short code with no public listing, and homepage / teacher route wiring.
+These cover A5 page size without LibreOffice, artwork/homework allow rules, ID/contact blocks, optional suggestions, catalog prices (digital ¥19.9, softcover ¥129, hardcover ¥199), unconfigured checkout, entitlement that never unlocks from a success query, official PDF email only after a confirmed digital entitlement, unpaid official PDF (402), paid download after a server-side grant and a saved delivery email, private share token + short code with no public listing, and homepage / teacher route wiring.
 
 ## What is free vs paid
 
 - Free: parent and teacher book preview, teacher preview A5 PDF, parent short film, parent viewing a private teacher share on another phone (including WeChat).
-- ¥19.9 (about $2.99): official digital A5 PDF download, only after the server confirms payment.
-- ¥129 (about $17.99): printed book request, only after the server confirms payment. The first batch is arranged and fulfilled manually from the adult contact and shipping address. There is no automated tracking and no claimed print factory or fulfillment partner.
+- ¥19.9 (about $2.99): official digital A5 PDF. After the server confirms payment, the buyer must confirm a delivery email. `POST /api/family-book/email` then builds the official PDF and sends it with the existing Resend mail path (`RESEND_API_KEY`, `AUTH_EMAIL_FROM`). The buyer can resend to the saved or updated address. If Resend is not configured, the payment stays confirmed and the address is still saved, but the API returns 503 and does not claim the PDF was sent. Download remains available from `/api/family-book/download` after that address is saved. An unpaid or preview PDF is never emailed.
+- ¥129 (about $17.99): softcover (`family-print-softcover`). Stripe Price ID: `STRIPE_PRICE_FAMILY_PRINT_SOFTCOVER`, with `STRIPE_PRICE_FAMILY_PRINT` kept as a fallback for this cover only.
+- ¥199 (about $27.99): premium hardcover (`family-print-hardcover`). Stripe Price ID: `STRIPE_PRICE_FAMILY_PRINT_HARDCOVER`.
 
-A checkout success page, `?paid=1`, or any other query string is never proof of payment. `/api/parent-book/pdf` now returns 402; the official file is issued only by `/api/family-book/download` after a server-confirmed entitlement. Minors do not check out: adult confirmation and an adult email are required, and print also needs a shipping address. There is no child-facing payment form.
+The buyer chooses 精美硬壳 or 软壳 before checkout on the parent page and on the private parent link opened from the teacher page. Print still needs an adult shipping address: name, phone, country, region, city, street, and postal code. The first batch is arranged and fulfilled manually after a real confirmed payment. There is no automated tracking and no claimed print factory, print partner, or live shipping integration.
+
+A checkout success page, `?paid=1`, or any other query string is never proof of payment and never triggers an email or download. `/api/parent-book/pdf` returns 402; the official file is issued only by `/api/family-book/download` or `/api/family-book/email` after a server-confirmed entitlement. Minors do not check out: adult confirmation and an adult email are required. There is no child-facing payment form. Teachers do not check out on the teacher page.
 
 ## Payment limitations (current workspace)
 
-Checkout reuses Stripe hosted checkout only through the dedicated family-book path (`/api/family-book/checkout`), not `/api/checkout-link` (that path is for signed-in credit packages). Live Price IDs are not invented. If `STRIPE_SECRET_KEY`, `PUBLIC_BASE_URL`, or — in live mode — `STRIPE_PRICE_FAMILY_DIGITAL` / `STRIPE_PRICE_FAMILY_PRINT` are missing, the UI still shows ¥19.9 / ¥129 and a clear unpaid / unavailable state. Empty placeholders for those env names are documented in `app/.env.example`. When keys are present later, test mode may use Stripe `price_data` in CNY; live mode still requires real Price IDs.
+Checkout reuses Stripe hosted checkout only through the dedicated family-book path (`/api/family-book/checkout`), not `/api/checkout-link` (that path is for signed-in credit packages). Live Price IDs are not invented. If `STRIPE_SECRET_KEY`, `PUBLIC_BASE_URL`, or — in live mode — `STRIPE_PRICE_FAMILY_DIGITAL` / `STRIPE_PRICE_FAMILY_PRINT_SOFTCOVER` (fallback `STRIPE_PRICE_FAMILY_PRINT`) / `STRIPE_PRICE_FAMILY_PRINT_HARDCOVER` are missing, the UI still shows ¥19.9, softcover ¥129, and hardcover ¥199, and a clear unpaid / unavailable state. Empty placeholders for those env names are documented in `.env.example`. When keys are present later, test mode may use Stripe `price_data` in CNY; live mode still requires real Price IDs. Paid-book email uses the same Resend configuration as sign-in mail. No second email vendor is added. WeChat Pay and Alipay are not part of this checkout.
+
+Railway still needs the operator to set those names on the service (no values belong in git): `STRIPE_SECRET_KEY`, `PUBLIC_BASE_URL`, `STRIPE_PRICE_FAMILY_DIGITAL`, `STRIPE_PRICE_FAMILY_PRINT_SOFTCOVER` or the softcover fallback `STRIPE_PRICE_FAMILY_PRINT`, `STRIPE_PRICE_FAMILY_PRINT_HARDCOVER`, and the existing `RESEND_API_KEY` plus `AUTH_EMAIL_FROM`. Set `STRIPE_LIVE_MODE=true` only together with live keys and real Price IDs. Until Resend is set, a confirmed digital payment can save the delivery email and return 503 without claiming the PDF was sent.
 
 ## How a teacher share link works
 
 - Teacher enters a class name (required), optional teacher name, and uploads photos (JPG/PNG/WEBP/HEIC, album cap 20 photos / 24 pages including the cover). Optional per-page student display names warn against full legal names or school IDs.
 - After preview, the teacher creates a private share. The server stores share tokens and book images under `app/.data/family-books/` (gitignored). Tokens are 24-byte hex; short codes are 8 characters. Shares expire after 60 days.
 - The teacher gets a private URL (`/book-share?t=…`) and a short code (`/book-share?c=CODE` or `/b/CODE`). Anyone with the link can preview. There is no public listing, no search index (`noindex` + `X-Robots-Tag`), and no secret logging of keys.
-- A parent opening the link can flip through the book for free, then choose digital ¥19.9 or print ¥129 under the same payment rules as the parent flow.
+- A parent opening the link can flip through the book for free, then choose digital ¥19.9 or, before checkout, softcover ¥129 or premium hardcover ¥199, under the same payment rules as the parent flow.
 - Teachers do not go through Yu mentoring or parent checkout to build or share the class book.
 
 ## Parent-flow additions kept on the existing page
@@ -94,7 +99,7 @@ Also changed:
 - `app/parent-book.html`, `app/parent-book.js` — author intro, suggestions, prices, adult/shipping form, paid download
 - `app/index.html`, `app/portal-home.js`, `app/portal-home.css` — parent and teacher homepage entries
 - `app/chinese-studio.html`, `app/chinese-studio.css` — parent and teacher Chinese-studio entries
-- `app/.env.example` — empty `STRIPE_PRICE_FAMILY_DIGITAL` / `STRIPE_PRICE_FAMILY_PRINT` comments
+- `.env.example` — empty `STRIPE_PRICE_FAMILY_DIGITAL`, `STRIPE_PRICE_FAMILY_PRINT_SOFTCOVER`, `STRIPE_PRICE_FAMILY_PRINT` (softcover fallback), and `STRIPE_PRICE_FAMILY_PRINT_HARDCOVER`
 - `app/package.json` / `app/package-lock.json` — `pdf-lib` (from the first pass)
 
 # Co-create film flow — added 2026-11-10
