@@ -9,6 +9,12 @@ const { safeHttpHeader } = require("./http-header-safety");
 const { buildYuMentorCurriculum } = require("./yu-mentor");
 const { createPlatformApi } = require("./platform-api");
 const { applyDeclaredGrammarChanges, cleanGrammarChanges, grammarSuggestionNeedsRepair } = require("./grammar-review");
+const { buildParentBookPdf, cleanFilename } = require("./parent-book-pdf");
+const { renderParentBookFilm } = require("./parent-book-film");
+const { inspectParentBookRequest } = require("./parent-book-safety");
+const { createFamilyBookApi } = require("./family-book-api");
+const { createCocreateFilmApi } = require("./cocreate-film-api");
+
 
 const root = __dirname;
 
@@ -23,6 +29,7 @@ const mimeTypes = {
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
   ".mp4": "video/mp4",
+  ".pdf": "application/pdf",
   ".ico": "image/x-icon"
 };
 
@@ -162,6 +169,13 @@ const pageAliases = Object.freeze({
   "/admin-allowances": "/admin-credits.html",
   "/studio": "/movie-studio.html",
   "/classroom": "/classroom-archive.html",
+  "/parent-book": "/parent-book.html",
+  "/family-book": "/parent-book.html",
+  "/teacher-book": "/teacher-book.html",
+  "/class-book": "/teacher-book.html",
+  "/book-share": "/book-share.html",
+  "/cocreate-film": "/cocreate-film.html",
+  "/co-create-film": "/cocreate-film.html",
   "/launch-gate": "/launch-readiness.html",
   "/cn-workshop": "/china-workshop.html"
 });
@@ -211,6 +225,66 @@ function readJsonBody(request, maxLength = 1_000_000) {
 
     request.on("error", reject);
   });
+}
+
+
+function parentBookContentDisposition(filename, fallback) {
+  const ascii = `${cleanFilename(filename) || fallback}`.replace(/["\\]/g, "");
+  const safe = safeHttpHeader(ascii, fallback);
+  const encoded = encodeURIComponent(String(filename || fallback));
+  return `attachment; filename="${safe}"; filename*=UTF-8''${encoded}`;
+}
+
+function sendBinary(response, { buffer, contentType, filename, fallbackName }) {
+  response.writeHead(200, {
+    "Content-Type": contentType,
+    "Content-Disposition": parentBookContentDisposition(filename, fallbackName),
+    "Cache-Control": "no-store, max-age=0",
+    "Content-Length": buffer.length
+  });
+  response.end(buffer);
+}
+
+async function handleParentBookPdf(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+  sendJson(response, 402, {
+    paid: false,
+    error: "The official A5 PDF is issued only after a server-confirmed payment. Preview stays on this page, and a checkout success page is not proof of payment."
+  });
+}
+
+async function handleParentBookFilm(request, response) {
+  if (request.method !== "POST") {
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+  try {
+    const body = await readJsonBody(request, 28_000_000);
+    const inspection = inspectParentBookRequest(body);
+    if (inspection.blocked) {
+      sendJson(response, 422, { error: "This photo cannot be used in the parent film.", reasonCode: inspection.reasonCode });
+      return;
+    }
+    const result = await renderParentBookFilm({
+      title: body.title,
+      pages: body.pages,
+      secondsPerPage: body.secondsPerPage
+    });
+    sendBinary(response, {
+      buffer: result.buffer,
+      contentType: "video/mp4",
+      filename: result.filename,
+      fallbackName: "storieslens-book.mp4"
+    });
+  } catch (error) {
+    sendJson(response, error.statusCode || 500, {
+      error: "The short film could not be created.",
+      reasonCode: error.message || "film_failed"
+    });
+  }
 }
 
 async function handleArtworkReview(request, response) {
@@ -1683,6 +1757,22 @@ const handlePlatformApi = createPlatformApi({
   reviewArtworkSafety: reviewArtworkImage
 });
 
+const familyBookApi = createFamilyBookApi({
+  sendJson,
+  sendBinary,
+  readJsonBody,
+  consumeRateLimit: (request, response, options) => handlePlatformApi.consumeRateLimit(request, response, options),
+  publicBaseUrl: process.env.PUBLIC_BASE_URL
+});
+
+const cocreateFilmApi = createCocreateFilmApi({
+  sendJson,
+  sendBinary,
+  readJsonBody,
+  consumeRateLimit: (request, response, options) => handlePlatformApi.consumeRateLimit(request, response, options),
+  publicBaseUrl: process.env.PUBLIC_BASE_URL
+});
+
 function textProviderForRequest(request, response, requestedModel = "") {
   const accountRegion = handlePlatformApi.creditManager.accountRegion(request, response);
   if (accountRegion === "cn") {
@@ -1724,6 +1814,26 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (await familyBookApi.handle(request, response, requestUrl)) {
+    return;
+  }
+
+  if (await cocreateFilmApi.handle(request, response, requestUrl)) {
+    return;
+  }
+
+  if (/^\/b\/[A-Za-z0-9]+$/.test(requestUrl.pathname) || /^\/book-share\//.test(requestUrl.pathname)) {
+    response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    sendFile(response, path.join(root, "book-share.html"));
+    return;
+  }
+
+  if (/^\/f\/[A-Za-z0-9]+$/.test(requestUrl.pathname)) {
+    response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    sendFile(response, path.join(root, "cocreate-film.html"));
+    return;
+  }
+
   if (projectPartImageMatch) {
     if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "image-generation", limit: 30, windowMs: 60 * 60 * 1000 })) return;
     handleCreateProjectPartImageTask(request, response, projectPartImageMatch[1]);
@@ -1738,6 +1848,19 @@ const server = http.createServer(async (request, response) => {
   if (requestUrl.pathname === "/api/generate-image") {
     if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "image-generation", limit: 30, windowMs: 60 * 60 * 1000 })) return;
     handleGenerateImage(request, response);
+    return;
+  }
+
+
+  if (requestUrl.pathname === "/api/parent-book/pdf") {
+    if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "parent-book-pdf", limit: 30, windowMs: 60 * 60 * 1000 })) return;
+    handleParentBookPdf(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/parent-book/film") {
+    if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "parent-book-film", limit: 8, windowMs: 60 * 60 * 1000 })) return;
+    handleParentBookFilm(request, response);
     return;
   }
 
@@ -1793,6 +1916,14 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
     response.end("Forbidden");
     return;
+  }
+
+  if (
+    requestUrl.pathname === "/book-share" ||
+    requestUrl.pathname === "/book-share.html" ||
+    path.basename(requestedPath) === "book-share.html"
+  ) {
+    response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
   }
 
   fs.stat(requestedPath, (error, stats) => {
