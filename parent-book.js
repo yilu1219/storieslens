@@ -6,15 +6,13 @@
   const MAX_PHOTOS = 20;
   const META_KEY = "storieslens_parent_book_meta";
   const LOCALE_KEY = "storieslens_locale";
-  const A5_WIDTH_PT = 148 * 72 / 25.4;
-  const A5_HEIGHT_PT = 210 * 72 / 25.4;
 
   const copy = {
     zh: {
       "brand-sub": "家长出书",
       kicker: "FOR PARENTS · 家长出书",
       title: "用手机照片，几分钟做成一本 A5 书",
-      lede: "上传孩子的画或作文照片，马上预览成书，并可一键生成短片。预览和短片免费。下载正式 A5 电子版为 ¥19.9（约 $2.99）；印刷成书为 ¥129（约 $17.99），确认付款后由我们人工安排首批印刷寄送。",
+      lede: "上传孩子的画或作文照片，马上预览成书，并可一键生成短片。预览和短片免费。正式电子版 ¥19.9（约 $2.99），确认付款并核对邮箱后发送 PDF。印刷请先选软壳 ¥129（约 $17.99）或精美硬壳 ¥199（约 $27.99），确认付款后由我们人工安排首批寄送。",
       "details-kicker": "书籍信息",
       "title-label": "书名",
       "name-label": "孩子的署名（选填）",
@@ -35,15 +33,19 @@
       "price-free-title": "预览成书和短片",
       "price-free-copy": "翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。",
       "price-digital": "电子版 A5 PDF · ¥19.9（约 $2.99）",
-      "price-digital-copy": "确认付款后，才能下载正式 A5 电子版。成功页本身不会解锁文件。",
+      "price-digital-copy": "服务器确认付款后，需要你再确认接收邮箱，正式 A5 PDF 才会发到这个邮箱。成功页或链接参数不会发信，也不会解锁下载。",
       "buy-digital": "购买电子版",
-      "price-print": "印刷成书 · ¥129（约 $17.99）",
-      "price-print-copy": "确认付款后，我们会按你留下的成人联系方式和地址，人工安排首批印刷和寄送。目前没有自动物流跟踪，也不假装已经对接印刷厂。",
+      "price-print": "印刷成书",
+      "price-print-copy": "请先选择精美硬壳或软壳。确认付款后，我们按你留下的成人联系方式和地址人工安排首批印刷和寄送。目前没有自动物流跟踪，也不假装已经对接印刷厂。",
+      "cover-legend": "先选择封面",
+      "cover-hardcover": "精美硬壳 · ¥199（约 $27.99）",
+      "cover-softcover": "软壳 · ¥129（约 $17.99）",
+      "cover-required": "请先选择精美硬壳或软壳。",
       "buy-print": "申请印刷并支付",
       "contact-name": "成人姓名",
       "contact-email": "成人邮箱",
-      "contact-phone": "成人电话（选填）",
-      "ship-line1": "收件地址",
+      "contact-phone": "成人电话",
+      "ship-line1": "街道地址",
       "ship-line2": "地址补充（选填）",
       "ship-city": "城市",
       "ship-region": "省/州",
@@ -52,9 +54,19 @@
       "adult-confirm": "我是家长或成年人，孩子不会在此填写付款信息。",
       "checkout-working": "正在连接安全结账…",
       "adult-required": "请先确认你是家长或成年人，并留下成人邮箱。",
-      "shipping-required": "印刷订单需要完整的成人联系方式和收件地址。",
-      "pay-unlocked-digital": "服务器已确认电子版付款。现在可以下载正式 A5 PDF。",
-      "pay-unlocked-print": "服务器已确认印刷付款。我们会用你留下的联系方式，人工安排首批印刷和寄送，暂时没有自动物流跟踪。",
+      "shipping-required": "印刷订单需要姓名、电话、国家/地区、省/州、城市、街道和邮编。",
+      "pay-unlocked-digital": "服务器已确认电子版付款。请确认接收邮箱，我们才会发送正式 A5 PDF。成功页不会自动发信。",
+      "pay-unlocked-print": "服务器已确认印刷付款。首批由我们按你留下的地址人工安排，暂时没有自动物流跟踪，也没有印刷厂对接。",
+      "pay-unlocked-hardcover": "服务器已确认精美硬壳付款。首批由我们人工安排印刷和寄送，暂时没有自动物流跟踪，也没有印刷厂对接。",
+      "pay-unlocked-softcover": "服务器已确认软壳付款。首批由我们人工安排印刷和寄送，暂时没有自动物流跟踪，也没有印刷厂对接。",
+      "delivery-email": "接收正式 PDF 的邮箱",
+      "delivery-email-copy": "请确认这个邮箱。我们只在服务器确认付款之后，把正式 A5 PDF 发到这里。成功页不会自动发信。",
+      "delivery-email-required": "请填写有效的接收邮箱。付款确认后需要你确认，我们才会发送正式 PDF。",
+      "send-book-email": "确认邮箱并发送正式 PDF",
+      "resend-book-email": "再次发送到这个邮箱",
+      "email-working": "正在把正式 A5 PDF 发到你确认的邮箱…",
+      "email-sent": "正式 A5 PDF 已发到你确认的邮箱。你也可以在这里下载。",
+      "email-saved-unsent": "付款已确认，邮箱已保存，但这次没有把 PDF 发出。",
       "page-label-author": "作者简介",
       "about-author": "作者简介",
       "credit-line": "作者 · {name}",
@@ -78,7 +90,7 @@
       "share-film": "分享短片",
       "trust-meta": "本机删除位置和拍摄信息",
       "trust-private": "默认保存在这台手机上",
-      "trust-free": "预览和短片免费 · 电子版 ¥19.9 · 印刷版 ¥129",
+      "trust-free": "预览和短片免费 · 电子版 ¥19.9 · 软壳 ¥129 · 硬壳 ¥199",
       "default-title": "我们的家庭绘本",
       "byline": "作者 · {name}",
       "page-of": "第 {current} 页，共 {total} 页",
@@ -106,7 +118,7 @@
       "brand-sub": "Parent book",
       kicker: "FOR PARENTS",
       title: "Turn phone photos into an A5 book in minutes",
-      lede: "Upload photos of your child’s drawings or writing, preview the book, and make a short film. Preview and the film are free. The official A5 digital PDF is ¥19.9 (about $2.99). A printed book is ¥129 (about $17.99); after a confirmed payment, the first batch will be arranged and shipped manually.",
+      lede: "Upload photos of your child’s drawings or writing, preview the book, and make a short film. Preview and the film are free. The official digital PDF is ¥19.9 (about $2.99) and is emailed after you confirm an address. For print, choose softcover ¥129 (about $17.99) or premium hardcover ¥199 (about $27.99). The first batch is arranged by hand after a confirmed payment.",
       "details-kicker": "BOOK DETAILS",
       "title-label": "Book title",
       "name-label": "Child’s display name (optional)",
@@ -127,15 +139,19 @@
       "price-free-title": "Book preview and short film",
       "price-free-copy": "You can flip through the book and make the short film for free. The on-screen preview is not a paid file.",
       "price-digital": "Digital A5 PDF · ¥19.9 (about $2.99)",
-      "price-digital-copy": "The official A5 digital PDF unlocks only after a confirmed payment. A success page alone will not unlock the file.",
+      "price-digital-copy": "After the server confirms payment, confirm a delivery email and the official A5 PDF is sent there. A success page or query string never sends the file or unlocks the download.",
       "buy-digital": "Buy the digital edition",
-      "price-print": "Printed book · ¥129 (about $17.99)",
-      "price-print-copy": "After a confirmed payment, we will use the adult contact and shipping address you provide to arrange the first batch manually. There is no automated tracking yet, and we do not claim a print factory is already connected.",
+      "price-print": "Printed book",
+      "price-print-copy": "Choose premium hardcover or softcover first. After a confirmed payment, we use the adult contact and shipping address to arrange the first batch by hand. There is no automated tracking yet, and we do not claim a print factory is already connected.",
+      "cover-legend": "Choose a cover first",
+      "cover-hardcover": "Premium hardcover · ¥199 (about $27.99)",
+      "cover-softcover": "Softcover · ¥129 (about $17.99)",
+      "cover-required": "Choose premium hardcover or softcover before checkout.",
       "buy-print": "Request print and pay",
       "contact-name": "Adult name",
       "contact-email": "Adult email",
-      "contact-phone": "Adult phone (optional)",
-      "ship-line1": "Address",
+      "contact-phone": "Adult phone",
+      "ship-line1": "Street address",
       "ship-line2": "Address line 2 (optional)",
       "ship-city": "City",
       "ship-region": "State / province",
@@ -144,9 +160,19 @@
       "adult-confirm": "I am a parent or another adult. A child will not enter payment details here.",
       "checkout-working": "Opening secure checkout…",
       "adult-required": "Please confirm you are a parent or adult, and leave an adult email address.",
-      "shipping-required": "A print order needs complete adult contact details and a shipping address.",
-      "pay-unlocked-digital": "The server has confirmed the digital payment. You can now download the official A5 PDF.",
-      "pay-unlocked-print": "The server has confirmed the print payment. We will use the contact details you left to arrange the first batch manually. There is no automated tracking yet.",
+      "shipping-required": "A print order needs a name, phone, country, region, city, street, and postal code.",
+      "pay-unlocked-digital": "The server has confirmed the digital payment. Confirm the delivery email and we will send the official A5 PDF. A success page does not send it.",
+      "pay-unlocked-print": "The server has confirmed the print payment. The first batch is arranged by hand from the address you left. There is no automated tracking, and no print partner is claimed.",
+      "pay-unlocked-hardcover": "The server has confirmed the premium hardcover payment. The first batch is arranged by hand. There is no automated tracking, and no print partner is claimed.",
+      "pay-unlocked-softcover": "The server has confirmed the softcover payment. The first batch is arranged by hand. There is no automated tracking, and no print partner is claimed.",
+      "delivery-email": "Email for the official PDF",
+      "delivery-email-copy": "Confirm this address. We email the official A5 PDF only after the server has confirmed payment. A success page does not send it.",
+      "delivery-email-required": "Enter a valid delivery email. We send the official PDF only after you confirm it.",
+      "send-book-email": "Confirm email and send the official PDF",
+      "resend-book-email": "Send again to this email",
+      "email-working": "Sending the official A5 PDF to the email you confirmed…",
+      "email-sent": "The official A5 PDF was sent to the email you confirmed. You can also download it here.",
+      "email-saved-unsent": "Payment is confirmed and the email is saved, but the PDF was not sent.",
       "page-label-author": "About the author",
       "about-author": "About the author",
       "credit-line": "By {name}",
@@ -170,7 +196,7 @@
       "share-film": "Share film",
       "trust-meta": "Location and camera details removed on this device",
       "trust-private": "Kept on this phone by default",
-      "trust-free": "Preview and film are free · Digital ¥19.9 · Print ¥129",
+      "trust-free": "Preview and film are free · Digital ¥19.9 · Softcover ¥129 · Hardcover ¥199",
       "default-title": "Our Family Book",
       "byline": "By {name}",
       "page-of": "Page {current} of {total}",
@@ -214,6 +240,10 @@
     paidActions: document.querySelector("[data-paid-actions]"),
     buyDigital: document.querySelector("[data-buy-digital]"),
     buyPrint: document.querySelector("[data-buy-print]"),
+    printPrice: document.querySelector("[data-print-price]"),
+    deliveryBox: document.querySelector("[data-delivery-box]"),
+    deliveryEmail: document.querySelector("[data-delivery-email]"),
+    sendBookEmail: document.querySelector("[data-send-book-email]"),
     adultConfirm: document.querySelector("[data-adult-confirm]"),
     contactName: document.querySelector("[data-contact-name]"),
     contactEmail: document.querySelector("[data-contact-email]"),
@@ -366,6 +396,8 @@
     });
     saveMeta();
     renderIntroTemplates();
+    syncCoverPrice();
+    syncDeliveryUi();
     if (state.photos.length) void rebuildBook();
   }
 
@@ -813,6 +845,7 @@
   function shippingPayload() {
     return {
       name: els.contactName?.value.trim() || "",
+      phone: els.contactPhone?.value.trim() || "",
       line1: els.shipLine1?.value.trim() || "",
       line2: els.shipLine2?.value.trim() || "",
       city: els.shipCity?.value.trim() || "",
@@ -822,13 +855,44 @@
     };
   }
 
+  function selectedPrintOfferId() {
+    return document.querySelector("[data-cover-option]:checked")?.value || "";
+  }
+
+  function syncCoverPrice() {
+    if (!els.printPrice) return;
+    const selected = selectedPrintOfferId();
+    if (selected === "family-print-hardcover") els.printPrice.textContent = t("cover-hardcover");
+    else if (selected === "family-print-softcover") els.printPrice.textContent = t("cover-softcover");
+    else els.printPrice.textContent = t("cover-required");
+  }
+
+  function syncDeliveryUi() {
+    if (els.sendBookEmail) els.sendBookEmail.textContent = state.entitlement.emailSent ? t("resend-book-email") : t("send-book-email");
+  }
+
+  function printStatusCopy(cover) {
+    if (cover === "hardcover") return t("pay-unlocked-hardcover");
+    if (cover === "softcover") return t("pay-unlocked-softcover");
+    return t("pay-unlocked-print");
+  }
+
+  function validEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+  }
+
   async function startCheckout(offerId) {
+    const isPrint = offerId === "print";
+    const selectedOffer = isPrint ? selectedPrintOfferId() : offerId;
     if (!state.pages.length) return setStatus(t("need-photos"), true);
     if (els.adultConfirm && !els.adultConfirm.checked) return setStatus(t("adult-required"), true);
     if (!contactPayload().email) return setStatus(t("adult-required"), true);
-    if (offerId === "family-print") {
+    if (isPrint && !selectedOffer) return setStatus(t("cover-required"), true);
+    if (isPrint) {
       const shipping = shippingPayload();
-      if (!shipping.line1 || !shipping.city || !shipping.country) return setStatus(t("shipping-required"), true);
+      if (!shipping.name || !shipping.phone || !shipping.line1 || !shipping.city || !shipping.region || !shipping.postal || !shipping.country) {
+        return setStatus(t("shipping-required"), true);
+      }
     }
     setStatus(t("checkout-working"));
     try {
@@ -836,10 +900,10 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          offerId,
+          offerId: selectedOffer,
           adultConfirmed: els.adultConfirm?.checked === true,
           contact: contactPayload(),
-          shipping: offerId === "family-print" ? shippingPayload() : undefined,
+          shipping: isPrint ? shippingPayload() : undefined,
           locale: state.locale,
           returnPath: "/parent-book",
           cancelPath: "/parent-book"
@@ -867,27 +931,27 @@
       state.entitlement = {
         paid,
         kind: result.order?.kind || "",
+        cover: result.order?.cover || "",
         orderId: result.order?.id || "",
-        grantToken: result.order?.grantToken || ""
+        grantToken: result.order?.grantToken || "",
+        deliveryEmail: result.order?.deliveryEmail || "",
+        emailSent: result.order?.emailSent === true
       };
-      if (els.paidActions) els.paidActions.hidden = !(paid && state.entitlement.kind === "digital");
+      const digitalPaid = paid && state.entitlement.kind === "digital";
+      if (els.deliveryBox) els.deliveryBox.hidden = !digitalPaid;
+      if (els.deliveryEmail && digitalPaid && !els.deliveryEmail.value.trim()) {
+        els.deliveryEmail.value = state.entitlement.deliveryEmail || result.order?.contactEmail || "";
+      }
+      if (els.paidActions) els.paidActions.hidden = !(digitalPaid && state.entitlement.deliveryEmail);
+      syncDeliveryUi();
       if (els.payUnlocked) {
         els.payUnlocked.hidden = !paid;
-        if (paid) els.payUnlocked.textContent = state.entitlement.kind === "print" ? t("pay-unlocked-print") : t("pay-unlocked-digital");
+        if (paid) els.payUnlocked.textContent = state.entitlement.kind === "print" ? printStatusCopy(state.entitlement.cover) : t("pay-unlocked-digital");
       }
-      if (paid) setStatus(state.entitlement.kind === "print" ? t("pay-unlocked-print") : t("pay-unlocked-digital"));
+      if (paid) setStatus(state.entitlement.kind === "print" ? printStatusCopy(state.entitlement.cover) : t("pay-unlocked-digital"));
     } catch (_error) {
       state.entitlement = { paid: false, kind: "" };
     }
-  }
-
-  function dataUrlToBytes(dataUrl) {
-    const match = String(dataUrl || "").match(/^data:image\/(?:jpeg|jpg|png);base64,([a-zA-Z0-9+/=\s]+)$/i);
-    if (!match) throw new Error("invalid_image");
-    const binary = atob(match[1].replace(/\s+/g, ""));
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-    return bytes;
   }
 
   function suggestedPdfName() {
@@ -895,75 +959,75 @@
     return `${base}.pdf`;
   }
 
-  async function buildPdfClient() {
-    const PDFLib = window.PDFLib;
-    if (!PDFLib?.PDFDocument) throw new Error("pdf_lib_unavailable");
-    const pdf = await PDFLib.PDFDocument.create();
-    pdf.setTitle(bookTitle());
-    pdf.setAuthor(childName() || "StoriesLens");
-    pdf.setCreator("StoriesLens Parent Book");
-    for (const pageDataUrl of state.pages) {
-      const image = await pdf.embedJpg(dataUrlToBytes(pageDataUrl));
-      const page = pdf.addPage([A5_WIDTH_PT, A5_HEIGHT_PT]);
-      page.drawImage(image, { x: 0, y: 0, width: A5_WIDTH_PT, height: A5_HEIGHT_PT });
-    }
-    const bytes = await pdf.save({ useObjectStreams: false });
-    return new Blob([bytes], { type: "application/pdf" });
+  function paidPagePayload() {
+    return state.pages.map((imageDataUrl) => ({ imageDataUrl }));
   }
 
-  async function buildPdfServer() {
-    const response = await fetch("/api/parent-book/pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: bookTitle(),
-        childName: childName(),
-        language: state.locale,
-        pages: state.pages.map((imageDataUrl, index) => ({
-          imageDataUrl,
-          filename: index === 0 ? "cover.jpg" : `page-${index}.jpg`
-        }))
-      })
-    });
-    if (!response.ok) throw new Error("pdf_failed");
-    return response.blob();
+  async function sendPaidBookEmail() {
+    if (!(state.entitlement?.paid && state.entitlement.kind === "digital")) return setStatus(t("pdf-failed"), true);
+    const email = els.deliveryEmail?.value.trim() || "";
+    if (!validEmail(email)) return setStatus(t("delivery-email-required"), true);
+    setStatus(t("email-working"));
+    try {
+      const response = await fetch("/api/family-book/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: state.entitlement.orderId,
+          grantToken: state.entitlement.grantToken,
+          email,
+          title: bookTitle(),
+          authorName: authorName(),
+          childName: childName(),
+          language: state.locale,
+          pages: paidPagePayload()
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (result.emailSaved) {
+        state.entitlement.deliveryEmail = result.deliveryEmail || email;
+        if (els.paidActions) els.paidActions.hidden = false;
+      }
+      if (result.sent === true) {
+        state.entitlement.emailSent = true;
+        syncDeliveryUi();
+        setStatus(t("email-sent"));
+        return;
+      }
+      syncDeliveryUi();
+      const message = state.locale === "zh" ? (result.errorZh || result.error || t("email-saved-unsent")) : (result.error || t("email-saved-unsent"));
+      setStatus(message, true);
+    } catch (_error) {
+      setStatus(t("email-saved-unsent"), true);
+    }
   }
 
   async function ensurePdf() {
-    if (!(state.entitlement?.paid && state.entitlement.kind === "digital")) {
-      setStatus(t("pdf-failed"), true);
+    if (!(state.entitlement?.paid && state.entitlement.kind === "digital" && state.entitlement.deliveryEmail)) {
+      setStatus(state.entitlement?.paid ? t("delivery-email-required") : t("pdf-failed"), true);
       throw new Error("unpaid");
     }
     if (state.pdfBlob) return state.pdfBlob;
     setStatus(t("pdf-working"));
     try {
-      let blob;
-      try {
-        const response = await fetch("/api/family-book/download", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: state.entitlement.orderId,
-            grantToken: state.entitlement.grantToken,
-            title: bookTitle(),
-            authorName: authorName(),
-            childName: childName(),
-            language: state.locale,
-            pages: state.pages.map((imageDataUrl) => ({ imageDataUrl }))
-          })
-        });
-        if (response.status === 402 || response.status === 401 || response.status === 403) {
-          throw new Error("unpaid");
-        }
-        if (!response.ok) {
-          blob = await buildPdfClient();
-        } else {
-          blob = await response.blob();
-        }
-      } catch (error) {
-        if (String(error?.message || "") === "unpaid") throw error;
-        blob = await buildPdfClient();
+      const response = await fetch("/api/family-book/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: state.entitlement.orderId,
+          grantToken: state.entitlement.grantToken,
+          title: bookTitle(),
+          authorName: authorName(),
+          childName: childName(),
+          language: state.locale,
+          pages: paidPagePayload()
+        })
+      });
+      if (response.status === 402 || response.status === 401 || response.status === 403 || response.status === 409) {
+        throw new Error("unpaid");
       }
+      if (!response.ok) throw new Error("pdf_failed");
+      const blob = await response.blob();
       state.pdfBlob = blob;
       if (state.pdfUrl) URL.revokeObjectURL(state.pdfUrl);
       state.pdfUrl = URL.createObjectURL(blob);
@@ -1147,7 +1211,11 @@
   els.suggestSkip?.addEventListener("click", () => skipSuggestion());
   els.suggestUndo?.addEventListener("click", () => undoSuggestion());
   els.buyDigital?.addEventListener("click", () => void startCheckout("family-digital"));
-  els.buyPrint?.addEventListener("click", () => void startCheckout("family-print"));
+  els.buyPrint?.addEventListener("click", () => void startCheckout("print"));
+  document.querySelectorAll("[data-cover-option]").forEach((input) => {
+    input.addEventListener("change", () => syncCoverPrice());
+  });
+  els.sendBookEmail?.addEventListener("click", () => void sendPaidBookEmail());
   els.prev.addEventListener("click", () => {
     if (state.pageIndex > 0) {
       state.pageIndex -= 1;

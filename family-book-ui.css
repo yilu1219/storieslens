@@ -41,6 +41,14 @@ label.field textarea {
 .price-card p { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .price-card .free-tag { color: var(--leaf-deep); font-weight: 800; font-size: 12px; letter-spacing: .08em; }
 .checkout-form { display: grid; gap: 12px; margin-top: 14px; }
+.cover-choice {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.cover-choice legend { font-weight: 700; padding: 0; }
 .checkout-form .check {
   display: flex;
   gap: 10px;

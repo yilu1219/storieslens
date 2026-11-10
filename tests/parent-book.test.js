@@ -117,7 +117,6 @@ test("parent book page, routes, and homepage entry are wired for China and inter
   assert.match(server, /\/api\/parent-book\/film/);
   assert.doesNotMatch(html, /fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com/);
   assert.doesNotMatch(css, /fonts\.googleapis/);
-  assert.match(html, /vendor\/pdf-lib\.min\.js/);
   assert.match(html, /artwork-upload-safety\.js/);
   assert.match(html, /capture="environment"/);
   assert.match(html, /multiple/);
@@ -125,7 +124,8 @@ test("parent book page, routes, and homepage entry are wired for China and inter
   assert.match(js, /removeMetadata/);
   assert.match(js, /StoriesLensArtworkSafety/);
   assert.doesNotMatch(js, /reviewSanitizedArtwork|processArtwork\(/);
-  assert.match(js, /PDFDocument/);
+  assert.match(js, /\/api\/family-book\/download/);
+  assert.doesNotMatch(js, /PDFDocument/);
   assert.match(index, /href="parent-book"/);
   assert.match(index, /data-audience="parent-book"/);
   assert.match(homeJs, /parent-book-cta/);
