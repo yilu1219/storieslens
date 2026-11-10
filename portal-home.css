@@ -43,6 +43,9 @@ button, textarea { color: inherit; font: inherit; }
 
 .portal-header,
 .magic-hero,
+.parent-book-entry,
+.book-entries,
+.cocreate-film-entry,
 .portal-spaces,
 .founder-story,
 .company-family,
@@ -325,4 +328,65 @@ button, textarea { color: inherit; font: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition-duration: .01ms !important; }
+}
+
+
+.parent-book-entry,
+.book-entries { margin-top: 18px; }
+.book-entries {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.parent-book-entry-card {
+  display: grid;
+  gap: 10px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(15,98,68,.08), rgba(255,253,248,.96));
+  text-decoration: none;
+  box-shadow: 0 18px 48px rgba(38, 31, 20, .08);
+}
+.parent-book-entry-kicker {
+  color: var(--leaf-deep);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+.parent-book-entry-card h2 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -.03em;
+}
+.parent-book-entry-card p {
+  margin: 0;
+  max-width: 46rem;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.parent-book-entry-card strong {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  color: var(--leaf-deep);
+  font-family: var(--sans);
+  font-size: 16px;
+}
+.teacher-book-entry-card {
+  background: linear-gradient(135deg, rgba(31,76,84,.10), rgba(255,253,248,.96));
+}
+@media (max-width: 720px) {
+  .book-entries { grid-template-columns: 1fr; }
+  .parent-book-entry-card { padding: 18px 16px; border-radius: 22px; }
+  .parent-book-entry-card p { font-size: 15px; }
+}
+
+.cocreate-film-entry { margin-top: 18px; }
+.cocreate-film-entry-card {
+  background: linear-gradient(135deg, rgba(16,24,23,.12), rgba(255,253,248,.96));
 }

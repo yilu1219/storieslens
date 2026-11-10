@@ -1,0 +1,88 @@
+.templates { display: grid; gap: 8px; margin-top: 8px; }
+.templates button {
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+.templates button.is-selected { border-color: var(--leaf-deep); background: rgba(15,98,68,.08); }
+label.field textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 12px 14px;
+  border: 1px solid rgba(16,24,23,.18);
+  border-radius: 14px;
+  background: #fff;
+  font-weight: 500;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.suggest-card { margin-top: 16px; padding: 16px; border-radius: 18px; background: rgba(15,98,68,.07); }
+.suggest-card h3 { margin: 0 0 8px; font-size: 16px; }
+.suggest-card p { margin: 0; font-size: 14px; line-height: 1.55; }
+.suggest-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.suggest-meta { margin-top: 10px; color: var(--muted); font-size: 12px; }
+
+.price-grid { display: grid; gap: 12px; margin-top: 12px; }
+.price-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.price-card b { display: block; font-size: 22px; }
+.price-card p { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.price-card .free-tag { color: var(--leaf-deep); font-weight: 800; font-size: 12px; letter-spacing: .08em; }
+.checkout-form { display: grid; gap: 12px; margin-top: 14px; }
+.checkout-form .check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.checkout-form .check input { width: 22px; height: 22px; margin-top: 2px; flex: none; }
+.pay-unavailable, .pay-note {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f0e2c8;
+  color: #3d3426;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.pay-unlocked {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(15,98,68,.1);
+  color: var(--leaf-deep);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.share-box {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #111817;
+  color: #f6f1e6;
+  word-break: break-all;
+}
+.share-box code, .share-box strong { display: block; margin-top: 6px; }
+.thumb-name {
+  width: calc(100% - 16px);
+  margin: 6px 8px 8px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.student-warning { color: #7a3b1f; font-size: 12px; line-height: 1.45; }
