@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="StoriesLens" />
+    <meta name="description" content="Upload phone photos of a child’s drawings or writing and turn them into an A5 book and a short film. Download or print the digital edition." />
+    <title>家长出书 · StoriesLens</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
+    <link rel="stylesheet" href="parent-book.css?v=20261110-2" />
+    <link rel="stylesheet" href="family-book-ui.css?v=20261110-2" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to book maker</a>
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <img src="assets/storieslens-logo.png" alt="" width="40" height="40" />
+        <span>
+          <strong class="brand-name">StoriesLens</strong>
+          <small data-i18n="brand-sub">家长出书</small>
+        </span>
+      </a>
+      <div class="topbar-actions">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-locale="zh" aria-pressed="true">中文</button>
+          <button type="button" data-locale="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      <p class="kicker" data-i18n="kicker">FOR PARENTS · 家长出书</p>
+      <h1 data-i18n="title">用手机照片，几分钟做成一本 A5 书</h1>
+      <p class="lede" data-i18n="lede">上传孩子的画或作文照片，马上预览成书，并可一键生成短片。预览和短片免费。下载正式 A5 电子版为 ¥19.9（约 $2.99）；印刷成书为 ¥129（约 $17.99），确认付款后由我们人工安排首批印刷寄送。</p>
+
+      <section class="card" aria-labelledby="details-title">
+        <h2 id="details-title" class="kicker" data-i18n="details-kicker">BOOK DETAILS</h2>
+        <div class="fields">
+          <label class="field">
+            <span data-i18n="title-label">书名</span>
+            <input type="text" maxlength="80" autocomplete="off" data-title />
+          </label>
+          <label class="field">
+            <span data-i18n="author-label">作者姓名</span>
+            <input type="text" maxlength="40" autocomplete="name" data-author-name />
+            <span class="hint" data-i18n="author-hint">会印在封面和作者简介页。</span>
+          </label>
+          <label class="field">
+            <span data-i18n="name-label">孩子的署名（选填）</span>
+            <input type="text" maxlength="40" autocomplete="off" data-child-name />
+            <span class="hint" data-i18n="name-hint">如果和作者姓名不同，可以另外写在封面上。保存在这台设备上。</span>
+          </label>
+          <div class="field">
+            <span data-i18n="intro-label">作者简介</span>
+            <p class="hint" data-i18n="intro-hint">先选一段短模板，再改成孩子自己的话。我们不会改孩子的画或作文。</p>
+            <div class="templates" data-intro-templates></div>
+            <label class="field">
+              <textarea maxlength="800" data-author-intro rows="4"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="upload-row">
+          <label class="upload-btn">
+            <input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" multiple data-album />
+            <span data-i18n="album">从相册选择照片</span>
+          </label>
+          <label class="upload-btn">
+            <input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" capture="environment" data-camera />
+            <span data-i18n="camera">拍照上传</span>
+          </label>
+        </div>
+        <p class="notice" data-i18n="safety-notice">请上传孩子的画、作文或手工作品照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。位置和拍摄信息会在本机删除。</p>
+        <p class="adult-note" data-i18n="adult-note">这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。</p>
+        <div class="thumbs" data-thumbs></div>
+        <p class="status" data-status role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card preview-stage" data-preview-card hidden>
+        <h2 class="kicker" data-i18n="preview-kicker">PREVIEW</h2>
+        <div class="book-frame">
+          <img data-page-image alt="" />
+        </div>
+        <div class="pager">
+          <button type="button" data-prev data-i18n="prev">上一页</button>
+          <span class="page-label" data-page-label></span>
+          <button type="button" data-next data-i18n="next">下一页</button>
+        </div>
+        <section class="suggest-card" data-suggest-card hidden>
+          <h3 data-i18n="suggest-kicker">检查建议</h3>
+          <p data-suggest-text></p>
+          <div class="suggest-actions">
+            <button class="primary" type="button" data-suggest-accept data-i18n="suggest-accept">接受这条</button>
+            <button class="secondary" type="button" data-suggest-skip data-i18n="suggest-skip">跳过</button>
+          </div>
+          <button class="secondary" type="button" data-suggest-undo hidden data-i18n="suggest-undo">撤销上一步</button>
+          <p class="suggest-meta" data-suggest-meta></p>
+        </section>
+        <div class="actions">
+          <button class="primary" type="button" data-make-film data-i18n="make-film">一键生成短片（免费）</button>
+        </div>
+        <section class="price-grid" data-price-box hidden>
+          <div class="price-card">
+            <span class="free-tag" data-i18n="price-free-tag">FREE · 免费</span>
+            <b data-i18n="price-free-title">预览成书和短片</b>
+            <p data-i18n="price-free-copy">翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。</p>
+          </div>
+          <div class="price-card">
+            <b data-i18n="price-digital">电子版 A5 PDF · ¥19.9（约 $2.99）</b>
+            <p data-i18n="price-digital-copy">确认付款后，才能下载正式 A5 电子版。成功页本身不会解锁文件。</p>
+            <button class="primary" type="button" data-buy-digital data-i18n="buy-digital" style="margin-top:12px;width:100%">购买电子版</button>
+          </div>
+          <div class="price-card">
+            <b data-i18n="price-print">印刷成书 · ¥129（约 $17.99）</b>
+            <p data-i18n="price-print-copy">确认付款后，我们会按你留下的成人联系方式和地址，人工安排首批印刷和寄送。目前没有自动物流跟踪，也不假装已经对接印刷厂。</p>
+            <div class="checkout-form" data-print-form>
+              <label class="field"><span data-i18n="contact-name">成人姓名</span><input data-contact-name autocomplete="name" maxlength="80" /></label>
+              <label class="field"><span data-i18n="contact-email">成人邮箱</span><input type="email" data-contact-email autocomplete="email" maxlength="120" /></label>
+              <label class="field"><span data-i18n="contact-phone">成人电话（选填）</span><input data-contact-phone autocomplete="tel" maxlength="40" /></label>
+              <label class="field"><span data-i18n="ship-line1">收件地址</span><input data-ship-line1 autocomplete="address-line1" maxlength="160" /></label>
+              <label class="field"><span data-i18n="ship-line2">地址补充（选填）</span><input data-ship-line2 autocomplete="address-line2" maxlength="160" /></label>
+              <label class="field"><span data-i18n="ship-city">城市</span><input data-ship-city autocomplete="address-level2" maxlength="80" /></label>
+              <label class="field"><span data-i18n="ship-region">省/州</span><input data-ship-region autocomplete="address-level1" maxlength="80" /></label>
+              <label class="field"><span data-i18n="ship-postal">邮编</span><input data-ship-postal autocomplete="postal-code" maxlength="20" /></label>
+              <label class="field"><span data-i18n="ship-country">国家/地区</span><input data-ship-country autocomplete="country-name" maxlength="80" /></label>
+              <label class="check"><input type="checkbox" data-adult-confirm /><span data-i18n="adult-confirm">我是家长或成年人，孩子不会在此填写付款信息。</span></label>
+            </div>
+            <button class="primary" type="button" data-buy-print data-i18n="buy-print" style="margin-top:12px;width:100%">申请印刷并支付</button>
+          </div>
+          <p class="pay-unavailable" data-pay-note></p>
+          <p class="pay-unlocked" data-pay-unlocked hidden></p>
+          <div class="actions" data-paid-actions hidden>
+            <button class="primary" type="button" data-download-pdf data-i18n="download-pdf">下载已购买的 A5 PDF</button>
+          </div>
+        </section>
+        <div class="file-box" data-pdf-box hidden>
+          <iframe title="A5 PDF preview" data-pdf-frame></iframe>
+          <p class="wechat-help" data-pdf-help></p>
+          <div class="actions-row" style="margin-top:10px">
+            <button class="secondary" type="button" data-open-pdf data-i18n="open-pdf">打开 PDF</button>
+            <button class="secondary" type="button" data-share-pdf data-i18n="share-pdf">分享 PDF</button>
+          </div>
+        </div>
+        <div class="film-box" data-film-box hidden>
+          <video data-film-player controls playsinline webkit-playsinline></video>
+          <p class="wechat-help" data-film-help></p>
+          <div class="actions-row" style="margin-top:10px">
+            <button class="secondary" type="button" data-save-film data-i18n="save-film">保存短片</button>
+            <button class="secondary" type="button" data-share-film data-i18n="share-film">分享短片</button>
+          </div>
+        </div>
+      </section>
+
+      <p class="trust">
+        <span data-i18n="trust-meta">本机删除位置和拍摄信息</span>
+        <span data-i18n="trust-private">默认保存在这台手机上</span>
+        <span data-i18n="trust-free">预览和短片免费 · 电子版 ¥19.9 · 印刷版 ¥129</span>
+      </p>
+    </main>
+
+    <div class="print-root" data-print-root aria-hidden="true"></div>
+
+    <script src="vendor/pdf-lib.min.js"></script>
+    <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
+    <script src="parent-book-safety.js?v=20261110-1"></script>
+    <script src="family-book-catalog.js?v=20261110-2"></script>
+    <script src="family-book-review.js?v=20261110-2"></script>
+    <script src="parent-book.js?v=20261110-2"></script>
+  </body>
+</html>
