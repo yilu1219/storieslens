@@ -2,5 +2,6 @@
 assets/_preview_*.png
 .env
 node_modules/
+.venv/
 public/generated/
 .data/
