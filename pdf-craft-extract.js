@@ -73,15 +73,52 @@ function separateCraftMarkdown(markdown) {
   return { text, images };
 }
 
-function piecesToResult(text, images) {
+function clampUnit(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.min(1, Math.max(0, number));
+}
+
+function normalizeScanBlocks(blocks) {
+  if (!Array.isArray(blocks)) return [];
+  const out = [];
+  for (const block of blocks) {
+    if (!block || typeof block !== "object") continue;
+    const rawKind = String(block.kind || "").toLowerCase();
+    const kind = rawKind === "image" || rawKind === "figure" ? "image" : rawKind === "text" ? "text" : "";
+    if (!kind) continue;
+    const source = block.box && typeof block.box === "object" ? block.box : null;
+    const box = source ? {
+      x: clampUnit(source.x),
+      y: clampUnit(source.y),
+      w: clampUnit(source.w),
+      h: clampUnit(source.h)
+    } : null;
+    if (box && (box.w <= 0 || box.h <= 0)) continue;
+    const text = kind === "text" ? String(block.text || "").trim().slice(0, 2000) : "";
+    if (kind === "text" && !text) continue;
+    out.push({
+      kind,
+      text,
+      box,
+      confidence: clampUnit(block.confidence == null ? 1 : block.confidence)
+    });
+    if (out.length >= 40) break;
+  }
+  return out;
+}
+
+function piecesToResult(text, images, blocks) {
   const faithful = String(text || "");
   const files = Array.isArray(images) ? images.filter(Boolean).slice(0, MAX_ASSETS) : [];
+  const normalized = normalizeScanBlocks(blocks);
   if (!faithful.trim()) {
     return {
       engine: "pdf-craft",
       status: "uncertain",
       text: "",
       images: files,
+      blocks: normalized.filter((block) => block.kind === "image").map((block) => ({ ...block, text: "" })),
       uncertain: true,
       rewritten: false,
       reason: "ocr_uncertain"
@@ -92,6 +129,7 @@ function piecesToResult(text, images) {
     status: "ok",
     text: faithful,
     images: files,
+    blocks: normalized.filter((block) => block.kind !== "text" || faithful.includes(block.text)),
     uncertain: false,
     rewritten: false,
     reason: "extracted"
@@ -123,6 +161,7 @@ function failureResult(reason) {
     status: unavailable ? "unavailable" : "uncertain",
     text: "",
     images: [],
+    blocks: [],
     uncertain: true,
     rewritten: false,
     reason: code
@@ -174,7 +213,17 @@ function readCraftDirectory(rootDir, markdownPath) {
     const mime = ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
     images.push(`data:${mime};base64,${bytes.toString("base64")}`);
   }
-  return piecesToResult(separated.text, images);
+  let blocks = [];
+  const layoutPath = path.join(path.dirname(markdownPath), "layout.json");
+  if (fs.existsSync(layoutPath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(layoutPath, "utf8"));
+      blocks = parsed && parsed.blocks;
+    } catch (_error) {
+      blocks = [];
+    }
+  }
+  return piecesToResult(separated.text, images, blocks);
 }
 
 function runPdfCraftProcess({ python, scriptPath, pdfPath, markdownPath, assetsPath, env, spawnImpl }) {
@@ -278,6 +327,7 @@ module.exports = {
   logExtractFailure,
   redactExtractMessage,
   imageToSinglePagePdf,
+  normalizeScanBlocks,
   parseImageDataUrl,
   pdfCraftOcrConfig,
   pdfCraftVendorKind,

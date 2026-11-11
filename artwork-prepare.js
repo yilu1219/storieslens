@@ -488,12 +488,40 @@
     };
   }
 
-  function interiorPageArt({ treatment = "original", scanUrl = "", polishedUrl = "", polishOk = false } = {}) {
+  function interiorPageArt({ treatment = "original", scanUrl = "", polishedUrl = "", polishOk = false, artOverrideUrl = "", artSource = "" } = {}) {
+    if (artSource === "accepted" && artOverrideUrl) {
+      return { url: artOverrideUrl, fallback: false, treatment: "accepted" };
+    }
     const style = normalizeInteriorStyle(treatment);
     if (style === "polished" && polishOk && polishedUrl) {
       return { url: polishedUrl, fallback: false, treatment: "polished" };
     }
     return { url: scanUrl || "", fallback: style === "polished", treatment: "original" };
+  }
+
+  function storyArtSources({
+    manuscript = false,
+    treatment = "original",
+    scanUrl = "",
+    polishedUrl = "",
+    polishOk = false,
+    artOverrideUrl = "",
+    artSource = "",
+    artworks = [],
+    layersSeparated = false
+  } = {}) {
+    if (manuscript) return { urls: [], marksUrl: scanUrl || "", separated: false, treatment: "original" };
+    const art = interiorPageArt({ treatment, scanUrl, polishedUrl, polishOk, artOverrideUrl, artSource });
+    if (art.treatment === "polished" || art.treatment === "accepted") {
+      return { urls: art.url ? [art.url] : [], marksUrl: "", separated: Boolean(art.url), treatment: art.treatment };
+    }
+    const layers = (Array.isArray(artworks) ? artworks : [])
+      .map((item) => (typeof item === "string" ? item : item && item.dataUrl))
+      .filter((url) => url && url !== scanUrl);
+    if (layersSeparated && layers.length) {
+      return { urls: layers.slice(0, 4), marksUrl: "", separated: true, treatment: "original" };
+    }
+    return { urls: [], marksUrl: art.url || scanUrl || "", separated: false, treatment: "original" };
   }
 
   function coverHeroSource(photo, style) {
@@ -658,6 +686,611 @@
     };
   }
 
+  function clampUnit(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return 0;
+    return Math.min(1, Math.max(0, number));
+  }
+
+  function isContentPixel(red, green, blue) {
+    const max = Math.max(red, green, blue);
+    const min = Math.min(red, green, blue);
+    const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    return !(luma >= 214 && (max - min) <= 34);
+  }
+
+  function normalizeScanBlocks(blocks) {
+    if (!Array.isArray(blocks)) return [];
+    const out = [];
+    for (const block of blocks) {
+      if (!block || typeof block !== "object") continue;
+      const rawKind = String(block.kind || "").toLowerCase();
+      const kind = rawKind === "image" || rawKind === "figure" ? "image" : rawKind === "text" ? "text" : "";
+      if (!kind) continue;
+      const source = block.box && typeof block.box === "object" ? block.box : null;
+      const box = source ? {
+        x: clampUnit(source.x),
+        y: clampUnit(source.y),
+        w: clampUnit(source.w),
+        h: clampUnit(source.h)
+      } : null;
+      if (box && (box.w <= 0 || box.h <= 0)) continue;
+      const text = kind === "text" ? String(block.text || "").trim().slice(0, 2000) : "";
+      if (kind === "text" && !text) continue;
+      out.push({
+        kind,
+        text,
+        box,
+        confidence: clampUnit(block.confidence == null ? 1 : block.confidence)
+      });
+      if (out.length >= 40) break;
+    }
+    return out;
+  }
+
+  function segmentSheet(rgba, width, height) {
+    const empty = { separated: false, artBox: null, textBoxes: [], confidence: 0 };
+    if (!width || !height || width < 16 || height < 24) return empty;
+    const source = toUint8(rgba, width, height);
+    const rowInk = new Float64Array(height);
+    const rowColor = new Float64Array(height);
+    const rowMinX = new Int32Array(height);
+    const rowMaxX = new Int32Array(height);
+    rowMinX.fill(width);
+    rowMaxX.fill(-1);
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const index = (y * width + x) * 4;
+        const red = source[index];
+        const green = source[index + 1];
+        const blue = source[index + 2];
+        if (!isContentPixel(red, green, blue)) continue;
+        const max = Math.max(red, green, blue);
+        const min = Math.min(red, green, blue);
+        const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+        rowInk[y] += 1;
+        if ((max - min) > 36 && luma > 70) rowColor[y] += 1;
+        if (x < rowMinX[y]) rowMinX[y] = x;
+        if (x > rowMaxX[y]) rowMaxX[y] = x;
+      }
+    }
+    const kinds = new Array(height);
+    for (let y = 0; y < height; y += 1) {
+      const ratio = rowInk[y] / width;
+      const colorRatio = rowInk[y] ? rowColor[y] / rowInk[y] : 0;
+      if (ratio < 0.02) kinds[y] = "empty";
+      else if (colorRatio > 0.28 || ratio > 0.62) kinds[y] = "art";
+      else kinds[y] = "text";
+    }
+    let artTop = -1;
+    let artBottom = -1;
+    for (let y = 0; y < height; y += 1) {
+      if (kinds[y] !== "art") continue;
+      if (artTop < 0) artTop = y;
+      artBottom = y;
+    }
+    if (artTop < 0) return empty;
+    const textRows = [];
+    for (let y = 0; y < height; y += 1) if (kinds[y] === "text") textRows.push(y);
+    if (!textRows.length) return empty;
+    if (textRows.some((y) => y >= artTop && y <= artBottom)) return empty;
+    const above = textRows.every((y) => y < artTop);
+    const below = textRows.every((y) => y > artBottom);
+    if (!above && !below) return empty;
+    const gap = above ? artTop - textRows[textRows.length - 1] - 1 : textRows[0] - artBottom - 1;
+    if (gap < Math.max(2, Math.round(height * 0.015))) return empty;
+    const artBox = bandBounds(artTop, artBottom + 1);
+    if (!artBox || artBox.h < height * 0.12 || artBox.h > height * 0.92 || artBox.w < width * 0.12) return empty;
+    const textBoxes = [];
+    let start = textRows[0];
+    let previous = textRows[0];
+    const pushText = (from, to) => {
+      const box = bandBounds(from, to);
+      if (!box || box.w < width * 0.18 || box.h > height * 0.2) return;
+      textBoxes.push(box);
+    };
+    for (let index = 1; index < textRows.length; index += 1) {
+      const y = textRows[index];
+      if (y - previous > Math.max(3, Math.round(height * 0.03))) {
+        pushText(start, previous + 1);
+        start = y;
+      }
+      previous = y;
+    }
+    pushText(start, previous + 1);
+    if (!textBoxes.length) return empty;
+    return { separated: true, artBox, textBoxes, confidence: 0.8 };
+
+    function bandBounds(y0, y1) {
+      let minX = width;
+      let maxX = -1;
+      let minY = y1;
+      let maxY = -1;
+      for (let y = y0; y < y1; y += 1) {
+        if (rowMaxX[y] < 0) continue;
+        if (rowMinX[y] < minX) minX = rowMinX[y];
+        if (rowMaxX[y] > maxX) maxX = rowMaxX[y];
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+      if (maxX < minX || maxY < minY) return null;
+      const pad = 1;
+      const x = Math.max(0, minX - pad);
+      const y = Math.max(0, minY - pad);
+      return {
+        x,
+        y,
+        w: Math.min(width, maxX + pad + 1) - x,
+        h: Math.min(height, maxY + pad + 1) - y
+      };
+    }
+  }
+
+  function unitBox(box, width, height) {
+    if (!box) return null;
+    return {
+      x: clampUnit(box.x / width),
+      y: clampUnit(box.y / height),
+      w: clampUnit(box.w / width),
+      h: clampUnit(box.h / height)
+    };
+  }
+
+  function pixelBox(box, width, height) {
+    if (!box) return null;
+    const x = Math.max(0, Math.min(width - 2, Math.floor(box.x * width)));
+    const y = Math.max(0, Math.min(height - 2, Math.floor(box.y * height)));
+    const w = Math.max(2, Math.min(width - x, Math.round(box.w * width)));
+    const h = Math.max(2, Math.min(height - y, Math.round(box.h * height)));
+    if (w >= width * 0.96 && h >= height * 0.92) return null;
+    return { x, y, w, h };
+  }
+
+  function composeScanLayers({ rgba, width, height, text = "", textStatus = "uncertain", blocks = [], toPng } = {}) {
+    const recognized = textStatus === "ok" || textStatus === "parent" ? String(text || "").trim() : "";
+    const local = rgba && width && height ? segmentSheet(rgba, width, height) : { separated: false, artBox: null, textBoxes: [], confidence: 0 };
+    const normalized = normalizeScanBlocks(blocks).filter((block) => block.kind !== "text" || (recognized && recognized.includes(block.text)));
+    const faithful = normalized.filter((block) => block.kind === "text");
+    let lines = [];
+    if (recognized) {
+      lines = faithful.length
+        ? faithful.map((block) => ({ text: block.text, confidence: block.confidence, box: block.box }))
+        : [{ text: recognized, confidence: 1, box: local.textBoxes && local.textBoxes[0] ? unitBox(local.textBoxes[0], width, height) : null }];
+    }
+    let artBox = local.separated ? local.artBox : null;
+    if (!artBox && recognized) {
+      const image = normalized.find((block) => block.kind === "image" && block.box);
+      const fromOcr = image ? pixelBox(image.box, width, height) : null;
+      if (fromOcr) artBox = fromOcr;
+    }
+    const artworks = [];
+    if (recognized && artBox && rgba && width && height) {
+      const cropped = opaqueResult(crop(toUint8(rgba, width, height), width, artBox.x, artBox.y, artBox.w, artBox.h));
+      artworks.push({
+        rgba: cropped,
+        width: artBox.w,
+        height: artBox.h,
+        dataUrl: typeof toPng === "function" ? toPng(cropped, artBox.w, artBox.h) : "",
+        box: artBox.w <= 1 && artBox.h <= 1 ? artBox : unitBox(artBox, width, height)
+      });
+    }
+    return {
+      separated: Boolean(recognized && artworks.length),
+      artworks,
+      lines,
+      artBox: artworks.length ? artBox : null,
+      confidence: local.confidence || 0,
+      handwritingOnArt: !(recognized && artworks.length)
+    };
+  }
+
+  function layoutWords(value) {
+    return String(value || "").replace(/\s+/g, "");
+  }
+
+  function tidyTypography(text) {
+    const original = String(text || "");
+    const collapsed = original.replace(/\r\n/g, "\n").split("\n").map((line) => (
+      line.replace(/[ \t\u3000]{2,}/g, " ").replace(/^[ \t\u3000]+|[ \t\u3000]+$/g, "")
+    )).join("\n").replace(/\n{3,}/g, "\n\n");
+    const broken = collapsed.split("\n").map((line) => {
+      if (Array.from(line).length < 42) return line;
+      return line.replace(/([。！？!?；;])\s*/g, "$1\n").replace(/\n+$/g, "");
+    }).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    if (!broken || layoutWords(broken) !== layoutWords(original)) return { text: original, changed: false };
+    return { text: broken, changed: broken !== original.trim() ? true : broken !== original };
+  }
+
+  function wordCore(value) {
+    return String(value || "").replace(/[\s\p{P}\p{S}]+/gu, "");
+  }
+
+  function punctuationFix(text) {
+    const source = String(text || "");
+    let next = source.replace(/[ \t\u3000]+([,.;:!?，。！？；：、])/g, "$1");
+    next = next.replace(/([。！？；，、])[ \t\u3000]+\1/g, "$1");
+    [["“", "”"], ["「", "」"], ["（", "）"]].forEach(([open, close]) => {
+      const opens = next.split(open).length - 1;
+      const closes = next.split(close).length - 1;
+      if (opens === closes + 1) next += close;
+    });
+    next = next.replace(/\uFFFD/g, "");
+    if (!next || wordCore(next) !== wordCore(source)) return { text: source, changed: false };
+    return { text: next, changed: next !== source };
+  }
+
+  function duplicateWordingFix(text) {
+    const source = String(text || "");
+    const english = source.match(/\b([A-Za-z]{2,})\s+\1\b/i);
+    if (english) {
+      return { before: source, after: source.replace(english[0], english[1]) };
+    }
+    const cjk = source.match(/([\u3400-\u9fff]{2,})\1/);
+    if (cjk) return { before: source, after: source.replace(cjk[0], cjk[1]) };
+    return null;
+  }
+
+  function proofItem({ category, before, after, changed, altersWords, id }) {
+    return {
+      id: id || `proof-${category}`,
+      kind: "proofread",
+      category,
+      before: String(before ?? ""),
+      after: String(after ?? ""),
+      changed: changed === true,
+      altersWords: altersWords === true,
+      accepted: false,
+      applied: false
+    };
+  }
+
+  function proposeProofreading({ text = "", textStatus = "ok", lines = [], edited = false } = {}) {
+    if ((textStatus === "uncertain" || textStatus === "unavailable" || textStatus === "restored") && edited !== true) {
+      return [proofItem({
+        category: "confirm",
+        before: "",
+        after: "",
+        changed: false,
+        altersWords: false,
+        id: "proof-confirm-unread"
+      })];
+    }
+    const source = String(text || "");
+    if (!source.trim()) return [];
+    const suggestions = [];
+    const tidy = tidyTypography(source);
+    if (tidy.changed && wordCore(tidy.text) === wordCore(source)) {
+      suggestions.push(proofItem({
+        category: "layout",
+        before: source,
+        after: tidy.text,
+        changed: true,
+        altersWords: false,
+        id: "proof-layout"
+      }));
+    }
+    const punct = punctuationFix(source);
+    if (punct.changed) {
+      suggestions.push(proofItem({
+        category: "punctuation",
+        before: source,
+        after: punct.text,
+        changed: true,
+        altersWords: false,
+        id: "proof-punctuation"
+      }));
+    }
+    const duplicate = duplicateWordingFix(source);
+    if (duplicate && wordCore(duplicate.after) !== wordCore(source)) {
+      suggestions.push(proofItem({
+        category: "wording",
+        before: duplicate.before,
+        after: duplicate.after,
+        changed: true,
+        altersWords: true,
+        id: "proof-wording"
+      }));
+    }
+    const seen = new Set();
+    (Array.isArray(lines) ? lines : []).forEach((line, index) => {
+      const lineText = String(line && line.text || "").trim();
+      const score = Number(line && line.confidence);
+      if (!lineText || !source.includes(lineText) || seen.has(lineText)) return;
+      if (!Number.isFinite(score) || score >= 0.72) return;
+      seen.add(lineText);
+      suggestions.push(proofItem({
+        category: "confirm",
+        before: lineText,
+        after: lineText,
+        changed: false,
+        altersWords: false,
+        id: `proof-confirm-${index}`
+      }));
+    });
+    return suggestions;
+  }
+
+  function proposeAssistantEdit({ kind = "", text = "", layoutTextShare = 0, id = "" } = {}) {
+    const proposalId = id || `${kind}-proposal`;
+    if (kind === "typography") {
+      const tidy = tidyTypography(text);
+      return {
+        id: proposalId,
+        kind,
+        before: String(text || ""),
+        after: tidy.changed ? tidy.text : String(text || ""),
+        changed: tidy.changed === true,
+        accepted: false,
+        applied: false
+      };
+    }
+    if (kind === "layout") {
+      const length = Array.from(String(text || "")).length;
+      const share = length > 80 ? 0.46 : length > 24 ? 0.36 : 0.28;
+      const before = Number(layoutTextShare) >= 0.26 ? Number(layoutTextShare) : 0.36;
+      return {
+        id: proposalId,
+        kind,
+        before,
+        after: share,
+        changed: Math.abs(share - before) > 0.011,
+        accepted: false,
+        applied: false
+      };
+    }
+    if (kind === "art") {
+      return {
+        id: proposalId,
+        kind,
+        before: "original",
+        after: "original",
+        imageDataUrl: "",
+        changed: false,
+        failed: false,
+        pending: true,
+        accepted: false,
+        applied: false
+      };
+    }
+    return null;
+  }
+
+  function resolveArtProposal(proposal, result) {
+    const base = proposal && proposal.kind === "art" ? proposal : proposeAssistantEdit({ kind: "art" });
+    const image = result && result.ok && typeof result.imageDataUrl === "string" ? result.imageDataUrl : "";
+    const ready = /^data:image\/(?:png|jpeg|jpg);base64,/i.test(image);
+    return {
+      ...base,
+      kind: "art",
+      after: ready ? "cleanup" : "original",
+      imageDataUrl: ready ? image : "",
+      changed: ready,
+      failed: !ready,
+      pending: false,
+      accepted: false,
+      applied: false
+    };
+  }
+
+  function applyAssistantProposal(photo, proposal) {
+    const current = photo && typeof photo === "object" ? photo : {};
+    const confirmOnly = proposal && proposal.kind === "proofread" && proposal.category === "confirm" && proposal.changed !== true;
+    if (!proposal || proposal.accepted !== true || (proposal.changed !== true && !confirmOnly)) {
+      return { photo: current, applied: false, acceptance: null };
+    }
+    const next = {
+      ...current,
+      assistantLog: Array.isArray(current.assistantLog) ? current.assistantLog.slice() : []
+    };
+    if (proposal.kind === "typography" || (proposal.kind === "proofread" && proposal.changed === true)) {
+      next.text = String(proposal.after ?? "");
+      next.textEdited = true;
+      next.textStatus = "parent";
+      next.lines = [{ text: next.text, confidence: 1, box: current.lines && current.lines[0] ? current.lines[0].box : null }];
+    } else if (proposal.kind === "proofread" && confirmOnly) {
+      next.text = current.text || "";
+      next.textStatus = current.textStatus;
+    } else if (proposal.kind === "layout") {
+      const share = Number(proposal.after);
+      if (!(share >= 0.26 && share <= 0.48)) return { photo: current, applied: false, acceptance: null };
+      next.layoutTextShare = share;
+    } else if (proposal.kind === "art" && /^data:image\/(?:png|jpeg|jpg);base64,/i.test(proposal.imageDataUrl || "")) {
+      next.artOverrideUrl = proposal.imageDataUrl;
+      next.artSource = "accepted";
+    } else {
+      return { photo: current, applied: false, acceptance: null };
+    }
+    const acceptance = {
+      id: String(proposal.id || `${proposal.kind}-${next.assistantLog.length + 1}`),
+      kind: proposal.kind,
+      category: proposal.category || "",
+      altersWords: proposal.altersWords === true,
+      accepted: true
+    };
+    next.assistantLog.push(acceptance);
+    return { photo: next, applied: true, acceptance };
+  }
+
+  function dismissAssistantProposal(photo, proposal) {
+    return {
+      photo: photo && typeof photo === "object" ? photo : {},
+      applied: false,
+      dismissed: Boolean(proposal),
+      proposal: proposal ? { ...proposal, accepted: false, dismissed: true } : null
+    };
+  }
+
+  function bindBookAssistant(section, api) {
+    if (!section || typeof section.querySelector !== "function" || !api) return;
+    if (section.getAttribute("data-assist-bound") === "true") return;
+    section.setAttribute("data-assist-bound", "true");
+    const proposalBox = section.querySelector("[data-assist-proposal]");
+    const summary = section.querySelector("[data-assist-summary]");
+    const before = section.querySelector("[data-assist-before]");
+    const after = section.querySelector("[data-assist-after]");
+    const preview = section.querySelector("[data-assist-preview]");
+    const accept = section.querySelector("[data-assist-accept]");
+    const note = section.querySelector("[data-assist-note]");
+    const meta = section.querySelector("[data-assist-meta]");
+    let pending = null;
+    let proofQueue = [];
+    const hide = () => {
+      pending = null;
+      proofQueue = [];
+      if (proposalBox) proposalBox.hidden = true;
+      if (note) note.hidden = true;
+      if (preview) {
+        preview.hidden = true;
+        preview.removeAttribute("src");
+      }
+    };
+    const reading = (value, proposal) => {
+      const text = proposal && proposal.kind === "layout" && api.shareLabel
+        ? api.shareLabel(value)
+        : String(value ?? "");
+      if (!text && proposal && proposal.category === "confirm" && api.emptyLabel) return api.emptyLabel();
+      return text;
+    };
+    const show = (proposal) => {
+      pending = proposal;
+      if (!proposalBox) return;
+      proposalBox.hidden = false;
+      if (summary) summary.textContent = api.label ? api.label(proposal) : proposal.kind;
+      if (note) {
+        const wording = proposal.altersWords === true;
+        const confirm = proposal.category === "confirm";
+        note.hidden = !wording && !confirm;
+        note.textContent = wording
+          ? (api.wordingNote ? api.wordingNote() : "")
+          : (confirm && api.confirmNote ? api.confirmNote() : "");
+      }
+      if (before) {
+        before.hidden = proposal.kind === "art";
+        const body = reading(proposal.before, proposal);
+        before.textContent = api.beforeLabel && proposal.kind !== "art" ? `${api.beforeLabel()}\n${body}` : body;
+      }
+      if (after) {
+        after.hidden = proposal.kind === "art";
+        const body = reading(proposal.after, proposal);
+        after.textContent = api.afterLabel && proposal.kind !== "art" ? `${api.afterLabel()}\n${body}` : body;
+      }
+      if (preview) {
+        const showArt = proposal.kind === "art" && proposal.imageDataUrl;
+        preview.hidden = !showArt;
+        if (showArt) preview.src = proposal.imageDataUrl;
+      }
+      if (accept) accept.hidden = !(proposal.changed === true || proposal.category === "confirm");
+      if (meta) meta.textContent = api.pendingLabel ? api.pendingLabel() : "";
+    };
+    const currentPhoto = () => (api.photo ? api.photo() : null);
+    const showNextProof = () => {
+      const next = proofQueue.shift();
+      if (!next) {
+        hide();
+        if (meta) meta.textContent = api.proofDoneLabel ? api.proofDoneLabel() : "";
+        return;
+      }
+      show(next);
+    };
+    section.querySelector("[data-assist-type]")?.addEventListener("click", () => {
+      proofQueue = [];
+      const photo = currentPhoto();
+      if (!photo) return;
+      const proposal = proposeAssistantEdit({ kind: "typography", text: api.text(photo), id: `typography-${photo.id || "page"}` });
+      proposal.photoId = photo.id;
+      if (!proposal.changed) {
+        hide();
+        if (meta) meta.textContent = api.unchangedLabel ? api.unchangedLabel() : "";
+        return;
+      }
+      show(proposal);
+    });
+    section.querySelector("[data-assist-layout]")?.addEventListener("click", () => {
+      proofQueue = [];
+      const photo = currentPhoto();
+      if (!photo) return;
+      const proposal = proposeAssistantEdit({
+        kind: "layout",
+        text: api.text(photo),
+        layoutTextShare: photo.layoutTextShare || 0,
+        id: `layout-${photo.id || "page"}`
+      });
+      proposal.photoId = photo.id;
+      if (!proposal.changed) {
+        hide();
+        if (meta) meta.textContent = api.unchangedLabel ? api.unchangedLabel() : "";
+        return;
+      }
+      show(proposal);
+    });
+    section.querySelector("[data-assist-art]")?.addEventListener("click", async () => {
+      proofQueue = [];
+      const photo = currentPhoto();
+      if (!photo) return;
+      if (meta && api.workingLabel) meta.textContent = api.workingLabel();
+      const base = proposeAssistantEdit({ kind: "art", text: api.text(photo), id: `art-${photo.id || "page"}` });
+      let result = { ok: false };
+      try {
+        result = await api.illustrate(photo);
+      } catch (_error) {
+        result = { ok: false };
+      }
+      const proposal = resolveArtProposal(base, result);
+      proposal.photoId = photo.id;
+      if (!proposal.changed) {
+        hide();
+        if (meta) meta.textContent = api.artFailedLabel ? api.artFailedLabel() : "";
+        return;
+      }
+      show(proposal);
+    });
+    section.querySelector("[data-assist-proof]")?.addEventListener("click", () => {
+      const photo = currentPhoto();
+      if (!photo) return;
+      proofQueue = proposeProofreading({
+        text: api.text(photo),
+        textStatus: photo.textStatus,
+        lines: photo.lines,
+        edited: photo.textEdited === true
+      }).map((item) => ({ ...item, photoId: photo.id }));
+      if (!proofQueue.length) {
+        hide();
+        if (meta) meta.textContent = api.proofClearLabel ? api.proofClearLabel() : "";
+        return;
+      }
+      showNextProof();
+    });
+    accept?.addEventListener("click", () => {
+      if (!pending) return;
+      const photo = api.photoById ? api.photoById(pending.photoId) : currentPhoto();
+      if (!photo) return;
+      const advancing = pending.kind === "proofread" && proofQueue.length > 0;
+      const outcome = applyAssistantProposal(photo, { ...pending, accepted: true });
+      if (!outcome.applied) {
+        if (meta) meta.textContent = api.unchangedLabel ? api.unchangedLabel() : "";
+        return;
+      }
+      if (api.commit) api.commit(outcome.photo);
+      if (advancing) {
+        showNextProof();
+        return;
+      }
+      hide();
+      if (meta && api.acceptedLabel) meta.textContent = api.acceptedLabel();
+    });
+    section.querySelector("[data-assist-reject]")?.addEventListener("click", () => {
+      if (!pending) return;
+      const advancing = pending.kind === "proofread" && proofQueue.length > 0;
+      dismissAssistantProposal(currentPhoto(), pending);
+      if (advancing) {
+        showNextProof();
+        return;
+      }
+      hide();
+      if (meta && api.dismissedLabel) meta.textContent = api.dismissedLabel();
+    });
+  }
+
   function typesetText({ text = "", status = "ok", edited = false, manuscript = false } = {}) {
     if (manuscript) return "";
     if (status === "uncertain" || status === "unavailable" || status === "restored") {
@@ -708,19 +1341,20 @@
     };
   }
 
-  function selectPagePictures({ artworks = [], marks = null, showText = false, manuscript = false, treatment = "" } = {}) {
+  function selectPagePictures({ artworks = [], marks = null, showText = false, manuscript = false, treatment = "", separated = false } = {}) {
     const figures = (Array.isArray(artworks) ? artworks : []).filter(Boolean);
-    const style = treatment === "polished" || treatment === "original" ? treatment : "";
-    if (manuscript || style === "original") {
+    const style = treatment === "polished" || treatment === "original" || treatment === "accepted" ? treatment : "";
+    if (manuscript || !showText) {
       if (marks) return [marks];
       return figures.slice(0, 1);
     }
-    if (style === "polished") {
+    if (style === "polished" || style === "accepted") {
       if (figures.length) return figures.slice(0, 1);
       if (marks) return [marks];
       return [];
     }
-    if (!showText) {
+    if (separated && figures.length) return figures.slice(0, 4);
+    if (style === "original") {
       if (marks) return [marks];
       return figures.slice(0, 1);
     }
@@ -728,16 +1362,24 @@
     return marks ? [marks] : [];
   }
 
-  function layoutRebuiltPage({ pageWidth, pageHeight, artworkCount = 0, showText = false, title = "", pageNumber = 1 } = {}) {
+  function layoutRebuiltPage({ pageWidth, pageHeight, artworkCount = 0, showText = false, title = "", pageNumber = 1, textShare = 0 } = {}) {
     const frame = printSafeFrame(pageWidth, pageHeight, pageNumber);
     const caption = captionMetrics(pageHeight);
     const gap = 4 * frame.pxPerMmY;
     const titleBand = title ? 28 * frame.pxPerMmY : 0;
-    const captionBand = showText ? CAPTION_BAND_MM * frame.pxPerMmY : 0;
+    const requested = Number(textShare);
+    const share = requested >= 0.26 && requested <= 0.48 ? requested : 0.36;
+    const captionBand = showText ? frame.h * share : 0;
     let bottom = frame.y + frame.h;
     const titleBox = titleBand ? { x: frame.x, y: bottom - titleBand, w: frame.w, h: titleBand } : null;
     if (titleBox) bottom = titleBox.y - gap;
-    const textBox = captionBand ? { x: frame.x, y: bottom - captionBand, w: frame.w, h: Math.max(1, captionBand) } : null;
+    const textInset = captionBand ? 1.5 * frame.pxPerMmX : 0;
+    const textBox = captionBand ? {
+      x: frame.x + textInset,
+      y: bottom - captionBand,
+      w: Math.max(1, frame.w - textInset * 2),
+      h: Math.max(1, captionBand)
+    } : null;
     if (textBox) bottom = textBox.y - gap;
     const art = artworkCount ? { x: frame.x, y: frame.y, w: frame.w, h: Math.max(1, bottom - frame.y) } : null;
     return {
@@ -804,7 +1446,9 @@
     title = "",
     paper,
     pageNumber = 1,
-    treatment = ""
+    treatment = "",
+    separated = false,
+    textShare = 0
   } = {}) {
     const shownText = typesetText({ text, status, edited, manuscript });
     const pictures = selectPagePictures({
@@ -812,7 +1456,8 @@
       marks,
       showText: Boolean(shownText),
       manuscript,
-      treatment: manuscript ? "original" : treatment
+      treatment: manuscript ? "original" : treatment,
+      separated: manuscript ? false : separated
     });
     const layout = layoutRebuiltPage({
       pageWidth,
@@ -820,7 +1465,8 @@
       artworkCount: pictures.length,
       showText: Boolean(shownText),
       title,
-      pageNumber
+      pageNumber,
+      textShare
     });
     const ink = paper || PAPER;
     const out = new Uint8ClampedArray(pageWidth * pageHeight * 4);
@@ -1388,12 +2034,15 @@
       : [];
     const artworks = images.map((dataUrl) => ({ dataUrl }));
     if (statusCode === 501 || body.status === "unavailable") {
-      return { engine: "pdf-craft", textStatus: "unavailable", text: "", artworks: [], reason: body.reason || "ocr_not_configured", rewritten: false };
+      return { engine: "pdf-craft", textStatus: "unavailable", text: "", artworks: [], blocks: [], reason: body.reason || "ocr_not_configured", rewritten: false };
     }
+    const blocks = body.status === "ok" && typeof body.text === "string"
+      ? normalizeScanBlocks(body.blocks).filter((block) => block.kind !== "text" || body.text.includes(block.text))
+      : [];
     if (body.status === "ok" && typeof body.text === "string" && body.text.trim()) {
-      return { engine: "pdf-craft", textStatus: "ok", text: body.text, artworks, reason: body.reason || "extracted", rewritten: false };
+      return { engine: "pdf-craft", textStatus: "ok", text: body.text, artworks, blocks, reason: body.reason || "extracted", rewritten: false };
     }
-    return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks, reason: body.reason || "ocr_uncertain", rewritten: false };
+    return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks, blocks: [], reason: body.reason || "ocr_uncertain", rewritten: false };
   }
 
   async function requestBookIllustration(dataUrl, text, fetchImpl) {
@@ -1444,7 +2093,7 @@
   async function requestPdfCraftExtraction(dataUrl, fetchImpl) {
     const fetchFn = fetchImpl || globalThis.fetch;
     if (typeof fetchFn !== "function") {
-      return { engine: "pdf-craft", textStatus: "unavailable", text: "", artworks: [], reason: "ocr_not_configured", rewritten: false };
+      return { engine: "pdf-craft", textStatus: "unavailable", text: "", artworks: [], blocks: [], reason: "ocr_not_configured", rewritten: false };
     }
     try {
       const response = await fetchFn("/api/family-book/extract", {
@@ -1455,7 +2104,7 @@
       const payload = await response.json().catch(() => ({}));
       return interpretPdfCraftResponse(response.status, payload);
     } catch (_error) {
-      return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks: [], reason: "extract_failed", rewritten: false };
+      return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks: [], blocks: [], reason: "extract_failed", rewritten: false };
     }
   }
 
@@ -1491,8 +2140,21 @@
         reason: "ocr_not_configured"
       };
       const textStatus = extraction.textStatus || "uncertain";
-      const figures = Array.isArray(extraction.artworks) ? extraction.artworks : [];
-      const artworks = figures.length ? figures : [{ dataUrl: scanDataUrl }];
+      const recognized = textStatus === "ok" ? String(extraction.text || "") : "";
+      const figures = Array.isArray(extraction.artworks) ? extraction.artworks.filter((item) => item && item.dataUrl) : [];
+      const layers = composeScanLayers({
+        rgba: scanned.rgba,
+        width: scanned.width,
+        height: scanned.height,
+        text: recognized,
+        textStatus,
+        blocks: extraction.blocks || [],
+        toPng
+      });
+      const separatedArt = !figures.length && layers.separated
+        ? layers.artworks.map((item) => ({ dataUrl: item.dataUrl, box: item.box || null })).filter((item) => item.dataUrl)
+        : [];
+      const artworks = figures.length ? figures : separatedArt.length ? separatedArt : [{ dataUrl: scanDataUrl }];
       pages.push({
         dataUrl: scanDataUrl,
         scanDataUrl,
@@ -1500,7 +2162,9 @@
         sheetCleaned: true,
         scanIsolated: true,
         artworks,
-        text: textStatus === "ok" ? String(extraction.text || "") : "",
+        lines: recognized ? layers.lines : [],
+        layersSeparated: Boolean(recognized && (figures.length || separatedArt.length)),
+        text: recognized,
         textStatus,
         textEdited: false,
         manuscript: Boolean(manuscript),
@@ -1556,7 +2220,8 @@
       marks: options.marks || null,
       showText: Boolean(shownText),
       manuscript,
-      treatment: manuscript ? "original" : (options.treatment || "")
+      treatment: manuscript ? "original" : (options.treatment || ""),
+      separated: manuscript ? false : options.separated === true
     });
     const layout = layoutRebuiltPage({
       pageWidth,
@@ -1564,7 +2229,8 @@
       artworkCount: pictures.length,
       showText: Boolean(shownText),
       title: options.title || options.subtitle || "",
-      pageNumber: options.pageNumber || 1
+      pageNumber: options.pageNumber || 1,
+      textShare: options.textShare || 0
     });
     context.fillStyle = options.paper || PAPER_HEX;
     context.fillRect(0, 0, pageWidth, pageHeight);
@@ -1583,8 +2249,11 @@
       context.textAlign = "left";
       context.textBaseline = "top";
       const maxLines = Math.max(1, Math.floor(layout.text.h / layout.caption.leadingPx));
-      wrapMeasured(context, shownText, layout.text.w).slice(0, maxLines).forEach((line, index) => {
-        context.fillText(line, layout.text.x, layout.text.y + index * layout.caption.leadingPx);
+      const lines = wrapMeasured(context, shownText, layout.text.w).slice(0, maxLines);
+      const blockHeight = lines.length * layout.caption.leadingPx;
+      const textTop = layout.text.y + Math.max(0, (layout.text.h - blockHeight) / 2);
+      lines.forEach((line, index) => {
+        context.fillText(line, layout.text.x, textTop + index * layout.caption.leadingPx);
       });
       context.restore();
     }
@@ -1742,9 +2411,19 @@
     planBookPages,
     prepareArtwork,
     renderAuthorPreview,
+    applyAssistantProposal,
+    bindBookAssistant,
+    composeScanLayers,
+    dismissAssistantProposal,
+    normalizeScanBlocks,
+    proposeAssistantEdit,
+    proposeProofreading,
     requestBookIllustration,
     requestPdfCraftExtraction,
+    resolveArtProposal,
     retainBookEdits,
+    segmentSheet,
+    storyArtSources,
     rgbaToPngDataUrl,
     splitScanPages,
     typesetText

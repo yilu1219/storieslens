@@ -25,7 +25,13 @@ const {
   scanArtwork,
   paintFullBleed,
   splitScanPages,
-  typesetText
+  typesetText,
+  segmentSheet,
+  composeScanLayers,
+  proposeProofreading,
+  applyAssistantProposal,
+  dismissAssistantProposal,
+  storyArtSources
 } = require("../artwork-prepare");
 
 const STATUS_COPY = "The words were not read confidently, so nothing was invented. The original marks stay on the page and can be corrected.";
@@ -755,4 +761,112 @@ test("interior style defaults to original artwork, keeps edits, and does not inv
   assert.equal(art.url, "scan");
   assert.equal(art.fallback, true);
   assert.equal(art.treatment, "original");
+});
+
+test("a sheet splits into an art frame and a text layer, and uncertain OCR does not invent words", () => {
+  const width = 80;
+  const height = 120;
+  const rgba = fill(width, height, [248, 244, 236]);
+  paintRect(rgba, width, 8, 8, 64, 58, [30, 144, 220]);
+  paintRect(rgba, width, 18, 20, 20, 16, [220, 40, 40]);
+  paintRect(rgba, width, 12, 86, 28, 3, [20, 20, 20]);
+  paintRect(rgba, width, 44, 86, 18, 3, [20, 20, 20]);
+  paintRect(rgba, width, 12, 98, 40, 3, [20, 20, 20]);
+  const segmented = segmentSheet(rgba, width, height);
+  assert.equal(segmented.separated, true);
+  assert.ok(segmented.artBox.y + segmented.artBox.h < 86);
+  assert.ok(segmented.textBoxes[0].y >= 80);
+  const layers = composeScanLayers({
+    rgba,
+    width,
+    height,
+    text: "teh catt",
+    textStatus: "ok",
+    blocks: [{ kind: "text", text: "a polished sentence", confidence: 1, box: { x: 0, y: 0.8, w: 0.4, h: 0.1 } }]
+  });
+  assert.equal(layers.separated, true);
+  assert.equal(layers.lines.map((line) => line.text).join("\n"), "teh catt");
+  const unsure = composeScanLayers({
+    rgba,
+    width,
+    height,
+    text: "invented caption",
+    textStatus: "uncertain",
+    blocks: [{ kind: "text", text: "invented caption", confidence: 0.2, box: { x: 0, y: 0.8, w: 0.5, h: 0.1 } }]
+  });
+  assert.equal(unsure.separated, false);
+  assert.deepEqual(unsure.lines, []);
+  const story = layoutRebuiltPage({ pageWidth: 154, pageHeight: 216, artworkCount: 1, showText: true, pageNumber: 1 });
+  assert.ok(story.text.h > story.frame.h * 0.28);
+  assert.ok(story.art.h > story.text.h);
+  assert.equal(story.caption.sizePt, 11);
+  assert.equal(story.caption.leading, 1.35);
+});
+
+test("proofreading stays out of the book until Accept, and does not rewrite the child’s spelling", () => {
+  const invented = proposeProofreading({ text: "teh catt sat", textStatus: "ok" });
+  assert.equal(invented.some((item) => String(item.after).includes("the cat")), false);
+  assert.equal(invented.every((item) => item.accepted === false), true);
+  const photo = { id: "p", text: "the the cat", textStatus: "ok", textEdited: false };
+  const wording = proposeProofreading({ text: photo.text, textStatus: "ok" }).find((item) => item.category === "wording");
+  assert.equal(wording.altersWords, true);
+  assert.equal(wording.after, "the cat");
+  assert.equal(applyAssistantProposal(photo, wording).applied, false);
+  assert.equal(photo.text, "the the cat");
+  const dismissed = dismissAssistantProposal(photo, wording);
+  assert.equal(dismissed.applied, false);
+  assert.equal(dismissed.photo.text, "the the cat");
+  const accepted = applyAssistantProposal(photo, { ...wording, accepted: true });
+  assert.equal(accepted.applied, true);
+  assert.equal(accepted.photo.text, "the cat");
+  assert.equal(accepted.photo.textEdited, true);
+  assert.equal(photo.text, "the the cat");
+  const punctPhoto = { text: "hello , cat", textStatus: "ok" };
+  const punct = proposeProofreading({ text: punctPhoto.text, textStatus: "ok" }).find((item) => item.category === "punctuation");
+  assert.equal(punct.altersWords, false);
+  assert.equal(punct.after, "hello, cat");
+  assert.equal(applyAssistantProposal(punctPhoto, punct).applied, false);
+  assert.equal(punctPhoto.text, "hello , cat");
+  const chinese = proposeProofreading({ text: "妈妈看着小猫小猫", textStatus: "ok" });
+  assert.equal(chinese.some((item) => item.after === "妈妈看着小猫"), true);
+  assert.equal(chinese.some((item) => item.before === "妈妈" || item.after === "妈"), false);
+  const quote = proposeProofreading({ text: "“小猫坐在月亮上", textStatus: "ok" }).find((item) => item.category === "punctuation");
+  assert.equal(quote.after, "“小猫坐在月亮上”");
+  assert.equal(quote.altersWords, false);
+  const uncertain = proposeProofreading({ text: "guessed sentence", textStatus: "uncertain" });
+  assert.equal(uncertain.length, 1);
+  assert.equal(uncertain[0].category, "confirm");
+  assert.equal(uncertain[0].before, "");
+  assert.equal(uncertain[0].after, "");
+  const confirmed = applyAssistantProposal({ text: "", textStatus: "uncertain" }, { ...uncertain[0], accepted: true });
+  assert.equal(confirmed.applied, true);
+  assert.equal(confirmed.photo.text, "");
+  assert.equal(confirmed.acceptance.accepted, true);
+  const low = proposeProofreading({
+    text: "teh catt",
+    textStatus: "ok",
+    lines: [{ text: "teh catt", confidence: 0.4 }]
+  });
+  const confirm = low.find((item) => item.category === "confirm");
+  assert.equal(confirm.before, "teh catt");
+  assert.equal(confirm.after, "teh catt");
+  assert.equal(confirm.changed, false);
+  const kept = storyArtSources({
+    manuscript: true,
+    treatment: "original",
+    scanUrl: "sheet",
+    artworks: [{ dataUrl: "figure" }],
+    layersSeparated: true
+  });
+  assert.equal(kept.marksUrl, "sheet");
+  assert.equal(kept.separated, false);
+  const spread = storyArtSources({
+    manuscript: false,
+    treatment: "original",
+    scanUrl: "sheet",
+    artworks: [{ dataUrl: "figure" }],
+    layersSeparated: true
+  });
+  assert.deepEqual(spread.urls, ["figure"]);
+  assert.equal(spread.separated, true);
 });

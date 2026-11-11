@@ -430,6 +430,28 @@ label.field input {
 }
 .book-edit h3 { margin: 0 0 6px; font-size: 18px; }
 .book-edit .fields { margin-top: 12px; }
+.book-assistant {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.book-assistant h3 { margin: 0 0 6px; font-size: 18px; }
+.book-assistant .suggest-actions { margin-top: 12px; }
+.assist-sample {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f6f0e4;
+  white-space: pre-wrap;
+}
+.assist-preview {
+  width: min(100%, 280px);
+  margin-top: 8px;
+  border-radius: 12px;
+  background: #f6f0e4;
+}
 .piece-edit { display: grid; gap: 8px; }
 .piece-edit .secondary { width: 100%; }
 .book-frame {

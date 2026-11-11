@@ -8,7 +8,7 @@
     <title>教师班级出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261111-ring1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261111-edit1" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -63,6 +63,28 @@
           <span class="page-label" data-page-label></span>
           <button type="button" data-next data-i18n="next">下一页</button>
         </div>
+        <section class="book-assistant" data-book-assistant hidden>
+          <h3 data-i18n="assistant-kicker">排版助手</h3>
+          <p class="hint" data-i18n="assistant-hint">可以建议间距、换行、图文比例、画面整理，以及校对。每条建议都会先对照显示。只有你点接受，才会写进这本书。</p>
+          <div class="suggest-actions">
+            <button class="secondary" type="button" data-assist-type data-i18n="assistant-type">整理间距和换行</button>
+            <button class="secondary" type="button" data-assist-layout data-i18n="assistant-layout">调整图文比例</button>
+            <button class="secondary" type="button" data-assist-art data-i18n="assistant-art">整理画面</button>
+            <button class="secondary" type="button" data-assist-proof data-i18n="assistant-proof">校对文字</button>
+          </div>
+          <div data-assist-proposal hidden>
+            <p data-assist-summary></p>
+            <p class="hint" data-assist-note hidden></p>
+            <p class="assist-sample" data-assist-before></p>
+            <p class="assist-sample" data-assist-after></p>
+            <img data-assist-preview alt="" hidden />
+            <div class="suggest-actions">
+              <button class="primary" type="button" data-assist-accept data-i18n="assistant-accept">接受</button>
+              <button class="secondary" type="button" data-assist-reject data-i18n="assistant-reject">不采用</button>
+            </div>
+          </div>
+          <p class="suggest-meta" data-assist-meta></p>
+        </section>
         <section class="suggest-card" data-reading-card hidden>
           <h3 data-i18n="reading-kicker">认读确认</h3>
           <p data-i18n="reading-copy">请学生把这一版读一遍。接受后记下认读，不改作业照片。也可以请语大师点评、改写和检查。</p>
@@ -103,9 +125,9 @@
     <div class="print-root" data-print-root aria-hidden="true"></div>
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261111-ring1"></script>
+    <script src="artwork-prepare.js?v=20261111-edit1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-review.js?v=20261111-2"></script>
-    <script src="teacher-book.js?v=20261111-ring1"></script>
+    <script src="teacher-book.js?v=20261111-edit1"></script>
   </body>
 </html>
