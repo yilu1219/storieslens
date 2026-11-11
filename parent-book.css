@@ -142,12 +142,23 @@ label.field input {
 }
 .hint { color: var(--muted); font-size: 12px; font-weight: 500; }
 
+.upload-start {
+  margin: 18px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(22, 132, 91, .1);
+  color: var(--leaf-deep);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.4;
+}
 .upload-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 16px;
 }
+.upload-start + .upload-row { margin-top: 8px; }
 .upload-btn {
   display: flex;
   min-height: 56px;
@@ -172,6 +183,29 @@ label.field input {
   font-size: 13px;
   line-height: 1.5;
 }
+.yu-progress {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.yu-progress img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+.yu-progress strong {
+  display: block;
+  color: var(--leaf-deep);
+  font-size: 28px;
+  line-height: 1;
+}
+.yu-progress p { margin: 6px 0 0; font-size: 14px; line-height: 1.45; }
 .status {
   min-height: 22px;
   margin: 12px 0 0;
@@ -179,6 +213,27 @@ label.field input {
   font-size: 14px;
 }
 .status.is-error { color: var(--danger); }
+.official-path, .follow-up {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.official-path h3, .follow-up h3 { margin: 0 0 8px; font-size: 18px; }
+.official-path p, .follow-up p, .follow-up li { font-size: 14px; line-height: 1.5; }
+.pay-steps { margin: 10px 0 0; padding-left: 1.2em; }
+.pay-steps li { margin: 4px 0; font-size: 14px; }
+.follow-up ul { margin: 8px 0 0; padding-left: 1.2em; }
+.follow-up .actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  text-decoration: none;
+}
 
 .thumbs {
   display: grid;
@@ -259,6 +314,17 @@ label.field input {
 .thumb-remove { position: absolute; top: 4px; right: 4px; }
 
 .preview-stage { margin-top: 8px; }
+.book-edit {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.book-edit h3 { margin: 0 0 6px; font-size: 18px; }
+.book-edit .fields { margin-top: 12px; }
+.piece-edit { display: grid; gap: 8px; }
+.piece-edit .secondary { width: 100%; }
 .book-frame {
   width: min(100%, 420px);
   margin: 0 auto;

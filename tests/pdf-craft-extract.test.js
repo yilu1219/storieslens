@@ -5,12 +5,14 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { PDFDocument } = require("pdf-lib");
 const { createFamilyBookApi } = require("../family-book-api");
 const { createFamilyBookStore } = require("../family-book-store");
 const { buildInformalPreviewPdf } = require("../parent-book-pdf");
 const {
   extractScanFromImage,
   imageToSinglePagePdf,
+  redactExtractMessage,
   pdfCraftOcrConfig,
   pdfCraftVendorKind,
   piecesToResult,
@@ -172,6 +174,10 @@ test("markdown from pdf-craft keeps the child's words and separates figure files
 test("a phone photo becomes a one-page PDF and pdf-craft output is recomposed without inventing text", async () => {
   const pdfBuffer = await imageToSinglePagePdf(png, "image/png");
   assert.equal(pdfBuffer.subarray(0, 5).toString("ascii"), "%PDF-");
+  const sized = await PDFDocument.load(pdfBuffer);
+  const pageSize = sized.getPages()[0].getSize();
+  assert.ok(pageSize.width <= 36.1, `phone pixels were treated as PDF points: ${pageSize.width}`);
+  assert.equal(redactExtractMessage("OCR failed sk-supersecretkeyvalue"), "OCR failed [redacted]");
 
   let spawned = false;
   const missing = await extractScanFromImage({
@@ -298,6 +304,10 @@ test("parent and teacher books call pdf-craft and rebuild pages instead of a ful
   assert.match(script, /DeepSeekOCRVendorConfig/);
   assert.match(script, /DeepSeekOCR2VendorConfig/);
   assert.match(script, /convert_pdf_to_markdown/);
+  assert.match(script, /max_page_image_file_size/);
+  assert.match(script, /def redact/);
+  assert.match(read("pdf-craft-extract.js"), /logExtractFailure/);
+  assert.match(read("family-book-api.js"), /logExtractFailure/);
   assert.doesNotMatch(script, /XMLTranslator/);
   assert.match(requirements, /pdf-craft==2\.6\.7/);
   assert.match(nixpacks, /poppler-utils/);

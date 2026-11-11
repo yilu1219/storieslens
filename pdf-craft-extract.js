@@ -98,6 +98,23 @@ function piecesToResult(text, images) {
   };
 }
 
+function redactExtractMessage(value) {
+  return String(value || "")
+    .replace(/bearer\s+[A-Za-z0-9._-]{6,}/gi, "Bearer [redacted]")
+    .replace(/(api[_-]?key|token|secret)(["']?\s*[:=]\s*["']?)[^\s"',}]+/gi, "$1$2[redacted]")
+    .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[redacted]")
+    .replace(/\bnvapi-[A-Za-z0-9_-]{6,}\b/g, "[redacted]")
+    .slice(0, 300);
+}
+
+function logExtractFailure(info = {}) {
+  console.error("family-book extract failed", JSON.stringify({
+    reason: String(info.reason || "pdf_craft_failed"),
+    errorType: String(info.errorType || ""),
+    message: redactExtractMessage(info.message)
+  }));
+}
+
 function failureResult(reason) {
   const code = reason || "pdf_craft_failed";
   const unavailable = code === "ocr_not_configured" || code === "pdf_craft_unavailable" || code === "poppler_missing";
@@ -125,8 +142,12 @@ function unavailableMessage(reason) {
 async function imageToSinglePagePdf(buffer, mimeType) {
   const pdf = await PDFDocument.create();
   const image = mimeType === "image/png" ? await pdf.embedPng(buffer) : await pdf.embedJpg(buffer);
-  const page = pdf.addPage([image.width, image.height]);
-  page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
+  // pdf-craft renders at 300 DPI. Size the page in points so that render stays near the
+  // source pixels instead of treating every pixel as one point.
+  const widthPt = Math.max(36, image.width * 72 / 300);
+  const heightPt = Math.max(36, image.height * 72 / 300);
+  const page = pdf.addPage([widthPt, heightPt]);
+  page.drawImage(image, { x: 0, y: 0, width: widthPt, height: heightPt });
   return Buffer.from(await pdf.save());
 }
 
@@ -175,6 +196,7 @@ function runPdfCraftProcess({ python, scriptPath, pdfPath, markdownPath, assetsP
       return;
     }
     let stdout = "";
+    let stderr = "";
     let settled = false;
     const finish = (payload) => {
       if (settled) return;
@@ -189,6 +211,10 @@ function runPdfCraftProcess({ python, scriptPath, pdfPath, markdownPath, assetsP
       stdout += chunk.toString("utf8");
       if (stdout.length > 200_000) stdout = stdout.slice(-200_000);
     });
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString("utf8");
+      if (stderr.length > 8_000) stderr = stderr.slice(-8_000);
+    });
     child.on("error", () => {
       clearTimeout(timer);
       finish({ ok: false, reason: "pdf_craft_unavailable", stdout });
@@ -201,10 +227,12 @@ function runPdfCraftProcess({ python, scriptPath, pdfPath, markdownPath, assetsP
         finish({
           ok: payload.ok === true,
           reason: payload.reason || (payload.ok ? "extracted" : "pdf_craft_failed"),
+          errorType: payload.errorType || "",
+          message: payload.message || stderr,
           stdout
         });
       } catch (_error) {
-        finish({ ok: false, reason: "pdf_craft_failed", stdout });
+        finish({ ok: false, reason: "pdf_craft_failed", errorType: "InvalidExtractOutput", message: stderr || stdout, stdout });
       }
     });
   });
@@ -230,9 +258,13 @@ async function extractScanFromImage({ buffer, mimeType = "image/png", env = proc
       env,
       spawnImpl
     });
-    if (!ran.ok) return failureResult(ran.reason);
+    if (!ran.ok) {
+      logExtractFailure(ran);
+      return failureResult(ran.reason);
+    }
     return readCraftDirectory(rootDir, markdownPath);
-  } catch (_error) {
+  } catch (error) {
+    logExtractFailure({ reason: "pdf_craft_failed", errorType: error?.name || "Error", message: error?.message || "" });
     return failureResult("pdf_craft_failed");
   } finally {
     fs.rmSync(rootDir, { recursive: true, force: true });
@@ -243,6 +275,8 @@ module.exports = {
   EXTRACT_TIMEOUT_MS,
   extractScanFromImage,
   failureResult,
+  logExtractFailure,
+  redactExtractMessage,
   imageToSinglePagePdf,
   parseImageDataUrl,
   pdfCraftOcrConfig,

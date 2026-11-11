@@ -4,7 +4,7 @@ const { familyCheckoutStatus, entitlementFromQuery, createFamilyCheckoutSession,
 const { getFamilyBookOffer } = require("./family-book-catalog");
 const { inspectParentBookRequest } = require("./parent-book-safety");
 const { mailConfigured, sendPaidBookPdf } = require("./family-book-mail");
-const { extractScanFromImage, parseImageDataUrl, unavailableMessage } = require("./pdf-craft-extract");
+const { extractScanFromImage, logExtractFailure, parseImageDataUrl, unavailableMessage } = require("./pdf-craft-extract");
 
 function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch, extractScan } = {}) {
   const books = store || createFamilyBookStore();
@@ -76,7 +76,12 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
           reason: result.reason,
           error: result.status === "unavailable" ? unavailableMessage(result.reason) : undefined
         });
-      } catch (_error) {
+      } catch (error) {
+        logExtractFailure({
+          reason: "pdf_craft_failed",
+          errorType: error?.name || "Error",
+          message: error?.message || ""
+        });
         sendJson(response, 422, {
           engine: "pdf-craft",
           status: "uncertain",

@@ -8,6 +8,8 @@ const {
   interpretPdfCraftResponse,
   looksLikeManuscript,
   pagesFromPhonePhoto,
+  rotateQuarter,
+  scanArtwork,
   paintFullBleed,
   paintRebuiltPage,
   placementFillsPage,
@@ -353,4 +355,80 @@ test("a real under-18 portrait needs a parental signature; an illustrated avatar
   const cartoon = illustrateAvatar(avatar, 4, 4);
   assert.equal(cartoon.length, avatar.length);
   assert.equal(cartoon[3], 255);
+});
+
+test("a phone photo is scanned off the desk before recognition, and a failed scan is not published", async () => {
+  const width = 80;
+  const height = 60;
+  const rgba = noisyTable(width, height);
+  paintRect(rgba, width, 16, 8, 48, 44, [250, 248, 240]);
+  paintRect(rgba, width, 30, 22, 12, 12, [200, 30, 40]);
+  const scanned = scanArtwork(rgba, width, height);
+  assert.equal(scanned.isolated, true);
+  const corner = pixel(scanned.rgba, scanned.width, 1, 1);
+  assert.ok(corner[0] > 190 && corner[1] > 190, `scan corner still looks like the desk: ${corner.join(",")}`);
+  let calls = 0;
+  const built = await pagesFromPhonePhoto({
+    rgba,
+    width,
+    height,
+    toPng: (pixels, scanWidth) => {
+      const sample = pixel(pixels, scanWidth, 0, 0);
+      assert.ok(sample[0] > 180, `OCR input still shows the desk: ${sample.join(",")}`);
+      return "data:image/png;base64,scan";
+    },
+    extract: async () => {
+      calls += 1;
+      return { textStatus: "ok", text: "teh catt", artworks: [{ dataUrl: "data:image/png;base64,fig" }] };
+    }
+  });
+  assert.equal(calls, 1);
+  assert.equal(built.pages[0].scanIsolated, true);
+  assert.equal(built.pages[0].text, "teh catt");
+  assert.equal(built.pages[0].artworks[0].dataUrl, "data:image/png;base64,fig");
+
+  let blocked = 0;
+  const missed = await pagesFromPhonePhoto({
+    rgba: noisyTable(width, height),
+    width,
+    height,
+    toPng: () => "data:image/png;base64,desk",
+    extract: async () => {
+      blocked += 1;
+      return { textStatus: "ok", text: "should not run" };
+    }
+  });
+  assert.equal(blocked, 0);
+  assert.equal(missed.pages[0].scanIsolated, false);
+  assert.equal(missed.pages[0].scanDataUrl, "");
+  assert.equal(missed.pages[0].marksDataUrl, "");
+  assert.equal(missed.pages[0].extractReason, "scan_not_isolated");
+});
+
+test("rotation is a 90 degree clockwise turn and the first photo can stay the cover", () => {
+  const width = 2;
+  const height = 1;
+  const rgba = new Uint8ClampedArray([
+    10, 0, 0, 255,
+    20, 0, 0, 255
+  ]);
+  const turned = rotateQuarter(rgba, width, height, 1);
+  assert.equal(turned.width, 1);
+  assert.equal(turned.height, 2);
+  assert.equal(turned.rgba[0], 20);
+  assert.equal(turned.rgba[4], 10);
+  const full = rotateQuarter(rgba, width, height, 4);
+  assert.equal(full.width, 2);
+  assert.equal(full.rgba[0], 10);
+  assert.equal(full.rgba[4], 20);
+  const pages = planBookPages({
+    photos: [
+      { id: "first", manuscript: true },
+      { id: "later", manuscript: false }
+    ],
+    coverId: "first",
+    includeAuthor: false
+  });
+  assert.equal(pages[0].kind, "cover");
+  assert.equal(pages[0].photoId, "first");
 });

@@ -61,6 +61,7 @@
       cutting: "正在用 pdf-craft 提取画作和文字…",
       "extract-done": "已用 pdf-craft 把画作和文字分开，再排到米色 A5 页上。文字没有改写。",
       "extract-uncertain": "文字没有把握，所以没有编造句子。原有笔迹还留在页面上，可以自己改正。",
+      "scan-not-isolated": "没有把作品从桌面上分开，所以这一页没有用带桌面的原图。请把纸拍完整、尽量摊平后再试。",
       "extract-unavailable": "pdf-craft 的远程 OCR 还没接通，没有识别文字。原图还在，可以恢复或稍后重试。",
       "split-done": "这张照片左右各有一幅作品，已分成两页，并分别提取。可以撤销拆分。",
       restored: "已恢复原图。这不是提取后的重排页。",
@@ -133,6 +134,7 @@
       cutting: "Extracting the drawing and the words with pdf-craft…",
       "extract-done": "pdf-craft separated the drawing and the words, then placed them on a cream A5 page. The words were not rewritten.",
       "extract-uncertain": "The words were not read confidently, so nothing was invented. The original marks stay on the page and can be corrected.",
+      "scan-not-isolated": "The sheet could not be separated from the table, so the tabletop photo was not used. Retake it with the whole page visible and as flat as you can.",
       "extract-unavailable": "pdf-craft remote OCR is not configured, so no words were recognized. The original photo is still here.",
       "split-done": "This photo has a piece on the left and a piece on the right, so each side was extracted into its own page. You can undo the split.",
       restored: "The original photo is restored. This is not an extracted page.",
@@ -299,6 +301,7 @@
 
   function pageNote(photo) {
     if (!photo) return "";
+    if (photo.extractReason === "scan_not_isolated" || photo.scanIsolated === false) return t("scan-not-isolated");
     if (photo.textStatus === "unavailable") return t("extract-unavailable");
     if (photo.textStatus === "uncertain") return t("extract-uncertain");
     if (photo.textStatus === "restored") return t("restored");
@@ -318,7 +321,8 @@
     });
     const groupId = built.split ? `split-${Date.now().toString(36)}` : "";
     const photos = built.pages.map((page) => ({
-      dataUrl: (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
+      dataUrl: page.dataUrl || (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
+      scanIsolated: page.scanIsolated !== false,
       originalDataUrl,
       scanDataUrl: page.scanDataUrl,
       marksDataUrl: page.marksDataUrl,
@@ -386,7 +390,7 @@
     }
     const forceMarks = photo.manuscript || !confident || (photo.textStatus === "parent" && !artworks.length);
     let marks = null;
-    const marksUrl = photo.marksDataUrl || (!confident || forceMarks ? (photo.scanDataUrl || photo.originalDataUrl) : "");
+    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || (forceMarks ? photo.scanDataUrl : ""));
     if (forceMarks && marksUrl) marks = await loadHtmlImage(marksUrl);
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
