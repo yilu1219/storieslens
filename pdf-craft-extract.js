@@ -1,0 +1,244 @@
+const { spawn } = require("node:child_process");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { PDFDocument } = require("pdf-lib");
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_ASSET_BYTES = 1_500_000;
+const MAX_ASSETS = 8;
+const EXTRACT_TIMEOUT_MS = 180_000;
+
+function pdfCraftOcrConfig(env = process.env) {
+  const backend = String(env.PDF_CRAFT_OCR_BACKEND || "deepseek").trim().toLowerCase();
+  if (backend === "unlimited") {
+    const ak = String(env.PDF_CRAFT_UNLIMITED_OCR_AK || "").trim();
+    const sk = String(env.PDF_CRAFT_UNLIMITED_OCR_SK || "").trim();
+    if (!ak || !sk) {
+      return {
+        configured: false,
+        backend: "unlimited",
+        reason: "ocr_not_configured",
+        missing: ["PDF_CRAFT_UNLIMITED_OCR_AK", "PDF_CRAFT_UNLIMITED_OCR_SK"]
+      };
+    }
+    return {
+      configured: true,
+      backend: "unlimited",
+      ak,
+      sk,
+      baseUrl: String(env.PDF_CRAFT_UNLIMITED_OCR_BASE_URL || "").trim()
+    };
+  }
+  const baseUrl = String(env.PDF_CRAFT_OCR_BASE_URL || env.OPENROUTER_BASE_URL || "").trim().replace(/\/+$/, "");
+  const apiKey = String(env.PDF_CRAFT_OCR_API_KEY || env.OPENROUTER_API_KEY || "").trim();
+  const model = String(env.PDF_CRAFT_OCR_MODEL || env.OPENROUTER_OCR_MODEL || "").trim();
+  const missing = [];
+  if (!baseUrl) missing.push("PDF_CRAFT_OCR_BASE_URL");
+  if (!apiKey) missing.push("PDF_CRAFT_OCR_API_KEY");
+  if (!model) missing.push("PDF_CRAFT_OCR_MODEL");
+  if (missing.length) {
+    return { configured: false, backend: "deepseek", reason: "ocr_not_configured", missing };
+  }
+  return { configured: true, backend: "deepseek", baseUrl, apiKey, model };
+}
+
+function parseImageDataUrl(value) {
+  const match = String(value || "").match(/^data:(image\/(?:jpeg|jpg|png));base64,([a-zA-Z0-9+/=\s]+)$/i);
+  if (!match) return null;
+  const mimeType = match[1].toLowerCase() === "image/jpg" ? "image/jpeg" : match[1].toLowerCase();
+  const buffer = Buffer.from(match[2].replace(/\s+/g, ""), "base64");
+  if (!buffer.length || buffer.length > MAX_IMAGE_BYTES) return null;
+  return { mimeType, buffer };
+}
+
+function separateCraftMarkdown(markdown) {
+  const images = [];
+  const text = String(markdown || "")
+    .replace(/!\[[^\]]*\]\(([^)]+)\)/g, (_, src) => {
+      images.push(String(src || "").trim());
+      return "\n";
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/^\s+|\s+$/g, "");
+  return { text, images };
+}
+
+function piecesToResult(text, images) {
+  const faithful = String(text || "");
+  const files = Array.isArray(images) ? images.filter(Boolean).slice(0, MAX_ASSETS) : [];
+  if (!faithful.trim()) {
+    return {
+      engine: "pdf-craft",
+      status: "uncertain",
+      text: "",
+      images: files,
+      uncertain: true,
+      rewritten: false,
+      reason: "ocr_uncertain"
+    };
+  }
+  return {
+    engine: "pdf-craft",
+    status: "ok",
+    text: faithful,
+    images: files,
+    uncertain: false,
+    rewritten: false,
+    reason: "extracted"
+  };
+}
+
+function failureResult(reason) {
+  const code = reason || "pdf_craft_failed";
+  const unavailable = code === "ocr_not_configured" || code === "pdf_craft_unavailable" || code === "poppler_missing";
+  return {
+    engine: "pdf-craft",
+    status: unavailable ? "unavailable" : "uncertain",
+    text: "",
+    images: [],
+    uncertain: true,
+    rewritten: false,
+    reason: code
+  };
+}
+
+function unavailableMessage(reason) {
+  if (reason === "poppler_missing") {
+    return "pdf-craft needs Poppler (pdftoppm) on this server. No text was recognized.";
+  }
+  if (reason === "pdf_craft_unavailable") {
+    return "The pdf-craft Python library is not installed on this server. No text was recognized.";
+  }
+  return "pdf-craft remote OCR is not configured. Set PDF_CRAFT_OCR_BASE_URL, PDF_CRAFT_OCR_API_KEY, and PDF_CRAFT_OCR_MODEL, or OPENROUTER_API_KEY with OPENROUTER_OCR_MODEL. No text was recognized.";
+}
+
+async function imageToSinglePagePdf(buffer, mimeType) {
+  const pdf = await PDFDocument.create();
+  const image = mimeType === "image/png" ? await pdf.embedPng(buffer) : await pdf.embedJpg(buffer);
+  const page = pdf.addPage([image.width, image.height]);
+  page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
+  return Buffer.from(await pdf.save());
+}
+
+function resolveAsset(rootDir, markdownPath, src) {
+  if (!src || /^(?:[a-z]+:|\/\/)/i.test(src) || src.includes("\0")) return null;
+  const full = path.resolve(path.dirname(markdownPath), src);
+  const root = path.resolve(rootDir);
+  if (full !== root && !full.startsWith(root + path.sep)) return null;
+  return full;
+}
+
+function readCraftDirectory(rootDir, markdownPath) {
+  if (!fs.existsSync(markdownPath)) return piecesToResult("", []);
+  const markdown = fs.readFileSync(markdownPath, "utf8");
+  const separated = separateCraftMarkdown(markdown);
+  const images = [];
+  for (const src of separated.images) {
+    if (images.length >= MAX_ASSETS) break;
+    const file = resolveAsset(rootDir, markdownPath, src);
+    if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
+    const bytes = fs.readFileSync(file);
+    if (!bytes.length || bytes.length > MAX_ASSET_BYTES) continue;
+    const ext = path.extname(file).toLowerCase();
+    const mime = ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
+    images.push(`data:${mime};base64,${bytes.toString("base64")}`);
+  }
+  return piecesToResult(separated.text, images);
+}
+
+function runPdfCraftProcess({ python, scriptPath, pdfPath, markdownPath, assetsPath, env, spawnImpl }) {
+  const spawnFn = spawnImpl || spawn;
+  const args = ["--pdf", pdfPath, "--markdown", markdownPath, "--assets", assetsPath];
+  return new Promise((resolve) => {
+    let child;
+    try {
+      child = spawnFn(python, [scriptPath, ...args], {
+        env,
+        stdio: ["ignore", "pipe", "pipe"]
+      });
+    } catch (_error) {
+      resolve({ ok: false, reason: "pdf_craft_unavailable", stdout: "" });
+      return;
+    }
+    if (!child || typeof child.on !== "function") {
+      resolve({ ok: false, reason: "pdf_craft_unavailable", stdout: "" });
+      return;
+    }
+    let stdout = "";
+    let settled = false;
+    const finish = (payload) => {
+      if (settled) return;
+      settled = true;
+      resolve(payload);
+    };
+    const timer = setTimeout(() => {
+      try { child.kill("SIGKILL"); } catch (_error) {}
+      finish({ ok: false, reason: "pdf_craft_failed", stdout });
+    }, EXTRACT_TIMEOUT_MS);
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString("utf8");
+      if (stdout.length > 200_000) stdout = stdout.slice(-200_000);
+    });
+    child.on("error", () => {
+      clearTimeout(timer);
+      finish({ ok: false, reason: "pdf_craft_unavailable", stdout });
+    });
+    child.on("close", () => {
+      clearTimeout(timer);
+      const line = stdout.trim().split(/\n/).filter(Boolean).pop() || "";
+      try {
+        const payload = JSON.parse(line);
+        finish({
+          ok: payload.ok === true,
+          reason: payload.reason || (payload.ok ? "extracted" : "pdf_craft_failed"),
+          stdout
+        });
+      } catch (_error) {
+        finish({ ok: false, reason: "pdf_craft_failed", stdout });
+      }
+    });
+  });
+}
+
+async function extractScanFromImage({ buffer, mimeType = "image/png", env = process.env, spawnImpl, python, scriptPath } = {}) {
+  const config = pdfCraftOcrConfig(env);
+  if (!config.configured) return failureResult("ocr_not_configured");
+  if (!buffer || !buffer.length) return failureResult("pdf_craft_failed");
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "storieslens-pdf-craft-"));
+  const pdfPath = path.join(rootDir, "scan.pdf");
+  const markdownPath = path.join(rootDir, "page.md");
+  const assetsPath = path.join(rootDir, "assets");
+  try {
+    fs.mkdirSync(assetsPath);
+    fs.writeFileSync(pdfPath, await imageToSinglePagePdf(buffer, mimeType));
+    const ran = await runPdfCraftProcess({
+      python: python || env.PDF_CRAFT_PYTHON || "python3",
+      scriptPath: scriptPath || path.join(__dirname, "scripts", "pdf_craft_extract.py"),
+      pdfPath,
+      markdownPath,
+      assetsPath,
+      env,
+      spawnImpl
+    });
+    if (!ran.ok) return failureResult(ran.reason);
+    return readCraftDirectory(rootDir, markdownPath);
+  } catch (_error) {
+    return failureResult("pdf_craft_failed");
+  } finally {
+    fs.rmSync(rootDir, { recursive: true, force: true });
+  }
+}
+
+module.exports = {
+  EXTRACT_TIMEOUT_MS,
+  extractScanFromImage,
+  failureResult,
+  imageToSinglePagePdf,
+  parseImageDataUrl,
+  pdfCraftOcrConfig,
+  piecesToResult,
+  readCraftDirectory,
+  separateCraftMarkdown,
+  unavailableMessage
+};

@@ -582,6 +582,372 @@
     return canvas.toDataURL("image/png");
   }
 
+  function containPlacement(srcWidth, srcHeight, box) {
+    const safeWidth = Math.max(1, srcWidth || 1);
+    const safeHeight = Math.max(1, srcHeight || 1);
+    const scale = Math.min(box.w / safeWidth, box.h / safeHeight);
+    const dw = safeWidth * scale;
+    const dh = safeHeight * scale;
+    return {
+      sx: 0,
+      sy: 0,
+      sw: safeWidth,
+      sh: safeHeight,
+      dx: box.x + (box.w - dw) / 2,
+      dy: box.y + (box.h - dh) / 2,
+      dw,
+      dh,
+      scale,
+      fit: "contain"
+    };
+  }
+
+  function typesetText({ text = "", status = "ok", edited = false, manuscript = false } = {}) {
+    if (manuscript) return "";
+    if (status === "uncertain" || status === "unavailable" || status === "restored") {
+      return edited ? String(text) : "";
+    }
+    if (status === "ok" || status === "parent") return String(text);
+    return "";
+  }
+
+  function layoutRebuiltPage({ pageWidth, pageHeight, artworkCount = 0, showMarks = false, showText = false, title = "" } = {}) {
+    const marginX = Math.max(1, Math.round(pageWidth * 0.08));
+    const marginY = Math.max(1, Math.round(pageHeight * 0.06));
+    const titleBand = title ? Math.round(pageHeight * 0.14) : 0;
+    const innerW = Math.max(1, pageWidth - marginX * 2);
+    const innerBottom = pageHeight - marginY - titleBand;
+    const innerH = Math.max(1, innerBottom - marginY);
+    const gap = Math.max(1, Math.round(pageHeight * 0.02));
+    let cursor = marginY;
+    const artH = artworkCount ? ((showMarks || showText) ? Math.round(innerH * 0.56) : innerH) : 0;
+    const art = artworkCount ? { x: marginX, y: cursor, w: innerW, h: Math.max(1, artH) } : null;
+    if (art) cursor += art.h + gap;
+    const marksH = showMarks ? (showText ? Math.round(innerH * 0.28) : Math.max(1, innerBottom - cursor)) : 0;
+    const marks = showMarks ? { x: marginX, y: cursor, w: innerW, h: Math.max(1, marksH) } : null;
+    if (marks) cursor += marks.h + gap;
+    const textBox = showText ? { x: marginX, y: cursor, w: innerW, h: Math.max(1, innerBottom - cursor) } : null;
+    const titleBox = title ? { x: marginX, y: pageHeight - marginY - titleBand, w: innerW, h: titleBand } : null;
+    return { marginX, marginY, art, marks, text: textBox, title: titleBox, fit: "contain" };
+  }
+
+  function samplePixel(src, srcWidth, srcHeight, x, y) {
+    const sx = Math.max(0, Math.min(srcWidth - 1, Math.round(x)));
+    const sy = Math.max(0, Math.min(srcHeight - 1, Math.round(y)));
+    const index = (sy * srcWidth + sx) * 4;
+    return [src[index] || 0, src[index + 1] || 0, src[index + 2] || 0, src[index + 3] || 0];
+  }
+
+  function blitContain(out, pageWidth, pageHeight, src, srcWidth, srcHeight, box) {
+    const placement = containPlacement(srcWidth, srcHeight, box);
+    const x0 = Math.max(0, Math.floor(placement.dx));
+    const y0 = Math.max(0, Math.floor(placement.dy));
+    const x1 = Math.min(pageWidth, Math.ceil(placement.dx + placement.dw));
+    const y1 = Math.min(pageHeight, Math.ceil(placement.dy + placement.dh));
+    for (let y = y0; y < y1; y += 1) {
+      for (let x = x0; x < x1; x += 1) {
+        const u = (x + 0.5 - placement.dx) / placement.dw;
+        const v = (y + 0.5 - placement.dy) / placement.dh;
+        if (u < 0 || v < 0 || u > 1 || v > 1) continue;
+        const px = samplePixel(src, srcWidth, srcHeight, u * (srcWidth - 1), v * (srcHeight - 1));
+        const alpha = px[3] / 255;
+        const index = (y * pageWidth + x) * 4;
+        out[index] = Math.round(px[0] * alpha + out[index] * (1 - alpha));
+        out[index + 1] = Math.round(px[1] * alpha + out[index + 1] * (1 - alpha));
+        out[index + 2] = Math.round(px[2] * alpha + out[index + 2] * (1 - alpha));
+        out[index + 3] = 255;
+      }
+    }
+    return placement;
+  }
+
+  function paintRebuiltPage({
+    pageWidth,
+    pageHeight,
+    artworks = [],
+    marks = null,
+    text = "",
+    status = "ok",
+    edited = false,
+    manuscript = false,
+    title = "",
+    paper,
+    forceMarks = false
+  } = {}) {
+    const shownText = typesetText({ text, status, edited, manuscript });
+    const showMarks = Boolean(marks && (forceMarks || manuscript || (status !== "ok" && status !== "parent")));
+    const layout = layoutRebuiltPage({
+      pageWidth,
+      pageHeight,
+      artworkCount: artworks.length,
+      showMarks,
+      showText: Boolean(shownText),
+      title
+    });
+    const ink = paper || PAPER;
+    const out = new Uint8ClampedArray(pageWidth * pageHeight * 4);
+    for (let index = 0; index < out.length; index += 4) {
+      out[index] = ink[0];
+      out[index + 1] = ink[1];
+      out[index + 2] = ink[2];
+      out[index + 3] = 255;
+    }
+    let placement = null;
+    if (layout.art && artworks.length) {
+      const band = layout.art.h / artworks.length;
+      artworks.forEach((artwork, index) => {
+        const box = { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band };
+        const drawn = blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, box);
+        if (!placement) placement = drawn;
+      });
+    }
+    if (layout.marks && marks) {
+      const drawn = blitContain(out, pageWidth, pageHeight, marks.rgba, marks.width, marks.height, layout.marks);
+      if (!placement) placement = drawn;
+    }
+    return {
+      rgba: out,
+      width: pageWidth,
+      height: pageHeight,
+      layout,
+      placement,
+      text: shownText,
+      rewritten: false,
+      fit: "contain"
+    };
+  }
+
+  function splitScanPages(rgba, width, height, options) {
+    const settings = options || {};
+    const source = toUint8(rgba, width, height);
+    if (!width || !height || width < 2 || height < 2) {
+      return { split: false, confidence: 0, pages: [{ rgba: source, width: Math.max(1, width || 1), height: Math.max(1, height || 1) }] };
+    }
+    const analysis = analyzeForeground(source, width, height, settings);
+    if (settings.allowSplit !== false && analysis && analysis.split && analysis.confidence >= 0.45) {
+      const splitX = analysis.split.x;
+      return {
+        split: true,
+        confidence: analysis.confidence,
+        pages: [
+          { rgba: opaqueResult(crop(source, width, 0, 0, splitX, height)), width: splitX, height },
+          { rgba: opaqueResult(crop(source, width, splitX, 0, width - splitX, height)), width: width - splitX, height }
+        ]
+      };
+    }
+    return {
+      split: false,
+      confidence: analysis ? analysis.confidence : 0,
+      pages: [{ rgba: opaqueResult(source), width, height }]
+    };
+  }
+
+  function cropSheet(rgba, width, height) {
+    const source = toUint8(rgba, width, height);
+    const analysis = analyzeForeground(source, width, height, {});
+    if (!analysis || analysis.confidence < 0.45 || !analysis.kept || !analysis.kept.length) {
+      return { rgba: opaqueResult(source), width, height, cleaned: false };
+    }
+    let minX = width;
+    let minY = height;
+    let maxX = 0;
+    let maxY = 0;
+    analysis.kept.forEach((item) => {
+      if (item.minX < minX) minX = item.minX;
+      if (item.minY < minY) minY = item.minY;
+      if (item.maxX > maxX) maxX = item.maxX;
+      if (item.maxY > maxY) maxY = item.maxY;
+    });
+    const pad = Math.round(Math.min(width, height) * 0.02);
+    minX = Math.max(0, minX - pad);
+    minY = Math.max(0, minY - pad);
+    maxX = Math.min(width - 1, maxX + pad);
+    maxY = Math.min(height - 1, maxY + pad);
+    const cropWidth = maxX - minX + 1;
+    const cropHeight = maxY - minY + 1;
+    if (cropWidth < 2 || cropHeight < 2 || cropWidth * cropHeight > width * height * 0.98) {
+      return { rgba: opaqueResult(source), width, height, cleaned: false };
+    }
+    return {
+      rgba: opaqueResult(crop(source, width, minX, minY, cropWidth, cropHeight)),
+      width: cropWidth,
+      height: cropHeight,
+      cleaned: true
+    };
+  }
+
+  function interpretPdfCraftResponse(statusCode, payload) {
+    const body = payload && typeof payload === "object" ? payload : {};
+    const images = Array.isArray(body.images)
+      ? body.images.filter((src) => typeof src === "string" && /^data:image\/(?:png|jpeg|jpg);base64,/i.test(src))
+      : [];
+    const artworks = images.map((dataUrl) => ({ dataUrl }));
+    if (statusCode === 501 || body.status === "unavailable") {
+      return { engine: "pdf-craft", textStatus: "unavailable", text: "", artworks: [], reason: body.reason || "ocr_not_configured", rewritten: false };
+    }
+    if (body.status === "ok" && typeof body.text === "string" && body.text.trim()) {
+      return { engine: "pdf-craft", textStatus: "ok", text: body.text, artworks, reason: body.reason || "extracted", rewritten: false };
+    }
+    return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks, reason: body.reason || "ocr_uncertain", rewritten: false };
+  }
+
+  async function requestPdfCraftExtraction(dataUrl, fetchImpl) {
+    const fetchFn = fetchImpl || globalThis.fetch;
+    if (typeof fetchFn !== "function") {
+      return { engine: "pdf-craft", textStatus: "unavailable", text: "", artworks: [], reason: "ocr_not_configured", rewritten: false };
+    }
+    try {
+      const response = await fetchFn("/api/family-book/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrl: dataUrl })
+      });
+      const payload = await response.json().catch(() => ({}));
+      return interpretPdfCraftResponse(response.status, payload);
+    } catch (_error) {
+      return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks: [], reason: "extract_failed", rewritten: false };
+    }
+  }
+
+  async function pagesFromPhonePhoto({ rgba, width, height, allowSplit = true, manuscript = false, extract, toPng } = {}) {
+    const split = splitScanPages(rgba, width, height, { allowSplit });
+    const pages = [];
+    for (const page of split.pages) {
+      const scanDataUrl = toPng(page.rgba, page.width, page.height);
+      const extraction = extract ? await extract(scanDataUrl) : {
+        textStatus: "unavailable",
+        text: "",
+        artworks: [],
+        reason: "ocr_not_configured"
+      };
+      const textStatus = extraction.textStatus || "uncertain";
+      const needsMarks = manuscript || textStatus !== "ok";
+      let marksDataUrl = "";
+      let sheetCleaned = false;
+      if (needsMarks) {
+        const sheet = cropSheet(page.rgba, page.width, page.height);
+        marksDataUrl = toPng(sheet.rgba, sheet.width, sheet.height);
+        sheetCleaned = sheet.cleaned === true;
+      }
+      pages.push({
+        scanDataUrl,
+        marksDataUrl,
+        sheetCleaned,
+        artworks: Array.isArray(extraction.artworks) ? extraction.artworks : [],
+        text: textStatus === "ok" ? String(extraction.text || "") : "",
+        textStatus,
+        textEdited: false,
+        manuscript: Boolean(manuscript),
+        extractEngine: "pdf-craft",
+        extractReason: extraction.reason || "",
+        split: split.split
+      });
+    }
+    return { split: split.split, pages };
+  }
+
+  function wrapMeasured(context, text, maxWidth) {
+    const value = String(text || "");
+    if (!value) return [];
+    if (!context.measureText) return [value];
+    const characters = /[\u3400-\u9fff]/.test(value) ? Array.from(value) : value.split(/\s+/);
+    const lines = [];
+    let current = "";
+    characters.forEach((part, index) => {
+      const chunk = /[\u3400-\u9fff]/.test(value) ? `${current}${part}` : current ? `${current} ${part}` : part;
+      if (context.measureText(chunk).width <= maxWidth || !current) current = chunk;
+      else {
+        lines.push(current);
+        current = part;
+      }
+      if (index === characters.length - 1 && current) lines.push(current);
+    });
+    return lines.slice(0, 12);
+  }
+
+  function drawContain(context, image, box) {
+    const srcWidth = image.naturalWidth || image.width;
+    const srcHeight = image.naturalHeight || image.height;
+    if (!srcWidth || !srcHeight || !box) return null;
+    const placement = containPlacement(srcWidth, srcHeight, box);
+    context.drawImage(image, placement.dx, placement.dy, placement.dw, placement.dh);
+    return placement;
+  }
+
+  function drawRebuiltPage(context, options = {}) {
+    const pageWidth = options.pageWidth;
+    const pageHeight = options.pageHeight;
+    const manuscript = options.manuscript === true;
+    const status = options.status || "ok";
+    const shownText = typesetText({
+      text: options.text || "",
+      status,
+      edited: options.edited === true,
+      manuscript
+    });
+    const artworks = options.artworks || [];
+    const showMarks = Boolean(options.marks && (options.forceMarks || manuscript || (status !== "ok" && status !== "parent")));
+    const layout = layoutRebuiltPage({
+      pageWidth,
+      pageHeight,
+      artworkCount: artworks.length,
+      showMarks,
+      showText: Boolean(shownText),
+      title: options.title || options.subtitle || ""
+    });
+    context.fillStyle = options.paper || PAPER_HEX;
+    context.fillRect(0, 0, pageWidth, pageHeight);
+    if (layout.art && artworks.length) {
+      const band = layout.art.h / artworks.length;
+      artworks.forEach((image, index) => {
+        drawContain(context, image, { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band });
+      });
+    }
+    if (layout.marks && options.marks) drawContain(context, options.marks, layout.marks);
+    if (layout.text && shownText) {
+      context.save();
+      context.fillStyle = "#1c2420";
+      context.font = options.font || "500 42px sans-serif";
+      context.textAlign = "left";
+      context.textBaseline = "top";
+      wrapMeasured(context, shownText, layout.text.w).forEach((line, index) => {
+        context.fillText(line, layout.text.x, layout.text.y + index * 56);
+      });
+      context.restore();
+    }
+    if (options.note) {
+      context.save();
+      context.fillStyle = "#6d5b3c";
+      context.font = options.noteFont || "700 28px sans-serif";
+      context.textAlign = "left";
+      context.textBaseline = "top";
+      wrapMeasured(context, options.note, pageWidth - layout.marginX * 2).slice(0, 3).forEach((line, index) => {
+        context.fillText(line, layout.marginX, layout.marginY + index * 36);
+      });
+      context.restore();
+    }
+    if (options.title || options.subtitle) {
+      const band = layout.title;
+      context.save();
+      context.fillStyle = "#101817";
+      context.textAlign = "center";
+      context.textBaseline = "alphabetic";
+      if (options.title) {
+        context.font = options.titleFont || "700 64px serif";
+        wrapMeasured(context, options.title, band.w).slice(0, 2).forEach((line, index) => {
+          context.fillText(line, pageWidth / 2, band.y + 52 + index * 72);
+        });
+      }
+      if (options.subtitle) {
+        context.fillStyle = "#3d4a44";
+        context.font = options.subtitleFont || "600 32px sans-serif";
+        context.fillText(options.subtitle, pageWidth / 2, band.y + band.h - 16);
+      }
+      context.restore();
+    }
+    return { layout, text: shownText, rewritten: false, fit: "contain" };
+  }
+
   function drawImageFullBleed(context, image, pageWidth, pageHeight, paper) {
     const srcWidth = image.naturalWidth || image.width;
     const srcHeight = image.naturalHeight || image.height;
@@ -616,16 +982,26 @@
     compositeOntoPaper,
     consentRecord,
     contentBounds,
+    containPlacement,
+    cropSheet,
     drawImageFullBleed,
+    drawRebuiltPage,
     fullBleedPlacement,
     illustrateAvatar,
+    interpretPdfCraftResponse,
+    layoutRebuiltPage,
     looksLikeManuscript,
+    pagesFromPhonePhoto,
     paintFullBleed,
+    paintRebuiltPage,
     parentalSignaturePresent,
     placementFillsPage,
     planBookPages,
     prepareArtwork,
     renderAuthorPreview,
-    rgbaToPngDataUrl
+    requestPdfCraftExtraction,
+    rgbaToPngDataUrl,
+    splitScanPages,
+    typesetText
   };
 });

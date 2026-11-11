@@ -128,20 +128,21 @@
       "cover-kicker": "STORIESLENS · 家长出书",
       "page-label-cover": "封面",
       "cover-style-legend": "封面样式",
-      "cover-style-full": "全幅封面",
+      "cover-style-full": "重排封面",
       "cover-style-type": "文字封面",
       "set-cover": "设为封面",
       "manuscript-toggle": "手稿",
       "restore-original": "原图",
-      "retry-cutout": "重试",
+      "retry-cutout": "重新提取",
       "undo-split": "撤销拆分",
-      cutting: "正在去掉桌子和背景…",
-      "cutout-done": "已去掉周围的桌子和背景。",
-      "cutout-kept": "背景不好分开，已保留原图。可以重试或恢复原图。",
-      "cutout-scan": "这张看起来已经是干净扫描，已保持原样。",
-      "cutout-clear": "这张已经是透明背景，已保持原样。",
-      "split-done": "这张照片左右各有一幅作品，已分成两页。可以撤销拆分。",
-      restored: "已恢复原图。",
+      "text-label": "识别出的文字",
+      cutting: "正在用 pdf-craft 提取画作和文字…",
+      "extract-done": "已用 pdf-craft 把画作和文字分开，再排到米色 A5 页上。文字没有改写。",
+      "extract-uncertain": "文字没有把握，所以没有编造句子。原有笔迹还留在页面上，可以自己改正。",
+      "extract-unavailable": "pdf-craft 的远程 OCR 还没接通，没有识别文字。原图还在，可以恢复或稍后重试。",
+      "extract-table": "手稿四周的桌子没能完全去掉，页面仍保留原稿笔迹。",
+      "split-done": "这张照片左右各有一幅作品，已分成两页，并分别提取。可以撤销拆分。",
+      restored: "已恢复原图。这不是提取后的重排页。",
       "download-preview": "下载预览 PDF",
       "preview-pdf-note": "非正式预览 PDF，不需要付款。正式 PDF 仍要等服务器确认付款后才会发送。",
       "preview-pdf-working": "正在生成预览 PDF…",
@@ -283,20 +284,21 @@
       "cover-kicker": "STORIESLENS · PARENT BOOK",
       "page-label-cover": "Cover",
       "cover-style-legend": "Cover style",
-      "cover-style-full": "Full-bleed cover",
+      "cover-style-full": "Rebuilt page",
       "cover-style-type": "Typographic cover",
       "set-cover": "Set cover",
       "manuscript-toggle": "Manuscript",
       "restore-original": "Original",
-      "retry-cutout": "Retry",
+      "retry-cutout": "Extract again",
       "undo-split": "Undo split",
-      cutting: "Removing the table and background…",
-      "cutout-done": "The surrounding table and background were removed.",
-      "cutout-kept": "The background was not clear enough, so the original photo was kept. You can retry or restore it.",
-      "cutout-scan": "This already looks like a clean scan, so it was left as it is.",
-      "cutout-clear": "This already has a transparent background, so it was left as it is.",
-      "split-done": "This photo has a piece on the left and a piece on the right, so it became two pages. You can undo the split.",
-      restored: "The original photo is restored.",
+      "text-label": "Extracted words",
+      cutting: "Extracting the drawing and the words with pdf-craft…",
+      "extract-done": "pdf-craft separated the drawing and the words, then placed them on a cream A5 page. The words were not rewritten.",
+      "extract-uncertain": "The words were not read confidently, so nothing was invented. The original marks stay on the page and can be corrected.",
+      "extract-unavailable": "pdf-craft remote OCR is not configured, so no words were recognized. The original photo is still here.",
+      "extract-table": "The table around this manuscript could not be fully removed. The handwritten marks stay on the page.",
+      "split-done": "This photo has a piece on the left and a piece on the right, so each side was extracted into its own page. You can undo the split.",
+      restored: "The original photo is restored. This is not an extracted page.",
       "download-preview": "Download preview PDF",
       "preview-pdf-note": "This informal preview PDF does not require payment. The official PDF is sent only after the server confirms payment.",
       "preview-pdf-working": "Creating the preview PDF…",
@@ -417,7 +419,7 @@
     entitlement: { paid: false, kind: "" },
     pageKinds: [],
     coverId: "",
-    coverStyle: "fullbleed",
+    coverStyle: "rebuilt",
     noticeKey: "",
     announcePrepare: false,
     avatar: { originalDataUrl: "", illustratedDataUrl: "", mode: "", under18: true, consent: null },
@@ -506,8 +508,9 @@
       if (typeof meta.childName === "string") els.childName.value = meta.childName;
       if (els.authorName && typeof meta.authorName === "string") els.authorName.value = meta.authorName;
       if (els.authorIntro && typeof meta.authorIntro === "string") els.authorIntro.value = meta.authorIntro;
-      if (meta.coverStyle === "typographic" || meta.coverStyle === "fullbleed") {
-        state.coverStyle = meta.coverStyle;
+      if (meta.coverStyle === "typographic") state.coverStyle = "typographic";
+      else if (meta.coverStyle === "rebuilt" || meta.coverStyle === "fullbleed") state.coverStyle = "rebuilt";
+      if (state.coverStyle === "typographic" || state.coverStyle === "rebuilt") {
         const selected = document.querySelector(`[data-cover-style][value="${state.coverStyle}"]`);
         if (selected) selected.checked = true;
       }
@@ -606,35 +609,66 @@
     return `photo-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 6)}`;
   }
 
-  function notePrepare(prepared) {
-    const rank = { split: 5, low_confidence: 4, cutout: 3, clean_scan: 2, already_transparent: 2, restored: 1 };
-    if ((rank[prepared.reason] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = prepared.reason;
+  function noteExtract(pages) {
+    const rank = { unavailable: 6, split: 5, uncertain: 4, extracted: 3, restored: 2 };
+    pages.forEach((page) => {
+      const key = page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
+      if ((rank[key] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = key;
+    });
   }
 
   function prepareNotice() {
     const keys = {
       split: "split-done",
-      low_confidence: "cutout-kept",
-      cutout: "cutout-done",
-      clean_scan: "cutout-scan",
-      already_transparent: "cutout-clear"
+      uncertain: "extract-uncertain",
+      unavailable: "extract-unavailable",
+      extracted: "extract-done",
+      restored: "restored"
     };
     return state.noticeKey && keys[state.noticeKey] ? t(keys[state.noticeKey]) : "";
   }
 
-  function photosFromPrepared(prepared, originalDataUrl, fileName, manuscript) {
-    const groupId = prepared.split ? `split-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}` : "";
-    return prepared.pages.map((page, index) => ({
+  function pageNote(photo) {
+    if (!photo) return "";
+    if (photo.textStatus === "unavailable") return t("extract-unavailable");
+    if (photo.textStatus === "uncertain") return t("extract-uncertain");
+    if (photo.textStatus === "restored") return t("restored");
+    if (photo.manuscript && photo.sheetCleaned === false) return t("extract-table");
+    return "";
+  }
+
+  async function photosFromScan(originalDataUrl, fileName, manuscript, options) {
+    const pixels = await pixelsFromDataUrl(originalDataUrl);
+    const built = await prepareApi().pagesFromPhonePhoto({
+      rgba: pixels.rgba,
+      width: pixels.width,
+      height: pixels.height,
+      allowSplit: !options || options.allowSplit !== false,
+      manuscript: Boolean(manuscript),
+      extract: (dataUrl) => prepareApi().requestPdfCraftExtraction(dataUrl),
+      toPng: pngFromRgba
+    });
+    const groupId = built.split ? `split-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}` : "";
+    const photos = built.pages.map((page, index) => ({
       id: newPhotoId(index),
-      dataUrl: pngFromRgba(page.rgba, page.width, page.height),
+      dataUrl: (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
       originalDataUrl,
+      scanDataUrl: page.scanDataUrl,
+      marksDataUrl: page.marksDataUrl,
+      sheetCleaned: page.sheetCleaned === true,
+      artworks: page.artworks,
+      text: page.text,
+      textStatus: page.textStatus,
+      textEdited: false,
       name: fileName || "",
       manuscript: Boolean(manuscript),
       groupId,
       groupIndex: index,
-      cutoutReason: prepared.reason,
-      keptOriginal: prepared.keptOriginal === true
+      extractEngine: "pdf-craft",
+      extractReason: page.extractReason
     }));
+    noteExtract(photos);
+    return photos;
   }
 
   function ensureCover() {
@@ -740,15 +774,10 @@
       }
       return canvasToJpeg(canvas, 0.9);
     }
-    const image = await loadHtmlImage(photo.dataUrl);
-    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
-    context.font = "700 64px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
-    const titleLines = wrapText(context, bookTitle(), PAGE_WIDTH - 160);
-    titleLines.forEach((line, index) => {
-      overlayCaption(context, line, PAGE_HEIGHT - 120 - (titleLines.length - index) * 72, 64);
+    return renderWorkPage(photo, {
+      title: bookTitle(),
+      subtitle: displayAuthor() ? t("byline", { name: displayAuthor() }) : ""
     });
-    if (displayAuthor()) overlayCaption(context, t("byline", { name: displayAuthor() }), PAGE_HEIGHT - 64, 32);
-    return canvasToJpeg(canvas, 0.9);
   }
 
   async function renderAuthorPage() {
@@ -791,12 +820,44 @@
     return canvasToJpeg(canvas, 0.9);
   }
 
-  async function renderPhotoPage(photo, label) {
+  async function renderWorkPage(photo, extras = {}) {
     const { canvas, context } = pageCanvas();
-    const image = await loadHtmlImage(photo.dataUrl);
-    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
-    if (label) overlayCaption(context, label, 90, 36);
+    const confident = photo.textStatus === "ok" || photo.textStatus === "parent";
+    const artworks = [];
+    if (confident || photo.manuscript) {
+      for (const item of photo.artworks || []) {
+        const src = item.dataUrl || item;
+        if (src) artworks.push(await loadHtmlImage(src));
+      }
+    }
+    const forceMarks = photo.manuscript || !confident || (photo.textStatus === "parent" && !artworks.length);
+    let marks = null;
+    const marksUrl = photo.marksDataUrl || (!confident || forceMarks ? (photo.scanDataUrl || photo.originalDataUrl) : "");
+    if (forceMarks && marksUrl) marks = await loadHtmlImage(marksUrl);
+    prepareApi().drawRebuiltPage(context, {
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      artworks,
+      marks,
+      forceMarks,
+      text: photo.text || "",
+      status: photo.textStatus,
+      edited: photo.textEdited === true,
+      manuscript: photo.manuscript === true,
+      title: extras.title || "",
+      subtitle: extras.subtitle || "",
+      note: pageNote(photo),
+      paper: "#f6f0e4",
+      font: "500 42px " + getComputedStyle(document.body).fontFamily,
+      titleFont: "700 64px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif'),
+      subtitleFont: "600 32px " + getComputedStyle(document.body).fontFamily,
+      noteFont: "700 28px " + getComputedStyle(document.body).fontFamily
+    });
     return canvasToJpeg(canvas, 0.9);
+  }
+
+  async function renderPhotoPage(photo, label) {
+    return renderWorkPage(photo, { subtitle: label || "" });
   }
 
   function showAuthorPage() {
@@ -904,6 +965,19 @@
       retry.textContent = t("retry-cutout");
       retry.addEventListener("click", () => { void retryCutout(photo); });
       tools.append(cover, manuscript, restore, retry);
+      const writing = document.createElement("textarea");
+      writing.className = "thumb-text";
+      writing.maxLength = 4000;
+      writing.value = photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited ? (photo.text || "") : "";
+      writing.placeholder = photo.textStatus === "unavailable" ? t("extract-unavailable") : photo.textStatus === "uncertain" ? t("extract-uncertain") : t("text-label");
+      writing.setAttribute("aria-label", t("text-label"));
+      writing.addEventListener("change", () => {
+        photo.text = writing.value;
+        photo.textEdited = true;
+        photo.textStatus = "parent";
+        renderThumbs();
+        void rebuildBook();
+      });
       if (photo.groupId) {
         const undo = document.createElement("button");
         undo.type = "button";
@@ -934,7 +1008,7 @@
         void rebuildBook();
       });
       actions.append(up, down);
-      item.append(frame, tools, actions);
+      item.append(frame, tools, writing, actions);
       els.thumbs.append(item);
     });
   }
@@ -944,14 +1018,21 @@
       id: newPhotoId(0),
       dataUrl: photo.originalDataUrl,
       originalDataUrl: photo.originalDataUrl,
+      scanDataUrl: photo.originalDataUrl,
+      marksDataUrl: photo.originalDataUrl,
+      artworks: [],
+      text: "",
+      textStatus: "restored",
+      textEdited: false,
       name: photo.name,
       manuscript: photo.manuscript,
       groupId: "",
       groupIndex: 0,
-      cutoutReason: "restored",
-      keptOriginal: true
+      extractEngine: "pdf-craft",
+      extractReason: "restored"
     };
     replacePhotoGroup(photo, [single]);
+    state.noticeKey = "restored";
     renderThumbs();
     await rebuildBook();
     setStatus(t("restored"));
@@ -959,10 +1040,7 @@
 
   async function retryCutout(photo) {
     setStatus(t("cutting"));
-    const pixels = await pixelsFromDataUrl(photo.originalDataUrl);
-    const prepared = prepareApi().prepareArtwork(pixels.rgba, pixels.width, pixels.height, { retry: true });
-    notePrepare(prepared);
-    const photos = photosFromPrepared(prepared, photo.originalDataUrl, photo.name, photo.manuscript);
+    const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, { allowSplit: true });
     if (state.photos.length - (photo.groupId ? state.photos.filter((item) => item.groupId === photo.groupId).length : 1) + photos.length > MAX_PHOTOS) {
       setStatus(t("too-many"), true);
       return;
@@ -975,13 +1053,10 @@
 
   async function undoSplit(photo) {
     setStatus(t("cutting"));
-    const pixels = await pixelsFromDataUrl(photo.originalDataUrl);
-    const prepared = prepareApi().prepareArtwork(pixels.rgba, pixels.width, pixels.height, { allowSplit: false });
-    const photos = photosFromPrepared(prepared, photo.originalDataUrl, photo.name, photo.manuscript);
+    const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, { allowSplit: false });
     replacePhotoGroup(photo, photos);
     renderThumbs();
     await rebuildBook();
-    setStatus(t("restored"));
   }
 
   async function addFiles(fileList) {
@@ -1010,15 +1085,12 @@
         }
         try {
           const originalDataUrl = await sanitizeToPng(file);
-          const pixels = await pixelsFromDataUrl(originalDataUrl);
-          const prepared = prepareApi().prepareArtwork(pixels.rgba, pixels.width, pixels.height);
           const manuscript = prepareApi().looksLikeManuscript(file.name);
-          const photos = photosFromPrepared(prepared, originalDataUrl, file.name || "", manuscript);
+          const photos = await photosFromScan(originalDataUrl, file.name || "", manuscript);
           if (state.photos.length + photos.length > MAX_PHOTOS) {
             setStatus(t("too-many"), true);
             break;
           }
-          notePrepare(prepared);
           state.photos.push(...photos);
           if (!state.coverId) state.coverId = (photos.find((item) => !item.manuscript) || photos[0]).id;
         } catch (_error) {
@@ -1068,6 +1140,7 @@
       authorIntro: authorIntro(),
       childName: childName(),
       locale: state.locale,
+      notes: state.photos.map((photo) => (photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited) ? photo.text : "").filter(Boolean),
       photos: state.photos.map((photo) => photo.dataUrl)
     };
   }
@@ -1784,7 +1857,7 @@
   document.querySelectorAll("[data-cover-style]").forEach((input) => {
     input.addEventListener("change", () => {
       if (!input.checked) return;
-      state.coverStyle = input.value === "typographic" ? "typographic" : "fullbleed";
+      state.coverStyle = input.value === "typographic" ? "typographic" : "rebuilt";
       saveMeta();
       if (state.photos.length) void rebuildBook();
     });

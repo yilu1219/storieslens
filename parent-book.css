@@ -217,6 +217,19 @@ label.field input {
   font-weight: 800;
 }
 .thumb-tools button.is-on { background: var(--leaf-deep); color: #fff; }
+.thumb-text {
+  width: 100%;
+  min-height: 72px;
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid rgba(28, 36, 32, 0.16);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #1c2420;
+  font: 500 13px/1.4 inherit;
+  resize: vertical;
+}
+.thumb-note { margin: 4px 0 0; color: #6d5b3c; font-size: 12px; line-height: 1.35; }
 .avatar-panel, .consent-box { display: grid; gap: 8px; margin-top: 12px; }
 .signature-pad {
   width: 100%;

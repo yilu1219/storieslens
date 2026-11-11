@@ -58,14 +58,16 @@
       "yu-kept": "已保留原文。",
       "yu-applied": "已采用语大师的检查稿。作业照片没有改。",
       processing: "正在本机处理照片并删除拍摄信息…",
-      cutting: "正在去掉桌子和背景…",
-      "cutout-done": "已去掉周围的桌子和背景。",
-      "cutout-kept": "背景不好分开，已保留原图。可以重试或恢复原图。",
-      "split-done": "这张照片左右各有一幅作品，已分成两页。可以撤销拆分。",
-      restored: "已恢复原图。",
+      cutting: "正在用 pdf-craft 提取画作和文字…",
+      "extract-done": "已用 pdf-craft 把画作和文字分开，再排到米色 A5 页上。文字没有改写。",
+      "extract-uncertain": "文字没有把握，所以没有编造句子。原有笔迹还留在页面上，可以自己改正。",
+      "extract-unavailable": "pdf-craft 的远程 OCR 还没接通，没有识别文字。原图还在，可以恢复或稍后重试。",
+      "split-done": "这张照片左右各有一幅作品，已分成两页，并分别提取。可以撤销拆分。",
+      restored: "已恢复原图。这不是提取后的重排页。",
       "restore-original": "原图",
-      "retry-cutout": "重试",
+      "retry-cutout": "重新提取",
       "undo-split": "撤销拆分",
+      "text-label": "识别出的文字",
       blocked: "这张照片不能使用。请不要上传证件、学生证，或带有电话、地址、邮箱、二维码的画面。",
       unsupported: "请选择 JPG、PNG、WEBP、HEIC 或 HEIF 图片。",
       "too-many": "一次最多 20 张照片。",
@@ -128,14 +130,16 @@
       "yu-kept": "The original was kept.",
       "yu-applied": "Yu’s checked text is saved. The work photos were not changed.",
       processing: "Preparing photos on this device and removing camera details…",
-      cutting: "Removing the table and background…",
-      "cutout-done": "The surrounding table and background were removed.",
-      "cutout-kept": "The background was not clear enough, so the original photo was kept. You can retry or restore it.",
-      "split-done": "This photo has a piece on the left and a piece on the right, so it became two pages. You can undo the split.",
-      restored: "The original photo is restored.",
+      cutting: "Extracting the drawing and the words with pdf-craft…",
+      "extract-done": "pdf-craft separated the drawing and the words, then placed them on a cream A5 page. The words were not rewritten.",
+      "extract-uncertain": "The words were not read confidently, so nothing was invented. The original marks stay on the page and can be corrected.",
+      "extract-unavailable": "pdf-craft remote OCR is not configured, so no words were recognized. The original photo is still here.",
+      "split-done": "This photo has a piece on the left and a piece on the right, so each side was extracted into its own page. You can undo the split.",
+      restored: "The original photo is restored. This is not an extracted page.",
       "restore-original": "Original",
-      "retry-cutout": "Retry",
+      "retry-cutout": "Extract again",
       "undo-split": "Undo split",
+      "text-label": "Extracted words",
       blocked: "That photo cannot be used. Please do not upload identity documents, school IDs, or images with a phone number, address, email, or QR code.",
       unsupported: "Please choose a JPG, PNG, WEBP, HEIC, or HEIF image.",
       "too-many": "You can add up to 20 photos at a time.",
@@ -285,21 +289,52 @@
     } finally { URL.revokeObjectURL(url); }
   }
 
-  function notePrepare(prepared) {
-    const rank = { split: 5, low_confidence: 4, cutout: 3 };
-    if ((rank[prepared.reason] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = prepared.reason;
+  function noteExtract(pages) {
+    const rank = { unavailable: 6, split: 5, uncertain: 4, extracted: 3, restored: 2 };
+    pages.forEach((page) => {
+      const key = page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
+      if ((rank[key] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = key;
+    });
   }
 
-  function photosFromPrepared(prepared, originalDataUrl, fileName) {
-    const groupId = prepared.split ? `split-${Date.now().toString(36)}` : "";
-    return prepared.pages.map((page, index) => ({
-      dataUrl: prepareApi().rgbaToPngDataUrl(page.rgba, page.width, page.height),
+  function pageNote(photo) {
+    if (!photo) return "";
+    if (photo.textStatus === "unavailable") return t("extract-unavailable");
+    if (photo.textStatus === "uncertain") return t("extract-uncertain");
+    if (photo.textStatus === "restored") return t("restored");
+    return "";
+  }
+
+  async function photosFromScan(originalDataUrl, fileName, manuscript, options) {
+    const pixels = await pixelsFromDataUrl(originalDataUrl);
+    const built = await prepareApi().pagesFromPhonePhoto({
+      rgba: pixels.data,
+      width: pixels.width,
+      height: pixels.height,
+      allowSplit: !options || options.allowSplit !== false,
+      manuscript: Boolean(manuscript),
+      extract: (dataUrl) => prepareApi().requestPdfCraftExtraction(dataUrl),
+      toPng: (rgba, width, height) => prepareApi().rgbaToPngDataUrl(rgba, width, height)
+    });
+    const groupId = built.split ? `split-${Date.now().toString(36)}` : "";
+    const photos = built.pages.map((page) => ({
+      dataUrl: (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
       originalDataUrl,
+      scanDataUrl: page.scanDataUrl,
+      marksDataUrl: page.marksDataUrl,
+      artworks: page.artworks,
+      text: page.text,
+      textStatus: page.textStatus,
+      textEdited: false,
       name: fileName || "",
       studentName: "",
+      manuscript: Boolean(manuscript),
       groupId,
-      keptOriginal: prepared.keptOriginal === true
+      extractEngine: "pdf-craft",
+      extractReason: page.extractReason
     }));
+    noteExtract(photos);
+    return photos;
   }
 
   function wrapText(context, text, maxWidth) {
@@ -336,28 +371,52 @@
     context.restore();
   }
 
-  async function renderCoverPage() {
+  async function renderWorkPage(photo, extras = {}) {
     const canvas = document.createElement("canvas");
     canvas.width = PAGE_WIDTH;
     canvas.height = PAGE_HEIGHT;
     const context = canvas.getContext("2d", { alpha: false });
-    const image = await loadHtmlImage(state.photos[0].dataUrl);
-    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
-    overlayCaption(context, bookTitle(), PAGE_HEIGHT - 140, 64);
-    if (className() || teacherName()) overlayCaption(context, className() || teacherName(), PAGE_HEIGHT - 70, 32);
+    const confident = photo.textStatus === "ok" || photo.textStatus === "parent";
+    const artworks = [];
+    if (confident || photo.manuscript) {
+      for (const item of photo.artworks || []) {
+        const src = item.dataUrl || item;
+        if (src) artworks.push(await loadHtmlImage(src));
+      }
+    }
+    const forceMarks = photo.manuscript || !confident || (photo.textStatus === "parent" && !artworks.length);
+    let marks = null;
+    const marksUrl = photo.marksDataUrl || (!confident || forceMarks ? (photo.scanDataUrl || photo.originalDataUrl) : "");
+    if (forceMarks && marksUrl) marks = await loadHtmlImage(marksUrl);
+    prepareApi().drawRebuiltPage(context, {
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      artworks,
+      marks,
+      forceMarks,
+      text: photo.text || "",
+      status: photo.textStatus,
+      edited: photo.textEdited === true,
+      manuscript: photo.manuscript === true,
+      title: extras.title || "",
+      subtitle: extras.subtitle || "",
+      note: pageNote(photo),
+      paper: "#f6f0e4"
+    });
     return canvasToJpeg(canvas, 0.9);
   }
 
+  async function renderCoverPage() {
+    const cover = state.photos.find((photo) => !photo.manuscript) || state.photos[0];
+    return renderWorkPage(cover, {
+      title: bookTitle(),
+      subtitle: className() || teacherName() || ""
+    });
+  }
+
   async function renderPhotoPage(photo, index) {
-    const canvas = document.createElement("canvas");
-    canvas.width = PAGE_WIDTH;
-    canvas.height = PAGE_HEIGHT;
-    const context = canvas.getContext("2d", { alpha: false });
-    const image = await loadHtmlImage(photo.dataUrl);
-    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
-    if (photo.studentName) overlayCaption(context, photo.studentName, PAGE_HEIGHT - 120, 36);
-    overlayCaption(context, String(index + 1), PAGE_HEIGHT - 70, 28);
-    return canvasToJpeg(canvas, 0.9);
+    const subtitle = [photo.studentName, String(index + 1)].filter(Boolean).join(" · ");
+    return renderWorkPage(photo, { subtitle });
   }
 
   async function rebuildBook() {
@@ -375,7 +434,8 @@
     renderPreview();
     els.previewCard.hidden = false;
     showReadingCheck();
-    const notice = state.noticeKey === "split" ? t("split-done") : state.noticeKey === "low_confidence" ? t("cutout-kept") : state.noticeKey === "cutout" ? t("cutout-done") : "";
+    const noticeKeys = { split: "split-done", uncertain: "extract-uncertain", unavailable: "extract-unavailable", extracted: "extract-done", restored: "restored" };
+    const notice = noticeKeys[state.noticeKey] ? t(noticeKeys[state.noticeKey]) : "";
     setStatus(state.announcePrepare && notice ? notice : t("ready"));
     state.announcePrepare = false;
   }
@@ -420,7 +480,23 @@
       restore.type = "button";
       restore.textContent = t("restore-original");
       restore.addEventListener("click", () => {
-        replacePhotoGroup(photo, [{ dataUrl: photo.originalDataUrl, originalDataUrl: photo.originalDataUrl, name: photo.name, studentName: photo.studentName, groupId: "", keptOriginal: true }]);
+        replacePhotoGroup(photo, [{
+          dataUrl: photo.originalDataUrl,
+          originalDataUrl: photo.originalDataUrl,
+          scanDataUrl: photo.originalDataUrl,
+          marksDataUrl: photo.originalDataUrl,
+          artworks: [],
+          text: "",
+          textStatus: "restored",
+          textEdited: false,
+          name: photo.name,
+          studentName: photo.studentName,
+          manuscript: photo.manuscript,
+          groupId: "",
+          extractEngine: "pdf-craft",
+          extractReason: "restored"
+        }]);
+        state.noticeKey = "restored";
         renderThumbs();
         void rebuildBook().then(() => setStatus(t("restored")));
       });
@@ -429,6 +505,19 @@
       retry.textContent = t("retry-cutout");
       retry.addEventListener("click", () => { void reprocessPhoto(photo, { retry: true }); });
       tools.append(restore, retry);
+      const writing = document.createElement("textarea");
+      writing.className = "thumb-text";
+      writing.maxLength = 4000;
+      writing.value = photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited ? (photo.text || "") : "";
+      writing.placeholder = photo.textStatus === "unavailable" ? t("extract-unavailable") : photo.textStatus === "uncertain" ? t("extract-uncertain") : t("text-label");
+      writing.setAttribute("aria-label", t("text-label"));
+      writing.addEventListener("change", () => {
+        photo.text = writing.value;
+        photo.textEdited = true;
+        photo.textStatus = "parent";
+        renderThumbs();
+        void rebuildBook();
+      });
       if (photo.groupId) {
         const undo = document.createElement("button");
         undo.type = "button";
@@ -452,17 +541,15 @@
         photo.studentName = name.value.trim();
         void rebuildBook();
       });
-      item.append(frame, tools, name);
+      item.append(frame, tools, writing, name);
       els.thumbs.append(item);
     });
   }
 
   async function reprocessPhoto(photo, options) {
     setStatus(t("cutting"));
-    const pixels = await pixelsFromDataUrl(photo.originalDataUrl);
-    const prepared = prepareApi().prepareArtwork(pixels.data, pixels.width, pixels.height, options);
-    notePrepare(prepared);
-    replacePhotoGroup(photo, photosFromPrepared(prepared, photo.originalDataUrl, photo.name));
+    const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, options);
+    replacePhotoGroup(photo, photos);
     state.announcePrepare = true;
     renderThumbs();
     await rebuildBook();
@@ -484,11 +571,9 @@
         if (!supported) { setStatus(t("unsupported"), true); continue; }
         try {
           const originalDataUrl = await sanitizeToPng(file);
-          const pixels = await pixelsFromDataUrl(originalDataUrl);
-          const prepared = prepareApi().prepareArtwork(pixels.data, pixels.width, pixels.height);
-          const photos = photosFromPrepared(prepared, originalDataUrl, file.name || "");
+          const manuscript = prepareApi().looksLikeManuscript(file.name);
+          const photos = await photosFromScan(originalDataUrl, file.name || "", manuscript);
           if (state.photos.length + photos.length > MAX_PHOTOS) { setStatus(t("too-many"), true); break; }
-          notePrepare(prepared);
           state.photos.push(...photos);
         } catch (_error) {
           setStatus(t("unsupported"), true);
@@ -510,7 +595,7 @@
       authorName: teacherName(),
       authorIntro: className(),
       locale: state.locale,
-      notes: state.photos.map((photo) => photo.studentName).filter(Boolean),
+      notes: state.photos.flatMap((photo) => [photo.studentName, (photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited) ? photo.text : ""].filter(Boolean)),
       photos: state.photos.map((photo) => photo.dataUrl)
     };
   }
