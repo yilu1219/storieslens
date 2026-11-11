@@ -20,6 +20,16 @@ def emit(payload: dict) -> None:
     sys.stdout.flush()
 
 
+def vendor_kind(backend: str, model: str) -> str:
+    name = (backend or "deepseek").strip().lower()
+    model_name = (model or "").lower()
+    if name in {"deepseek2", "deepseek-ocr-2", "ocr2"}:
+        return "deepseek2"
+    if name == "deepseek" and "ocr-2" in model_name:
+        return "deepseek2"
+    return "deepseek"
+
+
 def configured() -> tuple[str, dict]:
     backend = (os.environ.get("PDF_CRAFT_OCR_BACKEND") or "deepseek").strip().lower()
     if backend == "unlimited":
@@ -38,7 +48,7 @@ def configured() -> tuple[str, dict]:
     model = (os.environ.get("PDF_CRAFT_OCR_MODEL") or os.environ.get("OPENROUTER_OCR_MODEL") or "").strip()
     if not base_url or not api_key or not model:
         return "deepseek", {}
-    return "deepseek", {"base_url": base_url, "api_key": api_key, "model": model}
+    return vendor_kind(backend, model), {"base_url": base_url, "api_key": api_key, "model": model}
 
 
 def failure_reason(exc: BaseException) -> str:
@@ -78,6 +88,13 @@ def main() -> int:
             if settings["base_url"]:
                 ocr_kwargs["base_url"] = settings["base_url"]
             ocr = UnlimitedOCRVendorConfig(**ocr_kwargs)
+        elif backend == "deepseek2":
+            from pdf_craft import DeepSeekOCR2VendorConfig
+            ocr = DeepSeekOCR2VendorConfig(
+                base_url=settings["base_url"],
+                api_key=settings["api_key"],
+                model=settings["model"],
+            )
         else:
             from pdf_craft import DeepSeekOCRVendorConfig
             ocr = DeepSeekOCRVendorConfig(

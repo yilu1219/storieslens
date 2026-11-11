@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
 const { EventEmitter } = require("node:events");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -11,6 +12,7 @@ const {
   extractScanFromImage,
   imageToSinglePagePdf,
   pdfCraftOcrConfig,
+  pdfCraftVendorKind,
   piecesToResult,
   separateCraftMarkdown
 } = require("../pdf-craft-extract");
@@ -88,6 +90,69 @@ test("pdf-craft OCR config reuses a compatible OCR model and ignores the chat mo
   assert.equal(reused.configured, true);
   assert.equal(reused.model, "deepseek-ocr");
   assert.equal(reused.backend, "deepseek");
+});
+
+test("DeepSeek-OCR 2 is selected for an ocr-2 model or deepseek2 backend, and gen 1 stays gen 1", () => {
+  const novita = pdfCraftOcrConfig({
+    PDF_CRAFT_OCR_BASE_URL: "https://api.novita.ai/openai",
+    PDF_CRAFT_OCR_API_KEY: "test-key",
+    PDF_CRAFT_OCR_MODEL: "deepseek/deepseek-ocr-2",
+    OPENROUTER_MODEL: "openai/gpt-4o-mini"
+  });
+  assert.equal(novita.configured, true);
+  assert.equal(novita.backend, "deepseek2");
+  assert.equal(novita.model, "deepseek/deepseek-ocr-2");
+  assert.equal(pdfCraftVendorKind("deepseek2", "deepseek-ai/DeepSeek-OCR"), "deepseek2");
+
+  const silicon = pdfCraftOcrConfig({
+    PDF_CRAFT_OCR_BACKEND: "deepseek",
+    PDF_CRAFT_OCR_BASE_URL: "https://api.siliconflow.cn/v1",
+    PDF_CRAFT_OCR_API_KEY: "test-key",
+    PDF_CRAFT_OCR_MODEL: "deepseek-ai/DeepSeek-OCR"
+  });
+  assert.equal(silicon.configured, true);
+  assert.equal(silicon.backend, "deepseek");
+
+  const chatNamedLikeOcr = pdfCraftOcrConfig({
+    OPENROUTER_API_KEY: "test-key",
+    OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
+    OPENROUTER_MODEL: "deepseek/deepseek-ocr-2"
+  });
+  assert.equal(chatNamedLikeOcr.configured, false);
+
+  const script = `
+import importlib.util, json, os
+spec = importlib.util.spec_from_file_location("pdf_craft_extract", "scripts/pdf_craft_extract.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+kind, settings = mod.configured()
+print(json.dumps({"kind": kind, "model": settings.get("model", "")}))
+`;
+  const pythonKind = (env) => JSON.parse(execFileSync("python3", ["-c", script], {
+    cwd: root,
+    encoding: "utf8",
+    env: {
+      PATH: process.env.PATH,
+      PDF_CRAFT_OCR_BACKEND: env.backend || "deepseek",
+      PDF_CRAFT_OCR_BASE_URL: env.baseUrl || "",
+      PDF_CRAFT_OCR_API_KEY: "test-key",
+      PDF_CRAFT_OCR_MODEL: env.model || "",
+      OPENROUTER_MODEL: "openai/gpt-4o-mini"
+    }
+  }));
+  assert.deepEqual(pythonKind({
+    baseUrl: "https://api.novita.ai/openai",
+    model: "deepseek/deepseek-ocr-2"
+  }), { kind: "deepseek2", model: "deepseek/deepseek-ocr-2" });
+  assert.deepEqual(pythonKind({
+    backend: "deepseek2",
+    baseUrl: "https://api.novita.ai/openai",
+    model: "deepseek-ai/DeepSeek-OCR"
+  }), { kind: "deepseek2", model: "deepseek-ai/DeepSeek-OCR" });
+  assert.deepEqual(pythonKind({
+    baseUrl: "https://api.siliconflow.cn/v1",
+    model: "deepseek-ai/DeepSeek-OCR"
+  }), { kind: "deepseek", model: "deepseek-ai/DeepSeek-OCR" });
 });
 
 test("markdown from pdf-craft keeps the child's words and separates figure files", () => {
@@ -231,6 +296,7 @@ test("parent and teacher books call pdf-craft and rebuild pages instead of a ful
   assert.match(read("artwork-prepare.js"), /\/api\/family-book\/extract/);
   assert.match(script, /from pdf_craft import/);
   assert.match(script, /DeepSeekOCRVendorConfig/);
+  assert.match(script, /DeepSeekOCR2VendorConfig/);
   assert.match(script, /convert_pdf_to_markdown/);
   assert.doesNotMatch(script, /XMLTranslator/);
   assert.match(requirements, /pdf-craft==2\.6\.7/);
@@ -249,5 +315,9 @@ test("parent and teacher books call pdf-craft and rebuild pages instead of a ful
   assert.match(read("package.json"), /"start": "node server\.js"/);
   assert.match(envExample, /PDF_CRAFT_OCR_API_KEY=/);
   assert.match(envExample, /PDF_CRAFT_OCR_MODEL=/);
+  assert.match(envExample, /PDF_CRAFT_OCR_BACKEND=deepseek2/);
+  assert.match(envExample, /https:\/\/api\.novita\.ai\/openai/);
+  assert.match(envExample, /deepseek\/deepseek-ocr-2/);
+  assert.doesNotMatch(envExample, /nvapi-|sk-or-v1-/);
   assert.doesNotMatch(script, /api_key\s*=\s*["'][A-Za-z0-9]{8,}["']/);
 });
