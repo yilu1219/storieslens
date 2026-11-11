@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "python": "3.12"
+  },
+  "steps": {
+    "build": {
+      "commands": [
+        "...",
+        "python3 -m venv /app/.venv && /app/.venv/bin/pip install --no-cache-dir -r requirements.txt"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "aptPackages": ["...", "poppler-utils", "libglib2.0-0", "libzstd1"],
+    "variables": {
+      "PDF_CRAFT_PYTHON": "/app/.venv/bin/python"
+    }
+  }
+}

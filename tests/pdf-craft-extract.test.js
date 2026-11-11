@@ -236,6 +236,17 @@ test("parent and teacher books call pdf-craft and rebuild pages instead of a ful
   assert.match(requirements, /pdf-craft==2\.6\.7/);
   assert.match(nixpacks, /poppler-utils/);
   assert.match(nixpacks, /pdf-craft|requirements\.txt/);
+  const railpack = JSON.parse(read("railpack.json"));
+  const railway = JSON.parse(read("railway.json"));
+  assert.equal(railpack.provider, "node");
+  assert.equal(railpack.deploy.startCommand, "npm start");
+  assert.equal(railpack.packages.python, "3.12");
+  assert.equal(railpack.deploy.variables.PDF_CRAFT_PYTHON, "/app/.venv/bin/python");
+  assert.ok(railpack.deploy.aptPackages.includes("poppler-utils"));
+  assert.match(railpack.steps.build.commands.join("\n"), /pip install --no-cache-dir -r requirements\.txt/);
+  assert.equal(railway.build.builder, "RAILPACK");
+  assert.equal(railway.deploy.startCommand, "npm start");
+  assert.match(read("package.json"), /"start": "node server\.js"/);
   assert.match(envExample, /PDF_CRAFT_OCR_API_KEY=/);
   assert.match(envExample, /PDF_CRAFT_OCR_MODEL=/);
   assert.doesNotMatch(script, /api_key\s*=\s*["'][A-Za-z0-9]{8,}["']/);
