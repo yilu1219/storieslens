@@ -12,7 +12,7 @@
     <title>家长出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261110-2" />
+    <link rel="stylesheet" href="parent-book.css?v=20261111-6" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -95,7 +95,8 @@
           </div>
         </div>
 
-        <div class="upload-row">
+        <p class="upload-start" id="artwork-upload-start" data-i18n="upload-start">这里开始上传照片</p>
+        <div class="upload-row" role="group" aria-labelledby="artwork-upload-start">
           <label class="upload-btn">
             <input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" multiple data-album />
             <span data-i18n="album">从相册选择照片</span>
@@ -108,6 +109,13 @@
         <p class="notice" data-i18n="safety-notice">请上传孩子的画、作文或手工作品照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。位置和拍摄信息会在本机删除。</p>
         <p class="adult-note" data-i18n="adult-note">这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。</p>
         <div class="thumbs" data-thumbs></div>
+        <div class="yu-progress" data-yu-progress hidden role="status" aria-live="polite">
+          <img src="assets/yu-mascot-logo-v2.png" alt="小羽" width="96" height="96" data-yu-mark />
+          <div class="yu-progress-copy">
+            <strong data-progress-percent>0%</strong>
+            <p data-progress-label></p>
+          </div>
+        </div>
         <p class="status" data-status role="status" aria-live="polite"></p>
       </section>
 
@@ -121,6 +129,11 @@
           <span class="page-label" data-page-label></span>
           <button type="button" data-next data-i18n="next">下一页</button>
         </div>
+        <section class="book-edit" data-book-edit>
+          <h3 data-i18n="edit-kicker">修改内容</h3>
+          <p class="hint" data-i18n="edit-hint">改书名、作者和每张作品上的文字。预览只在你修改之后更新。我们不会自动改孩子的画或原文。</p>
+          <div class="fields" data-book-edit-fields></div>
+        </section>
         <section class="suggest-card" data-suggest-card hidden>
           <h3 data-i18n="suggest-kicker">检查建议</h3>
           <p data-suggest-text></p>
@@ -153,7 +166,17 @@
           <button class="secondary" type="button" data-download-preview data-i18n="download-preview">下载预览 PDF</button>
           <button class="primary" type="button" data-make-film data-i18n="make-film">一键生成短片（免费）</button>
         </div>
-        <p class="hint" data-i18n="preview-pdf-note">非正式预览 PDF，不需要付款。正式 PDF 仍要等服务器确认付款后才会发送。</p>
+        <p class="hint" data-i18n="preview-pdf-note">这是带 StoriesLens 标志的免费预览，不需要付款。没有标志的正式 PDF 要先付款，再确认邮箱，服务器确认后才会发送。</p>
+        <section class="official-path" data-official-path>
+          <h3 data-i18n="official-kicker">正式文件</h3>
+          <p data-i18n="official-steps">想下载没有标志的正式 A5 PDF：先付款，再填写接收邮箱，我们在服务器确认付款之后才会发送。成功页或链接不会解锁下载。</p>
+          <ol class="pay-steps">
+            <li data-i18n="official-step-pay">先付款</li>
+            <li data-i18n="official-step-email">再确认接收邮箱</li>
+            <li data-i18n="official-step-send">服务器确认付款后，我们发送正式无水印 PDF</li>
+          </ol>
+          <button class="primary" type="button" data-scroll-official data-i18n="official-go">去付款并发送正式 PDF</button>
+        </section>
         <div class="file-box" data-pdf-box hidden>
           <iframe title="A5 PDF preview" data-pdf-frame></iframe>
           <p class="wechat-help" data-pdf-help></p>
@@ -176,12 +199,17 @@
         <div class="price-card">
           <span class="free-tag" data-i18n="price-free-tag">FREE · 免费</span>
           <b data-i18n="price-free-title">预览成书和短片</b>
-          <p data-i18n="price-free-copy">翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。</p>
+          <p data-i18n="price-free-copy">翻页预览带有 StoriesLens 标志，短片可以免费使用。画面上的预览不是已付款的正式文件。</p>
         </div>
         <div class="price-card">
           <b data-i18n="price-digital">电子版 A5 PDF · ¥19.9（约 $2.99）</b>
-          <p data-i18n="price-digital-copy">服务器确认付款后，需要你再确认接收邮箱，正式 A5 PDF 才会发到这个邮箱。成功页或链接参数不会发信，也不会解锁下载。</p>
-          <button class="primary" type="button" data-buy-digital data-i18n="buy-digital" style="margin-top:12px;width:100%">购买电子版</button>
+          <p data-i18n="price-digital-copy">正式无水印 PDF 的顺序是：先付款，再确认接收邮箱，服务器确认付款后我们才发送。成功页或链接参数不会发信，也不会解锁下载。</p>
+          <ol class="pay-steps">
+            <li data-i18n="official-step-pay">先付款</li>
+            <li data-i18n="official-step-email">再确认接收邮箱</li>
+            <li data-i18n="official-step-send">服务器确认付款后，我们发送正式无水印 PDF</li>
+          </ol>
+          <button class="primary" type="button" data-buy-digital id="official-download" data-i18n="buy-digital" style="margin-top:12px;width:100%">购买电子版</button>
         </div>
         <div class="price-card">
           <b data-i18n="price-print">印刷成书</b>
@@ -216,6 +244,21 @@
         <div class="actions" data-paid-actions hidden>
           <button class="primary" type="button" data-download-pdf data-i18n="download-pdf">下载已购买的 A5 PDF</button>
         </div>
+        <section class="follow-up" data-follow-up hidden>
+          <h3 data-i18n="follow-kicker">后续服务</h3>
+          <p data-i18n="follow-copy">正式 PDF 已经发到你确认的邮箱。接下来可以选这些后续服务。</p>
+          <ul>
+            <li data-i18n="follow-film">免费短片可以在预览里生成。</li>
+            <li data-i18n="follow-print">印刷可以选精美硬壳或软壳。付款确认后，我们按你留下的成人地址人工安排。目前没有自动物流跟踪，也没有印刷厂对接。</li>
+            <li data-i18n="follow-contact">售后由成人联系。可以发邮件到 support@storieslens.com，或查看退款规则。</li>
+          </ul>
+          <div class="actions">
+            <button class="secondary" type="button" data-follow-film data-i18n="follow-film-btn">生成免费短片</button>
+            <button class="secondary" type="button" data-follow-print data-i18n="follow-print-btn">查看印刷选项</button>
+            <a class="secondary" href="mailto:support@storieslens.com" data-i18n="follow-email">联系售后</a>
+            <a class="secondary" href="refund-policy.html" data-i18n="follow-refund">退款规则</a>
+          </div>
+        </section>
       </section>
 
       <p class="trust">
@@ -229,10 +272,10 @@
 
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261111-2"></script>
+    <script src="artwork-prepare.js?v=20261111-6"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
-    <script src="parent-book.js?v=20261111-2"></script>
+    <script src="parent-book.js?v=20261111-6"></script>
   </body>
 </html>

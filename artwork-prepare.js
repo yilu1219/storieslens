@@ -742,6 +742,238 @@
     };
   }
 
+  function downscaleNearest(rgba, width, height, maxEdge) {
+    const edge = Math.max(width, height);
+    if (edge <= maxEdge) return { rgba, width, height, scaleX: 1, scaleY: 1 };
+    const scale = maxEdge / edge;
+    const dw = Math.max(2, Math.round(width * scale));
+    const dh = Math.max(2, Math.round(height * scale));
+    const out = new Uint8ClampedArray(dw * dh * 4);
+    for (let y = 0; y < dh; y += 1) {
+      const sy = Math.min(height - 1, Math.floor((y + 0.5) * height / dh));
+      for (let x = 0; x < dw; x += 1) {
+        const sx = Math.min(width - 1, Math.floor((x + 0.5) * width / dw));
+        const from = (sy * width + sx) * 4;
+        const to = (y * dw + x) * 4;
+        out[to] = rgba[from];
+        out[to + 1] = rgba[from + 1];
+        out[to + 2] = rgba[from + 2];
+        out[to + 3] = 255;
+      }
+    }
+    return { rgba: out, width: dw, height: dh, scaleX: width / dw, scaleY: height / dh };
+  }
+
+  function solveHomography(src, dst) {
+    const matrix = [];
+    for (let index = 0; index < 4; index += 1) {
+      const x = dst[index].x;
+      const y = dst[index].y;
+      const u = src[index].x;
+      const v = src[index].y;
+      matrix.push([x, y, 1, 0, 0, 0, -u * x, -u * y, u]);
+      matrix.push([0, 0, 0, x, y, 1, -v * x, -v * y, v]);
+    }
+    const size = 8;
+    for (let col = 0; col < size; col += 1) {
+      let pivot = col;
+      for (let row = col + 1; row < size; row += 1) {
+        if (Math.abs(matrix[row][col]) > Math.abs(matrix[pivot][col])) pivot = row;
+      }
+      if (Math.abs(matrix[pivot][col]) < 1e-8) return null;
+      if (pivot !== col) {
+        const swap = matrix[col];
+        matrix[col] = matrix[pivot];
+        matrix[pivot] = swap;
+      }
+      const divisor = matrix[col][col];
+      for (let colIndex = col; colIndex <= size; colIndex += 1) matrix[col][colIndex] /= divisor;
+      for (let row = 0; row < size; row += 1) {
+        if (row === col) continue;
+        const factor = matrix[row][col];
+        for (let colIndex = col; colIndex <= size; colIndex += 1) matrix[row][colIndex] -= factor * matrix[col][colIndex];
+      }
+    }
+    return matrix.map((row) => row[size]);
+  }
+
+  function mapPoint(homography, x, y) {
+    const weight = homography[6] * x + homography[7] * y + 1;
+    if (!Number.isFinite(weight) || Math.abs(weight) < 1e-8) return null;
+    return {
+      x: (homography[0] * x + homography[1] * y + homography[2]) / weight,
+      y: (homography[3] * x + homography[4] * y + homography[5]) / weight
+    };
+  }
+
+  function sampleBilinear(rgba, width, height, x, y) {
+    if (x < 0 || y < 0 || x > width - 1 || y > height - 1) return PAPER;
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const x1 = Math.min(width - 1, x0 + 1);
+    const y1 = Math.min(height - 1, y0 + 1);
+    const tx = x - x0;
+    const ty = y - y0;
+    const weights = [
+      [(1 - tx) * (1 - ty), x0, y0],
+      [tx * (1 - ty), x1, y0],
+      [(1 - tx) * ty, x0, y1],
+      [tx * ty, x1, y1]
+    ];
+    const color = [0, 0, 0];
+    weights.forEach(([weight, sx, sy]) => {
+      const index = (sy * width + sx) * 4;
+      color[0] += rgba[index] * weight;
+      color[1] += rgba[index + 1] * weight;
+      color[2] += rgba[index + 2] * weight;
+    });
+    return color.map((value) => Math.max(0, Math.min(255, Math.round(value))));
+  }
+
+  function quadArea(corners) {
+    let sum = 0;
+    for (let index = 0; index < corners.length; index += 1) {
+      const next = corners[(index + 1) % corners.length];
+      sum += corners[index].x * next.y - next.x * corners[index].y;
+    }
+    return Math.abs(sum) / 2;
+  }
+
+  function pageCorners(labels, keptIds, width, height) {
+    const points = [];
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (keptIds.has(labels[y * width + x])) points.push({ x, y });
+      }
+    }
+    if (points.length < 16) return null;
+    const pick = (score, low) => {
+      const ranked = points.map((point) => ({ point, score: score(point) })).sort((a, b) => a.score - b.score);
+      const index = low ? Math.floor(ranked.length * 0.02) : Math.ceil(ranked.length * 0.98) - 1;
+      return ranked[Math.max(0, Math.min(ranked.length - 1, index))].point;
+    };
+    return [
+      pick((point) => point.x + point.y, true),
+      pick((point) => point.y - point.x, true),
+      pick((point) => point.x + point.y, false),
+      pick((point) => point.x - point.y, true)
+    ];
+  }
+
+  function warpPage(rgba, width, height, corners, maxEdge) {
+    const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    let outWidth = Math.max(2, Math.round((distance(corners[0], corners[1]) + distance(corners[3], corners[2])) / 2));
+    let outHeight = Math.max(2, Math.round((distance(corners[0], corners[3]) + distance(corners[1], corners[2])) / 2));
+    const edge = Math.max(outWidth, outHeight);
+    if (edge > maxEdge) {
+      const scale = maxEdge / edge;
+      outWidth = Math.max(2, Math.round(outWidth * scale));
+      outHeight = Math.max(2, Math.round(outHeight * scale));
+    }
+    const destination = [
+      { x: 0, y: 0 },
+      { x: outWidth - 1, y: 0 },
+      { x: outWidth - 1, y: outHeight - 1 },
+      { x: 0, y: outHeight - 1 }
+    ];
+    const homography = solveHomography(corners, destination);
+    if (!homography) return null;
+    const out = new Uint8ClampedArray(outWidth * outHeight * 4);
+    for (let y = 0; y < outHeight; y += 1) {
+      for (let x = 0; x < outWidth; x += 1) {
+        const source = mapPoint(homography, x, y);
+        const color = source ? sampleBilinear(rgba, width, height, source.x, source.y) : PAPER;
+        const index = (y * outWidth + x) * 4;
+        out[index] = color[0];
+        out[index + 1] = color[1];
+        out[index + 2] = color[2];
+        out[index + 3] = 255;
+      }
+    }
+    return { rgba: out, width: outWidth, height: outHeight };
+  }
+
+  function rotateQuarter(rgba, width, height, turns) {
+    let pixels = toUint8(rgba, width, height);
+    let currentWidth = width;
+    let currentHeight = height;
+    const steps = ((Number(turns) || 0) % 4 + 4) % 4;
+    for (let step = 0; step < steps; step += 1) {
+      const next = new Uint8ClampedArray(currentWidth * currentHeight * 4);
+      const nextWidth = currentHeight;
+      for (let y = 0; y < currentHeight; y += 1) {
+        for (let x = 0; x < currentWidth; x += 1) {
+          const nx = y;
+          const ny = currentWidth - 1 - x;
+          const from = (y * currentWidth + x) * 4;
+          const to = (ny * nextWidth + nx) * 4;
+          next[to] = pixels[from];
+          next[to + 1] = pixels[from + 1];
+          next[to + 2] = pixels[from + 2];
+          next[to + 3] = pixels[from + 3] || 255;
+        }
+      }
+      pixels = next;
+      const previousWidth = currentWidth;
+      currentWidth = currentHeight;
+      currentHeight = previousWidth;
+    }
+    return { rgba: pixels, width: currentWidth, height: currentHeight };
+  }
+
+  function scanArtwork(rgba, width, height) {
+    const source = opaqueResult(toUint8(rgba, width, height));
+    const missed = { isolated: false, rgba: null, width: 0, height: 0, confidence: 0 };
+    if (!width || !height || width < 8 || height < 8) return missed;
+    if (isCleanScan(source, width, height)) {
+      const fitted = downscaleNearest(source, width, height, 1600);
+      return { isolated: true, rgba: fitted.rgba, width: fitted.width, height: fitted.height, confidence: 1 };
+    }
+    const view = downscaleNearest(source, width, height, 480);
+    const analysis = analyzeForeground(view.rgba, view.width, view.height, {});
+    if (!analysis || analysis.confidence < 0.45 || !analysis.keptIds || !analysis.keptIds.size) return missed;
+    const smallCorners = pageCorners(analysis.labels, analysis.keptIds, view.width, view.height);
+    if (!smallCorners) return missed;
+    const corners = smallCorners.map((point) => ({
+      x: (point.x + 0.5) * view.scaleX - 0.5,
+      y: (point.y + 0.5) * view.scaleY - 0.5
+    }));
+    let turn = 0;
+    for (let index = 0; index < corners.length; index += 1) {
+      const current = corners[index];
+      const next = corners[(index + 1) % corners.length];
+      const after = corners[(index + 2) % corners.length];
+      const cross = (next.x - current.x) * (after.y - next.y) - (next.y - current.y) * (after.x - next.x);
+      if (Math.abs(cross) < 1) continue;
+      const sign = Math.sign(cross);
+      if (turn && sign !== turn) return missed;
+      turn = sign;
+    }
+    const area = quadArea(corners);
+    const frame = width * height;
+    const minEdge = Math.min(
+      Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y),
+      Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y)
+    );
+    if (area < frame * 0.08 || area > frame * 0.94 || minEdge < Math.min(width, height) * 0.12) return missed;
+    const warped = warpPage(source, width, height, corners, 1600);
+    if (!warped) return missed;
+    return { isolated: true, rgba: warped.rgba, width: warped.width, height: warped.height, confidence: analysis.confidence };
+  }
+
+  function creamPlaceholder(toPng) {
+    const width = 40;
+    const height = 56;
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    for (let index = 0; index < rgba.length; index += 4) {
+      rgba[index] = PAPER[0];
+      rgba[index + 1] = PAPER[1];
+      rgba[index + 2] = PAPER[2];
+      rgba[index + 3] = 255;
+    }
+    return typeof toPng === "function" ? toPng(rgba, width, height) : "";
+  }
+
   function cropSheet(rgba, width, height) {
     const source = toUint8(rgba, width, height);
     const analysis = analyzeForeground(source, width, height, {});
@@ -813,7 +1045,27 @@
     const split = splitScanPages(rgba, width, height, { allowSplit });
     const pages = [];
     for (const page of split.pages) {
-      const scanDataUrl = toPng(page.rgba, page.width, page.height);
+      const scanned = scanArtwork(page.rgba, page.width, page.height);
+      if (!scanned.isolated) {
+        const placeholder = creamPlaceholder(toPng);
+        pages.push({
+          dataUrl: placeholder,
+          scanDataUrl: "",
+          marksDataUrl: "",
+          sheetCleaned: false,
+          scanIsolated: false,
+          artworks: [],
+          text: "",
+          textStatus: "uncertain",
+          textEdited: false,
+          manuscript: Boolean(manuscript),
+          extractEngine: "pdf-craft",
+          extractReason: "scan_not_isolated",
+          split: split.split
+        });
+        continue;
+      }
+      const scanDataUrl = toPng(scanned.rgba, scanned.width, scanned.height);
       const extraction = extract ? await extract(scanDataUrl) : {
         textStatus: "unavailable",
         text: "",
@@ -821,19 +1073,15 @@
         reason: "ocr_not_configured"
       };
       const textStatus = extraction.textStatus || "uncertain";
-      const needsMarks = manuscript || textStatus !== "ok";
-      let marksDataUrl = "";
-      let sheetCleaned = false;
-      if (needsMarks) {
-        const sheet = cropSheet(page.rgba, page.width, page.height);
-        marksDataUrl = toPng(sheet.rgba, sheet.width, sheet.height);
-        sheetCleaned = sheet.cleaned === true;
-      }
+      const figures = Array.isArray(extraction.artworks) ? extraction.artworks : [];
+      const artworks = figures.length ? figures : [{ dataUrl: scanDataUrl }];
       pages.push({
+        dataUrl: (artworks[0] && artworks[0].dataUrl) || scanDataUrl,
         scanDataUrl,
-        marksDataUrl,
-        sheetCleaned,
-        artworks: Array.isArray(extraction.artworks) ? extraction.artworks : [],
+        marksDataUrl: scanDataUrl,
+        sheetCleaned: true,
+        scanIsolated: true,
+        artworks,
         text: textStatus === "ok" ? String(extraction.text || "") : "",
         textStatus,
         textEdited: false,
@@ -984,6 +1232,8 @@
     contentBounds,
     containPlacement,
     cropSheet,
+    rotateQuarter,
+    scanArtwork,
     drawImageFullBleed,
     drawRebuiltPage,
     fullBleedPlacement,

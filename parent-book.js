@@ -46,9 +46,9 @@
       "yu-applied": "已采用语大师的检查稿。画面没有改。",
       "price-free-tag": "FREE · 免费",
       "price-free-title": "预览成书和短片",
-      "price-free-copy": "翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。",
+      "price-free-copy": "翻页预览带有 StoriesLens 标志，短片可以免费使用。画面上的预览不是已付款的正式文件。",
       "price-digital": "电子版 A5 PDF · ¥19.9（约 $2.99）",
-      "price-digital-copy": "服务器确认付款后，需要你再确认接收邮箱，正式 A5 PDF 才会发到这个邮箱。成功页或链接参数不会发信，也不会解锁下载。",
+      "price-digital-copy": "正式无水印 PDF 的顺序是：先付款，再确认接收邮箱，服务器确认付款后我们才发送。成功页或链接参数不会发信，也不会解锁下载。",
       "buy-digital": "购买电子版",
       "price-print": "印刷成书",
       "price-print-copy": "请先选择精美硬壳或软壳。确认付款后，我们按你留下的成人联系方式和地址人工安排首批印刷和寄送。目前没有自动物流跟踪，也不假装已经对接印刷厂。",
@@ -89,6 +89,10 @@
       "name-placeholder": "例如：小羽",
       album: "从相册选择照片",
       camera: "拍照上传",
+      "upload-start": "这里开始上传照片",
+      "edit-kicker": "修改内容",
+      "edit-hint": "改书名、作者和每张作品上的文字。预览只在你修改之后更新。我们不会自动改孩子的画或原文。",
+      "edit-piece": "第 {n} 张作品的文字",
       "safety-notice": "请上传孩子的画、作文或手工作品照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。位置和拍摄信息会在本机删除。",
       "adult-note": "这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。",
       "preview-kicker": "预览成书",
@@ -131,20 +135,40 @@
       "cover-style-full": "重排封面",
       "cover-style-type": "文字封面",
       "set-cover": "设为封面",
+      "rotate-photo": "旋转 90°",
       "manuscript-toggle": "手稿",
       "restore-original": "原图",
       "retry-cutout": "重新提取",
       "undo-split": "撤销拆分",
       "text-label": "识别出的文字",
-      cutting: "正在用 pdf-craft 提取画作和文字…",
-      "extract-done": "已用 pdf-craft 把画作和文字分开，再排到米色 A5 页上。文字没有改写。",
+      "progress-prepare": "小羽正在这台设备上准备照片（第 {current} 张，共 {count} 张）",
+      "progress-extract": "小羽正在提取这张作品的画和文字（第 {current} 张，共 {count} 张）",
+      "progress-layout": "小羽正在把作品排到 A5 书页上",
+      "yu-name": "小羽",
+      "official-kicker": "正式文件",
+      "official-steps": "想下载没有标志的正式 A5 PDF：先付款，再填写接收邮箱，我们在服务器确认付款之后才会发送。成功页或链接不会解锁下载。",
+      "official-step-pay": "先付款",
+      "official-step-email": "再确认接收邮箱",
+      "official-step-send": "服务器确认付款后，我们发送正式无水印 PDF",
+      "official-go": "去付款并发送正式 PDF",
+      "follow-kicker": "后续服务",
+      "follow-copy": "正式 PDF 已经发到你确认的邮箱。接下来可以选这些后续服务。",
+      "follow-film": "免费短片可以在预览里生成。",
+      "follow-print": "印刷可以选精美硬壳或软壳。付款确认后，我们按你留下的成人地址人工安排。目前没有自动物流跟踪，也没有印刷厂对接。",
+      "follow-contact": "售后由成人联系。可以发邮件到 support@storieslens.com，或查看退款规则。",
+      "follow-film-btn": "生成免费短片",
+      "follow-print-btn": "查看印刷选项",
+      "follow-email": "联系售后",
+      "follow-refund": "退款规则",
+      "extract-done": "画作和文字已经分开，排到米色 A5 页上。文字没有改写。",
       "extract-uncertain": "文字没有把握，所以没有编造句子。原有笔迹还留在页面上，可以自己改正。",
-      "extract-unavailable": "pdf-craft 的远程 OCR 还没接通，没有识别文字。原图还在，可以恢复或稍后重试。",
+      "scan-not-isolated": "没有把作品从桌面上分开，所以这一页没有用带桌面的原图。请把纸拍完整、尽量摊平后再试。",
+      "extract-unavailable": "远程文字识别还没接通，没有识别文字。原图还在，可以恢复或稍后重试。",
       "extract-table": "手稿四周的桌子没能完全去掉，页面仍保留原稿笔迹。",
       "split-done": "这张照片左右各有一幅作品，已分成两页，并分别提取。可以撤销拆分。",
       restored: "已恢复原图。这不是提取后的重排页。",
       "download-preview": "下载预览 PDF",
-      "preview-pdf-note": "非正式预览 PDF，不需要付款。正式 PDF 仍要等服务器确认付款后才会发送。",
+      "preview-pdf-note": "这是带 StoriesLens 标志的免费预览，不需要付款。没有标志的正式 PDF 要先付款，再确认邮箱，服务器确认后才会发送。",
       "preview-pdf-working": "正在生成预览 PDF…",
       "preview-pdf-ready": "预览 PDF 已准备好，可以下载。这不是已付款的正式文件。",
       "preview-pdf-failed": "预览 PDF 暂时无法生成，请再试一次。",
@@ -202,9 +226,9 @@
       "yu-applied": "Yu’s checked text is now the author intro. The pictures were not changed.",
       "price-free-tag": "FREE",
       "price-free-title": "Book preview and short film",
-      "price-free-copy": "You can flip through the book and make the short film for free. The on-screen preview is not a paid file.",
+      "price-free-copy": "The page preview carries the StoriesLens logo, and the short film is free. The on-screen preview is not a paid file.",
       "price-digital": "Digital A5 PDF · ¥19.9 (about $2.99)",
-      "price-digital-copy": "After the server confirms payment, confirm a delivery email and the official A5 PDF is sent there. A success page or query string never sends the file or unlocks the download.",
+      "price-digital-copy": "The official PDF without the logo follows this order: pay, confirm the delivery email, then we send it after the server confirms payment. A success page or query string never sends the file or unlocks the download.",
       "buy-digital": "Buy the digital edition",
       "price-print": "Printed book",
       "price-print-copy": "Choose premium hardcover or softcover first. After a confirmed payment, we use the adult contact and shipping address to arrange the first batch by hand. There is no automated tracking yet, and we do not claim a print factory is already connected.",
@@ -245,6 +269,10 @@
       "name-placeholder": "For example: Mia",
       album: "Choose from camera roll",
       camera: "Take a photo",
+      "upload-start": "Start uploading photos here",
+      "edit-kicker": "Edit this book",
+      "edit-hint": "Edit the title, the author, and the words on each piece. The preview updates after you make a change. We do not rewrite the child’s pictures or words on our own.",
+      "edit-piece": "Words on piece {n}",
       "safety-notice": "Upload photos of your child’s artwork or writing. Do not upload identity documents, student or school IDs, or images that show a phone number, address, email, or QR code. Location and camera details are removed on this device.",
       "adult-note": "This flow is for a parent or another adult. A child should not enter a checkout page.",
       "preview-kicker": "BOOK PREVIEW",
@@ -287,20 +315,40 @@
       "cover-style-full": "Rebuilt page",
       "cover-style-type": "Typographic cover",
       "set-cover": "Set cover",
+      "rotate-photo": "Rotate 90°",
       "manuscript-toggle": "Manuscript",
       "restore-original": "Original",
       "retry-cutout": "Extract again",
       "undo-split": "Undo split",
       "text-label": "Extracted words",
-      cutting: "Extracting the drawing and the words with pdf-craft…",
-      "extract-done": "pdf-craft separated the drawing and the words, then placed them on a cream A5 page. The words were not rewritten.",
+      "progress-prepare": "Yu is preparing the photo on this device ({current} of {count})",
+      "progress-extract": "Yu is reading the drawing and the words ({current} of {count})",
+      "progress-layout": "Yu is placing the work on A5 pages",
+      "yu-name": "Yu",
+      "official-kicker": "Official file",
+      "official-steps": "To download the official A5 PDF without the logo: pay first, then enter the delivery email. We send it only after the server confirms payment. A success page or link does not unlock the download.",
+      "official-step-pay": "Pay first",
+      "official-step-email": "Then confirm the delivery email",
+      "official-step-send": "After the server confirms payment, we send the official PDF without the logo",
+      "official-go": "Pay and send the official PDF",
+      "follow-kicker": "What you can do next",
+      "follow-copy": "The official PDF was sent to the email you confirmed. You can use these next.",
+      "follow-film": "The short film is free and can be made from the preview.",
+      "follow-print": "Printing can be premium hardcover or softcover. After payment is confirmed, we arrange the first batch by hand from the adult address you left. There is no automated tracking, and no print factory is connected.",
+      "follow-contact": "After-sales contact is for an adult. Email support@storieslens.com, or read the refund policy.",
+      "follow-film-btn": "Make the free short film",
+      "follow-print-btn": "See print options",
+      "follow-email": "Contact support",
+      "follow-refund": "Refund policy",
+      "extract-done": "The drawing and the words were separated, then placed on a cream A5 page. The words were not rewritten.",
       "extract-uncertain": "The words were not read confidently, so nothing was invented. The original marks stay on the page and can be corrected.",
-      "extract-unavailable": "pdf-craft remote OCR is not configured, so no words were recognized. The original photo is still here.",
+      "scan-not-isolated": "The sheet could not be separated from the table, so the tabletop photo was not used. Retake it with the whole page visible and as flat as you can.",
+      "extract-unavailable": "Remote text recognition is not connected, so no words were recognized. The original photo is still here.",
       "extract-table": "The table around this manuscript could not be fully removed. The handwritten marks stay on the page.",
       "split-done": "This photo has a piece on the left and a piece on the right, so each side was extracted into its own page. You can undo the split.",
       restored: "The original photo is restored. This is not an extracted page.",
       "download-preview": "Download preview PDF",
-      "preview-pdf-note": "This informal preview PDF does not require payment. The official PDF is sent only after the server confirms payment.",
+      "preview-pdf-note": "This free preview carries the StoriesLens logo and does not require payment. The official PDF without the logo is sent only after you pay and confirm an email, and the server confirms payment.",
       "preview-pdf-working": "Creating the preview PDF…",
       "preview-pdf-ready": "The preview PDF is ready. It is not the paid official file.",
       "preview-pdf-failed": "The preview PDF could not be created. Please try again.",
@@ -369,8 +417,17 @@
     album: document.querySelector("[data-album]"),
     camera: document.querySelector("[data-camera]"),
     thumbs: document.querySelector("[data-thumbs]"),
+    yuProgress: document.querySelector("[data-yu-progress]"),
+    yuMark: document.querySelector("[data-yu-mark]"),
+    progressPercent: document.querySelector("[data-progress-percent]"),
+    progressLabel: document.querySelector("[data-progress-label]"),
+    followUp: document.querySelector("[data-follow-up]"),
+    scrollOfficial: document.querySelector("[data-scroll-official]"),
+    followFilm: document.querySelector("[data-follow-film]"),
+    followPrint: document.querySelector("[data-follow-print]"),
     status: document.querySelector("[data-status]"),
     previewCard: document.querySelector("[data-preview-card]"),
+    bookEditFields: document.querySelector("[data-book-edit-fields]"),
     pageImage: document.querySelector("[data-page-image]"),
     pageLabel: document.querySelector("[data-page-label]"),
     prev: document.querySelector("[data-prev]"),
@@ -405,6 +462,7 @@
     locale: "zh",
     photos: [],
     pages: [],
+    previewPages: [],
     pageIndex: 0,
     pdfBlob: null,
     pdfUrl: "",
@@ -462,6 +520,27 @@
   function setStatus(message, isError = false) {
     els.status.textContent = message || "";
     els.status.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function showProgress(done, total, key, vars) {
+    const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 0;
+    if (els.yuProgress) els.yuProgress.hidden = false;
+    if (els.progressPercent) els.progressPercent.textContent = `${percent}%`;
+    if (els.progressLabel) els.progressLabel.textContent = t(key, vars || {});
+    if (els.status) {
+      els.status.textContent = "";
+      els.status.classList.remove("is-error");
+    }
+  }
+
+  function hideProgress() {
+    if (els.yuProgress) els.yuProgress.hidden = true;
+  }
+
+  function syncFollowUp() {
+    if (!els.followUp) return;
+    const sent = state.entitlement?.paid === true && state.entitlement.kind === "digital" && state.entitlement.emailSent === true;
+    els.followUp.hidden = !sent;
   }
 
   function bookTitle() {
@@ -528,6 +607,7 @@
     });
     els.title.placeholder = t("title-placeholder");
     els.childName.placeholder = t("name-placeholder");
+    if (els.yuMark) els.yuMark.alt = t("yu-name");
     document.querySelectorAll("[data-locale]").forEach((button) => {
       const active = button.dataset.locale === state.locale;
       button.classList.toggle("is-active", active);
@@ -562,6 +642,36 @@
 
   function canvasToJpeg(canvas, quality = 0.86) {
     return canvas.toDataURL("image/jpeg", quality);
+  }
+
+  let brandMarkPromise = null;
+  function loadBrandMark() {
+    if (!brandMarkPromise) {
+      brandMarkPromise = loadHtmlImage("assets/storieslens-logo.png").catch((error) => {
+        brandMarkPromise = null;
+        throw error;
+      });
+    }
+    return brandMarkPromise;
+  }
+
+  async function watermarkPage(dataUrl) {
+    const page = await loadHtmlImage(dataUrl);
+    const logo = await loadBrandMark();
+    const width = page.naturalWidth || page.width || PAGE_WIDTH;
+    const height = page.naturalHeight || page.height || PAGE_HEIGHT;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    context.drawImage(page, 0, 0, width, height);
+    const mark = Math.round(width * 0.16);
+    const margin = Math.round(width * 0.045);
+    context.save();
+    context.globalAlpha = 0.62;
+    context.drawImage(logo, width - mark - margin, margin, mark, mark);
+    context.restore();
+    return canvasToJpeg(canvas, 0.9);
   }
 
   function prepareApi() {
@@ -610,9 +720,11 @@
   }
 
   function noteExtract(pages) {
-    const rank = { unavailable: 6, split: 5, uncertain: 4, extracted: 3, restored: 2 };
+    const rank = { unavailable: 6, scan: 5, split: 4, uncertain: 3, extracted: 2, restored: 1 };
     pages.forEach((page) => {
-      const key = page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
+      const key = page.extractReason === "scan_not_isolated" || page.scanIsolated === false
+        ? "scan"
+        : page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
       if ((rank[key] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = key;
     });
   }
@@ -621,6 +733,7 @@
     const keys = {
       split: "split-done",
       uncertain: "extract-uncertain",
+      scan: "scan-not-isolated",
       unavailable: "extract-unavailable",
       extracted: "extract-done",
       restored: "restored"
@@ -630,6 +743,7 @@
 
   function pageNote(photo) {
     if (!photo) return "";
+    if (photo.extractReason === "scan_not_isolated" || photo.scanIsolated === false) return t("scan-not-isolated");
     if (photo.textStatus === "unavailable") return t("extract-unavailable");
     if (photo.textStatus === "uncertain") return t("extract-uncertain");
     if (photo.textStatus === "restored") return t("restored");
@@ -651,11 +765,12 @@
     const groupId = built.split ? `split-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}` : "";
     const photos = built.pages.map((page, index) => ({
       id: newPhotoId(index),
-      dataUrl: (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
+      dataUrl: page.dataUrl || (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
       originalDataUrl,
       scanDataUrl: page.scanDataUrl,
       marksDataUrl: page.marksDataUrl,
       sheetCleaned: page.sheetCleaned === true,
+      scanIsolated: page.scanIsolated !== false,
       artworks: page.artworks,
       text: page.text,
       textStatus: page.textStatus,
@@ -673,16 +788,40 @@
 
   function ensureCover() {
     if (state.photos.some((photo) => photo.id === state.coverId)) return;
-    const main = state.photos.find((photo) => !photo.manuscript) || state.photos[0];
-    state.coverId = main ? main.id : "";
+    state.coverId = state.photos[0] ? state.photos[0].id : "";
   }
 
   function replacePhotoGroup(photo, replacements) {
     const index = state.photos.findIndex((item) => (photo.groupId && item.groupId === photo.groupId) || item === photo);
-    const covered = state.photos.some((item) => item.id === state.coverId && ((photo.groupId && item.groupId === photo.groupId) || item === photo));
+    const coverPiece = state.photos.find((item) => item.id === state.coverId && (photo.groupId ? item.groupId === photo.groupId : item === photo));
     state.photos = state.photos.filter((item) => photo.groupId ? item.groupId !== photo.groupId : item !== photo);
     state.photos.splice(Math.max(0, index), 0, ...replacements);
-    if (covered || !state.photos.some((item) => item.id === state.coverId)) state.coverId = replacements[0]?.id || "";
+    if (coverPiece) state.coverId = (replacements[coverPiece.groupIndex] || replacements[0])?.id || "";
+    else if (!state.photos.some((item) => item.id === state.coverId)) state.coverId = state.photos[0]?.id || "";
+  }
+
+  async function rotateDataUrl(dataUrl) {
+    const pixels = await pixelsFromDataUrl(dataUrl);
+    const turned = prepareApi().rotateQuarter(pixels.rgba, pixels.width, pixels.height, 1);
+    return pngFromRgba(turned.rgba, turned.width, turned.height);
+  }
+
+  async function rotatePhoto(photo) {
+    if (state.busy || !photo?.originalDataUrl) return;
+    state.busy = true;
+    showProgress(0, 3, "progress-prepare", { current: 1, count: 1 });
+    try {
+      const rotated = await rotateDataUrl(photo.originalDataUrl);
+      showProgress(1, 3, "progress-extract", { current: 1, count: 1 });
+      const photos = await photosFromScan(rotated, photo.name, photo.manuscript);
+      replacePhotoGroup(photo, photos);
+      showProgress(2, 3, "progress-layout", { current: 1, count: 1 });
+      renderThumbs();
+      await rebuildBook();
+    } finally {
+      state.busy = false;
+      hideProgress();
+    }
   }
 
   function roundedRect(context, x, y, width, height, radius) {
@@ -832,7 +971,7 @@
     }
     const forceMarks = photo.manuscript || !confident || (photo.textStatus === "parent" && !artworks.length);
     let marks = null;
-    const marksUrl = photo.marksDataUrl || (!confident || forceMarks ? (photo.scanDataUrl || photo.originalDataUrl) : "");
+    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || (forceMarks ? photo.scanDataUrl : ""));
     if (forceMarks && marksUrl) marks = await loadHtmlImage(marksUrl);
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
@@ -867,7 +1006,9 @@
   async function rebuildBook() {
     if (!state.photos.length) {
       state.pages = [];
+      state.previewPages = [];
       els.previewCard.hidden = true;
+      if (els.bookEditFields) els.bookEditFields.replaceChildren();
       return;
     }
     ensureCover();
@@ -885,7 +1026,10 @@
       else pages.push(await renderPhotoPage(photo, item.kind === "manuscript" ? t("page-label-manuscript") : ""));
       kinds.push(item.kind);
     }
+    const previewPages = [];
+    for (const page of pages) previewPages.push(await watermarkPage(page));
     state.pages = pages;
+    state.previewPages = previewPages;
     state.pageKinds = kinds;
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
     state.pdfBlob = null;
@@ -893,6 +1037,7 @@
     state.pdfUrl = "";
     if (els.pdfBox) els.pdfBox.hidden = true;
     renderPreview();
+    renderBookEditor();
     els.previewCard.hidden = false;
     if (els.priceBox) els.priceBox.hidden = false;
     startSuggestions();
@@ -903,14 +1048,88 @@
   }
 
   function renderPreview() {
-    if (!state.pages.length) return;
-    els.pageImage.src = state.pages[state.pageIndex];
+    const shown = state.previewPages[state.pageIndex];
+    if (!shown) return;
+    els.pageImage.src = shown;
     const kind = state.pageKinds[state.pageIndex];
     const label = kind === "cover" ? t("page-label-cover") : kind === "author" ? t("page-label-author") : kind === "manuscript" ? t("page-label-manuscript") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
     els.pageImage.alt = label;
     els.pageLabel.textContent = label;
     els.prev.disabled = state.pageIndex === 0;
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
+  }
+
+  function shownPhotoText(photo) {
+    return photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited ? (photo.text || "") : "";
+  }
+
+  function photoTextPlaceholder(photo) {
+    if (photo.textStatus === "unavailable") return t("extract-unavailable");
+    if (photo.textStatus === "uncertain") return t("extract-uncertain");
+    return t("text-label");
+  }
+
+  function commitPhotoText(photo, value) {
+    photo.text = value;
+    photo.textEdited = true;
+    photo.textStatus = "parent";
+    renderThumbs();
+    void rebuildBook();
+  }
+
+  function renderBookEditor() {
+    const root = els.bookEditFields;
+    if (!root) return;
+    root.replaceChildren();
+    if (!state.photos.length) return;
+    const bindField = (labelKey, source, options = {}) => {
+      if (!source) return;
+      const label = document.createElement("label");
+      label.className = "field";
+      const span = document.createElement("span");
+      span.textContent = t(labelKey);
+      const control = document.createElement(options.multiline ? "textarea" : "input");
+      if (!options.multiline) control.type = "text";
+      control.maxLength = options.maxLength;
+      if (options.rows) control.rows = options.rows;
+      control.value = source.value;
+      if (source.placeholder) control.placeholder = source.placeholder;
+      control.addEventListener("change", () => {
+        source.value = control.value;
+        saveMeta();
+        if (options.after) options.after();
+        if (state.photos.length) void rebuildBook();
+      });
+      label.append(span, control);
+      root.append(label);
+    };
+    bindField("title-label", els.title, { maxLength: 80 });
+    bindField("author-label", els.authorName, { maxLength: 40 });
+    bindField("name-label", els.childName, { maxLength: 40 });
+    bindField("intro-label", els.authorIntro, { multiline: true, maxLength: 800, rows: 4, after: renderIntroTemplates });
+    state.photos.forEach((photo, index) => {
+      const piece = document.createElement("div");
+      piece.className = "piece-edit";
+      const rotate = document.createElement("button");
+      rotate.type = "button";
+      rotate.className = "secondary";
+      rotate.textContent = t("rotate-photo");
+      rotate.addEventListener("click", () => { void rotatePhoto(photo); });
+      const label = document.createElement("label");
+      label.className = "field";
+      const span = document.createElement("span");
+      span.textContent = t("edit-piece", { n: index + 1 });
+      const writing = document.createElement("textarea");
+      writing.maxLength = 4000;
+      writing.rows = 4;
+      writing.value = shownPhotoText(photo);
+      writing.placeholder = photoTextPlaceholder(photo);
+      writing.setAttribute("aria-label", t("edit-piece", { n: index + 1 }));
+      writing.addEventListener("change", () => commitPhotoText(photo, writing.value));
+      label.append(span, writing);
+      piece.append(rotate, label);
+      root.append(piece);
+    });
   }
 
   function renderThumbs() {
@@ -938,6 +1157,10 @@
       frame.append(image, remove);
       const tools = document.createElement("div");
       tools.className = "thumb-tools";
+      const rotate = document.createElement("button");
+      rotate.type = "button";
+      rotate.textContent = t("rotate-photo");
+      rotate.addEventListener("click", () => { void rotatePhoto(photo); });
       const cover = document.createElement("button");
       cover.type = "button";
       cover.textContent = t("set-cover");
@@ -964,20 +1187,14 @@
       retry.type = "button";
       retry.textContent = t("retry-cutout");
       retry.addEventListener("click", () => { void retryCutout(photo); });
-      tools.append(cover, manuscript, restore, retry);
+      tools.append(rotate, cover, manuscript, restore, retry);
       const writing = document.createElement("textarea");
       writing.className = "thumb-text";
       writing.maxLength = 4000;
-      writing.value = photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited ? (photo.text || "") : "";
-      writing.placeholder = photo.textStatus === "unavailable" ? t("extract-unavailable") : photo.textStatus === "uncertain" ? t("extract-uncertain") : t("text-label");
+      writing.value = shownPhotoText(photo);
+      writing.placeholder = photoTextPlaceholder(photo);
       writing.setAttribute("aria-label", t("text-label"));
-      writing.addEventListener("change", () => {
-        photo.text = writing.value;
-        photo.textEdited = true;
-        photo.textStatus = "parent";
-        renderThumbs();
-        void rebuildBook();
-      });
+      writing.addEventListener("change", () => commitPhotoText(photo, writing.value));
       if (photo.groupId) {
         const undo = document.createElement("button");
         undo.type = "button";
@@ -1039,24 +1256,34 @@
   }
 
   async function retryCutout(photo) {
-    setStatus(t("cutting"));
-    const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, { allowSplit: true });
-    if (state.photos.length - (photo.groupId ? state.photos.filter((item) => item.groupId === photo.groupId).length : 1) + photos.length > MAX_PHOTOS) {
-      setStatus(t("too-many"), true);
-      return;
+    showProgress(0, 2, "progress-extract", { current: 1, count: 1 });
+    try {
+      const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, { allowSplit: true });
+      if (state.photos.length - (photo.groupId ? state.photos.filter((item) => item.groupId === photo.groupId).length : 1) + photos.length > MAX_PHOTOS) {
+        setStatus(t("too-many"), true);
+        return;
+      }
+      replacePhotoGroup(photo, photos);
+      state.announcePrepare = true;
+      showProgress(1, 2, "progress-layout", { current: 1, count: 1 });
+      renderThumbs();
+      await rebuildBook();
+    } finally {
+      hideProgress();
     }
-    replacePhotoGroup(photo, photos);
-    state.announcePrepare = true;
-    renderThumbs();
-    await rebuildBook();
   }
 
   async function undoSplit(photo) {
-    setStatus(t("cutting"));
-    const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, { allowSplit: false });
-    replacePhotoGroup(photo, photos);
-    renderThumbs();
-    await rebuildBook();
+    showProgress(0, 2, "progress-extract", { current: 1, count: 1 });
+    try {
+      const photos = await photosFromScan(photo.originalDataUrl, photo.name, photo.manuscript, { allowSplit: false });
+      replacePhotoGroup(photo, photos);
+      showProgress(1, 2, "progress-layout", { current: 1, count: 1 });
+      renderThumbs();
+      await rebuildBook();
+    } finally {
+      hideProgress();
+    }
   }
 
   async function addFiles(fileList) {
@@ -1068,9 +1295,13 @@
     }
     state.busy = true;
     state.noticeKey = "";
-    setStatus(t("cutting"));
+    const total = files.length * 2 + 1;
+    showProgress(0, total, "progress-prepare", { current: 1, count: files.length });
     try {
-      for (const file of files) {
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        const current = index + 1;
+        showProgress(index * 2, total, "progress-prepare", { current, count: files.length });
         const inspection = inspectUpload(file);
         if (inspection.blocked) {
           setStatus(t("blocked"), true);
@@ -1083,6 +1314,7 @@
           setStatus(t("unsupported"), true);
           continue;
         }
+        showProgress(index * 2 + 1, total, "progress-extract", { current, count: files.length });
         try {
           const originalDataUrl = await sanitizeToPng(file);
           const manuscript = prepareApi().looksLikeManuscript(file.name);
@@ -1092,7 +1324,7 @@
             break;
           }
           state.photos.push(...photos);
-          if (!state.coverId) state.coverId = (photos.find((item) => !item.manuscript) || photos[0]).id;
+          if (!state.coverId) state.coverId = photos[0].id;
         } catch (_error) {
           setStatus(t("unsupported"), true);
         }
@@ -1100,12 +1332,14 @@
       renderThumbs();
       if (state.photos.length) {
         state.announcePrepare = true;
+        showProgress(files.length * 2, total, "progress-layout", { current: files.length, count: files.length });
         await rebuildBook();
       } else {
         setStatus(t("need-photos"), true);
       }
     } finally {
       state.busy = false;
+      hideProgress();
     }
   }
 
@@ -1444,8 +1678,10 @@
         if (paid) els.payUnlocked.textContent = state.entitlement.kind === "print" ? printStatusCopy(state.entitlement.cover) : t("pay-unlocked-digital");
       }
       if (paid) setStatus(state.entitlement.kind === "print" ? printStatusCopy(state.entitlement.cover) : t("pay-unlocked-digital"));
+      syncFollowUp();
     } catch (_error) {
       state.entitlement = { paid: false, kind: "" };
+      syncFollowUp();
     }
   }
 
@@ -1486,6 +1722,7 @@
       if (result.sent === true) {
         state.entitlement.emailSent = true;
         syncDeliveryUi();
+        syncFollowUp();
         setStatus(t("email-sent"));
         return;
       }
@@ -1566,10 +1803,11 @@
 
   function fillPrintRoot() {
     els.printRoot.innerHTML = "";
-    state.pages.forEach((page, index) => {
+    const pages = state.previewPages.length === state.pages.length ? state.previewPages : [];
+    pages.forEach((page, index) => {
       const image = document.createElement("img");
       image.src = page;
-      image.alt = t("page-of", { current: index + 1, total: state.pages.length });
+      image.alt = t("page-of", { current: index + 1, total: pages.length });
       els.printRoot.append(image);
     });
   }
@@ -1702,14 +1940,15 @@
   async function downloadPreviewPdf() {
     if (!state.pages.length) return setStatus(t("need-photos"), true);
     if (!window.PDFLib?.PDFDocument) return setStatus(t("preview-pdf-failed"), true);
+    if (state.previewPages.length !== state.pages.length) return setStatus(t("preview-pdf-failed"), true);
     setStatus(t("preview-pdf-working"));
     try {
       const pdf = await window.PDFLib.PDFDocument.create();
       pdf.setTitle(bookTitle());
-      pdf.setSubject("StoriesLens informal preview. Not an official paid PDF. 非正式预览");
+      pdf.setSubject("StoriesLens watermarked informal preview. Not an official paid PDF. 带标志的非正式预览");
       pdf.setCreator("StoriesLens Informal Preview");
-      pdf.setKeywords(["preview", "informal", "预览"]);
-      for (const pageDataUrl of state.pages) {
+      pdf.setKeywords(["preview", "watermark", "informal", "预览"]);
+      for (const pageDataUrl of state.previewPages) {
         const bytes = dataUrlToBytes(pageDataUrl);
         const image = /^data:image\/png/i.test(pageDataUrl) ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
         const page = pdf.addPage([A5_WIDTH_PT, A5_HEIGHT_PT]);
@@ -1854,6 +2093,13 @@
   });
   els.makeFilm.addEventListener("click", () => void makeFilm());
   els.downloadPreview?.addEventListener("click", () => void downloadPreviewPdf());
+  els.scrollOfficial?.addEventListener("click", () => {
+    document.getElementById("official-download")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+  els.followFilm?.addEventListener("click", () => { void makeFilm(); });
+  els.followPrint?.addEventListener("click", () => {
+    document.querySelector("[data-buy-print]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
   document.querySelectorAll("[data-cover-style]").forEach((input) => {
     input.addEventListener("change", () => {
       if (!input.checked) return;
