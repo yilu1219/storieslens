@@ -31,6 +31,19 @@
       "suggest-undo": "撤销上一步",
       "suggest-progress": "第 {current} 条，共 {total} 条。每条都可以跳过或撤销。",
       "suggest-done": "检查已结束。你可以继续预览、做短片，或查看价格。",
+      "reading-kicker": "认读确认",
+      "reading-copy": "请把这一版读一遍。如果觉得可以，点接受。也可以请语大师点评、改写和检查。接受不会改孩子的画或原文。",
+      "reading-accept": "接受",
+      "reading-yu": "请语大师点评改写检查",
+      "reading-approved": "已记下：学生认读并接受了这一版。画和原文都没有被改写。",
+      "reading-empty": "还没有可检查的文字。画面保持原样。",
+      "yu-working": "正在请语大师点评、改写和检查…",
+      "yu-unavailable": "语大师还没有接通。原文和画面都保持不变。",
+      "yu-ready": "语大师只提出检查意见。原文还没改，除非你采用检查稿。",
+      "yu-apply": "采用语大师的检查稿",
+      "yu-keep": "保留原文",
+      "yu-kept": "已保留原文。",
+      "yu-applied": "已采用语大师的检查稿。画面没有改。",
       "price-free-tag": "FREE · 免费",
       "price-free-title": "预览成书和短片",
       "price-free-copy": "翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。",
@@ -173,6 +186,19 @@
       "suggest-undo": "Undo last step",
       "suggest-progress": "Suggestion {current} of {total}. Every suggestion is optional and can be undone.",
       "suggest-done": "The check is finished. You can keep previewing, make a film, or look at the prices.",
+      "reading-kicker": "Approve reading",
+      "reading-copy": "Read this version. If it is ready, choose Accept. You can also ask Yu to review, comment, and check it. Accept does not change the artwork or the original words.",
+      "reading-accept": "Accept",
+      "reading-yu": "Ask Yu to review and check",
+      "reading-approved": "Saved: the student read this version and accepted it. The artwork and original words were not rewritten.",
+      "reading-empty": "There is no writing to check yet. The pictures stay as they are.",
+      "yu-working": "Asking Yu to review and check…",
+      "yu-unavailable": "Yu is not connected yet. The original words and pictures stay unchanged.",
+      "yu-ready": "Yu offered a check. The original stays until you adopt that check.",
+      "yu-apply": "Use Yu’s checked text",
+      "yu-keep": "Keep the original",
+      "yu-kept": "The original was kept.",
+      "yu-applied": "Yu’s checked text is now the author intro. The pictures were not changed.",
       "price-free-tag": "FREE",
       "price-free-title": "Book preview and short film",
       "price-free-copy": "You can flip through the book and make the short film for free. The on-screen preview is not a paid file.",
@@ -308,6 +334,16 @@
     suggestSkip: document.querySelector("[data-suggest-skip]"),
     suggestUndo: document.querySelector("[data-suggest-undo]"),
     suggestMeta: document.querySelector("[data-suggest-meta]"),
+    readingCard: document.querySelector("[data-reading-card]"),
+    readingText: document.querySelector("[data-reading-text]"),
+    readingAccept: document.querySelector("[data-reading-accept]"),
+    readingYu: document.querySelector("[data-reading-yu]"),
+    readingStatus: document.querySelector("[data-reading-status]"),
+    yuResult: document.querySelector("[data-yu-result]"),
+    yuComment: document.querySelector("[data-yu-comment]"),
+    yuSuggestion: document.querySelector("[data-yu-suggestion]"),
+    yuApply: document.querySelector("[data-yu-apply]"),
+    yuKeep: document.querySelector("[data-yu-keep]"),
     priceBox: document.querySelector("[data-price-box]"),
     payNote: document.querySelector("[data-pay-note]"),
     payUnlocked: document.querySelector("[data-pay-unlocked]"),
@@ -384,7 +420,9 @@
     coverStyle: "fullbleed",
     noticeKey: "",
     announcePrepare: false,
-    avatar: { originalDataUrl: "", illustratedDataUrl: "", mode: "", under18: true, consent: null }
+    avatar: { originalDataUrl: "", illustratedDataUrl: "", mode: "", under18: true, consent: null },
+    readingApproval: null,
+    yuOffer: null
   };
 
   const t = (key, vars) => {
@@ -452,7 +490,8 @@
         authorName: els.authorName?.value || "",
         authorIntro: els.authorIntro?.value || "",
         coverStyle: state.coverStyle,
-        avatarConsent: state.avatar.consent
+        avatarConsent: state.avatar.consent,
+        readingApproval: state.readingApproval
       }));
       localStorage.setItem(LOCALE_KEY, state.locale);
     } catch (_error) {}
@@ -473,6 +512,7 @@
         if (selected) selected.checked = true;
       }
       if (meta.avatarConsent && typeof meta.avatarConsent === "object") state.avatar.consent = meta.avatarConsent;
+      if (meta.readingApproval && meta.readingApproval.approved === true) state.readingApproval = meta.readingApproval;
     } catch (_error) {}
   }
 
@@ -795,6 +835,7 @@
     els.previewCard.hidden = false;
     if (els.priceBox) els.priceBox.hidden = false;
     startSuggestions();
+    showReadingCheck();
     void refreshPricing();
     setStatus(state.announcePrepare ? (prepareNotice() || t("ready")) : t("ready"));
     state.announcePrepare = false;
@@ -1018,6 +1059,102 @@
     });
     if (els.authorIntro) els.authorIntro.placeholder = t("intro-placeholder");
     if (els.authorName) els.authorName.placeholder = t("author-placeholder");
+  }
+
+  function readingBook() {
+    return {
+      title: els.title.value.trim(),
+      authorName: authorName(),
+      authorIntro: authorIntro(),
+      childName: childName(),
+      locale: state.locale,
+      photos: state.photos.map((photo) => photo.dataUrl)
+    };
+  }
+
+  function showReadingCheck() {
+    if (!els.readingCard) return;
+    const review = window.StoriesLensFamilyBookReview;
+    els.readingCard.hidden = !state.photos.length;
+    if (els.readingText && review) els.readingText.textContent = review.bookReadingText(readingBook());
+    if (els.readingStatus && state.readingApproval?.approved) els.readingStatus.textContent = t("reading-approved");
+  }
+
+  function acceptReading() {
+    const review = window.StoriesLensFamilyBookReview;
+    const before = readingBook();
+    state.readingApproval = review.approveReading(before);
+    saveMeta();
+    if (els.readingStatus) els.readingStatus.textContent = t("reading-approved");
+    if (els.yuResult) els.yuResult.hidden = true;
+    setStatus(t("reading-approved"));
+  }
+
+  async function askYuToReview() {
+    const review = window.StoriesLensFamilyBookReview;
+    const book = readingBook();
+    const request = review.yuMentorReviewRequest(book);
+    if (!request.original) {
+      if (els.readingStatus) els.readingStatus.textContent = t("reading-empty");
+      setStatus(t("reading-empty"), true);
+      return;
+    }
+    if (els.readingYu) els.readingYu.disabled = true;
+    setStatus(t("yu-working"));
+    try {
+      const response = await fetch(request.path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request.body)
+      });
+      const payload = await response.json().catch(() => ({}));
+      const outcome = review.yuReviewOutcome({
+        original: request.original,
+        status: response.ok ? response.status : response.status,
+        result: response.ok ? (payload.result || payload) : null
+      });
+      if (!outcome.configured) {
+        if (els.yuResult) els.yuResult.hidden = true;
+        if (els.readingStatus) els.readingStatus.textContent = t("yu-unavailable");
+        setStatus(t("yu-unavailable"), true);
+        return;
+      }
+      state.yuOffer = outcome;
+      if (els.yuComment) els.yuComment.textContent = outcome.comment;
+      if (els.yuSuggestion) els.yuSuggestion.textContent = outcome.suggestion;
+      if (els.yuResult) els.yuResult.hidden = false;
+      if (els.readingStatus) els.readingStatus.textContent = t("yu-ready");
+      setStatus(t("yu-ready"));
+    } catch (_error) {
+      if (els.yuResult) els.yuResult.hidden = true;
+      if (els.readingStatus) els.readingStatus.textContent = t("yu-unavailable");
+      setStatus(t("yu-unavailable"), true);
+    } finally {
+      if (els.readingYu) els.readingYu.disabled = false;
+    }
+  }
+
+  function applyYuOffer() {
+    const review = window.StoriesLensFamilyBookReview;
+    const book = readingBook();
+    const applied = review.applyYuSuggestion(book, state.yuOffer?.suggestion || "");
+    if (!applied.applied) {
+      if (els.readingStatus) els.readingStatus.textContent = t("yu-kept");
+      return;
+    }
+    if (String(book.authorIntro || "").trim()) els.authorIntro.value = applied.authorIntro;
+    else els.title.value = applied.title;
+    saveMeta();
+    renderIntroTemplates();
+    if (els.readingStatus) els.readingStatus.textContent = t("yu-applied");
+    if (state.photos.length) void rebuildBook();
+  }
+
+  function keepOriginalAfterYu() {
+    state.yuOffer = null;
+    if (els.yuResult) els.yuResult.hidden = true;
+    if (els.readingStatus) els.readingStatus.textContent = t("yu-kept");
+    setStatus(t("yu-kept"));
   }
 
   function startSuggestions() {
@@ -1595,6 +1732,10 @@
   els.suggestAccept?.addEventListener("click", () => acceptSuggestion());
   els.suggestSkip?.addEventListener("click", () => skipSuggestion());
   els.suggestUndo?.addEventListener("click", () => undoSuggestion());
+  els.readingAccept?.addEventListener("click", () => acceptReading());
+  els.readingYu?.addEventListener("click", () => void askYuToReview());
+  els.yuApply?.addEventListener("click", () => applyYuOffer());
+  els.yuKeep?.addEventListener("click", () => keepOriginalAfterYu());
   els.buyDigital?.addEventListener("click", () => void startCheckout("family-digital"));
   els.buyPrint?.addEventListener("click", () => void startCheckout("print"));
   document.querySelectorAll("[data-cover-option]").forEach((input) => {

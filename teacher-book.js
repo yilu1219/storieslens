@@ -44,6 +44,19 @@
       "page-label-cover": "封面",
       added: "已加入 {count} 张作业照片，正在生成预览…",
       ready: "班级书已准备好。请先预览，再生成发给家长的私密链接。",
+      "reading-kicker": "认读确认",
+      "reading-copy": "请学生把这一版读一遍。接受后记下认读，不改作业照片。也可以请语大师点评、改写和检查。",
+      "reading-accept": "接受",
+      "reading-yu": "请语大师点评改写检查",
+      "reading-approved": "已记下：学生认读并接受了这一版。作业照片没有被改写。",
+      "reading-empty": "还没有可检查的文字。作业照片保持原样。",
+      "yu-working": "正在请语大师点评、改写和检查…",
+      "yu-unavailable": "语大师还没有接通。原文和作业照片都保持不变。",
+      "yu-ready": "语大师只提出检查意见。原文还没改，除非你采用检查稿。",
+      "yu-apply": "采用语大师的检查稿",
+      "yu-keep": "保留原文",
+      "yu-kept": "已保留原文。",
+      "yu-applied": "已采用语大师的检查稿。作业照片没有改。",
       processing: "正在本机处理照片并删除拍摄信息…",
       cutting: "正在去掉桌子和背景…",
       "cutout-done": "已去掉周围的桌子和背景。",
@@ -101,6 +114,19 @@
       "page-label-cover": "Cover",
       added: "{count} photos added. Building the preview…",
       ready: "The class book is ready. Please review it, then create a private link for parents.",
+      "reading-kicker": "Approve reading",
+      "reading-copy": "Have the student read this version. Accept records that reading and does not change the work photos. You can also ask Yu to review and check.",
+      "reading-accept": "Accept",
+      "reading-yu": "Ask Yu to review and check",
+      "reading-approved": "Saved: the student read this version and accepted it. The work photos were not rewritten.",
+      "reading-empty": "There is no writing to check yet. The work photos stay as they are.",
+      "yu-working": "Asking Yu to review and check…",
+      "yu-unavailable": "Yu is not connected yet. The original words and work photos stay unchanged.",
+      "yu-ready": "Yu offered a check. The original stays until you adopt that check.",
+      "yu-apply": "Use Yu’s checked text",
+      "yu-keep": "Keep the original",
+      "yu-kept": "The original was kept.",
+      "yu-applied": "Yu’s checked text is saved. The work photos were not changed.",
       processing: "Preparing photos on this device and removing camera details…",
       cutting: "Removing the table and background…",
       "cutout-done": "The surrounding table and background were removed.",
@@ -144,10 +170,20 @@
     shareUrl: document.querySelector("[data-share-url]"),
     shareCode: document.querySelector("[data-share-code]"),
     copyShare: document.querySelector("[data-copy-share]"),
-    openShare: document.querySelector("[data-open-share]")
+    openShare: document.querySelector("[data-open-share]"),
+    readingCard: document.querySelector("[data-reading-card]"),
+    readingText: document.querySelector("[data-reading-text]"),
+    readingAccept: document.querySelector("[data-reading-accept]"),
+    readingYu: document.querySelector("[data-reading-yu]"),
+    readingStatus: document.querySelector("[data-reading-status]"),
+    yuResult: document.querySelector("[data-yu-result]"),
+    yuComment: document.querySelector("[data-yu-comment]"),
+    yuSuggestion: document.querySelector("[data-yu-suggestion]"),
+    yuApply: document.querySelector("[data-yu-apply]"),
+    yuKeep: document.querySelector("[data-yu-keep]")
   };
 
-  const state = { locale: "zh", photos: [], pages: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false };
+  const state = { locale: "zh", photos: [], pages: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false, readingApproval: null, yuOffer: null };
 
   const t = (key, vars) => {
     const table = copy[state.locale] || copy.zh;
@@ -338,6 +374,7 @@
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
     renderPreview();
     els.previewCard.hidden = false;
+    showReadingCheck();
     const notice = state.noticeKey === "split" ? t("split-done") : state.noticeKey === "low_confidence" ? t("cutout-kept") : state.noticeKey === "cutout" ? t("cutout-done") : "";
     setStatus(state.announcePrepare && notice ? notice : t("ready"));
     state.announcePrepare = false;
@@ -467,6 +504,97 @@
     }
   }
 
+  function readingBook() {
+    return {
+      title: bookTitle(),
+      authorName: teacherName(),
+      authorIntro: className(),
+      locale: state.locale,
+      notes: state.photos.map((photo) => photo.studentName).filter(Boolean),
+      photos: state.photos.map((photo) => photo.dataUrl)
+    };
+  }
+
+  function showReadingCheck() {
+    if (!els.readingCard) return;
+    const review = window.StoriesLensFamilyBookReview;
+    els.readingCard.hidden = !state.photos.length;
+    if (els.readingText && review) els.readingText.textContent = review.bookReadingText(readingBook());
+    if (els.readingStatus && state.readingApproval?.approved) els.readingStatus.textContent = t("reading-approved");
+  }
+
+  function acceptReading() {
+    const review = window.StoriesLensFamilyBookReview;
+    state.readingApproval = review.approveReading(readingBook());
+    if (els.readingStatus) els.readingStatus.textContent = t("reading-approved");
+    if (els.yuResult) els.yuResult.hidden = true;
+    setStatus(t("reading-approved"));
+  }
+
+  async function askYuToReview() {
+    const review = window.StoriesLensFamilyBookReview;
+    const book = readingBook();
+    const request = review.yuMentorReviewRequest(book);
+    if (!request.original) {
+      if (els.readingStatus) els.readingStatus.textContent = t("reading-empty");
+      setStatus(t("reading-empty"), true);
+      return;
+    }
+    if (els.readingYu) els.readingYu.disabled = true;
+    setStatus(t("yu-working"));
+    try {
+      const response = await fetch(request.path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request.body)
+      });
+      const payload = await response.json().catch(() => ({}));
+      const outcome = review.yuReviewOutcome({
+        original: request.original,
+        status: response.status,
+        result: response.ok ? (payload.result || payload) : null
+      });
+      if (!outcome.configured) {
+        if (els.yuResult) els.yuResult.hidden = true;
+        if (els.readingStatus) els.readingStatus.textContent = t("yu-unavailable");
+        setStatus(t("yu-unavailable"), true);
+        return;
+      }
+      state.yuOffer = outcome;
+      if (els.yuComment) els.yuComment.textContent = outcome.comment;
+      if (els.yuSuggestion) els.yuSuggestion.textContent = outcome.suggestion;
+      if (els.yuResult) els.yuResult.hidden = false;
+      if (els.readingStatus) els.readingStatus.textContent = t("yu-ready");
+      setStatus(t("yu-ready"));
+    } catch (_error) {
+      if (els.yuResult) els.yuResult.hidden = true;
+      setStatus(t("yu-unavailable"), true);
+    } finally {
+      if (els.readingYu) els.readingYu.disabled = false;
+    }
+  }
+
+  function applyYuOffer() {
+    const review = window.StoriesLensFamilyBookReview;
+    const book = readingBook();
+    const photoSnapshot = book.photos.slice();
+    const applied = review.applyYuSuggestion(book, state.yuOffer?.suggestion || "");
+    if (!applied.applied || photoSnapshot.join("|") !== (applied.photos || []).join("|")) {
+      setStatus(t("yu-kept"));
+      return;
+    }
+    if (String(book.authorIntro || "").trim()) els.className.value = applied.authorIntro;
+    else els.title.value = applied.title;
+    setStatus(t("yu-applied"));
+    void rebuildBook();
+  }
+
+  function keepOriginalAfterYu() {
+    state.yuOffer = null;
+    if (els.yuResult) els.yuResult.hidden = true;
+    setStatus(t("yu-kept"));
+  }
+
   function dataUrlToBytes(dataUrl) {
     const match = String(dataUrl || "").match(/^data:image\/(?:jpeg|jpg|png);base64,([a-zA-Z0-9+/=\s]+)$/i);
     const binary = atob(match[1].replace(/\s+/g, ""));
@@ -543,6 +671,10 @@
   els.prev.addEventListener("click", () => { if (state.pageIndex > 0) { state.pageIndex -= 1; renderPreview(); } });
   els.next.addEventListener("click", () => { if (state.pageIndex < state.pages.length - 1) { state.pageIndex += 1; renderPreview(); } });
   els.downloadPreview.addEventListener("click", () => void downloadPreviewPdf());
+  els.readingAccept?.addEventListener("click", () => acceptReading());
+  els.readingYu?.addEventListener("click", () => void askYuToReview());
+  els.yuApply?.addEventListener("click", () => applyYuOffer());
+  els.yuKeep?.addEventListener("click", () => keepOriginalAfterYu());
   els.createShare.addEventListener("click", () => void createShare());
   els.copyShare.addEventListener("click", async () => {
     if (!state.share) return;

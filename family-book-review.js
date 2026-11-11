@@ -142,11 +142,83 @@
     return suggestions;
   }
 
+  function bookReadingText(book = {}) {
+    const parts = [book.title, book.authorName, book.authorIntro, book.childName];
+    if (Array.isArray(book.notes)) parts.push(...book.notes);
+    return parts.map((part) => String(part || "").trim()).filter(Boolean).join("\n");
+  }
+
+  function approveReading(book = {}, approvedAt = "") {
+    return {
+      approved: true,
+      approvedAt: approvedAt || new Date().toISOString(),
+      text: bookReadingText(book),
+      title: String(book.title || ""),
+      authorIntro: String(book.authorIntro || ""),
+      photos: book.photos || [],
+      rewritten: false,
+      artworkUnchanged: true,
+      source: "student"
+    };
+  }
+
+  function yuMentorReviewRequest(book = {}) {
+    const studentDraft = String(book.authorIntro || "").trim() || String(book.title || "").trim();
+    const locale = book.locale === "en" ? "en" : "zh";
+    return {
+      path: "/api/writing-assistant",
+      original: studentDraft,
+      body: {
+        action: "check",
+        mode: "parent-book",
+        storyLanguage: locale,
+        grade: "3",
+        studentDraft,
+        selectedText: studentDraft,
+        skillFocus: "grammar and clarity of the child's own words",
+        teacherInstructions: "Approve-reading check for a family book. Comment, check, and minimally correct grammar only. Do not replace artwork, photos, characters, or story facts. The parent suggestions elsewhere must not rewrite the work; only this explicit Yu check may propose a correction."
+      }
+    };
+  }
+
+  function yuReviewOutcome({ original = "", status = 0, result = null } = {}) {
+    const unavailable = status === 501 || status === 503 || status === 0 || !result;
+    return {
+      configured: !unavailable,
+      mentorPath: "/api/writing-assistant",
+      action: "check",
+      rewritten: false,
+      text: String(original || ""),
+      suggestion: unavailable ? "" : String(result.suggestion || ""),
+      comment: unavailable ? "" : String(result.reply || result.grammarNote || result.priority || ""),
+      reason: unavailable ? "yu_unavailable" : "mentor_check"
+    };
+  }
+
+  function applyYuSuggestion(book = {}, suggestion = "") {
+    const next = {
+      title: String(book.title || ""),
+      authorIntro: String(book.authorIntro || ""),
+      photos: book.photos || []
+    };
+    const proposed = String(suggestion || "").trim();
+    const draft = String(book.authorIntro || "").trim() || String(book.title || "").trim();
+    if (!proposed || proposed === draft) return Object.assign(next, { applied: false, rewritten: false });
+    if (String(book.authorIntro || "").trim()) next.authorIntro = proposed;
+    else next.title = proposed;
+    return Object.assign(next, { applied: true, rewritten: true, photos: book.photos || [] });
+  }
+
   return {
     AUTHOR_INTRO_TEMPLATES,
+    applyYuSuggestion,
+    approveReading,
     authorIntroTemplates,
+    bookReadingText,
     looksLikeFilenameTitle,
     looksLikeFullLegalName,
-    suggestFamilyBook
+    suggestFamilyBook,
+    yuMentorReviewRequest,
+    yuReviewOutcome
   };
 });

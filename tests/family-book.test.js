@@ -8,9 +8,13 @@ const { listFamilyBookOffers, getFamilyBookOffer } = require("../family-book-cat
 const {
   AUTHOR_INTRO_TEMPLATES,
   authorIntroTemplates,
+  applyYuSuggestion,
+  approveReading,
   looksLikeFilenameTitle,
   looksLikeFullLegalName,
-  suggestFamilyBook
+  suggestFamilyBook,
+  yuMentorReviewRequest,
+  yuReviewOutcome
 } = require("../family-book-review");
 const { familyCheckoutStatus, entitlementFromQuery, priceIdForOffer, createFamilyCheckoutSession } = require("../family-book-payments");
 const { createFamilyBookStore } = require("../family-book-store");
@@ -124,6 +128,58 @@ test("family book prices are digital ¥19.9, softcover ¥129, and hardcover ¥19
   assert.equal(priceIdForOffer(hardcover, {
     STRIPE_PRICE_FAMILY_PRINT: "price_test_oldsoft"
   }), "");
+});
+
+test("approve reading keeps the original, and Yu review uses the mentor check without unlocking payment", () => {
+  const book = {
+    title: "小羽的画",
+    authorIntro: "我喜欢画画",
+    photos: ["data:image/png;base64,artwork"]
+  };
+  const approved = approveReading(book, "2026-11-11T00:00:00.000Z");
+  assert.equal(approved.approved, true);
+  assert.equal(approved.rewritten, false);
+  assert.equal(approved.artworkUnchanged, true);
+  assert.equal(approved.authorIntro, "我喜欢画画");
+  assert.equal(approved.photos, book.photos);
+  assert.equal(book.authorIntro, "我喜欢画画");
+  assert.notEqual(approved.paid, true);
+
+  const request = yuMentorReviewRequest(book);
+  assert.equal(request.path, "/api/writing-assistant");
+  assert.equal(request.body.action, "check");
+  assert.equal(request.body.studentDraft, "我喜欢画画");
+  assert.equal(book.photos[0].includes("artwork"), true);
+
+  const offline = yuReviewOutcome({ original: request.original, status: 501, result: null });
+  assert.equal(offline.configured, false);
+  assert.equal(offline.rewritten, false);
+  assert.equal(offline.text, "我喜欢画画");
+  assert.equal(offline.mentorPath, "/api/writing-assistant");
+
+  const offered = yuReviewOutcome({
+    original: request.original,
+    status: 200,
+    result: { suggestion: "我喜欢画画。", reply: "句末可以有句号。" }
+  });
+  assert.equal(offered.action, "check");
+  assert.equal(offered.rewritten, false);
+  assert.equal(offered.text, "我喜欢画画");
+  const applied = applyYuSuggestion(book, offered.suggestion);
+  assert.equal(applied.rewritten, true);
+  assert.equal(applied.authorIntro, "我喜欢画画。");
+  assert.equal(applied.photos, book.photos);
+
+  const claimed = entitlementFromQuery("paid=1&success=true&checkout=success");
+  assert.equal(claimed.paid, false);
+  assert.match(read("parent-book.html"), /data-reading-accept/);
+  assert.match(read("parent-book.html"), /data-reading-yu/);
+  assert.match(read("family-book-review.js"), /\/api\/writing-assistant/);
+  assert.match(read("family-book-review.js"), /action: "check"/);
+  assert.match(read("parent-book.js"), /yuMentorReviewRequest/);
+  assert.match(read("teacher-book.js"), /yuMentorReviewRequest/);
+  assert.match(read("teacher-book.html"), /data-reading-yu/);
+  assert.doesNotMatch(read("teacher-book.html"), /yu-mentor\.js/);
 });
 
 test("author intro templates and optional suggestions never rewrite artwork", () => {
