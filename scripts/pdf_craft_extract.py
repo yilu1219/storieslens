@@ -121,6 +121,62 @@ def render_page_png(pdf_path: str) -> str:
     return png_path
 
 
+def box_norm(nums: list[int], width: int, height: int) -> dict:
+    x1, y1, x2, y2 = nums
+    if max(nums) <= 1000:
+        x1, y1, x2, y2 = [value / 1000 for value in nums]
+    else:
+        safe_w = max(int(width or 1), 1)
+        safe_h = max(int(height or 1), 1)
+        x1, x2 = x1 / safe_w, x2 / safe_w
+        y1, y2 = y1 / safe_h, y2 / safe_h
+    left, right = min(x1, x2), max(x1, x2)
+    top, bottom = min(y1, y2), max(y1, y2)
+    return {
+        "x": max(0.0, min(1.0, left)),
+        "y": max(0.0, min(1.0, top)),
+        "w": max(0.0, min(1.0, right - left)),
+        "h": max(0.0, min(1.0, bottom - top)),
+    }
+
+
+def layout_blocks(raw: str, width: int = 1000, height: int = 1000) -> list[dict]:
+    """Read line and figure boxes already present in the OCR grounding. Do not invent text."""
+    source = raw or ""
+    tagged = re.compile(
+        r"<\|ref\|>\s*([^<]+?)\s*<\|/ref\|>\s*<\|det\|>\s*\[\[(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\]\]\s*<\|/det\|>",
+        re.I,
+    )
+    matches = list(tagged.finditer(source))
+    blocks: list[dict] = []
+    for index, match in enumerate(matches):
+        if len(blocks) >= 40:
+            break
+        kind_raw = match.group(1).strip().lower()
+        nums = [int(match.group(group)) for group in range(2, 6)]
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(source)
+        text = plain_ocr_text(source[match.end():end])
+        kind = "image" if kind_raw in {"image", "figure"} else "text"
+        if kind == "text" and not text:
+            continue
+        box = box_norm(nums, width, height)
+        if box["w"] <= 0 or box["h"] <= 0:
+            continue
+        blocks.append({
+            "kind": kind,
+            "text": text if kind == "text" else "",
+            "box": box,
+            "confidence": 1,
+        })
+    return blocks
+
+
+def write_layout(markdown_path: str, blocks: list[dict]) -> None:
+    layout_path = os.path.join(os.path.dirname(markdown_path) or ".", "layout.json")
+    with open(layout_path, "w", encoding="utf-8") as handle:
+        json.dump({"blocks": blocks}, handle, ensure_ascii=False)
+
+
 def plain_ocr_text(raw: str) -> str:
     text = re.sub(r"<\|ref\|>\s*image\s*<\|/ref\|>\s*<\|det\|>.*?<\|/det\|>", "\n", raw or "", flags=re.I | re.S)
     text = re.sub(r"<\|/?ref\|>|<\|/?det\|>", "", text)
@@ -199,6 +255,14 @@ def direct_ocr(png_path: str, markdown_path: str, assets_path: str, settings: di
     figures = save_figure_crops(content, png_path, assets_path)
     if not text and not figures:
         return False
+    width, height = 1000, 1000
+    try:
+        from PIL import Image
+        with Image.open(png_path) as image:
+            width, height = image.size
+    except Exception:
+        width, height = 1000, 1000
+    write_layout(markdown_path, layout_blocks(content, width, height))
     figure_md = "\n".join(f"![](assets/{name})" for name in figures)
     with open(markdown_path, "w", encoding="utf-8") as handle:
         handle.write((text + ("\n\n" + figure_md if figure_md else "")).strip() + "\n")
@@ -302,6 +366,13 @@ def main() -> int:
                 "text": "",
             })
             return 1
+
+    layout_path = os.path.join(os.path.dirname(args.markdown) or ".", "layout.json")
+    if not os.path.exists(layout_path) and os.path.exists(args.markdown):
+        with open(args.markdown, "r", encoding="utf-8") as handle:
+            grounded = layout_blocks(handle.read())
+        if grounded:
+            write_layout(args.markdown, grounded)
 
     if not markdown_has_content(args.markdown):
         emit({

@@ -161,10 +161,19 @@ test("markdown from pdf-craft keeps the child's words and separates figure files
   const separated = separateCraftMarkdown("teh catt sat\n\n![](assets/figure.png)\n");
   assert.equal(separated.text, "teh catt sat");
   assert.deepEqual(separated.images, ["assets/figure.png"]);
-  const kept = piecesToResult(separated.text, ["data:image/png;base64,aaaa"]);
+  const kept = piecesToResult(separated.text, ["data:image/png;base64,aaaa"], [
+    { kind: "text", text: "teh catt sat", confidence: 1, box: { x: 0.1, y: 0.7, w: 0.5, h: 0.1 } },
+    { kind: "text", text: "invented extra", confidence: 0.4, box: { x: 0, y: 0, w: 0.2, h: 0.1 } },
+    { kind: "image", text: "do not keep", box: { x: 0.05, y: 0.05, w: 0.7, h: 0.4 } },
+    { kind: "note", text: "skip" }
+  ]);
   assert.equal(kept.text, "teh catt sat");
   assert.equal(kept.rewritten, false);
   assert.equal(kept.status, "ok");
+  assert.equal(kept.blocks.length, 2);
+  assert.equal(kept.blocks[0].text, "teh catt sat");
+  assert.equal(kept.blocks[1].kind, "image");
+  assert.equal(kept.blocks[1].text, "");
   const uncertain = piecesToResult("   ", ["data:image/png;base64,aaaa"]);
   assert.equal(uncertain.text, "");
   assert.equal(uncertain.status, "uncertain");

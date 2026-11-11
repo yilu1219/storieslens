@@ -91,8 +91,8 @@
       camera: "拍照上传",
       "upload-start": "这里开始上传照片",
       "edit-kicker": "修改内容",
-      "edit-hint": "改书名、作者和每张作品上的文字。预览只在你修改之后更新。我们不会自动改孩子的画或原文。",
-      "edit-piece": "第 {n} 张作品的文字",
+      "edit-hint": "改书名、作者和每张作品的文字层。画面层只在你接受助手建议后才会更换。预览只在你修改之后更新。我们不会自动改孩子的画或原文。",
+      "edit-piece": "第 {n} 张的文字层",
       "safety-notice": "请上传孩子的画、作文或手工作品照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。位置和拍摄信息会在本机删除。",
       "adult-note": "这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。",
       "preview-kicker": "预览成书",
@@ -137,7 +137,36 @@
       "interior-legend": "内页样式",
       "interior-original": "原画摆正",
       "interior-polished": "精修插画",
-      "interior-hint": "默认使用孩子自己的画，只把纸摆正并排上文字。精修插画按同一张原画生成成品，文字仍单独排版。两种都会在最后加上手稿。",
+      "interior-hint": "默认是原画摆正：画在安全框里，孩子的话单独排成文字层。精修插画只换画面层，文字仍是排版，不会画进图里。两种最后都保留手稿。",
+      "assistant-kicker": "排版助手",
+      "assistant-hint": "可以建议间距、换行、图文比例、画面整理，以及校对。每条建议都会先对照显示。只有你点接受，才会写进这本书。",
+      "assistant-type": "整理间距和换行",
+      "assistant-layout": "调整图文比例",
+      "assistant-art": "整理画面",
+      "assistant-proof": "校对文字",
+      "assistant-accept": "接受",
+      "assistant-reject": "不采用",
+      "assistant-pending": "这是建议，还没有写进书里。",
+      "assistant-accepted": "已写入这一页。",
+      "assistant-dismissed": "未采用。文字层和画面层保持原样。",
+      "assistant-unchanged": "这条建议不会改孩子的话或画。",
+      "assistant-working": "正在准备画面建议…",
+      "assistant-art-failed": "画面没有整理成功。原画仍在。",
+      "assistant-type-label": "间距和换行。不改用词。",
+      "assistant-layout-label": "图文比例",
+      "assistant-art-label": "画面整理。接受之后才替换画面层。",
+      "assistant-proof-layout": "校对：间距和换行。不改用词。",
+      "assistant-proof-punctuation": "校对：标点。不改孩子的用词。",
+      "assistant-proof-wording": "校对：这是改词建议。",
+      "assistant-proof-confirm": "校对：请确认这处文字。系统没有猜一句新的。",
+      "assistant-wording-note": "这会改动孩子的用词，不是只改标点或空格。不接受就不会写入。",
+      "assistant-confirm-note": "识别不确定，或需要你确认。这里没有改成另一套说法。",
+      "assistant-before": "现在的文字",
+      "assistant-after": "建议写成",
+      "assistant-empty": "（空，没有猜词）",
+      "assistant-share": "文字层约占 {n}%",
+      "assistant-proof-clear": "没有要校对的问题。孩子的话保持原样。",
+      "assistant-proof-done": "校对建议已看完。未接受的内容没有写入。",
       "set-cover": "设为封面",
       "rotate-photo": "旋转 90°",
       "manuscript-toggle": "手稿",
@@ -277,8 +306,8 @@
       camera: "Take a photo",
       "upload-start": "Start uploading photos here",
       "edit-kicker": "Edit this book",
-      "edit-hint": "Edit the title, the author, and the words on each piece. The preview updates after you make a change. We do not rewrite the child’s pictures or words on our own.",
-      "edit-piece": "Words on piece {n}",
+      "edit-hint": "Edit the title, the author, and the text layer on each piece. The art layer changes only after you accept an assistant suggestion. The preview updates after you make a change. We do not rewrite the child’s pictures or words on our own.",
+      "edit-piece": "Text layer on piece {n}",
       "safety-notice": "Upload photos of your child’s artwork or writing. Do not upload identity documents, student or school IDs, or images that show a phone number, address, email, or QR code. Location and camera details are removed on this device.",
       "adult-note": "This flow is for a parent or another adult. A child should not enter a checkout page.",
       "preview-kicker": "BOOK PREVIEW",
@@ -323,7 +352,36 @@
       "interior-legend": "Interior style",
       "interior-original": "Original artwork",
       "interior-polished": "Polished illustrations",
-      "interior-hint": "Original artwork is the default: the child’s drawing is straightened and the words are typeset. Polished illustrations are made from that same drawing, with the words kept in the caption. Both keep a manuscript section at the end.",
+      "interior-hint": "Original artwork is the default: the drawing sits in a print-safe frame and the child’s words are a separate text layer. Polished illustrations replace only the art layer. The words stay typeset and are not drawn into the picture. Both end with the manuscript.",
+      "assistant-kicker": "Editing assistant",
+      "assistant-hint": "It can suggest spacing, line breaks, the picture-and-text balance, art cleanup, and proofreading. Each suggestion is shown first. Nothing enters the book until you accept it.",
+      "assistant-type": "Tidy spacing and line breaks",
+      "assistant-layout": "Adjust the picture and text",
+      "assistant-art": "Clean up the picture",
+      "assistant-proof": "Proofread the words",
+      "assistant-accept": "Accept",
+      "assistant-reject": "Don’t use this",
+      "assistant-pending": "This is a suggestion. It is not in the book yet.",
+      "assistant-accepted": "Accepted and placed on this page.",
+      "assistant-dismissed": "Dismissed. The text layer and the art layer stay as they are.",
+      "assistant-unchanged": "This suggestion does not change the child’s words or picture.",
+      "assistant-working": "Preparing a picture suggestion…",
+      "assistant-art-failed": "The picture was not cleaned up. The original art is still here.",
+      "assistant-type-label": "Spacing and line breaks. The words stay the same.",
+      "assistant-layout-label": "Picture and text balance",
+      "assistant-art-label": "Picture cleanup. The art layer changes only if you accept.",
+      "assistant-proof-layout": "Proofreading: spacing and line breaks. The wording stays the same.",
+      "assistant-proof-punctuation": "Proofreading: punctuation. The child’s words stay the same.",
+      "assistant-proof-wording": "Proofreading: this suggestion changes wording.",
+      "assistant-proof-confirm": "Proofreading: please confirm this reading. Nothing new was guessed.",
+      "assistant-wording-note": "This would change the child’s words, not only punctuation or spacing. It stays out of the book unless you accept it.",
+      "assistant-confirm-note": "This reading is uncertain or needs your confirmation. No other wording was guessed.",
+      "assistant-before": "Current text",
+      "assistant-after": "Suggested text",
+      "assistant-empty": "(empty — nothing was guessed)",
+      "assistant-share": "The text layer is about {n}% of the page",
+      "assistant-proof-clear": "Nothing to proofread. The child’s words stay as they are.",
+      "assistant-proof-done": "Those proofreading suggestions are finished. Anything you did not accept was left out.",
       "set-cover": "Set cover",
       "rotate-photo": "Rotate 90°",
       "manuscript-toggle": "Manuscript",
@@ -396,6 +454,7 @@
     suggestSkip: document.querySelector("[data-suggest-skip]"),
     suggestUndo: document.querySelector("[data-suggest-undo]"),
     suggestMeta: document.querySelector("[data-suggest-meta]"),
+    bookAssistant: document.querySelector("[data-book-assistant]"),
     readingCard: document.querySelector("[data-reading-card]"),
     readingText: document.querySelector("[data-reading-text]"),
     readingAccept: document.querySelector("[data-reading-accept]"),
@@ -830,6 +889,12 @@
       sheetCleaned: page.sheetCleaned === true,
       scanIsolated: page.scanIsolated !== false,
       artworks: page.artworks,
+      lines: Array.isArray(page.lines) ? page.lines : [],
+      layersSeparated: page.layersSeparated === true,
+      layoutTextShare: 0,
+      artOverrideUrl: "",
+      artSource: "",
+      assistantLog: [],
       text: page.text,
       textStatus: page.textStatus,
       textEdited: false,
@@ -1045,19 +1110,20 @@
   async function renderWorkPage(photo, extras = {}) {
     const { canvas, context } = pageCanvas();
     const manuscript = extras.manuscript === true || photo.manuscript === true;
-    const art = prepareApi().interiorPageArt({
+    const sources = prepareApi().storyArtSources({
+      manuscript,
       treatment: manuscript ? "original" : (extras.treatment || state.interiorStyle),
       scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
       polishedUrl: photo.polishedDataUrl || "",
-      polishOk: photo.polishStatus === "ok"
+      polishOk: photo.polishStatus === "ok",
+      artOverrideUrl: photo.artOverrideUrl || "",
+      artSource: photo.artSource || "",
+      artworks: photo.artworks,
+      layersSeparated: photo.layersSeparated === true
     });
     const artworks = [];
-    let marks = null;
-    if (art.url) {
-      const image = await loadHtmlImage(art.url);
-      if (art.treatment === "polished") artworks.push(image);
-      else marks = image;
-    }
+    for (const url of sources.urls) artworks.push(await loadHtmlImage(url));
+    const marks = sources.marksUrl ? await loadHtmlImage(sources.marksUrl) : null;
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
       pageHeight: PAGE_HEIGHT,
@@ -1068,11 +1134,13 @@
       status: photo.textStatus,
       edited: photo.textEdited === true,
       manuscript,
-      treatment: art.treatment,
+      treatment: sources.treatment,
+      separated: sources.separated,
+      textShare: photo.layoutTextShare || 0,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
       paper: "#f6f0e4",
-      fontFamily: bodyFont()
+      fontFamily: serifFont()
     });
     return canvasToJpeg(canvas, 0.92);
   }
@@ -1090,6 +1158,7 @@
       state.pages = [];
       state.previewPages = [];
       els.previewCard.hidden = true;
+      if (els.bookAssistant) els.bookAssistant.hidden = true;
       if (els.bookEditFields) els.bookEditFields.replaceChildren();
       return;
     }
@@ -1110,6 +1179,7 @@
       coverId: state.coverId,
       includeAuthor: showAuthorPage()
     });
+    state.pagePhotoIds = plan.map((item) => item.photoId || "");
     const pages = [];
     const kinds = [];
     for (let index = 0; index < plan.length; index += 1) {
@@ -1136,6 +1206,7 @@
     renderPreview();
     renderBookEditor();
     els.previewCard.hidden = false;
+    if (els.bookAssistant) els.bookAssistant.hidden = false;
     if (els.priceBox) els.priceBox.hidden = false;
     startSuggestions();
     showReadingCheck();
@@ -1156,6 +1227,37 @@
     els.pageLabel.textContent = label;
     els.prev.disabled = state.pageIndex === 0;
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
+  }
+
+  function assistantPhoto() {
+    const kind = state.pageKinds[state.pageIndex];
+    const id = state.pagePhotoIds && state.pagePhotoIds[state.pageIndex];
+    if (kind === "photo" && id) {
+      const current = state.photos.find((photo) => photo.id === id);
+      if (current) return current;
+    }
+    return state.photos.find((photo) => photo.manuscript !== true) || state.photos[0] || null;
+  }
+
+  function assistantLabel(proposal) {
+    if (!proposal) return "";
+    if (proposal.kind === "proofread") {
+      if (proposal.category === "wording") return t("assistant-proof-wording");
+      if (proposal.category === "punctuation") return t("assistant-proof-punctuation");
+      if (proposal.category === "confirm") return t("assistant-proof-confirm");
+      return t("assistant-proof-layout");
+    }
+    if (proposal.kind === "layout") return t("assistant-layout-label");
+    if (proposal.kind === "art") return t("assistant-art-label");
+    return t("assistant-type-label");
+  }
+
+  function commitAssistantPhoto(photo) {
+    const index = state.photos.findIndex((item) => item.id === photo.id);
+    if (index < 0) return;
+    state.photos[index] = photo;
+    renderThumbs();
+    void rebuildBook();
   }
 
   function shownPhotoText(photo) {
@@ -2145,6 +2247,28 @@
   els.childName.addEventListener("change", () => { saveMeta(); if (state.photos.length) void rebuildBook(); });
   els.authorName?.addEventListener("change", () => { saveMeta(); if (state.photos.length) void rebuildBook(); });
   els.authorIntro?.addEventListener("change", () => { saveMeta(); renderIntroTemplates(); if (state.photos.length) void rebuildBook(); });
+  prepareApi().bindBookAssistant(els.bookAssistant, {
+    photo: assistantPhoto,
+    photoById: (id) => state.photos.find((photo) => photo.id === id) || null,
+    text: shownPhotoText,
+    illustrate: (photo) => prepareApi().requestBookIllustration(photo.scanDataUrl || photo.marksDataUrl || "", shownPhotoText(photo)),
+    commit: commitAssistantPhoto,
+    label: assistantLabel,
+    shareLabel: (share) => t("assistant-share", { n: Math.round(Number(share) * 100) }),
+    beforeLabel: () => t("assistant-before"),
+    afterLabel: () => t("assistant-after"),
+    emptyLabel: () => t("assistant-empty"),
+    wordingNote: () => t("assistant-wording-note"),
+    confirmNote: () => t("assistant-confirm-note"),
+    pendingLabel: () => t("assistant-pending"),
+    acceptedLabel: () => t("assistant-accepted"),
+    dismissedLabel: () => t("assistant-dismissed"),
+    unchangedLabel: () => t("assistant-unchanged"),
+    workingLabel: () => t("assistant-working"),
+    artFailedLabel: () => t("assistant-art-failed"),
+    proofClearLabel: () => t("assistant-proof-clear"),
+    proofDoneLabel: () => t("assistant-proof-done")
+  });
   els.suggestAccept?.addEventListener("click", () => acceptSuggestion());
   els.suggestSkip?.addEventListener("click", () => skipSuggestion());
   els.suggestUndo?.addEventListener("click", () => undoSuggestion());
@@ -2233,6 +2357,7 @@
       state.interiorStyle = kept.interiorStyle;
       state.coverStyle = kept.coverStyle;
       state.coverId = kept.coverId;
+      prepareApi().applyInteriorStyleArt(state.photos);
       saveMeta();
       if (state.photos.length) void rebuildBook();
     });
