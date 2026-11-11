@@ -1,10 +1,9 @@
 (() => {
   "use strict";
 
-  const PAGE_WIDTH = 1480;
-  const PAGE_HEIGHT = 2100;
-  const A5_WIDTH_PT = 148 * 72 / 25.4;
-  const A5_HEIGHT_PT = 210 * 72 / 25.4;
+  const printSpec = () => window.StoriesLensArtworkPrepare;
+  const PAGE_WIDTH = printSpec().PAGE_WIDTH_PX;
+  const PAGE_HEIGHT = printSpec().PAGE_HEIGHT_PX;
   const MAX_PHOTOS = 20;
   const META_KEY = "storieslens_parent_book_meta";
   const LOCALE_KEY = "storieslens_locale";
@@ -640,8 +639,35 @@
     });
   }
 
-  function canvasToJpeg(canvas, quality = 0.86) {
+  function canvasToJpeg(canvas, quality = 0.92) {
     return canvas.toDataURL("image/jpeg", quality);
+  }
+
+  function ptToPx(pt) {
+    return Math.max(1, Math.round(pt * PAGE_HEIGHT / printSpec().PAGE_HEIGHT_MM * 25.4 / 72));
+  }
+
+  function bodyFont() {
+    return getComputedStyle(document.body).fontFamily;
+  }
+
+  function serifFont() {
+    return state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif';
+  }
+
+  function addPrintPdfPage(pdf, image) {
+    const spec = printSpec();
+    const page = pdf.addPage([spec.BLEED_WIDTH_PT, spec.BLEED_HEIGHT_PT]);
+    page.setMediaBox(0, 0, spec.BLEED_WIDTH_PT, spec.BLEED_HEIGHT_PT);
+    page.setBleedBox(0, 0, spec.BLEED_WIDTH_PT, spec.BLEED_HEIGHT_PT);
+    page.setTrimBox(spec.BLEED_PT, spec.BLEED_PT, spec.TRIM_WIDTH_PT, spec.TRIM_HEIGHT_PT);
+    page.drawImage(image, {
+      x: 0,
+      y: 0,
+      width: spec.BLEED_WIDTH_PT,
+      height: spec.BLEED_HEIGHT_PT
+    });
+    return page;
   }
 
   let brandMarkPromise = null;
@@ -671,7 +697,7 @@
     context.globalAlpha = 0.62;
     context.drawImage(logo, width - mark - margin, margin, mark, mark);
     context.restore();
-    return canvasToJpeg(canvas, 0.9);
+    return canvasToJpeg(canvas, 0.92);
   }
 
   function prepareApi() {
@@ -739,16 +765,6 @@
       restored: "restored"
     };
     return state.noticeKey && keys[state.noticeKey] ? t(keys[state.noticeKey]) : "";
-  }
-
-  function pageNote(photo) {
-    if (!photo) return "";
-    if (photo.extractReason === "scan_not_isolated" || photo.scanIsolated === false) return t("scan-not-isolated");
-    if (photo.textStatus === "unavailable") return t("extract-unavailable");
-    if (photo.textStatus === "uncertain") return t("extract-uncertain");
-    if (photo.textStatus === "restored") return t("restored");
-    if (photo.manuscript && photo.sheetCleaned === false) return t("extract-table");
-    return "";
   }
 
   async function photosFromScan(originalDataUrl, fileName, manuscript, options) {
@@ -894,109 +910,127 @@
     });
   }
 
-  async function renderCoverPage(photo) {
-    const { canvas, context } = pageCanvas();
-    context.textAlign = "center";
-    if (state.coverStyle === "typographic" || !photo) {
-      context.fillStyle = "#0f6244";
-      context.font = "700 36px " + getComputedStyle(document.body).fontFamily;
-      context.fillText(t("cover-kicker"), PAGE_WIDTH / 2, 280);
-      context.fillStyle = "#101817";
-      context.font = "700 92px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
-      wrapText(context, bookTitle(), PAGE_WIDTH - 180).forEach((line, index) => {
-        context.fillText(line, PAGE_WIDTH / 2, 860 + index * 108);
-      });
-      if (displayAuthor()) {
-        context.fillStyle = "#3d4a44";
-        context.font = "600 42px " + getComputedStyle(document.body).fontFamily;
-        context.fillText(t("byline", { name: displayAuthor() }), PAGE_WIDTH / 2, PAGE_HEIGHT - 280);
-      }
-      return canvasToJpeg(canvas, 0.9);
-    }
-    return renderWorkPage(photo, {
-      title: bookTitle(),
-      subtitle: displayAuthor() ? t("byline", { name: displayAuthor() }) : ""
-    });
+  function coverHeroUrl(photo) {
+    if (!photo || photo.scanIsolated === false) return "";
+    return photo.scanDataUrl || photo.dataUrl || "";
   }
 
-  async function renderAuthorPage() {
+  function drawTypographicCover(context, pageNumber) {
+    const frame = prepareApi().printSafeFrame(PAGE_WIDTH, PAGE_HEIGHT, pageNumber);
+    const center = frame.x + frame.w / 2;
+    context.textAlign = "center";
+    context.fillStyle = "#0f6244";
+    context.font = `700 ${ptToPx(12)}px ${bodyFont()}`;
+    context.fillText(t("cover-kicker"), center, frame.y + ptToPx(18));
+    context.fillStyle = "#101817";
+    context.font = `700 ${ptToPx(28)}px ${serifFont()}`;
+    const lines = wrapText(context, bookTitle(), frame.w);
+    const titleTop = frame.y + frame.h * 0.38;
+    lines.forEach((line, index) => {
+      context.fillText(line, center, titleTop + index * ptToPx(34));
+    });
+    if (displayAuthor()) {
+      context.fillStyle = "#3d4a44";
+      context.font = `600 ${ptToPx(12)}px ${bodyFont()}`;
+      context.fillText(t("byline", { name: displayAuthor() }), center, frame.y + frame.h - ptToPx(8));
+    }
+  }
+
+  async function renderCoverPage(photo, pageNumber = 1) {
     const { canvas, context } = pageCanvas();
+    const heroUrl = state.coverStyle === "typographic" ? "" : coverHeroUrl(photo);
+    if (!heroUrl) {
+      drawTypographicCover(context, pageNumber);
+      return canvasToJpeg(canvas, 0.92);
+    }
+    const image = await loadHtmlImage(heroUrl);
+    prepareApi().drawCoverPage(context, {
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      pageNumber,
+      image,
+      title: bookTitle(),
+      subtitle: displayAuthor() ? t("byline", { name: displayAuthor() }) : "",
+      paper: "#f6f0e4",
+      fontFamily: bodyFont(),
+      titleFont: `700 ${ptToPx(22)}px ${serifFont()}`,
+      subtitleFont: `600 ${ptToPx(12)}px ${bodyFont()}`
+    });
+    return canvasToJpeg(canvas, 0.92);
+  }
+
+  async function renderAuthorPage(pageNumber = 2) {
+    const { canvas, context } = pageCanvas();
+    const frame = prepareApi().printSafeFrame(PAGE_WIDTH, PAGE_HEIGHT, pageNumber);
+    const center = frame.x + frame.w / 2;
     const decision = avatarDecision();
     const avatarUrl = state.avatar.mode === "illustrated" ? state.avatar.illustratedDataUrl : state.avatar.originalDataUrl;
-    let textTop = 260;
+    let textTop = frame.y + ptToPx(8);
     if (decision.allowed && avatarUrl) {
       const image = await loadHtmlImage(avatarUrl);
-      const size = 520;
-      const x = (PAGE_WIDTH - size) / 2;
-      const y = 160;
+      const size = Math.min(frame.w * 0.62, frame.h * 0.42);
+      const x = frame.x + (frame.w - size) / 2;
+      const y = frame.y;
       context.save();
-      roundedRect(context, x, y, size, size, 48);
+      roundedRect(context, x, y, size, size, Math.round(size * 0.08));
       context.clip();
       const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
       const drawWidth = image.naturalWidth * scale;
       const drawHeight = image.naturalHeight * scale;
       context.drawImage(image, x + (size - drawWidth) / 2, y + (size - drawHeight) / 2, drawWidth, drawHeight);
       context.restore();
-      textTop = y + size + 90;
+      textTop = y + size + ptToPx(16);
     }
     context.fillStyle = "#0f6244";
     context.textAlign = "center";
-    context.font = "700 36px " + getComputedStyle(document.body).fontFamily;
-    context.fillText(t("about-author"), PAGE_WIDTH / 2, textTop);
+    context.font = `700 ${ptToPx(12)}px ${bodyFont()}`;
+    context.fillText(t("about-author"), center, textTop);
     context.fillStyle = "#101817";
-    context.font = "700 72px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
-    context.fillText(displayAuthor() || bookTitle(), PAGE_WIDTH / 2, textTop + 120);
+    context.font = `700 ${ptToPx(22)}px ${serifFont()}`;
+    context.fillText(displayAuthor() || bookTitle(), center, textTop + ptToPx(28));
     context.fillStyle = "#3d4a44";
-    context.font = "500 44px " + getComputedStyle(document.body).fontFamily;
-    wrapText(context, authorIntro(), PAGE_WIDTH - 220).forEach((line, index) => {
-      context.fillText(line, PAGE_WIDTH / 2, textTop + 220 + index * 72);
+    context.font = `500 ${ptToPx(13)}px ${bodyFont()}`;
+    wrapText(context, authorIntro(), frame.w).forEach((line, index) => {
+      context.fillText(line, center, textTop + ptToPx(48) + index * ptToPx(18));
     });
     if (childName() && childName() !== authorName()) {
       context.fillStyle = "#7a756b";
-      context.font = "600 32px " + getComputedStyle(document.body).fontFamily;
-      context.fillText(t("credit-line", { name: childName() }), PAGE_WIDTH / 2, PAGE_HEIGHT - 120);
+      context.font = `600 ${ptToPx(11)}px ${bodyFont()}`;
+      context.fillText(t("credit-line", { name: childName() }), center, frame.y + frame.h - ptToPx(4));
     }
-    return canvasToJpeg(canvas, 0.9);
+    return canvasToJpeg(canvas, 0.92);
   }
 
   async function renderWorkPage(photo, extras = {}) {
     const { canvas, context } = pageCanvas();
-    const confident = photo.textStatus === "ok" || photo.textStatus === "parent";
     const artworks = [];
-    if (confident || photo.manuscript) {
-      for (const item of photo.artworks || []) {
-        const src = item.dataUrl || item;
-        if (src) artworks.push(await loadHtmlImage(src));
-      }
+    for (const item of photo.artworks || []) {
+      const src = item && (item.dataUrl || item);
+      if (typeof src === "string" && src) artworks.push(await loadHtmlImage(src));
     }
-    const forceMarks = photo.manuscript || !confident || (photo.textStatus === "parent" && !artworks.length);
     let marks = null;
-    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || (forceMarks ? photo.scanDataUrl : ""));
-    if (forceMarks && marksUrl) marks = await loadHtmlImage(marksUrl);
+    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || photo.scanDataUrl || "");
+    if (marksUrl) marks = await loadHtmlImage(marksUrl);
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
       pageHeight: PAGE_HEIGHT,
+      pageNumber: extras.pageNumber || 1,
       artworks,
       marks,
-      forceMarks,
       text: photo.text || "",
       status: photo.textStatus,
       edited: photo.textEdited === true,
       manuscript: photo.manuscript === true,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
-      note: pageNote(photo),
       paper: "#f6f0e4",
-      font: "500 42px " + getComputedStyle(document.body).fontFamily,
-      titleFont: "700 64px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif'),
-      subtitleFont: "600 32px " + getComputedStyle(document.body).fontFamily,
-      noteFont: "700 28px " + getComputedStyle(document.body).fontFamily
+      fontFamily: bodyFont()
     });
-    return canvasToJpeg(canvas, 0.9);
+    return canvasToJpeg(canvas, 0.92);
   }
 
-  async function renderPhotoPage(photo, label) {
-    return renderWorkPage(photo, { subtitle: label || "" });
+  async function renderPhotoPage(photo, pageNumber) {
+    return renderWorkPage(photo, { pageNumber });
   }
 
   function showAuthorPage() {
@@ -1019,11 +1053,13 @@
     });
     const pages = [];
     const kinds = [];
-    for (const item of plan) {
+    for (let index = 0; index < plan.length; index += 1) {
+      const item = plan[index];
+      const pageNumber = index + 1;
       const photo = state.photos.find((entry) => entry.id === item.photoId);
-      if (item.kind === "cover") pages.push(await renderCoverPage(photo));
-      else if (item.kind === "author") pages.push(await renderAuthorPage());
-      else pages.push(await renderPhotoPage(photo, item.kind === "manuscript" ? t("page-label-manuscript") : ""));
+      if (item.kind === "cover") pages.push(await renderCoverPage(photo, pageNumber));
+      else if (item.kind === "author") pages.push(await renderAuthorPage(pageNumber));
+      else pages.push(await renderPhotoPage(photo, pageNumber));
       kinds.push(item.kind);
     }
     const previewPages = [];
@@ -1801,13 +1837,19 @@
     return false;
   }
 
+  function officialPrintUnlocked() {
+    return state.entitlement?.paid === true
+      && state.entitlement.kind === "digital"
+      && Boolean(state.entitlement.deliveryEmail);
+  }
+
   function fillPrintRoot() {
-    els.printRoot.innerHTML = "";
-    const pages = state.previewPages.length === state.pages.length ? state.previewPages : [];
-    pages.forEach((page, index) => {
+    els.printRoot.replaceChildren();
+    if (!officialPrintUnlocked()) return;
+    state.pages.forEach((page, index) => {
       const image = document.createElement("img");
       image.src = page;
-      image.alt = t("page-of", { current: index + 1, total: pages.length });
+      image.alt = t("page-of", { current: index + 1, total: state.pages.length });
       els.printRoot.append(image);
     });
   }
@@ -1951,8 +1993,7 @@
       for (const pageDataUrl of state.previewPages) {
         const bytes = dataUrlToBytes(pageDataUrl);
         const image = /^data:image\/png/i.test(pageDataUrl) ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
-        const page = pdf.addPage([A5_WIDTH_PT, A5_HEIGHT_PT]);
-        page.drawImage(image, { x: 0, y: 0, width: A5_WIDTH_PT, height: A5_HEIGHT_PT });
+        addPrintPdfPage(pdf, image);
       }
       const bytes = await pdf.save();
       triggerDownload(new Blob([bytes], { type: "application/pdf" }), suggestedPdfName().replace(/\.pdf$/i, "-preview.pdf"));
@@ -2088,8 +2129,16 @@
   });
   els.print?.addEventListener("click", () => {
     if (!state.pages.length) return setStatus(t("need-photos"), true);
+    if (!officialPrintUnlocked()) return setStatus(t("pdf-failed"), true);
     fillPrintRoot();
     window.print();
+  });
+  window.addEventListener("beforeprint", () => {
+    if (!officialPrintUnlocked()) {
+      els.printRoot?.replaceChildren();
+      return;
+    }
+    fillPrintRoot();
   });
   els.makeFilm.addEventListener("click", () => void makeFilm());
   els.downloadPreview?.addEventListener("click", () => void downloadPreviewPdf());

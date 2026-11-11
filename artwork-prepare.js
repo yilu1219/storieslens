@@ -7,6 +7,27 @@
   const PAPER = Object.freeze([0xf6, 0xf0, 0xe4]);
   const PAPER_HEX = "#f6f0e4";
   const MANUSCRIPT_NAME = /手稿|草稿|原稿|手写|manuscript|handwrit|draft/i;
+  const PRINT_DPI = 300;
+  const TRIM_WIDTH_MM = 148;
+  const TRIM_HEIGHT_MM = 210;
+  const BLEED_MM = 3;
+  const SAFE_MM = 8;
+  const GUTTER_MM = 5;
+  const PAGE_WIDTH_MM = TRIM_WIDTH_MM + BLEED_MM * 2;
+  const PAGE_HEIGHT_MM = TRIM_HEIGHT_MM + BLEED_MM * 2;
+  const MM_TO_PT = 72 / 25.4;
+  const PAGE_WIDTH_PX = Math.round(PAGE_WIDTH_MM / 25.4 * PRINT_DPI);
+  const PAGE_HEIGHT_PX = Math.round(PAGE_HEIGHT_MM / 25.4 * PRINT_DPI);
+  const SCAN_MAX_EDGE = PAGE_HEIGHT_PX;
+  const CAPTION_BAND_MM = 32;
+  const CAPTION_SIZE_PT = 11;
+  const CAPTION_LEADING = 1.35;
+  const COVER_BAND_MM = 36;
+  const TRIM_WIDTH_PT = TRIM_WIDTH_MM * MM_TO_PT;
+  const TRIM_HEIGHT_PT = TRIM_HEIGHT_MM * MM_TO_PT;
+  const BLEED_WIDTH_PT = PAGE_WIDTH_MM * MM_TO_PT;
+  const BLEED_HEIGHT_PT = PAGE_HEIGHT_MM * MM_TO_PT;
+  const BLEED_PT = BLEED_MM * MM_TO_PT;
 
   function toUint8(rgba, width, height) {
     const length = width * height * 4;
@@ -611,24 +632,89 @@
     return "";
   }
 
-  function layoutRebuiltPage({ pageWidth, pageHeight, artworkCount = 0, showMarks = false, showText = false, title = "" } = {}) {
-    const marginX = Math.max(1, Math.round(pageWidth * 0.08));
-    const marginY = Math.max(1, Math.round(pageHeight * 0.06));
-    const titleBand = title ? Math.round(pageHeight * 0.14) : 0;
-    const innerW = Math.max(1, pageWidth - marginX * 2);
-    const innerBottom = pageHeight - marginY - titleBand;
-    const innerH = Math.max(1, innerBottom - marginY);
-    const gap = Math.max(1, Math.round(pageHeight * 0.02));
-    let cursor = marginY;
-    const artH = artworkCount ? ((showMarks || showText) ? Math.round(innerH * 0.56) : innerH) : 0;
-    const art = artworkCount ? { x: marginX, y: cursor, w: innerW, h: Math.max(1, artH) } : null;
-    if (art) cursor += art.h + gap;
-    const marksH = showMarks ? (showText ? Math.round(innerH * 0.28) : Math.max(1, innerBottom - cursor)) : 0;
-    const marks = showMarks ? { x: marginX, y: cursor, w: innerW, h: Math.max(1, marksH) } : null;
-    if (marks) cursor += marks.h + gap;
-    const textBox = showText ? { x: marginX, y: cursor, w: innerW, h: Math.max(1, innerBottom - cursor) } : null;
-    const titleBox = title ? { x: marginX, y: pageHeight - marginY - titleBand, w: innerW, h: titleBand } : null;
-    return { marginX, marginY, art, marks, text: textBox, title: titleBox, fit: "contain" };
+  function printSafeFrame(pageWidth, pageHeight, pageNumber = 1) {
+    const width = Math.max(1, Number(pageWidth) || 1);
+    const height = Math.max(1, Number(pageHeight) || 1);
+    const bleedAspect = PAGE_WIDTH_MM / PAGE_HEIGHT_MM;
+    const trimAspect = TRIM_WIDTH_MM / TRIM_HEIGHT_MM;
+    const aspect = width / height;
+    const bleed = Math.abs(aspect - bleedAspect) <= Math.abs(aspect - trimAspect);
+    const widthMm = bleed ? PAGE_WIDTH_MM : TRIM_WIDTH_MM;
+    const heightMm = bleed ? PAGE_HEIGHT_MM : TRIM_HEIGHT_MM;
+    const bleedMm = bleed ? BLEED_MM : 0;
+    const pxPerMmX = width / widthMm;
+    const pxPerMmY = height / heightMm;
+    const number = Math.max(1, Math.round(Number(pageNumber) || 1));
+    const gutterLeft = number % 2 === 1;
+    const leftMm = bleedMm + SAFE_MM + (gutterLeft ? GUTTER_MM : 0);
+    const rightMm = bleedMm + SAFE_MM + (gutterLeft ? 0 : GUTTER_MM);
+    const topMm = bleedMm + SAFE_MM;
+    const bottomMm = bleedMm + SAFE_MM;
+    return {
+      x: leftMm * pxPerMmX,
+      y: topMm * pxPerMmY,
+      w: Math.max(1, width - (leftMm + rightMm) * pxPerMmX),
+      h: Math.max(1, height - (topMm + bottomMm) * pxPerMmY),
+      pxPerMmX,
+      pxPerMmY,
+      bleed,
+      pageNumber: number
+    };
+  }
+
+  function captionMetrics(pageHeight) {
+    const height = Math.max(1, Number(pageHeight) || 1);
+    const fontPx = Math.max(1, CAPTION_SIZE_PT * height / PAGE_HEIGHT_MM * 25.4 / 72);
+    return {
+      fontPx,
+      leadingPx: fontPx * CAPTION_LEADING,
+      sizePt: CAPTION_SIZE_PT,
+      leading: CAPTION_LEADING
+    };
+  }
+
+  function selectPagePictures({ artworks = [], marks = null, showText = false, manuscript = false } = {}) {
+    const figures = (Array.isArray(artworks) ? artworks : []).filter(Boolean);
+    if (manuscript || !showText) {
+      if (marks) return [marks];
+      return figures.slice(0, 1);
+    }
+    if (figures.length) return figures;
+    return marks ? [marks] : [];
+  }
+
+  function layoutRebuiltPage({ pageWidth, pageHeight, artworkCount = 0, showText = false, title = "", pageNumber = 1 } = {}) {
+    const frame = printSafeFrame(pageWidth, pageHeight, pageNumber);
+    const caption = captionMetrics(pageHeight);
+    const gap = 4 * frame.pxPerMmY;
+    const titleBand = title ? 28 * frame.pxPerMmY : 0;
+    const captionBand = showText ? CAPTION_BAND_MM * frame.pxPerMmY : 0;
+    let bottom = frame.y + frame.h;
+    const titleBox = titleBand ? { x: frame.x, y: bottom - titleBand, w: frame.w, h: titleBand } : null;
+    if (titleBox) bottom = titleBox.y - gap;
+    const textBox = captionBand ? { x: frame.x, y: bottom - captionBand, w: frame.w, h: Math.max(1, captionBand) } : null;
+    if (textBox) bottom = textBox.y - gap;
+    const art = artworkCount ? { x: frame.x, y: frame.y, w: frame.w, h: Math.max(1, bottom - frame.y) } : null;
+    return {
+      marginX: frame.x,
+      marginY: frame.y,
+      art,
+      marks: null,
+      text: textBox,
+      title: titleBox,
+      frame,
+      caption,
+      fit: "contain"
+    };
+  }
+
+  function layoutCoverPage({ pageWidth, pageHeight, pageNumber = 1 } = {}) {
+    const frame = printSafeFrame(pageWidth, pageHeight, pageNumber);
+    const gap = 4 * frame.pxPerMmY;
+    const bandH = COVER_BAND_MM * frame.pxPerMmY;
+    const title = { x: frame.x, y: frame.y + frame.h - bandH, w: frame.w, h: bandH };
+    const art = { x: frame.x, y: frame.y, w: frame.w, h: Math.max(1, title.y - gap - frame.y) };
+    return { frame, art, title, marginX: frame.x, marginY: frame.y, fit: "contain", caption: captionMetrics(pageHeight) };
   }
 
   function samplePixel(src, srcWidth, srcHeight, x, y) {
@@ -672,17 +758,22 @@
     manuscript = false,
     title = "",
     paper,
-    forceMarks = false
+    pageNumber = 1
   } = {}) {
     const shownText = typesetText({ text, status, edited, manuscript });
-    const showMarks = Boolean(marks && (forceMarks || manuscript || (status !== "ok" && status !== "parent")));
+    const pictures = selectPagePictures({
+      artworks,
+      marks,
+      showText: Boolean(shownText),
+      manuscript
+    });
     const layout = layoutRebuiltPage({
       pageWidth,
       pageHeight,
-      artworkCount: artworks.length,
-      showMarks,
+      artworkCount: pictures.length,
       showText: Boolean(shownText),
-      title
+      title,
+      pageNumber
     });
     const ink = paper || PAPER;
     const out = new Uint8ClampedArray(pageWidth * pageHeight * 4);
@@ -693,18 +784,17 @@
       out[index + 3] = 255;
     }
     let placement = null;
-    if (layout.art && artworks.length) {
-      const band = layout.art.h / artworks.length;
-      artworks.forEach((artwork, index) => {
+    if (layout.art && pictures.length) {
+      const band = layout.art.h / pictures.length;
+      pictures.forEach((artwork, index) => {
         const box = { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band };
         const drawn = blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, box);
         if (!placement) placement = drawn;
       });
     }
-    if (layout.marks && marks) {
-      const drawn = blitContain(out, pageWidth, pageHeight, marks.rgba, marks.width, marks.height, layout.marks);
-      if (!placement) placement = drawn;
-    }
+    const paintedText = [];
+    if (shownText) paintedText.push(shownText);
+    if (title) paintedText.push(String(title));
     return {
       rgba: out,
       width: pageWidth,
@@ -712,7 +802,33 @@
       layout,
       placement,
       text: shownText,
+      paintedText,
+      note: "",
       rewritten: false,
+      fit: "contain"
+    };
+  }
+
+  function paintCoverPage({ pageWidth, pageHeight, artwork = null, paper, pageNumber = 1 } = {}) {
+    const layout = layoutCoverPage({ pageWidth, pageHeight, pageNumber });
+    const ink = paper || PAPER;
+    const out = new Uint8ClampedArray(pageWidth * pageHeight * 4);
+    for (let index = 0; index < out.length; index += 4) {
+      out[index] = ink[0];
+      out[index + 1] = ink[1];
+      out[index + 2] = ink[2];
+      out[index + 3] = 255;
+    }
+    const placement = artwork
+      ? blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, layout.art)
+      : null;
+    return {
+      rgba: out,
+      width: pageWidth,
+      height: pageHeight,
+      layout,
+      placement,
+      note: "",
       fit: "contain"
     };
   }
@@ -926,7 +1042,7 @@
     const missed = { isolated: false, rgba: null, width: 0, height: 0, confidence: 0 };
     if (!width || !height || width < 8 || height < 8) return missed;
     if (isCleanScan(source, width, height)) {
-      const fitted = downscaleNearest(source, width, height, 1600);
+      const fitted = downscaleNearest(source, width, height, SCAN_MAX_EDGE);
       return { isolated: true, rgba: fitted.rgba, width: fitted.width, height: fitted.height, confidence: 1 };
     }
     const view = downscaleNearest(source, width, height, 480);
@@ -956,7 +1072,7 @@
       Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y)
     );
     if (area < frame * 0.08 || area > frame * 0.94 || minEdge < Math.min(width, height) * 0.12) return missed;
-    const warped = warpPage(source, width, height, corners, 1600);
+    const warped = warpPage(source, width, height, corners, SCAN_MAX_EDGE);
     if (!warped) return missed;
     return { isolated: true, rgba: warped.rgba, width: warped.width, height: warped.height, confidence: analysis.confidence };
   }
@@ -1133,67 +1249,112 @@
       edited: options.edited === true,
       manuscript
     });
-    const artworks = options.artworks || [];
-    const showMarks = Boolean(options.marks && (options.forceMarks || manuscript || (status !== "ok" && status !== "parent")));
+    const pictures = selectPagePictures({
+      artworks: options.artworks || [],
+      marks: options.marks || null,
+      showText: Boolean(shownText),
+      manuscript
+    });
     const layout = layoutRebuiltPage({
       pageWidth,
       pageHeight,
-      artworkCount: artworks.length,
-      showMarks,
+      artworkCount: pictures.length,
       showText: Boolean(shownText),
-      title: options.title || options.subtitle || ""
+      title: options.title || options.subtitle || "",
+      pageNumber: options.pageNumber || 1
     });
     context.fillStyle = options.paper || PAPER_HEX;
     context.fillRect(0, 0, pageWidth, pageHeight);
-    if (layout.art && artworks.length) {
-      const band = layout.art.h / artworks.length;
-      artworks.forEach((image, index) => {
+    if (layout.art && pictures.length) {
+      const band = layout.art.h / pictures.length;
+      pictures.forEach((image, index) => {
         drawContain(context, image, { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band });
       });
     }
-    if (layout.marks && options.marks) drawContain(context, options.marks, layout.marks);
+    const paintedText = [];
     if (layout.text && shownText) {
+      paintedText.push(shownText);
       context.save();
       context.fillStyle = "#1c2420";
-      context.font = options.font || "500 42px sans-serif";
+      context.font = `500 ${layout.caption.fontPx}px ${options.fontFamily || "sans-serif"}`;
       context.textAlign = "left";
       context.textBaseline = "top";
-      wrapMeasured(context, shownText, layout.text.w).forEach((line, index) => {
-        context.fillText(line, layout.text.x, layout.text.y + index * 56);
+      const maxLines = Math.max(1, Math.floor(layout.text.h / layout.caption.leadingPx));
+      wrapMeasured(context, shownText, layout.text.w).slice(0, maxLines).forEach((line, index) => {
+        context.fillText(line, layout.text.x, layout.text.y + index * layout.caption.leadingPx);
       });
       context.restore();
     }
-    if (options.note) {
-      context.save();
-      context.fillStyle = "#6d5b3c";
-      context.font = options.noteFont || "700 28px sans-serif";
-      context.textAlign = "left";
-      context.textBaseline = "top";
-      wrapMeasured(context, options.note, pageWidth - layout.marginX * 2).slice(0, 3).forEach((line, index) => {
-        context.fillText(line, layout.marginX, layout.marginY + index * 36);
-      });
-      context.restore();
-    }
-    if (options.title || options.subtitle) {
+    if ((options.title || options.subtitle) && layout.title) {
       const band = layout.title;
+      const titleSize = Math.max(1, 18 * pageHeight / PAGE_HEIGHT_MM * 25.4 / 72);
+      const subSize = Math.max(1, 12 * pageHeight / PAGE_HEIGHT_MM * 25.4 / 72);
       context.save();
       context.fillStyle = "#101817";
       context.textAlign = "center";
       context.textBaseline = "alphabetic";
       if (options.title) {
-        context.font = options.titleFont || "700 64px serif";
+        paintedText.push(String(options.title));
+        context.font = options.titleFont || `700 ${titleSize}px serif`;
         wrapMeasured(context, options.title, band.w).slice(0, 2).forEach((line, index) => {
-          context.fillText(line, pageWidth / 2, band.y + 52 + index * 72);
+          context.fillText(line, band.x + band.w / 2, band.y + titleSize + index * titleSize * 1.15);
         });
       }
       if (options.subtitle) {
+        paintedText.push(String(options.subtitle));
         context.fillStyle = "#3d4a44";
-        context.font = options.subtitleFont || "600 32px sans-serif";
-        context.fillText(options.subtitle, pageWidth / 2, band.y + band.h - 16);
+        context.font = options.subtitleFont || `600 ${subSize}px ${options.fontFamily || "sans-serif"}`;
+        context.fillText(options.subtitle, band.x + band.w / 2, band.y + band.h - subSize * 0.3);
       }
       context.restore();
     }
-    return { layout, text: shownText, rewritten: false, fit: "contain" };
+    return { layout, text: shownText, paintedText, note: "", rewritten: false, fit: "contain" };
+  }
+
+  function drawCoverPage(context, options = {}) {
+    const pageWidth = options.pageWidth;
+    const pageHeight = options.pageHeight;
+    const layout = layoutCoverPage({
+      pageWidth,
+      pageHeight,
+      pageNumber: options.pageNumber || 1
+    });
+    context.fillStyle = options.paper || PAPER_HEX;
+    context.fillRect(0, 0, pageWidth, pageHeight);
+    if (options.image) drawContain(context, options.image, layout.art);
+    const band = layout.title;
+    const titleSize = Math.max(1, 22 * pageHeight / PAGE_HEIGHT_MM * 25.4 / 72);
+    const subSize = Math.max(1, 12 * pageHeight / PAGE_HEIGHT_MM * 25.4 / 72);
+    const paintedText = [];
+    context.save();
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#101817";
+    if (options.title) {
+      paintedText.push(String(options.title));
+      context.font = options.titleFont || `700 ${titleSize}px serif`;
+      const lines = wrapMeasured(context, options.title, band.w).slice(0, 2);
+      const lineGap = titleSize * 1.15;
+      const subGap = options.subtitle ? subSize * 1.5 : 0;
+      let y = band.y + (band.h - lines.length * lineGap - subGap) / 2 + lineGap / 2;
+      lines.forEach((line) => {
+        context.fillText(line, band.x + band.w / 2, y);
+        y += lineGap;
+      });
+      if (options.subtitle) {
+        paintedText.push(String(options.subtitle));
+        context.fillStyle = "#3d4a44";
+        context.font = options.subtitleFont || `600 ${subSize}px ${options.fontFamily || "sans-serif"}`;
+        context.fillText(options.subtitle, band.x + band.w / 2, y + subSize * 0.15);
+      }
+    } else if (options.subtitle) {
+      paintedText.push(String(options.subtitle));
+      context.fillStyle = "#3d4a44";
+      context.font = options.subtitleFont || `600 ${subSize}px ${options.fontFamily || "sans-serif"}`;
+      context.fillText(options.subtitle, band.x + band.w / 2, band.y + band.h / 2);
+    }
+    context.restore();
+    return { layout, paintedText, note: "", fit: "contain" };
   }
 
   function drawImageFullBleed(context, image, pageWidth, pageHeight, paper) {
@@ -1230,10 +1391,35 @@
     compositeOntoPaper,
     consentRecord,
     contentBounds,
+    BLEED_HEIGHT_PT,
+    BLEED_MM,
+    BLEED_PT,
+    BLEED_WIDTH_PT,
+    CAPTION_LEADING,
+    CAPTION_SIZE_PT,
+    COVER_BAND_MM,
+    GUTTER_MM,
+    PAGE_HEIGHT_MM,
+    PAGE_HEIGHT_PX,
+    PAGE_WIDTH_MM,
+    PAGE_WIDTH_PX,
+    PRINT_DPI,
+    SAFE_MM,
+    SCAN_MAX_EDGE,
+    TRIM_HEIGHT_MM,
+    TRIM_HEIGHT_PT,
+    TRIM_WIDTH_MM,
+    TRIM_WIDTH_PT,
+    captionMetrics,
     containPlacement,
     cropSheet,
+    drawCoverPage,
+    layoutCoverPage,
+    paintCoverPage,
+    printSafeFrame,
     rotateQuarter,
     scanArtwork,
+    selectPagePictures,
     drawImageFullBleed,
     drawRebuiltPage,
     fullBleedPlacement,

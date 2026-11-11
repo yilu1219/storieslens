@@ -5,13 +5,15 @@ const test = require("node:test");
 const { PDFDocument } = require("pdf-lib");
 const {
   A5_HEIGHT_MM,
-  A5_HEIGHT_PT,
   A5_WIDTH_MM,
-  A5_WIDTH_PT,
+  BLEED_HEIGHT_MM,
+  BLEED_HEIGHT_PT,
+  BLEED_WIDTH_MM,
+  BLEED_WIDTH_PT,
   MAX_PAGES,
   buildInformalPreviewPdf,
   buildParentBookPdf,
-  isA5PageSize,
+  isPrintReadyPageSize,
   readPdfPageSize
 } = require("../parent-book-pdf");
 const { inspectParentBookRequest, inspectParentBookUpload } = require("../parent-book-safety");
@@ -39,24 +41,44 @@ test("parent book PDF is a real A5 document without LibreOffice", async () => {
   assert(result.buffer.length > 400);
   assert.equal(result.pageCount, 2);
   assert.equal(result.filename.endsWith(".pdf"), true);
-  assert.equal(result.pageSize.widthMm, A5_WIDTH_MM);
-  assert.equal(result.pageSize.heightMm, A5_HEIGHT_MM);
-  assert.equal(result.pageSize.widthPt, A5_WIDTH_PT);
-  assert.equal(result.pageSize.heightPt, A5_HEIGHT_PT);
+  assert.equal(result.official, true);
+  assert.equal(result.pageSize.widthMm, BLEED_WIDTH_MM);
+  assert.equal(result.pageSize.heightMm, BLEED_HEIGHT_MM);
+  assert.equal(result.pageSize.widthPt, BLEED_WIDTH_PT);
+  assert.equal(result.pageSize.heightPt, BLEED_HEIGHT_PT);
+  assert.equal(result.pageSize.trimWidthMm, A5_WIDTH_MM);
+  assert.equal(result.pageSize.trimHeightMm, A5_HEIGHT_MM);
 
   const measured = await readPdfPageSize(result.buffer);
   assert.equal(measured.pageCount, 2);
-  assert.equal(isA5PageSize(measured), true);
-  assert(Math.abs(measured.widthMm - 148) < 0.05);
-  assert(Math.abs(measured.heightMm - 210) < 0.05);
+  assert.equal(isPrintReadyPageSize(measured), true);
+  assert(Math.abs(measured.widthMm - 154) < 0.05);
+  assert(Math.abs(measured.heightMm - 216) < 0.05);
+  assert(Math.abs(measured.trim.widthMm - 148) < 0.05);
+  assert(Math.abs(measured.trim.heightMm - 210) < 0.05);
+  assert(Math.abs(measured.bleed.widthMm - 154) < 0.05);
+  assert(Math.abs(measured.bleed.heightMm - 216) < 0.05);
+  assert(Math.abs(measured.trim.xPt - measured.bleed.xPt) > 1);
+  const doc = await PDFDocument.load(result.buffer);
+  assert.equal(doc.getPageCount(), 2);
+  assert.doesNotMatch(String(doc.getSubject() || ""), /preview|watermark|预览/i);
+  assert.doesNotMatch(String(doc.getCreator() || ""), /Informal Preview|watermark/i);
   assert.doesNotMatch(read("parent-book-pdf.js"), /libreoffice|soffice/i);
+  const prepare = require("../artwork-prepare");
+  assert.equal(prepare.PAGE_WIDTH_MM, BLEED_WIDTH_MM);
+  assert.equal(prepare.PAGE_HEIGHT_MM, BLEED_HEIGHT_MM);
+  assert.equal(prepare.TRIM_WIDTH_MM, A5_WIDTH_MM);
+  assert.equal(prepare.TRIM_HEIGHT_MM, A5_HEIGHT_MM);
+  assert.equal(prepare.PAGE_WIDTH_PX, Math.round(154 * 300 / 25.4));
+  assert.equal(prepare.PAGE_HEIGHT_PX, Math.round(216 * 300 / 25.4));
+  assert.equal(prepare.PRINT_DPI, 300);
 });
 
 test("parent book PDF accepts image data URLs and rejects an empty book", async () => {
   const pngDataUrl = `data:image/png;base64,${png.toString("base64")}`;
   const result = await buildParentBookPdf({ pages: [{ imageDataUrl: pngDataUrl }] });
   const measured = await readPdfPageSize(result.buffer);
-  assert.equal(isA5PageSize(measured), true);
+  assert.equal(isPrintReadyPageSize(measured), true);
   await assert.rejects(() => buildParentBookPdf({ pages: [] }), /pages_required/);
 });
 
@@ -163,7 +185,10 @@ test("informal preview PDF is created without payment and still fills A5", async
   assert.equal(result.buffer.subarray(0, 5).toString("ascii"), "%PDF-");
   const doc = await PDFDocument.load(result.buffer);
   assert.match(String(doc.getSubject() || ""), /preview|预览/);
-  assert.equal(isA5PageSize(await readPdfPageSize(result.buffer)), true);
+  assert.match(String(doc.getCreator() || ""), /Informal Preview/);
+  const measured = await readPdfPageSize(result.buffer);
+  assert.equal(isPrintReadyPageSize(measured), true);
+  assert.equal(result.official, false);
 });
 
 test("a success query string does not unlock the official download or email", async () => {
@@ -237,8 +262,8 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   const suggestAt = html.indexOf("data-suggest-card");
   assert.ok(previewAt > 0 && previewAt < editAt && editAt < suggestAt);
   assert.match(html.slice(previewAt, suggestAt), /data-book-edit-fields/);
-  assert.match(html, /parent-book\.js\?v=20261111-6/);
-  assert.match(html, /parent-book\.css\?v=20261111-6/);
+  assert.match(html, /parent-book\.js\?v=20261111-print1/);
+  assert.match(html, /parent-book\.css\?v=20261111-print1/);
   assert.match(js, /function commitPhotoText/);
   assert.match(js, /photo\.textEdited = true/);
   assert.match(js, /photo\.textStatus = "parent"/);
@@ -271,6 +296,25 @@ test("parent book shows staged Yu progress, a watermarked preview, and pay-then-
   assert.match(js, /function watermarkPage/);
   assert.match(js, /for \(const pageDataUrl of state\.previewPages\)/);
   assert.match(js, /return state\.pages\.map\(\(imageDataUrl\) => \(\{ imageDataUrl \}\)\)/);
+  assert.match(js, /The words were not read confidently/);
+  const renderWork = js.slice(js.indexOf("async function renderWorkPage"), js.indexOf("async function renderPhotoPage"));
+  assert.doesNotMatch(renderWork, /note:|pageNote|noteFont/);
+  const prepare = read("artwork-prepare.js");
+  const draw = prepare.slice(prepare.indexOf("function drawRebuiltPage"), prepare.indexOf("function drawCoverPage"));
+  assert.doesNotMatch(draw, /options\.note|noteFont/);
+  const fillPrint = js.slice(js.indexOf("function fillPrintRoot"), js.indexOf("async function requestFilmFromServer"));
+  assert.match(fillPrint, /officialPrintUnlocked/);
+  assert.match(fillPrint, /state\.pages\.forEach/);
+  assert.doesNotMatch(fillPrint, /previewPages/);
+  const printClick = js.slice(js.indexOf("els.print?.addEventListener"), js.indexOf("els.makeFilm.addEventListener"));
+  assert.match(printClick, /officialPrintUnlocked/);
+  assert.doesNotMatch(printClick, /previewPages/);
+  const teacher = read("teacher-book.js");
+  assert.match(teacher, /drawCoverPage/);
+  assert.match(teacher, /state\.previewPages/);
+  assert.match(teacher, /pages: state\.pages\.map/);
+  assert.doesNotMatch(teacher, /pageNote|noteFont/);
+  assert.match(js, /quality = 0\.92/);
   assert.match(js, /result\.paid === true && result\.reason === "server_confirmed"/);
   assert.match(html, /data-official-path/);
   assert.match(html, /data-i18n="official-step-pay"/);

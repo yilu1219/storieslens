@@ -1,12 +1,11 @@
 (() => {
   "use strict";
 
-  const PAGE_WIDTH = 1480;
-  const PAGE_HEIGHT = 2100;
+  const printSpec = () => window.StoriesLensArtworkPrepare;
+  const PAGE_WIDTH = printSpec().PAGE_WIDTH_PX;
+  const PAGE_HEIGHT = printSpec().PAGE_HEIGHT_PX;
   const MAX_PHOTOS = 20;
   const LOCALE_KEY = "storieslens_locale";
-  const A5_WIDTH_PT = 148 * 72 / 25.4;
-  const A5_HEIGHT_PT = 210 * 72 / 25.4;
 
   const copy = {
     zh: {
@@ -189,7 +188,7 @@
     yuKeep: document.querySelector("[data-yu-keep]")
   };
 
-  const state = { locale: "zh", photos: [], pages: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false, readingApproval: null, yuOffer: null };
+  const state = { locale: "zh", photos: [], pages: [], previewPages: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false, readingApproval: null, yuOffer: null };
 
   const t = (key, vars) => {
     const table = copy[state.locale] || copy.zh;
@@ -255,8 +254,56 @@
     });
   }
 
-  function canvasToJpeg(canvas, quality = 0.86) {
+  function canvasToJpeg(canvas, quality = 0.92) {
     return canvas.toDataURL("image/jpeg", quality);
+  }
+
+  function ptToPx(pt) {
+    return Math.max(1, Math.round(pt * PAGE_HEIGHT / printSpec().PAGE_HEIGHT_MM * 25.4 / 72));
+  }
+
+  function bodyFont() {
+    return getComputedStyle(document.body).fontFamily;
+  }
+
+  function addPrintPdfPage(pdf, image) {
+    const spec = printSpec();
+    const page = pdf.addPage([spec.BLEED_WIDTH_PT, spec.BLEED_HEIGHT_PT]);
+    page.setMediaBox(0, 0, spec.BLEED_WIDTH_PT, spec.BLEED_HEIGHT_PT);
+    page.setBleedBox(0, 0, spec.BLEED_WIDTH_PT, spec.BLEED_HEIGHT_PT);
+    page.setTrimBox(spec.BLEED_PT, spec.BLEED_PT, spec.TRIM_WIDTH_PT, spec.TRIM_HEIGHT_PT);
+    page.drawImage(image, { x: 0, y: 0, width: spec.BLEED_WIDTH_PT, height: spec.BLEED_HEIGHT_PT });
+    return page;
+  }
+
+  let brandMarkPromise = null;
+  function loadBrandMark() {
+    if (!brandMarkPromise) {
+      brandMarkPromise = loadHtmlImage("assets/storieslens-logo.png").catch((error) => {
+        brandMarkPromise = null;
+        throw error;
+      });
+    }
+    return brandMarkPromise;
+  }
+
+  async function watermarkPage(dataUrl) {
+    const page = await loadHtmlImage(dataUrl);
+    const logo = await loadBrandMark();
+    const width = page.naturalWidth || page.width || PAGE_WIDTH;
+    const height = page.naturalHeight || page.height || PAGE_HEIGHT;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    context.drawImage(page, 0, 0, width, height);
+    const mark = Math.round(width * 0.16);
+    const margin = Math.round(width * 0.045);
+    context.save();
+    context.globalAlpha = 0.62;
+    context.drawImage(logo, width - mark - margin, margin, mark, mark);
+    context.restore();
+    return canvasToJpeg(canvas, 0.92);
   }
 
   function prepareApi() {
@@ -297,15 +344,6 @@
       const key = page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
       if ((rank[key] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = key;
     });
-  }
-
-  function pageNote(photo) {
-    if (!photo) return "";
-    if (photo.extractReason === "scan_not_isolated" || photo.scanIsolated === false) return t("scan-not-isolated");
-    if (photo.textStatus === "unavailable") return t("extract-unavailable");
-    if (photo.textStatus === "uncertain") return t("extract-uncertain");
-    if (photo.textStatus === "restored") return t("restored");
-    return "";
   }
 
   async function photosFromScan(originalDataUrl, fileName, manuscript, options) {
@@ -380,60 +418,94 @@
     canvas.width = PAGE_WIDTH;
     canvas.height = PAGE_HEIGHT;
     const context = canvas.getContext("2d", { alpha: false });
-    const confident = photo.textStatus === "ok" || photo.textStatus === "parent";
+    context.fillStyle = "#f6f0e4";
+    context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
     const artworks = [];
-    if (confident || photo.manuscript) {
-      for (const item of photo.artworks || []) {
-        const src = item.dataUrl || item;
-        if (src) artworks.push(await loadHtmlImage(src));
-      }
+    for (const item of photo.artworks || []) {
+      const src = item && (item.dataUrl || item);
+      if (typeof src === "string" && src) artworks.push(await loadHtmlImage(src));
     }
-    const forceMarks = photo.manuscript || !confident || (photo.textStatus === "parent" && !artworks.length);
     let marks = null;
-    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || (forceMarks ? photo.scanDataUrl : ""));
-    if (forceMarks && marksUrl) marks = await loadHtmlImage(marksUrl);
+    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || photo.scanDataUrl || "");
+    if (marksUrl) marks = await loadHtmlImage(marksUrl);
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
       pageHeight: PAGE_HEIGHT,
+      pageNumber: extras.pageNumber || 1,
       artworks,
       marks,
-      forceMarks,
       text: photo.text || "",
       status: photo.textStatus,
       edited: photo.textEdited === true,
       manuscript: photo.manuscript === true,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
-      note: pageNote(photo),
-      paper: "#f6f0e4"
+      paper: "#f6f0e4",
+      fontFamily: bodyFont()
     });
-    return canvasToJpeg(canvas, 0.9);
+    return canvasToJpeg(canvas, 0.92);
   }
 
-  async function renderCoverPage() {
-    const cover = state.photos.find((photo) => !photo.manuscript) || state.photos[0];
-    return renderWorkPage(cover, {
+  async function renderCoverPage(pageNumber = 1) {
+    const cover = state.photos[0];
+    const canvas = document.createElement("canvas");
+    canvas.width = PAGE_WIDTH;
+    canvas.height = PAGE_HEIGHT;
+    const context = canvas.getContext("2d", { alpha: false });
+    context.fillStyle = "#f6f0e4";
+    context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+    const heroUrl = cover && cover.scanIsolated !== false ? (cover.scanDataUrl || cover.dataUrl || "") : "";
+    if (!heroUrl) {
+      const frame = prepareApi().printSafeFrame(PAGE_WIDTH, PAGE_HEIGHT, pageNumber);
+      const center = frame.x + frame.w / 2;
+      context.textAlign = "center";
+      context.fillStyle = "#101817";
+      context.font = `700 ${ptToPx(22)}px ${bodyFont()}`;
+      wrapText(context, bookTitle(), frame.w).forEach((line, index) => {
+        context.fillText(line, center, frame.y + frame.h * 0.42 + index * ptToPx(28));
+      });
+      const subtitle = className() || teacherName();
+      if (subtitle) {
+        context.fillStyle = "#3d4a44";
+        context.font = `600 ${ptToPx(12)}px ${bodyFont()}`;
+        context.fillText(subtitle, center, frame.y + frame.h - ptToPx(10));
+      }
+      return canvasToJpeg(canvas, 0.92);
+    }
+    const image = await loadHtmlImage(heroUrl);
+    prepareApi().drawCoverPage(context, {
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      pageNumber,
+      image,
       title: bookTitle(),
-      subtitle: className() || teacherName() || ""
+      subtitle: className() || teacherName() || "",
+      paper: "#f6f0e4",
+      fontFamily: bodyFont()
     });
+    return canvasToJpeg(canvas, 0.92);
   }
 
-  async function renderPhotoPage(photo, index) {
+  async function renderPhotoPage(photo, index, pageNumber) {
     const subtitle = [photo.studentName, String(index + 1)].filter(Boolean).join(" · ");
-    return renderWorkPage(photo, { subtitle });
+    return renderWorkPage(photo, { subtitle, pageNumber });
   }
 
   async function rebuildBook() {
     if (!state.photos.length) {
       state.pages = [];
+      state.previewPages = [];
       els.previewCard.hidden = true;
       return;
     }
-    const pages = [await renderCoverPage()];
+    const pages = [await renderCoverPage(1)];
     for (let index = 0; index < state.photos.length; index += 1) {
-      pages.push(await renderPhotoPage(state.photos[index], index));
+      pages.push(await renderPhotoPage(state.photos[index], index, index + 2));
     }
+    const previewPages = [];
+    for (const page of pages) previewPages.push(await watermarkPage(page));
     state.pages = pages;
+    state.previewPages = previewPages;
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
     renderPreview();
     els.previewCard.hidden = false;
@@ -445,8 +517,9 @@
   }
 
   function renderPreview() {
-    if (!state.pages.length) return;
-    els.pageImage.src = state.pages[state.pageIndex];
+    const shown = state.previewPages[state.pageIndex];
+    if (!shown) return;
+    els.pageImage.src = shown;
     els.pageLabel.textContent = state.pageIndex === 0 ? t("page-label-cover") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
     els.prev.disabled = state.pageIndex === 0;
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
@@ -693,16 +766,16 @@
   }
 
   async function downloadPreviewPdf() {
-    if (!state.pages.length) return setStatus(t("need-photos"), true);
+    if (!state.pages.length || state.previewPages.length !== state.pages.length) return setStatus(t("need-photos"), true);
     setStatus(t("pdf-working"));
     try {
       const pdf = await window.PDFLib.PDFDocument.create();
       pdf.setTitle(bookTitle());
-      pdf.setCreator("StoriesLens Teacher Book");
-      for (const pageDataUrl of state.pages) {
+      pdf.setSubject("StoriesLens watermarked informal preview. Not an official paid PDF.");
+      pdf.setCreator("StoriesLens Informal Preview");
+      for (const pageDataUrl of state.previewPages) {
         const image = await pdf.embedJpg(dataUrlToBytes(pageDataUrl));
-        const page = pdf.addPage([A5_WIDTH_PT, A5_HEIGHT_PT]);
-        page.drawImage(image, { x: 0, y: 0, width: A5_WIDTH_PT, height: A5_HEIGHT_PT });
+        addPrintPdfPage(pdf, image);
       }
       const bytes = await pdf.save({ useObjectStreams: false });
       const blob = new Blob([bytes], { type: "application/pdf" });
