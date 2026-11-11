@@ -2,23 +2,29 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 const {
   PAPER,
+  SCAN_MAX_EDGE,
   avatarUseDecision,
   compositeOntoPaper,
   illustrateAvatar,
   interpretPdfCraftResponse,
+  layoutRebuiltPage,
   looksLikeManuscript,
   pagesFromPhonePhoto,
-  rotateQuarter,
-  scanArtwork,
-  paintFullBleed,
+  paintCoverPage,
   paintRebuiltPage,
   placementFillsPage,
   planBookPages,
   prepareArtwork,
+  printSafeFrame,
   renderAuthorPreview,
+  rotateQuarter,
+  scanArtwork,
+  paintFullBleed,
   splitScanPages,
   typesetText
 } = require("../artwork-prepare");
+
+const STATUS_COPY = "The words were not read confidently, so nothing was invented. The original marks stay on the page and can be corrected.";
 
 function fill(width, height, color, alpha = 255) {
   const rgba = new Uint8ClampedArray(width * height * 4);
@@ -403,6 +409,124 @@ test("a phone photo is scanned off the desk before recognition, and a failed sca
   assert.equal(missed.pages[0].scanDataUrl, "");
   assert.equal(missed.pages[0].marksDataUrl, "");
   assert.equal(missed.pages[0].extractReason, "scan_not_isolated");
+});
+
+test("system status copy is never painted, and uncertain OCR does not invent a caption", () => {
+  const art = fill(30, 40, [200, 30, 40]);
+  const base = {
+    pageWidth: 154,
+    pageHeight: 216,
+    artworks: [{ rgba: art, width: 30, height: 40 }],
+    text: STATUS_COPY,
+    status: "uncertain"
+  };
+  const plain = paintRebuiltPage(base);
+  const noted = paintRebuiltPage({ ...base, note: STATUS_COPY });
+  assert.equal(plain.text, "");
+  assert.equal(noted.text, "");
+  assert.equal(noted.note, "");
+  assert.deepEqual(noted.paintedText, []);
+  assert.equal(JSON.stringify(noted.paintedText).includes("invented"), false);
+  assert.deepEqual(Array.from(noted.rgba), Array.from(plain.rgba));
+  assert.equal(typesetText({ text: "invented caption", status: "uncertain" }), "");
+});
+
+test("artwork stays contained, near-A5 sheets fill the safe area, and a square stays centered", () => {
+  const wide = fill(40, 10, [200, 30, 40]);
+  const widePage = paintRebuiltPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    artworks: [{ rgba: wide, width: 40, height: 10 }],
+    status: "uncertain"
+  });
+  assert.equal(widePage.fit, "contain");
+  assert.ok(Math.abs(widePage.placement.dw / widePage.placement.dh - 4) < 0.02);
+
+  const sheet = fill(148, 210, [30, 90, 200]);
+  const sheetPage = paintRebuiltPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    artworks: [{ rgba: sheet, width: 148, height: 210 }],
+    status: "uncertain"
+  });
+  const frame = printSafeFrame(154, 216, 1);
+  assert.ok(sheetPage.placement.dw >= frame.w * 0.98);
+  assert.ok(sheetPage.placement.dh <= frame.h + 0.5);
+  assert.equal(placementFillsPage(sheetPage.placement, 154, 216), false);
+
+  const square = fill(80, 80, [180, 20, 40]);
+  const squarePage = paintRebuiltPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    artworks: [{ rgba: square, width: 80, height: 80 }],
+    status: "uncertain"
+  });
+  const box = squarePage.layout.art;
+  const left = squarePage.placement.dx - box.x;
+  const right = box.x + box.w - (squarePage.placement.dx + squarePage.placement.dw);
+  const top = squarePage.placement.dy - box.y;
+  const bottom = box.y + box.h - (squarePage.placement.dy + squarePage.placement.dh);
+  assert.ok(Math.abs(left - right) < 1);
+  assert.ok(Math.abs(top - bottom) < 1);
+  assert.ok(Math.abs(squarePage.placement.dw / squarePage.placement.dh - 1) < 0.02);
+});
+
+test("uncertain OCR shows the cleaned scan once, and caption pages share one type measure", () => {
+  const scan = fill(20, 30, [20, 70, 180]);
+  const figure = fill(20, 10, [200, 30, 40]);
+  const uncertain = paintRebuiltPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    artworks: [{ rgba: figure, width: 20, height: 10 }],
+    marks: { rgba: scan, width: 20, height: 30 },
+    text: "invented caption",
+    status: "uncertain",
+    note: STATUS_COPY
+  });
+  assert.equal(uncertain.text, "");
+  assert.equal(uncertain.layout.marks, null);
+  let sawRed = false;
+  let sawBlue = false;
+  for (let y = 0; y < 216; y += 1) {
+    for (let x = 0; x < 154; x += 1) {
+      const sample = pixel(uncertain.rgba, 154, x, y);
+      if (sample[0] > 150 && sample[2] < 80) sawRed = true;
+      if (sample[2] > 150 && sample[0] < 80) sawBlue = true;
+    }
+  }
+  assert.equal(sawBlue, true);
+  assert.equal(sawRed, false);
+
+  const odd = layoutRebuiltPage({ pageWidth: 1819, pageHeight: 2551, artworkCount: 1, showText: true, pageNumber: 1 });
+  const even = layoutRebuiltPage({ pageWidth: 1819, pageHeight: 2551, artworkCount: 1, showText: true, pageNumber: 2 });
+  assert.equal(odd.caption.sizePt, 11);
+  assert.equal(odd.caption.leading, 1.35);
+  assert.equal(odd.caption.fontPx, even.caption.fontPx);
+  assert.equal(odd.caption.leadingPx, even.caption.leadingPx);
+  assert.ok(Math.abs(odd.text.w - even.text.w) < 0.01);
+  const oddFrame = printSafeFrame(154, 216, 1);
+  const evenFrame = printSafeFrame(154, 216, 2);
+  assert.ok(oddFrame.x > evenFrame.x);
+  assert.ok(Math.abs(oddFrame.w - evenFrame.w) < 0.01);
+
+  const cover = paintCoverPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    artwork: { rgba: figure, width: 20, height: 10 }
+  });
+  assert.ok(cover.layout.art.h > 154 * 0.55);
+  assert.ok(cover.layout.art.y + cover.layout.art.h <= cover.layout.title.y + 0.01);
+  assert.ok(Math.abs(cover.placement.dw / cover.placement.dh - 2) < 0.02);
+});
+
+test("a clean scan keeps enough pixels for a 300 dpi A5 bleed page", () => {
+  assert.ok(SCAN_MAX_EDGE >= Math.round(216 * 300 / 25.4) - 1);
+  const width = 1800;
+  const height = 1200;
+  const rgba = fill(width, height, [250, 247, 238]);
+  const scanned = scanArtwork(rgba, width, height);
+  assert.equal(scanned.isolated, true);
+  assert.equal(Math.max(scanned.width, scanned.height), 1800);
 });
 
 test("rotation is a 90 degree clockwise turn and the first photo can stay the cover", () => {

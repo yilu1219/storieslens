@@ -19,7 +19,7 @@ const {
 const { familyCheckoutStatus, entitlementFromQuery, priceIdForOffer, createFamilyCheckoutSession } = require("../family-book-payments");
 const { createFamilyBookStore } = require("../family-book-store");
 const { createFamilyBookApi } = require("../family-book-api");
-const { A5_WIDTH_MM, A5_HEIGHT_MM, isA5PageSize, readPdfPageSize } = require("../parent-book-pdf");
+const { BLEED_WIDTH_MM, BLEED_HEIGHT_MM, A5_WIDTH_MM, A5_HEIGHT_MM, isPrintReadyPageSize, readPdfPageSize } = require("../parent-book-pdf");
 
 const root = path.resolve(__dirname, "..");
 const png = Buffer.from(
@@ -372,9 +372,11 @@ test("orders require an adult, unpaid downloads stay locked, and only a server-s
   assert.equal(download.response.contentType, "application/pdf");
   assert.equal(download.response.buffer.subarray(0, 5).toString("ascii"), "%PDF-");
   const measured = await readPdfPageSize(download.response.buffer);
-  assert.equal(isA5PageSize(measured), true);
-  assert(Math.abs(measured.widthMm - A5_WIDTH_MM) < 0.05);
-  assert(Math.abs(measured.heightMm - A5_HEIGHT_MM) < 0.05);
+  assert.equal(isPrintReadyPageSize(measured), true);
+  assert(Math.abs(measured.widthMm - BLEED_WIDTH_MM) < 0.05);
+  assert(Math.abs(measured.heightMm - BLEED_HEIGHT_MM) < 0.05);
+  assert(Math.abs(measured.trim.widthMm - A5_WIDTH_MM) < 0.05);
+  assert(Math.abs(measured.trim.heightMm - A5_HEIGHT_MM) < 0.05);
   const doc = await PDFDocument.load(download.response.buffer);
   assert.equal(doc.getPageCount(), 1);
 });
@@ -635,7 +637,9 @@ test("official PDF email is sent only after a confirmed digital entitlement", as
   const pdf = Buffer.from(payload.attachments[0].content, "base64");
   assert.equal(pdf.subarray(0, 5).toString("ascii"), "%PDF-");
   const measured = await readPdfPageSize(pdf);
-  assert.equal(isA5PageSize(measured), true);
+  assert.equal(isPrintReadyPageSize(measured), true);
+  assert(Math.abs(measured.widthMm - BLEED_WIDTH_MM) < 0.05);
+  assert(Math.abs(measured.trim.widthMm - A5_WIDTH_MM) < 0.05);
   assert.equal(store.loadOrder(paid.id).emailSendCount, 1);
 
   const resent = await api.call("POST", "/api/family-book/email", {
