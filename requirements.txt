@@ -1,0 +1,2 @@
+# Remote OCR only. Do not install the local CUDA extra (pdf-craft[local]).
+pdf-craft==2.6.7

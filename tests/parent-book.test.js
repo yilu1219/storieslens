@@ -129,7 +129,9 @@ test("parent book page, routes, and homepage entry are wired for China and inter
   assert.match(js, /\/api\/family-book\/download/);
   assert.match(js, /downloadPreviewPdf/);
   assert.match(js, /preserveAlpha: true/);
-  assert.match(js, /drawImageFullBleed/);
+  assert.match(js, /drawRebuiltPage/);
+  assert.match(js, /requestPdfCraftExtraction/);
+  assert.doesNotMatch(js, /drawImageFullBleed/);
   assert.match(js, /avatarUseDecision/);
   assert.match(js, /planBookPages/);
   assert.doesNotMatch(js, /toJpegDataUrl/);

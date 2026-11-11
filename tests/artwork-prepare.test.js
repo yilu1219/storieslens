@@ -5,12 +5,17 @@ const {
   avatarUseDecision,
   compositeOntoPaper,
   illustrateAvatar,
+  interpretPdfCraftResponse,
   looksLikeManuscript,
+  pagesFromPhonePhoto,
   paintFullBleed,
+  paintRebuiltPage,
   placementFillsPage,
   planBookPages,
   prepareArtwork,
-  renderAuthorPreview
+  renderAuthorPreview,
+  splitScanPages,
+  typesetText
 } = require("../artwork-prepare");
 
 function fill(width, height, color, alpha = 255) {
@@ -191,6 +196,105 @@ test("full-bleed placement covers the A5 canvas instead of an inset frame", () =
   assert.deepEqual(pixel(filled.rgba, pageWidth, 0, 0).slice(0, 3), [200, 30, 40]);
   assert.deepEqual(pixel(filled.rgba, pageWidth, pageWidth - 1, pageHeight - 1).slice(0, 3), [200, 30, 40]);
   assert.notDeepEqual(pixel(filled.rgba, pageWidth, 1, 1).slice(0, 3), [90, 50, 30]);
+});
+
+test("pdf-craft pieces are recomposed on cream A5 and the raw photo is not full-bleed", () => {
+  const pageWidth = 40;
+  const pageHeight = 56;
+  const art = fill(20, 10, [200, 30, 40]);
+  paintRect(art, 20, 10, 0, 10, 10, [30, 90, 200]);
+  const desk = fill(30, 40, [90, 50, 30]);
+  const painted = paintRebuiltPage({
+    pageWidth,
+    pageHeight,
+    artworks: [{ rgba: art, width: 20, height: 10 }],
+    marks: { rgba: desk, width: 30, height: 40 },
+    text: "teh catt",
+    status: "ok"
+  });
+  assert.equal(painted.text, "teh catt");
+  assert.equal(painted.rewritten, false);
+  assert.equal(painted.fit, "contain");
+  assert.equal(placementFillsPage(painted.placement, pageWidth, pageHeight), false);
+  assert.ok(painted.placement.dx > 0 || painted.placement.dw < pageWidth);
+  assert.deepEqual(pixel(painted.rgba, pageWidth, 0, 0).slice(0, 3), PAPER);
+  assert.deepEqual(pixel(painted.rgba, pageWidth, pageWidth - 1, pageHeight - 1).slice(0, 3), PAPER);
+  let sawRed = false;
+  let sawBlue = false;
+  let sawDesk = false;
+  for (let y = 0; y < pageHeight; y += 1) {
+    for (let x = 0; x < pageWidth; x += 1) {
+      const sample = pixel(painted.rgba, pageWidth, x, y);
+      if (sample[0] > 150 && sample[2] < 80) sawRed = true;
+      if (sample[2] > 150 && sample[0] < 80) sawBlue = true;
+      if (sample[0] > 70 && sample[0] < 110 && sample[1] > 40 && sample[1] < 70) sawDesk = true;
+    }
+  }
+  assert.equal(sawRed, true);
+  assert.equal(sawBlue, true);
+  assert.equal(sawDesk, false);
+});
+
+test("uncertain OCR does not invent the child's words, and a parent correction is kept verbatim", () => {
+  assert.equal(typesetText({ text: "a polished sentence", status: "uncertain" }), "");
+  assert.equal(typesetText({ text: "a polished sentence", status: "unavailable" }), "");
+  assert.equal(typesetText({ text: "teh catt", status: "ok" }), "teh catt");
+  assert.equal(typesetText({ text: "家长改正", status: "uncertain", edited: true }), "家长改正");
+  const response = interpretPdfCraftResponse(422, {
+    status: "uncertain",
+    text: "invented caption",
+    images: ["data:image/png;base64,aaaa"],
+    reason: "ocr_uncertain"
+  });
+  assert.equal(response.text, "");
+  assert.equal(response.textStatus, "uncertain");
+  assert.equal(response.artworks.length, 1);
+  assert.equal(response.rewritten, false);
+  const missing = interpretPdfCraftResponse(501, { status: "unavailable", text: "hello", reason: "ocr_not_configured" });
+  assert.equal(missing.text, "");
+  assert.equal(missing.artworks.length, 0);
+  const faithful = interpretPdfCraftResponse(200, { status: "ok", text: "teh catt", images: [] });
+  assert.equal(faithful.text, "teh catt");
+});
+
+test("a left and right scan still splits before each side is extracted", async () => {
+  const width = 90;
+  const height = 50;
+  const pair = noisyTable(width, height);
+  paintRect(pair, width, 4, 8, 28, 34, [250, 247, 238]);
+  paintRect(pair, width, 58, 8, 28, 34, [250, 247, 238]);
+  paintRect(pair, width, 10, 18, 6, 6, [180, 20, 40]);
+  paintRect(pair, width, 66, 18, 6, 6, [20, 70, 180]);
+  const split = splitScanPages(pair, width, height);
+  assert.equal(split.split, true);
+  assert.equal(split.pages.length, 2);
+  assert.equal(pixel(split.pages[0].rgba, split.pages[0].width, 0, 0)[3], 255);
+  let calls = 0;
+  const built = await pagesFromPhonePhoto({
+    rgba: pair,
+    width,
+    height,
+    toPng: () => "data:image/png;base64,scan",
+    extract: async () => {
+      calls += 1;
+      return calls === 1
+        ? { textStatus: "ok", text: "left words", artworks: [{ dataUrl: "data:image/png;base64,left" }] }
+        : { textStatus: "uncertain", text: "do not keep this guess", artworks: [] };
+    }
+  });
+  assert.equal(built.split, true);
+  assert.equal(built.pages.length, 2);
+  assert.equal(built.pages[0].text, "left words");
+  assert.equal(built.pages[0].extractEngine, "pdf-craft");
+  assert.equal(built.pages[1].text, "");
+  assert.equal(built.pages[1].textStatus, "uncertain");
+  const single = noisyTable(width, height);
+  paintRect(single, width, 6, 8, 78, 34, [250, 247, 238]);
+  paintRect(single, width, 12, 20, 6, 6, [180, 20, 40]);
+  paintRect(single, width, 70, 20, 6, 6, [20, 70, 180]);
+  const one = splitScanPages(single, width, height);
+  assert.equal(one.split, false);
+  assert.equal(one.pages.length, 1);
 });
 
 test("manuscript photos close the book and the chosen cover is not stuck on the first upload", () => {

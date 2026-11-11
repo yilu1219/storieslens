@@ -4,9 +4,11 @@ const { familyCheckoutStatus, entitlementFromQuery, createFamilyCheckoutSession,
 const { getFamilyBookOffer } = require("./family-book-catalog");
 const { inspectParentBookRequest } = require("./parent-book-safety");
 const { mailConfigured, sendPaidBookPdf } = require("./family-book-mail");
+const { extractScanFromImage, parseImageDataUrl, unavailableMessage } = require("./pdf-craft-extract");
 
-function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch } = {}) {
+function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch, extractScan } = {}) {
   const books = store || createFamilyBookStore();
+  const scan = extractScan || ((image) => extractScanFromImage({ buffer: image.buffer, mimeType: image.mimeType, env }));
 
   async function officialPdfForOrder(order, body) {
     let pages = [];
@@ -41,6 +43,51 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
 
     if (pathName === "/api/family-book/pricing" && request.method === "GET") {
       sendJson(response, 200, familyCheckoutStatus());
+      return true;
+    }
+
+    if (pathName === "/api/family-book/extract" && request.method === "POST") {
+      if (consumeRateLimit && !consumeRateLimit(request, response, { bucket: "family-book-extract", limit: 30, windowMs: 60 * 60 * 1000 })) return true;
+      try {
+        const body = await readJsonBody(request, 8_000_000);
+        const image = parseImageDataUrl(body.imageDataUrl);
+        if (!image) {
+          sendJson(response, 400, {
+            engine: "pdf-craft",
+            status: "uncertain",
+            text: "",
+            images: [],
+            uncertain: true,
+            rewritten: false,
+            reason: "invalid_image",
+            error: "A PNG or JPEG photo is required."
+          });
+          return true;
+        }
+        const result = await scan(image);
+        const statusCode = result.status === "unavailable" ? 501 : result.status === "ok" ? 200 : 422;
+        sendJson(response, statusCode, {
+          engine: "pdf-craft",
+          status: result.status,
+          text: result.text || "",
+          images: result.images || [],
+          uncertain: result.status !== "ok",
+          rewritten: false,
+          reason: result.reason,
+          error: result.status === "unavailable" ? unavailableMessage(result.reason) : undefined
+        });
+      } catch (_error) {
+        sendJson(response, 422, {
+          engine: "pdf-craft",
+          status: "uncertain",
+          text: "",
+          images: [],
+          uncertain: true,
+          rewritten: false,
+          reason: "pdf_craft_failed",
+          error: "pdf-craft could not read this photo. The original is still available."
+        });
+      }
       return true;
     }
 
