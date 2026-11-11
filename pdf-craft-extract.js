@@ -9,6 +9,14 @@ const MAX_ASSET_BYTES = 1_500_000;
 const MAX_ASSETS = 8;
 const EXTRACT_TIMEOUT_MS = 180_000;
 
+function pdfCraftVendorKind(backend, model) {
+  const name = String(backend || "deepseek").trim().toLowerCase();
+  const modelName = String(model || "").toLowerCase();
+  if (name === "deepseek2" || name === "deepseek-ocr-2" || name === "ocr2") return "deepseek2";
+  if (name === "deepseek" && modelName.includes("ocr-2")) return "deepseek2";
+  return "deepseek";
+}
+
 function pdfCraftOcrConfig(env = process.env) {
   const backend = String(env.PDF_CRAFT_OCR_BACKEND || "deepseek").trim().toLowerCase();
   if (backend === "unlimited") {
@@ -32,6 +40,7 @@ function pdfCraftOcrConfig(env = process.env) {
   }
   const baseUrl = String(env.PDF_CRAFT_OCR_BASE_URL || env.OPENROUTER_BASE_URL || "").trim().replace(/\/+$/, "");
   const apiKey = String(env.PDF_CRAFT_OCR_API_KEY || env.OPENROUTER_API_KEY || "").trim();
+  // OPENROUTER_MODEL is a chat model, not a pdf-craft OCR model, so it is ignored.
   const model = String(env.PDF_CRAFT_OCR_MODEL || env.OPENROUTER_OCR_MODEL || "").trim();
   const missing = [];
   if (!baseUrl) missing.push("PDF_CRAFT_OCR_BASE_URL");
@@ -40,7 +49,7 @@ function pdfCraftOcrConfig(env = process.env) {
   if (missing.length) {
     return { configured: false, backend: "deepseek", reason: "ocr_not_configured", missing };
   }
-  return { configured: true, backend: "deepseek", baseUrl, apiKey, model };
+  return { configured: true, backend: pdfCraftVendorKind(backend, model), baseUrl, apiKey, model };
 }
 
 function parseImageDataUrl(value) {
@@ -110,7 +119,7 @@ function unavailableMessage(reason) {
   if (reason === "pdf_craft_unavailable") {
     return "The pdf-craft Python library is not installed on this server. No text was recognized.";
   }
-  return "pdf-craft remote OCR is not configured. Set PDF_CRAFT_OCR_BASE_URL, PDF_CRAFT_OCR_API_KEY, and PDF_CRAFT_OCR_MODEL, or OPENROUTER_API_KEY with OPENROUTER_OCR_MODEL. No text was recognized.";
+  return "pdf-craft remote OCR is not configured. Set PDF_CRAFT_OCR_BASE_URL, PDF_CRAFT_OCR_API_KEY, and PDF_CRAFT_OCR_MODEL. Use PDF_CRAFT_OCR_BACKEND=deepseek2, or a model name containing ocr-2, for DeepSeek-OCR 2. OPENROUTER_MODEL is not used. No text was recognized.";
 }
 
 async function imageToSinglePagePdf(buffer, mimeType) {
@@ -237,6 +246,7 @@ module.exports = {
   imageToSinglePagePdf,
   parseImageDataUrl,
   pdfCraftOcrConfig,
+  pdfCraftVendorKind,
   piecesToResult,
   readCraftDirectory,
   separateCraftMarkdown,
