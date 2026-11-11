@@ -8,7 +8,7 @@
     <title>教师班级出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261111-print1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261111-interior1" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -37,6 +37,12 @@
           <label class="field"><span data-i18n="class-label">班级名称</span><input data-class-name maxlength="80" /></label>
           <label class="field"><span data-i18n="teacher-label">教师姓名（选填）</span><input data-teacher-name maxlength="80" /></label>
           <label class="field"><span data-i18n="title-label">书名</span><input data-title maxlength="80" /></label>
+          <fieldset class="cover-choice choice-row">
+            <legend data-i18n="interior-legend">内页样式</legend>
+            <label class="check"><input type="radio" name="interior-style" value="original" data-interior-style checked /><span data-i18n="interior-original">原画摆正</span></label>
+            <label class="check"><input type="radio" name="interior-style" value="polished" data-interior-style /><span data-i18n="interior-polished">精修插画</span></label>
+            <p class="hint" data-i18n="interior-hint">默认使用学生自己的画，只把纸摆正并排上文字。精修插画按同一张原画生成成品，文字仍单独排版。两种都会在最后加上手稿。</p>
+          </fieldset>
         </div>
         <div class="upload-row">
           <label class="upload-btn"><input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" multiple data-album /><span data-i18n="album">从相册选择作业照片</span></label>
@@ -97,9 +103,9 @@
     <div class="print-root" data-print-root aria-hidden="true"></div>
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261111-print1"></script>
+    <script src="artwork-prepare.js?v=20261111-interior1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-review.js?v=20261111-2"></script>
-    <script src="teacher-book.js?v=20261111-print1"></script>
+    <script src="teacher-book.js?v=20261111-interior1"></script>
   </body>
 </html>

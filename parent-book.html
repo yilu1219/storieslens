@@ -12,7 +12,7 @@
     <title>家长出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261111-print1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261111-interior1" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -63,10 +63,16 @@
               <textarea maxlength="800" data-author-intro rows="4"></textarea>
             </label>
           </div>
-          <fieldset class="cover-choice">
+          <fieldset class="cover-choice choice-row">
             <legend data-i18n="cover-style-legend">封面样式</legend>
             <label class="check"><input type="radio" name="cover-style" value="rebuilt" data-cover-style checked /><span data-i18n="cover-style-full">重排封面</span></label>
             <label class="check"><input type="radio" name="cover-style" value="typographic" data-cover-style /><span data-i18n="cover-style-type">文字封面</span></label>
+          </fieldset>
+          <fieldset class="cover-choice choice-row">
+            <legend data-i18n="interior-legend">内页样式</legend>
+            <label class="check"><input type="radio" name="interior-style" value="original" data-interior-style checked /><span data-i18n="interior-original">原画摆正</span></label>
+            <label class="check"><input type="radio" name="interior-style" value="polished" data-interior-style /><span data-i18n="interior-polished">精修插画</span></label>
+            <p class="hint" data-i18n="interior-hint">默认使用孩子自己的画，只把纸摆正并排上文字。精修插画按同一张原画生成成品，文字仍单独排版。两种都会在最后加上手稿。</p>
           </fieldset>
           <div class="avatar-panel" data-avatar-panel>
             <span data-i18n="avatar-label">作者头像</span>
@@ -109,7 +115,7 @@
         <p class="notice" data-i18n="safety-notice">请上传孩子的画、作文或手工作品照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。位置和拍摄信息会在本机删除。</p>
         <p class="adult-note" data-i18n="adult-note">这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。</p>
         <div class="thumbs" data-thumbs></div>
-        <div class="yu-progress" data-yu-progress hidden role="status" aria-live="polite">
+        <div class="yu-progress" data-yu-progress data-extract-progress hidden role="status" aria-live="polite">
           <img src="assets/yu-mascot-logo-v2.png" alt="小羽" width="96" height="96" data-yu-mark />
           <div class="yu-progress-copy">
             <strong data-progress-percent>0%</strong>
@@ -273,10 +279,10 @@
 
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261111-print1"></script>
+    <script src="artwork-prepare.js?v=20261111-interior1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
-    <script src="parent-book.js?v=20261111-print1"></script>
+    <script src="parent-book.js?v=20261111-interior1"></script>
   </body>
 </html>

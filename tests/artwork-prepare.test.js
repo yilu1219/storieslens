@@ -13,10 +13,14 @@ const {
   paintCoverPage,
   paintRebuiltPage,
   placementFillsPage,
+  illustratePhotos,
+  interiorPageArt,
+  normalizeInteriorStyle,
   planBookPages,
   prepareArtwork,
   printSafeFrame,
   renderAuthorPreview,
+  retainBookEdits,
   rotateQuarter,
   scanArtwork,
   paintFullBleed,
@@ -317,9 +321,9 @@ test("manuscript photos close the book and the chosen cover is not stuck on the 
     coverId: "c",
     includeAuthor: true
   });
-  assert.deepEqual(pages.map((page) => page.kind), ["cover", "author", "photo", "photo", "manuscript"]);
+  assert.deepEqual(pages.map((page) => page.kind), ["cover", "author", "photo", "photo", "manuscript", "manuscript", "manuscript"]);
   assert.equal(pages[0].photoId, "c");
-  assert.equal(pages.at(-1).photoId, "b");
+  assert.deepEqual(pages.filter((page) => page.kind === "manuscript").map((page) => page.photoId), ["a", "c", "b"]);
   assert.equal(pages.at(-1).kind, "manuscript");
 });
 
@@ -555,4 +559,200 @@ test("rotation is a 90 degree clockwise turn and the first photo can stay the co
   });
   assert.equal(pages[0].kind, "cover");
   assert.equal(pages[0].photoId, "first");
+  assert.equal(pages.some((page) => page.kind === "manuscript" && page.photoId === "later"), true);
+});
+
+function countColor(rgba, width, height, color, tolerance = 36) {
+  let count = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4;
+      if (Math.abs(rgba[index] - color[0]) <= tolerance
+        && Math.abs(rgba[index + 1] - color[1]) <= tolerance
+        && Math.abs(rgba[index + 2] - color[2]) <= tolerance) count += 1;
+    }
+  }
+  return count;
+}
+
+test("a full sheet keeps marks at all four edges, and a square page is letterboxed", () => {
+  const width = 80;
+  const height = 60;
+  const rgba = noisyTable(width, height);
+  paintRect(rgba, width, 10, 8, 60, 44, [250, 248, 240]);
+  paintRect(rgba, width, 10, 8, 4, 4, [220, 20, 20]);
+  paintRect(rgba, width, 66, 8, 4, 4, [20, 180, 40]);
+  paintRect(rgba, width, 10, 48, 4, 4, [20, 40, 220]);
+  paintRect(rgba, width, 66, 48, 4, 4, [230, 200, 20]);
+  const scanned = scanArtwork(rgba, width, height);
+  assert.equal(scanned.isolated, true);
+  assert.equal(scanned.width, 60);
+  assert.equal(scanned.height, 44);
+  assert.ok(countColor(scanned.rgba, scanned.width, scanned.height, [220, 20, 20]) >= 8);
+  assert.ok(countColor(scanned.rgba, scanned.width, scanned.height, [20, 180, 40]) >= 8);
+  assert.ok(countColor(scanned.rgba, scanned.width, scanned.height, [20, 40, 220]) >= 8);
+  assert.ok(countColor(scanned.rgba, scanned.width, scanned.height, [230, 200, 20]) >= 8);
+
+  const laid = paintRebuiltPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    marks: scanned,
+    artworks: [{ rgba: fill(12, 12, [255, 0, 0]), width: 12, height: 12 }],
+    text: "teh catt",
+    status: "ok",
+    treatment: "original",
+    title: "手稿"
+  });
+  assert.equal(laid.placement.sw, scanned.width);
+  assert.equal(laid.placement.sh, scanned.height);
+  assert.equal(laid.fit, "contain");
+  assert.equal(placementFillsPage(laid.placement, 154, 216), false);
+  assert.deepEqual(pixel(laid.rgba, 154, 0, 0).slice(0, 3), PAPER);
+  assert.ok(countColor(laid.rgba, 154, 216, [220, 20, 20]) > 0);
+  assert.ok(countColor(laid.rgba, 154, 216, [20, 180, 40]) > 0);
+  assert.ok(countColor(laid.rgba, 154, 216, [20, 40, 220]) > 0);
+  assert.ok(countColor(laid.rgba, 154, 216, [230, 200, 20]) > 0);
+  assert.equal(countColor(laid.rgba, 154, 216, [255, 0, 0], 8), 0);
+
+  const square = fill(40, 40, [250, 248, 240]);
+  paintRect(square, 40, 0, 0, 6, 6, [220, 20, 20]);
+  paintRect(square, 40, 34, 0, 6, 6, [20, 180, 40]);
+  paintRect(square, 40, 0, 34, 6, 6, [20, 40, 220]);
+  paintRect(square, 40, 34, 34, 6, 6, [230, 200, 20]);
+  const squarePage = paintRebuiltPage({
+    pageWidth: 154,
+    pageHeight: 216,
+    artworks: [{ rgba: square, width: 40, height: 40 }],
+    status: "uncertain"
+  });
+  assert.equal(squarePage.placement.sw, 40);
+  assert.equal(squarePage.placement.sh, 40);
+  assert.ok(Math.abs(squarePage.placement.dw / squarePage.placement.dh - 1) < 0.02);
+  assert.equal(placementFillsPage(squarePage.placement, 154, 216), false);
+  assert.deepEqual(pixel(squarePage.rgba, 154, 0, 0).slice(0, 3), PAPER);
+  assert.deepEqual(pixel(squarePage.rgba, 154, 153, 215).slice(0, 3), PAPER);
+  assert.ok(countColor(squarePage.rgba, 154, 216, [220, 20, 20]) > 0);
+  assert.ok(countColor(squarePage.rgba, 154, 216, [20, 180, 40]) > 0);
+  assert.ok(countColor(squarePage.rgba, 154, 216, [20, 40, 220]) > 0);
+  assert.ok(countColor(squarePage.rgba, 154, 216, [230, 200, 20]) > 0);
+});
+
+test("sideways, upside-down, and tilted sheets are made upright without a second crop", () => {
+  const width = 70;
+  const height = 96;
+  const rgba = noisyTable(width, height);
+  paintRect(rgba, width, 12, 10, 46, 76, [250, 248, 240]);
+  paintRect(rgba, width, 18, 24, 34, 3, [10, 10, 10]);
+  paintRect(rgba, width, 18, 40, 34, 3, [10, 10, 10]);
+  paintRect(rgba, width, 18, 56, 34, 3, [10, 10, 10]);
+  const turned = rotateQuarter(rgba, width, height, 1);
+  const upright = scanArtwork(turned.rgba, turned.width, turned.height);
+  assert.equal(upright.turns, 1);
+  let peak = 0;
+  for (let y = 0; y < upright.height; y += 1) {
+    let dark = 0;
+    for (let x = 0; x < upright.width; x += 1) if (upright.rgba[(y * upright.width + x) * 4] < 40) dark += 1;
+    if (dark > peak) peak = dark;
+  }
+  assert.ok(peak >= 30);
+
+  const upside = noisyTable(80, 100);
+  paintRect(upside, 80, 8, 8, 64, 84, [250, 248, 240]);
+  paintRect(upside, 80, 16, 12, 48, 4, [10, 10, 10]);
+  const flipped = scanArtwork(upside, 80, 100);
+  assert.equal(flipped.turns, 2);
+  let mass = 0;
+  let darkCount = 0;
+  for (let y = 0; y < flipped.height; y += 1) {
+    for (let x = 0; x < flipped.width; x += 1) {
+      if (flipped.rgba[(y * flipped.width + x) * 4] < 40) {
+        mass += y;
+        darkCount += 1;
+      }
+    }
+  }
+  assert.ok(darkCount > 0 && mass / darkCount > flipped.height * 0.6);
+
+  const tilted = fill(120, 80, [250, 248, 240]);
+  for (let x = 8; x < 112; x += 1) {
+    const y = Math.round(18 + (x - 8) * 0.18);
+    paintRect(tilted, 120, x, y, 1, 3, [10, 10, 10]);
+  }
+  const leveled = scanArtwork(tilted, 120, 80);
+  assert.equal(leveled.isolated, true);
+  assert.ok(Math.abs(leveled.skew) >= 3);
+  let levelPeak = 0;
+  let minY = leveled.height;
+  let maxY = 0;
+  for (let y = 0; y < leveled.height; y += 1) {
+    let dark = 0;
+    for (let x = 0; x < leveled.width; x += 1) {
+      if (leveled.rgba[(y * leveled.width + x) * 4] < 40) {
+        dark += 1;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (dark > levelPeak) levelPeak = dark;
+  }
+  assert.ok(levelPeak > 40);
+  assert.ok(maxY - minY < 12);
+});
+
+test("interior style defaults to original artwork, keeps edits, and does not invent a caption", async () => {
+  assert.equal(normalizeInteriorStyle(undefined), "original");
+  assert.equal(normalizeInteriorStyle("polished"), "polished");
+  assert.equal(normalizeInteriorStyle("cover"), "original");
+  const kept = retainBookEdits({
+    title: "春天",
+    author: "小羽",
+    coverId: "c",
+    coverStyle: "typographic",
+    photos: [{ id: "a", text: "家长改正", textEdited: true, textStatus: "parent", manuscript: false, scanDataUrl: "scan" }]
+  }, "polished");
+  assert.equal(kept.interiorStyle, "polished");
+  assert.equal(kept.title, "春天");
+  assert.equal(kept.author, "小羽");
+  assert.equal(kept.coverId, "c");
+  assert.equal(kept.coverStyle, "typographic");
+  assert.equal(kept.photos[0].text, "家长改正");
+  assert.equal(kept.photos[0].textEdited, true);
+  const back = retainBookEdits(kept, "original");
+  assert.equal(back.interiorStyle, "original");
+  assert.equal(back.photos[0].text, "家长改正");
+  const plan = planBookPages({ photos: kept.photos, coverId: kept.coverId, includeAuthor: false });
+  assert.deepEqual(plan.map((page) => page.kind), ["cover", "photo", "manuscript"]);
+  assert.equal(typesetText({ text: "invented caption", status: "uncertain" }), "");
+  const fallbackSentence = "A polished illustration was not created, so this page keeps the straightened original artwork.";
+  const painted = paintRebuiltPage({
+    pageWidth: 80,
+    pageHeight: 112,
+    marks: { rgba: fill(20, 30, [20, 70, 180]), width: 20, height: 30 },
+    text: fallbackSentence,
+    status: "uncertain",
+    note: fallbackSentence,
+    manuscript: true,
+    title: "手稿",
+    treatment: "original"
+  });
+  assert.equal(painted.text, "");
+  assert.deepEqual(painted.paintedText, ["手稿"]);
+  assert.equal(JSON.stringify(painted.paintedText).includes("polished"), false);
+  const failed = [{ scanDataUrl: "data:image/png;base64,aa", scanIsolated: true, textStatus: "uncertain", text: "guess" }];
+  const result = await illustratePhotos(failed, {
+    style: "polished",
+    textFor: (photo) => (photo.textStatus === "ok" || photo.textEdited ? photo.text : ""),
+    fetchImpl: async () => ({ ok: false, status: 501, json: async () => ({ reason: "illustration_not_configured" }) })
+  });
+  assert.equal(result.fallback, true);
+  assert.equal(failed[0].polishStatus, "fallback");
+  const art = interiorPageArt({
+    treatment: "polished",
+    scanUrl: "scan",
+    polishedUrl: failed[0].polishedDataUrl,
+    polishOk: failed[0].polishStatus === "ok"
+  });
+  assert.equal(art.url, "scan");
+  assert.equal(art.fallback, true);
+  assert.equal(art.treatment, "original");
 });

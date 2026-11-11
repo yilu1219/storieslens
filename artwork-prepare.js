@@ -467,8 +467,43 @@
     if (cover) pages.push({ kind: "cover", photoId: cover.id });
     if (includeAuthor) pages.push({ kind: "author" });
     main.forEach((photo) => pages.push({ kind: "photo", photoId: photo.id }));
+    main.forEach((photo) => pages.push({ kind: "manuscript", photoId: photo.id }));
     manuscript.forEach((photo) => pages.push({ kind: "manuscript", photoId: photo.id }));
     return pages;
+  }
+
+  function normalizeInteriorStyle(value) {
+    return value === "polished" ? "polished" : "original";
+  }
+
+  function retainBookEdits(book, style) {
+    const source = book && typeof book === "object" ? book : {};
+    return {
+      interiorStyle: normalizeInteriorStyle(style),
+      title: String(source.title || ""),
+      author: String(source.author || ""),
+      coverId: String(source.coverId || ""),
+      coverStyle: source.coverStyle === "typographic" ? "typographic" : "rebuilt",
+      photos: (Array.isArray(source.photos) ? source.photos : []).map((photo) => ({ ...photo }))
+    };
+  }
+
+  function interiorPageArt({ treatment = "original", scanUrl = "", polishedUrl = "", polishOk = false } = {}) {
+    const style = normalizeInteriorStyle(treatment);
+    if (style === "polished" && polishOk && polishedUrl) {
+      return { url: polishedUrl, fallback: false, treatment: "polished" };
+    }
+    return { url: scanUrl || "", fallback: style === "polished", treatment: "original" };
+  }
+
+  function coverHeroSource(photo, style) {
+    if (!photo || photo.scanIsolated === false) return "";
+    return interiorPageArt({
+      treatment: style,
+      scanUrl: photo.scanDataUrl || photo.marksDataUrl || "",
+      polishedUrl: photo.polishedDataUrl || "",
+      polishOk: photo.polishStatus === "ok"
+    }).url;
   }
 
   function parentalSignaturePresent(signature) {
@@ -673,9 +708,19 @@
     };
   }
 
-  function selectPagePictures({ artworks = [], marks = null, showText = false, manuscript = false } = {}) {
+  function selectPagePictures({ artworks = [], marks = null, showText = false, manuscript = false, treatment = "" } = {}) {
     const figures = (Array.isArray(artworks) ? artworks : []).filter(Boolean);
-    if (manuscript || !showText) {
+    const style = treatment === "polished" || treatment === "original" ? treatment : "";
+    if (manuscript || style === "original") {
+      if (marks) return [marks];
+      return figures.slice(0, 1);
+    }
+    if (style === "polished") {
+      if (figures.length) return figures.slice(0, 1);
+      if (marks) return [marks];
+      return [];
+    }
+    if (!showText) {
       if (marks) return [marks];
       return figures.slice(0, 1);
     }
@@ -758,14 +803,16 @@
     manuscript = false,
     title = "",
     paper,
-    pageNumber = 1
+    pageNumber = 1,
+    treatment = ""
   } = {}) {
     const shownText = typesetText({ text, status, edited, manuscript });
     const pictures = selectPagePictures({
       artworks,
       marks,
       showText: Boolean(shownText),
-      manuscript
+      manuscript,
+      treatment: manuscript ? "original" : treatment
     });
     const layout = layoutRebuiltPage({
       pageWidth,
@@ -965,7 +1012,7 @@
     if (points.length < 16) return null;
     const pick = (score, low) => {
       const ranked = points.map((point) => ({ point, score: score(point) })).sort((a, b) => a.score - b.score);
-      const index = low ? Math.floor(ranked.length * 0.02) : Math.ceil(ranked.length * 0.98) - 1;
+      const index = low ? 0 : ranked.length - 1;
       return ranked[Math.max(0, Math.min(ranked.length - 1, index))].point;
     };
     return [
@@ -1037,24 +1084,251 @@
     return { rgba: pixels, width: currentWidth, height: currentHeight };
   }
 
+  function componentBounds(labels, keptIds, width, height) {
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (!keptIds.has(labels[y * width + x])) continue;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (maxX < 0) return null;
+    return { minX, minY, maxX, maxY };
+  }
+
+  function cropBounds(rgba, width, height, box, scaleX, scaleY) {
+    const pad = Math.max(scaleX, scaleY) > 1.01 ? Math.ceil(Math.max(scaleX, scaleY)) : 0;
+    const x0 = Math.max(0, Math.min(width - 2, Math.floor(box.minX * scaleX) - pad));
+    const y0 = Math.max(0, Math.min(height - 2, Math.floor(box.minY * scaleY) - pad));
+    const x1 = Math.max(x0 + 2, Math.min(width, Math.ceil((box.maxX + 1) * scaleX) + pad));
+    const y1 = Math.max(y0 + 2, Math.min(height, Math.ceil((box.maxY + 1) * scaleY) + pad));
+    return {
+      rgba: opaqueResult(crop(rgba, width, x0, y0, x1 - x0, y1 - y0)),
+      width: x1 - x0,
+      height: y1 - y0
+    };
+  }
+
+  function isMarkPixel(red, green, blue) {
+    const max = Math.max(red, green, blue);
+    const min = Math.min(red, green, blue);
+    const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    return luma < 165 || (max - min) > 42;
+  }
+
+  function orientationStats(rgba, width, height) {
+    const rows = new Float64Array(height);
+    let count = 0;
+    let top = 0;
+    let bottom = 0;
+    let usedRows = 0;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const index = (y * width + x) * 4;
+        if (!isMarkPixel(rgba[index], rgba[index + 1], rgba[index + 2])) continue;
+        rows[y] += 1;
+        count += 1;
+        if (y < height * 0.34) top += 1;
+        else if (y > height * 0.66) bottom += 1;
+      }
+      if (rows[y] > 0) usedRows += 1;
+    }
+    let sum = 0;
+    let sumSq = 0;
+    for (let y = 0; y < height; y += 1) {
+      sum += rows[y];
+      sumSq += rows[y] * rows[y];
+    }
+    const mean = height ? sum / height : 0;
+    return {
+      energy: height ? sumSq / height - mean * mean : 0,
+      count,
+      polarity: count ? (bottom - top) / count : 0,
+      edgeRatio: count ? (top + bottom) / count : 0,
+      occupancy: height ? usedRows / height : 1
+    };
+  }
+
+  function chooseUprightTurns(rgba, width, height) {
+    const view = downscaleNearest(rgba, width, height, 160);
+    let pixels = view.rgba;
+    let viewWidth = view.width;
+    let viewHeight = view.height;
+    const scores = [];
+    for (let turns = 0; turns < 4; turns += 1) {
+      scores.push({ turns, ...orientationStats(pixels, viewWidth, viewHeight) });
+      if (turns < 3) {
+        const next = rotateQuarter(pixels, viewWidth, viewHeight, 1);
+        pixels = next.rgba;
+        viewWidth = next.width;
+        viewHeight = next.height;
+      }
+    }
+    const base = scores[0];
+    if (base.count < 8) return 0;
+    const side = scores[1].energy >= scores[3].energy ? scores[1] : scores[3];
+    if (side.energy > base.energy * 1.45 + 0.25 && side.energy >= scores[2].energy) return side.turns;
+    const flipped = scores[2];
+    const thin = base.occupancy < 0.22 && flipped.occupancy < 0.22;
+    if (thin && base.edgeRatio > 0.75 && flipped.edgeRatio > 0.75 && flipped.polarity > base.polarity + 0.45) return 2;
+    return 0;
+  }
+
+  function rotateFree(rgba, width, height, degrees) {
+    const radians = degrees * Math.PI / 180;
+    const cosine = Math.cos(radians);
+    const sine = Math.sin(radians);
+    const outWidth = Math.max(2, Math.ceil(Math.abs(width * cosine) + Math.abs(height * sine)));
+    const outHeight = Math.max(2, Math.ceil(Math.abs(width * sine) + Math.abs(height * cosine)));
+    const out = new Uint8ClampedArray(outWidth * outHeight * 4);
+    for (let index = 0; index < out.length; index += 4) {
+      out[index] = PAPER[0];
+      out[index + 1] = PAPER[1];
+      out[index + 2] = PAPER[2];
+      out[index + 3] = 255;
+    }
+    const cx = (width - 1) / 2;
+    const cy = (height - 1) / 2;
+    const ocx = (outWidth - 1) / 2;
+    const ocy = (outHeight - 1) / 2;
+    for (let y = 0; y < outHeight; y += 1) {
+      for (let x = 0; x < outWidth; x += 1) {
+        const dx = x - ocx;
+        const dy = y - ocy;
+        const color = sampleBilinear(rgba, width, height, cosine * dx + sine * dy + cx, -sine * dx + cosine * dy + cy);
+        const index = (y * outWidth + x) * 4;
+        out[index] = color[0];
+        out[index + 1] = color[1];
+        out[index + 2] = color[2];
+        out[index + 3] = 255;
+      }
+    }
+    return { rgba: out, width: outWidth, height: outHeight };
+  }
+
+  function projectionEnergy(points, degrees) {
+    const radians = degrees * Math.PI / 180;
+    const sine = Math.sin(radians);
+    const cosine = Math.cos(radians);
+    const bins = new Map();
+    points.forEach((point) => {
+      const row = Math.round(sine * point.x + cosine * point.y);
+      bins.set(row, (bins.get(row) || 0) + 1);
+    });
+    let sum = 0;
+    let sumSq = 0;
+    bins.forEach((value) => {
+      sum += value;
+      sumSq += value * value;
+    });
+    const count = bins.size || 1;
+    const mean = sum / count;
+    return sumSq / count - mean * mean;
+  }
+
+  function bestSkewDegrees(rgba, width, height) {
+    const view = downscaleNearest(rgba, width, height, 120);
+    const points = [];
+    for (let y = 0; y < view.height; y += 1) {
+      for (let x = 0; x < view.width; x += 1) {
+        const index = (y * view.width + x) * 4;
+        if (!isMarkPixel(view.rgba[index], view.rgba[index + 1], view.rgba[index + 2])) continue;
+        points.push({ x: x - view.width / 2, y: y - view.height / 2 });
+      }
+    }
+    if (points.length < 12) return 0;
+    let best = 0;
+    const base = projectionEnergy(points, 0);
+    let bestScore = base;
+    for (let degrees = -12; degrees <= 12; degrees += 1) {
+      const score = projectionEnergy(points, degrees);
+      if (score > bestScore) {
+        bestScore = score;
+        best = degrees;
+      }
+    }
+    if (Math.abs(best) < 3 || bestScore < base * 1.2) return 0;
+    return best;
+  }
+
+  function uprightSheet(bitmap) {
+    const turns = chooseUprightTurns(bitmap.rgba, bitmap.width, bitmap.height);
+    const turned = turns ? rotateQuarter(bitmap.rgba, bitmap.width, bitmap.height, turns) : bitmap;
+    const skew = bestSkewDegrees(turned.rgba, turned.width, turned.height);
+    if (!skew) return { rgba: turned.rgba, width: turned.width, height: turned.height, turns, skew: 0 };
+    const skewed = rotateFree(turned.rgba, turned.width, turned.height, skew);
+    return { rgba: skewed.rgba, width: skewed.width, height: skewed.height, turns, skew };
+  }
+
+  function cornersReach(corners, box) {
+    const xs = corners.map((point) => point.x);
+    const ys = corners.map((point) => point.y);
+    return Math.min(...xs) <= box.minX + 1
+      && Math.max(...xs) >= box.maxX - 1
+      && Math.min(...ys) <= box.minY + 1
+      && Math.max(...ys) >= box.maxY - 1;
+  }
+
+  function axisAlignedQuad(corners) {
+    const xs = corners.map((point) => point.x);
+    const ys = corners.map((point) => point.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return corners.every((corner) => (
+      (Math.abs(corner.x - minX) <= 1.5 || Math.abs(corner.x - maxX) <= 1.5)
+      && (Math.abs(corner.y - minY) <= 1.5 || Math.abs(corner.y - maxY) <= 1.5)
+    ));
+  }
+
+  function isolatedResult(bitmap, confidence, extra) {
+    const fitted = bitmap.width > SCAN_MAX_EDGE || bitmap.height > SCAN_MAX_EDGE
+      ? downscaleNearest(bitmap.rgba, bitmap.width, bitmap.height, SCAN_MAX_EDGE)
+      : bitmap;
+    const upright = uprightSheet(fitted);
+    return Object.assign({
+      isolated: true,
+      rgba: upright.rgba,
+      width: upright.width,
+      height: upright.height,
+      confidence,
+      turns: upright.turns,
+      skew: upright.skew
+    }, extra);
+  }
+
   function scanArtwork(rgba, width, height) {
     const source = opaqueResult(toUint8(rgba, width, height));
-    const missed = { isolated: false, rgba: null, width: 0, height: 0, confidence: 0 };
+    const missed = { isolated: false, rgba: null, width: 0, height: 0, confidence: 0, turns: 0, skew: 0 };
     if (!width || !height || width < 8 || height < 8) return missed;
     if (isCleanScan(source, width, height)) {
-      const fitted = downscaleNearest(source, width, height, SCAN_MAX_EDGE);
-      return { isolated: true, rgba: fitted.rgba, width: fitted.width, height: fitted.height, confidence: 1 };
+      return isolatedResult({ rgba: source, width, height }, 1, { loose: false });
     }
     const view = downscaleNearest(source, width, height, 480);
     const analysis = analyzeForeground(view.rgba, view.width, view.height, {});
     if (!analysis || analysis.confidence < 0.45 || !analysis.keptIds || !analysis.keptIds.size) return missed;
+    const smallBox = componentBounds(analysis.labels, analysis.keptIds, view.width, view.height);
+    if (!smallBox) return missed;
+    const loose = () => isolatedResult(
+      cropBounds(source, width, height, smallBox, view.scaleX, view.scaleY),
+      analysis.confidence,
+      { loose: true }
+    );
     const smallCorners = pageCorners(analysis.labels, analysis.keptIds, view.width, view.height);
-    if (!smallCorners) return missed;
+    if (!smallCorners || !cornersReach(smallCorners, smallBox)) return loose();
     const corners = smallCorners.map((point) => ({
       x: (point.x + 0.5) * view.scaleX - 0.5,
       y: (point.y + 0.5) * view.scaleY - 0.5
     }));
     let turn = 0;
+    let convex = true;
     for (let index = 0; index < corners.length; index += 1) {
       const current = corners[index];
       const next = corners[(index + 1) % corners.length];
@@ -1062,19 +1336,31 @@
       const cross = (next.x - current.x) * (after.y - next.y) - (next.y - current.y) * (after.x - next.x);
       if (Math.abs(cross) < 1) continue;
       const sign = Math.sign(cross);
-      if (turn && sign !== turn) return missed;
-      turn = sign;
+      if (turn && sign !== turn) convex = false;
+      turn = sign || turn;
     }
+    if (!convex) return loose();
     const area = quadArea(corners);
     const frame = width * height;
     const minEdge = Math.min(
       Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y),
       Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y)
     );
-    if (area < frame * 0.08 || area > frame * 0.94 || minEdge < Math.min(width, height) * 0.12) return missed;
+    if (area < frame * 0.08 || minEdge < Math.min(width, height) * 0.12) return missed;
+    if (area > frame * 0.94 || axisAlignedQuad(smallCorners)) return loose();
     const warped = warpPage(source, width, height, corners, SCAN_MAX_EDGE);
-    if (!warped) return missed;
-    return { isolated: true, rgba: warped.rgba, width: warped.width, height: warped.height, confidence: analysis.confidence };
+    if (!warped) return loose();
+    const upright = uprightSheet(warped);
+    return {
+      isolated: true,
+      rgba: upright.rgba,
+      width: upright.width,
+      height: upright.height,
+      confidence: analysis.confidence,
+      turns: upright.turns,
+      skew: upright.skew,
+      loose: false
+    };
   }
 
   function creamPlaceholder(toPng) {
@@ -1091,37 +1377,8 @@
   }
 
   function cropSheet(rgba, width, height) {
-    const source = toUint8(rgba, width, height);
-    const analysis = analyzeForeground(source, width, height, {});
-    if (!analysis || analysis.confidence < 0.45 || !analysis.kept || !analysis.kept.length) {
-      return { rgba: opaqueResult(source), width, height, cleaned: false };
-    }
-    let minX = width;
-    let minY = height;
-    let maxX = 0;
-    let maxY = 0;
-    analysis.kept.forEach((item) => {
-      if (item.minX < minX) minX = item.minX;
-      if (item.minY < minY) minY = item.minY;
-      if (item.maxX > maxX) maxX = item.maxX;
-      if (item.maxY > maxY) maxY = item.maxY;
-    });
-    const pad = Math.round(Math.min(width, height) * 0.02);
-    minX = Math.max(0, minX - pad);
-    minY = Math.max(0, minY - pad);
-    maxX = Math.min(width - 1, maxX + pad);
-    maxY = Math.min(height - 1, maxY + pad);
-    const cropWidth = maxX - minX + 1;
-    const cropHeight = maxY - minY + 1;
-    if (cropWidth < 2 || cropHeight < 2 || cropWidth * cropHeight > width * height * 0.98) {
-      return { rgba: opaqueResult(source), width, height, cleaned: false };
-    }
-    return {
-      rgba: opaqueResult(crop(source, width, minX, minY, cropWidth, cropHeight)),
-      width: cropWidth,
-      height: cropHeight,
-      cleaned: true
-    };
+    const source = opaqueResult(toUint8(rgba, width, height));
+    return { rgba: source, width, height, cleaned: false, cropped: false };
   }
 
   function interpretPdfCraftResponse(statusCode, payload) {
@@ -1137,6 +1394,51 @@
       return { engine: "pdf-craft", textStatus: "ok", text: body.text, artworks, reason: body.reason || "extracted", rewritten: false };
     }
     return { engine: "pdf-craft", textStatus: "uncertain", text: "", artworks, reason: body.reason || "ocr_uncertain", rewritten: false };
+  }
+
+  async function requestBookIllustration(dataUrl, text, fetchImpl) {
+    const fetchFn = fetchImpl || globalThis.fetch;
+    if (typeof fetchFn !== "function" || !dataUrl) return { ok: false, reason: "illustration_not_configured" };
+    try {
+      const response = await fetchFn("/api/family-book/illustrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined,
+        body: JSON.stringify({ imageDataUrl: dataUrl, text: String(text || "").slice(0, 280) })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || typeof payload.imageDataUrl !== "string" || !/^data:image\/(?:png|jpeg|jpg);base64,/i.test(payload.imageDataUrl)) {
+        return { ok: false, reason: payload.reason || "illustration_failed" };
+      }
+      return { ok: true, imageDataUrl: payload.imageDataUrl, reason: payload.reason || "illustrated" };
+    } catch (_error) {
+      return { ok: false, reason: "illustration_failed" };
+    }
+  }
+
+  async function illustratePhotos(photos, { style, textFor, fetchImpl, onProgress } = {}) {
+    if (normalizeInteriorStyle(style) !== "polished") return { fallback: false };
+    const targets = (Array.isArray(photos) ? photos : []).filter((photo) => photo && photo.manuscript !== true && photo.scanIsolated !== false && photo.scanDataUrl);
+    let fallback = false;
+    for (let index = 0; index < targets.length; index += 1) {
+      const photo = targets[index];
+      const text = textFor ? textFor(photo) : "";
+      const key = `${String(photo.scanDataUrl).length}:${String(text || "").slice(0, 280)}`;
+      if (onProgress) onProgress(index, targets.length);
+      if (photo.polishStatus === "ok" && photo.polishedDataUrl && photo.polishKey === key) continue;
+      const result = await requestBookIllustration(photo.scanDataUrl, text, fetchImpl);
+      if (result.ok) {
+        photo.polishedDataUrl = result.imageDataUrl;
+        photo.polishStatus = "ok";
+        photo.polishKey = key;
+      } else {
+        photo.polishedDataUrl = "";
+        photo.polishStatus = "fallback";
+        photo.polishKey = key;
+        fallback = true;
+      }
+    }
+    return { fallback };
   }
 
   async function requestPdfCraftExtraction(dataUrl, fetchImpl) {
@@ -1192,7 +1494,7 @@
       const figures = Array.isArray(extraction.artworks) ? extraction.artworks : [];
       const artworks = figures.length ? figures : [{ dataUrl: scanDataUrl }];
       pages.push({
-        dataUrl: (artworks[0] && artworks[0].dataUrl) || scanDataUrl,
+        dataUrl: scanDataUrl,
         scanDataUrl,
         marksDataUrl: scanDataUrl,
         sheetCleaned: true,
@@ -1253,7 +1555,8 @@
       artworks: options.artworks || [],
       marks: options.marks || null,
       showText: Boolean(shownText),
-      manuscript
+      manuscript,
+      treatment: manuscript ? "original" : (options.treatment || "")
     });
     const layout = layoutRebuiltPage({
       pageWidth,
@@ -1412,8 +1715,12 @@
     TRIM_WIDTH_PT,
     captionMetrics,
     containPlacement,
+    coverHeroSource,
     cropSheet,
     drawCoverPage,
+    illustratePhotos,
+    interiorPageArt,
+    normalizeInteriorStyle,
     layoutCoverPage,
     paintCoverPage,
     printSafeFrame,
@@ -1435,7 +1742,9 @@
     planBookPages,
     prepareArtwork,
     renderAuthorPreview,
+    requestBookIllustration,
     requestPdfCraftExtraction,
+    retainBookEdits,
     rgbaToPngDataUrl,
     splitScanPages,
     typesetText
