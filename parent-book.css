@@ -207,28 +207,112 @@ label.field input {
 .choice-row .hint { font-weight: 500; }
 .yu-progress {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  justify-items: center;
   gap: 12px;
-  align-items: center;
   margin-top: 14px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
+  padding: 18px 14px 16px;
+  border: 1px solid rgba(180, 148, 90, 0.28);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(244, 203, 112, 0.2), transparent 16rem),
+    #fffdf8;
+  text-align: center;
+}
+.yu-progress-dial {
+  position: relative;
+  width: min(232px, 74vw);
+  aspect-ratio: 1;
+}
+.yu-progress-dial::before {
+  position: absolute;
+  z-index: 0;
+  inset: 10%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #fffdf8 0%, #f3e6cf 78%);
+  box-shadow: inset 0 0 0 1px rgba(180, 148, 90, 0.2);
+  content: "";
+}
+.yu-progress-glow {
+  position: absolute;
+  z-index: 1;
+  inset: 12%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(244, 203, 112, 0) 0deg, rgba(244, 203, 112, 0.2) 36deg, rgba(255, 248, 220, 0.96) 78deg, rgba(244, 203, 112, 0.28) 118deg, rgba(244, 203, 112, 0) 168deg);
+  animation: yu-progress-glow 4.8s linear infinite;
+  pointer-events: none;
+}
+.yu-progress-svg {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+.yu-progress-track,
+.yu-progress-value,
+.yu-progress-sheen { fill: none; stroke-width: 8; }
+.yu-progress-track { stroke: #e4d2ae; }
+.yu-progress-value { stroke: var(--leaf-deep); }
+.yu-progress-sheen {
+  stroke: #f4cb70;
+  stroke-linecap: round;
+  stroke-dasharray: 22px 304.7256359733385px;
+  filter: drop-shadow(0 0 2px rgba(255, 248, 220, 0.95));
+  animation: yu-progress-sheen 3.6s linear infinite;
 }
 /* --extract-progress on [data-extract-progress] is 0–100 for a circular progress treatment. */
 .yu-progress img {
-  width: 96px;
-  height: 96px;
+  position: absolute;
+  z-index: 3;
+  top: 44%;
+  left: 50%;
+  width: 58%;
+  height: 58%;
   object-fit: contain;
+  transform: translate(-50%, -56%);
+  filter: drop-shadow(0 8px 10px rgba(15, 98, 68, 0.16));
+  pointer-events: none;
 }
 .yu-progress strong {
-  display: block;
+  position: absolute;
+  z-index: 4;
+  bottom: 13%;
+  left: 50%;
+  min-width: 4.6ch;
+  padding: 4px 10px 5px;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 6px 16px rgba(61, 52, 38, 0.1);
   color: var(--leaf-deep);
-  font-size: 28px;
+  font-size: 32px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   line-height: 1;
+  transform: translateX(-50%);
 }
-.yu-progress p { margin: 6px 0 0; font-size: 14px; line-height: 1.45; }
+.yu-progress p {
+  max-width: 28rem;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+@keyframes yu-progress-glow {
+  to { transform: rotate(360deg); }
+}
+@keyframes yu-progress-sheen {
+  to { stroke-dashoffset: -326.7256359733385px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yu-progress-sheen { animation: none; opacity: 0; }
+  .yu-progress-glow {
+    animation: none;
+    transform: none;
+    background: radial-gradient(circle, rgba(244, 203, 112, 0.42), transparent 68%);
+  }
+}
 .status {
   min-height: 22px;
   margin: 12px 0 0;

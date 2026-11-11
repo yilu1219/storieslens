@@ -12,7 +12,7 @@
     <title>家长出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261111-interior1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261111-ring1" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -116,11 +116,17 @@
         <p class="adult-note" data-i18n="adult-note">这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。</p>
         <div class="thumbs" data-thumbs></div>
         <div class="yu-progress" data-yu-progress data-extract-progress hidden role="status" aria-live="polite">
-          <img src="assets/yu-mascot-logo-v2.png" alt="小羽" width="96" height="96" data-yu-mark />
-          <div class="yu-progress-copy">
+          <div class="yu-progress-dial" data-progress-dial role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0%" aria-labelledby="yu-progress-label">
+            <span class="yu-progress-glow" aria-hidden="true"></span>
+            <svg class="yu-progress-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="yu-progress-track" cx="60" cy="60" r="52"></circle>
+              <circle class="yu-progress-value" data-progress-arc cx="60" cy="60" r="52" stroke-dasharray="326.7256359733385" stroke-dashoffset="326.7256359733385"></circle>
+              <circle class="yu-progress-sheen" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <img src="assets/yu-mascot-logo-v2.png" alt="小羽" width="128" height="128" data-yu-mark />
             <strong data-progress-percent>0%</strong>
-            <p data-progress-label></p>
           </div>
+          <p id="yu-progress-label" data-progress-label></p>
         </div>
         <p class="status" data-status role="status" aria-live="polite"></p>
       </section>
@@ -279,10 +285,10 @@
 
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261111-interior1"></script>
+    <script src="artwork-prepare.js?v=20261111-ring1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
-    <script src="parent-book.js?v=20261111-interior1"></script>
+    <script src="parent-book.js?v=20261111-ring1"></script>
   </body>
 </html>

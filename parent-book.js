@@ -5,6 +5,7 @@
   const PAGE_WIDTH = printSpec().PAGE_WIDTH_PX;
   const PAGE_HEIGHT = printSpec().PAGE_HEIGHT_PX;
   const MAX_PHOTOS = 20;
+  const PROGRESS_RING_LENGTH = 2 * Math.PI * 52;
   const META_KEY = "storieslens_parent_book_meta";
   const LOCALE_KEY = "storieslens_locale";
 
@@ -430,6 +431,8 @@
     thumbs: document.querySelector("[data-thumbs]"),
     yuProgress: document.querySelector("[data-yu-progress]"),
     yuMark: document.querySelector("[data-yu-mark]"),
+    progressDial: document.querySelector("[data-progress-dial]"),
+    progressArc: document.querySelector("[data-progress-arc]"),
     progressPercent: document.querySelector("[data-progress-percent]"),
     progressLabel: document.querySelector("[data-progress-label]"),
     followUp: document.querySelector("[data-follow-up]"),
@@ -535,7 +538,10 @@
     els.status.classList.toggle("is-error", Boolean(isError));
   }
 
+  let progressState = null;
+
   function showProgress(done, total, key, vars) {
+    progressState = { done, total, key, vars: vars || {} };
     const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 0;
     if (els.yuProgress) {
       els.yuProgress.hidden = false;
@@ -543,6 +549,15 @@
       els.yuProgress.dataset.extractProgress = String(percent);
     }
     if (els.progressPercent) els.progressPercent.textContent = `${percent}%`;
+    if (els.progressArc) {
+      els.progressArc.style.strokeDasharray = String(PROGRESS_RING_LENGTH);
+      els.progressArc.style.strokeDashoffset = String(PROGRESS_RING_LENGTH * (1 - percent / 100));
+      els.progressArc.style.strokeLinecap = percent > 0 && percent < 100 ? "round" : "butt";
+    }
+    if (els.progressDial) {
+      els.progressDial.setAttribute("aria-valuenow", String(percent));
+      els.progressDial.setAttribute("aria-valuetext", `${percent}%`);
+    }
     if (els.progressLabel) els.progressLabel.textContent = t(key, vars || {});
     if (els.status) {
       els.status.textContent = "";
@@ -551,6 +566,7 @@
   }
 
   function hideProgress() {
+    progressState = null;
     if (els.yuProgress) els.yuProgress.hidden = true;
   }
 
@@ -639,6 +655,10 @@
     renderThumbs();
     syncCoverPrice();
     syncDeliveryUi();
+    if (progressState && els.yuProgress && !els.yuProgress.hidden) {
+      const current = progressState;
+      showProgress(current.done, current.total, current.key, current.vars);
+    }
     if (state.photos.length) void rebuildBook();
   }
 
