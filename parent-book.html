@@ -36,7 +36,7 @@
     <main id="main" class="wrap">
       <p class="kicker" data-i18n="kicker">FOR PARENTS · 家长出书</p>
       <h1 data-i18n="title">用手机照片，几分钟做成一本 A5 书</h1>
-      <p class="lede" data-i18n="lede">上传孩子的画或作文照片，马上预览成书，并可一键生成短片。预览和短片免费。正式电子版 ¥19.9（约 $2.99），确认付款并核对邮箱后发送 PDF。印刷请先选软壳 ¥129（约 $17.99）或精美硬壳 ¥199（约 $27.99），确认付款后由我们人工安排首批寄送。</p>
+      <p class="lede" data-i18n="lede">上传孩子的画、手工或作文照片，几分钟预览成一本 A5 书，也可以生成短片。</p>
 
       <section class="card" aria-labelledby="details-title">
         <h2 id="details-title" class="kicker" data-i18n="details-kicker">BOOK DETAILS</h2>
@@ -62,6 +62,36 @@
             <label class="field">
               <textarea maxlength="800" data-author-intro rows="4"></textarea>
             </label>
+          </div>
+          <fieldset class="cover-choice">
+            <legend data-i18n="cover-style-legend">封面样式</legend>
+            <label class="check"><input type="radio" name="cover-style" value="fullbleed" data-cover-style checked /><span data-i18n="cover-style-full">全幅封面</span></label>
+            <label class="check"><input type="radio" name="cover-style" value="typographic" data-cover-style /><span data-i18n="cover-style-type">文字封面</span></label>
+          </fieldset>
+          <div class="avatar-panel" data-avatar-panel>
+            <span data-i18n="avatar-label">作者头像</span>
+            <p class="hint" data-i18n="avatar-hint">可以选择真实照片，或在本机做成动画头像。未满 18 岁的真人照片需要家长签名后才会用在作者简介页。动画头像不需要签名。</p>
+            <div class="upload-row">
+              <label class="upload-btn">
+                <input type="file" accept="image/*,.heic,.heif,image/heic,image/heif" data-avatar-file />
+                <span data-i18n="avatar-upload">上传头像</span>
+              </label>
+            </div>
+            <div class="avatar-modes" role="radiogroup" data-i18n-aria="avatar-label">
+              <label class="check"><input type="radio" name="avatar-mode" value="photo" data-avatar-mode /><span data-i18n="avatar-photo">真实照片</span></label>
+              <label class="check"><input type="radio" name="avatar-mode" value="illustrated" data-avatar-mode /><span data-i18n="avatar-illustrated">动画头像</span></label>
+            </div>
+            <label class="check" data-under18-row hidden><input type="checkbox" data-avatar-under18 checked /><span data-i18n="avatar-under18">这是未满 18 岁的真人照片</span></label>
+            <div class="consent-box" data-consent-box hidden>
+              <p data-i18n="consent-copy">我是家长或监护人，同意把这张未满 18 岁的真人照片用作本书作者简介页的头像。</p>
+              <label class="field"><span data-i18n="consent-name">家长姓名</span><input data-consent-name maxlength="80" autocomplete="name" /></label>
+              <span data-i18n="consent-sign">请在框里签名</span>
+              <canvas class="signature-pad" data-signature width="640" height="200"></canvas>
+              <div class="actions-row">
+                <button class="secondary" type="button" data-signature-clear data-i18n="consent-clear">清除签名</button>
+                <button class="primary" type="button" data-signature-save data-i18n="consent-save">确认签名</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -101,54 +131,29 @@
           <button class="secondary" type="button" data-suggest-undo hidden data-i18n="suggest-undo">撤销上一步</button>
           <p class="suggest-meta" data-suggest-meta></p>
         </section>
-        <div class="actions">
-          <button class="primary" type="button" data-make-film data-i18n="make-film">一键生成短片（免费）</button>
-        </div>
-        <section class="price-grid" data-price-box hidden>
-          <div class="price-card">
-            <span class="free-tag" data-i18n="price-free-tag">FREE · 免费</span>
-            <b data-i18n="price-free-title">预览成书和短片</b>
-            <p data-i18n="price-free-copy">翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。</p>
+        <section class="suggest-card" data-reading-card hidden>
+          <h3 data-i18n="reading-kicker">认读确认</h3>
+          <p data-i18n="reading-copy">请把这一版读一遍。如果觉得可以，点接受。也可以请语大师点评、改写和检查。接受不会改孩子的画或原文。</p>
+          <p data-reading-text></p>
+          <div class="suggest-actions">
+            <button class="primary" type="button" data-reading-accept data-i18n="reading-accept">接受</button>
+            <button class="secondary" type="button" data-reading-yu data-i18n="reading-yu">请语大师点评改写检查</button>
           </div>
-          <div class="price-card">
-            <b data-i18n="price-digital">电子版 A5 PDF · ¥19.9（约 $2.99）</b>
-            <p data-i18n="price-digital-copy">服务器确认付款后，需要你再确认接收邮箱，正式 A5 PDF 才会发到这个邮箱。成功页或链接参数不会发信，也不会解锁下载。</p>
-            <button class="primary" type="button" data-buy-digital data-i18n="buy-digital" style="margin-top:12px;width:100%">购买电子版</button>
-          </div>
-          <div class="price-card">
-            <b data-i18n="price-print">印刷成书</b>
-            <p data-i18n="price-print-copy">请先选择精美硬壳或软壳。确认付款后，我们按你留下的成人联系方式和地址人工安排首批印刷和寄送。目前没有自动物流跟踪，也不假装已经对接印刷厂。</p>
-            <div class="checkout-form" data-print-form>
-              <fieldset class="cover-choice">
-                <legend data-i18n="cover-legend">先选择封面</legend>
-                <label class="check"><input type="radio" name="parent-print-cover" value="family-print-hardcover" data-cover-option /><span data-i18n="cover-hardcover">精美硬壳 · ¥199（约 $27.99）</span></label>
-                <label class="check"><input type="radio" name="parent-print-cover" value="family-print-softcover" data-cover-option /><span data-i18n="cover-softcover">软壳 · ¥129（约 $17.99）</span></label>
-              </fieldset>
-              <p data-print-price></p>
-              <label class="field"><span data-i18n="contact-name">成人姓名</span><input data-contact-name autocomplete="name" maxlength="80" /></label>
-              <label class="field"><span data-i18n="contact-email">成人邮箱</span><input type="email" data-contact-email autocomplete="email" maxlength="120" /></label>
-              <label class="field"><span data-i18n="contact-phone">成人电话</span><input data-contact-phone autocomplete="tel" maxlength="40" /></label>
-              <label class="field"><span data-i18n="ship-line1">街道地址</span><input data-ship-line1 autocomplete="address-line1" maxlength="160" /></label>
-              <label class="field"><span data-i18n="ship-line2">地址补充（选填）</span><input data-ship-line2 autocomplete="address-line2" maxlength="160" /></label>
-              <label class="field"><span data-i18n="ship-city">城市</span><input data-ship-city autocomplete="address-level2" maxlength="80" /></label>
-              <label class="field"><span data-i18n="ship-region">省/州</span><input data-ship-region autocomplete="address-level1" maxlength="80" /></label>
-              <label class="field"><span data-i18n="ship-postal">邮编</span><input data-ship-postal autocomplete="postal-code" maxlength="20" /></label>
-              <label class="field"><span data-i18n="ship-country">国家/地区</span><input data-ship-country autocomplete="country-name" maxlength="80" /></label>
-              <label class="check"><input type="checkbox" data-adult-confirm /><span data-i18n="adult-confirm">我是家长或成年人，孩子不会在此填写付款信息。</span></label>
+          <p class="suggest-meta" data-reading-status></p>
+          <div data-yu-result hidden>
+            <p data-yu-comment></p>
+            <p data-yu-suggestion></p>
+            <div class="suggest-actions">
+              <button class="primary" type="button" data-yu-apply data-i18n="yu-apply">采用语大师的检查稿</button>
+              <button class="secondary" type="button" data-yu-keep data-i18n="yu-keep">保留原文</button>
             </div>
-            <button class="primary" type="button" data-buy-print data-i18n="buy-print" style="margin-top:12px;width:100%">申请印刷并支付</button>
-          </div>
-          <p class="pay-unavailable" data-pay-note></p>
-          <p class="pay-unlocked" data-pay-unlocked hidden></p>
-          <div class="checkout-form" data-delivery-box hidden>
-            <label class="field"><span data-i18n="delivery-email">接收正式 PDF 的邮箱</span><input type="email" data-delivery-email autocomplete="email" maxlength="120" required /></label>
-            <p data-i18n="delivery-email-copy">请确认这个邮箱。我们只在服务器确认付款之后，把正式 A5 PDF 发到这里。成功页不会自动发信。</p>
-            <button class="primary" type="button" data-send-book-email data-i18n="send-book-email">确认邮箱并发送正式 PDF</button>
-          </div>
-          <div class="actions" data-paid-actions hidden>
-            <button class="primary" type="button" data-download-pdf data-i18n="download-pdf">下载已购买的 A5 PDF</button>
           </div>
         </section>
+        <div class="actions">
+          <button class="secondary" type="button" data-download-preview data-i18n="download-preview">下载预览 PDF</button>
+          <button class="primary" type="button" data-make-film data-i18n="make-film">一键生成短片（免费）</button>
+        </div>
+        <p class="hint" data-i18n="preview-pdf-note">非正式预览 PDF，不需要付款。正式 PDF 仍要等服务器确认付款后才会发送。</p>
         <div class="file-box" data-pdf-box hidden>
           <iframe title="A5 PDF preview" data-pdf-frame></iframe>
           <p class="wechat-help" data-pdf-help></p>
@@ -167,19 +172,67 @@
         </div>
       </section>
 
+      <section class="card price-grid" data-price-box>
+        <div class="price-card">
+          <span class="free-tag" data-i18n="price-free-tag">FREE · 免费</span>
+          <b data-i18n="price-free-title">预览成书和短片</b>
+          <p data-i18n="price-free-copy">翻页预览和短片可以免费使用。画面上的预览不是已付款的正式文件。</p>
+        </div>
+        <div class="price-card">
+          <b data-i18n="price-digital">电子版 A5 PDF · ¥19.9（约 $2.99）</b>
+          <p data-i18n="price-digital-copy">服务器确认付款后，需要你再确认接收邮箱，正式 A5 PDF 才会发到这个邮箱。成功页或链接参数不会发信，也不会解锁下载。</p>
+          <button class="primary" type="button" data-buy-digital data-i18n="buy-digital" style="margin-top:12px;width:100%">购买电子版</button>
+        </div>
+        <div class="price-card">
+          <b data-i18n="price-print">印刷成书</b>
+          <p data-i18n="price-print-copy">请先选择精美硬壳或软壳。确认付款后，我们按你留下的成人联系方式和地址人工安排首批印刷和寄送。目前没有自动物流跟踪，也不假装已经对接印刷厂。</p>
+          <div class="checkout-form" data-print-form>
+            <fieldset class="cover-choice">
+              <legend data-i18n="cover-legend">先选择封面</legend>
+              <label class="check"><input type="radio" name="parent-print-cover" value="family-print-hardcover" data-cover-option /><span data-i18n="cover-hardcover">精美硬壳 · ¥199（约 $27.99）</span></label>
+              <label class="check"><input type="radio" name="parent-print-cover" value="family-print-softcover" data-cover-option /><span data-i18n="cover-softcover">软壳 · ¥129（约 $17.99）</span></label>
+            </fieldset>
+            <p data-print-price></p>
+            <label class="field"><span data-i18n="contact-name">成人姓名</span><input data-contact-name autocomplete="name" maxlength="80" /></label>
+            <label class="field"><span data-i18n="contact-email">成人邮箱</span><input type="email" data-contact-email autocomplete="email" maxlength="120" /></label>
+            <label class="field"><span data-i18n="contact-phone">成人电话</span><input data-contact-phone autocomplete="tel" maxlength="40" /></label>
+            <label class="field"><span data-i18n="ship-line1">街道地址</span><input data-ship-line1 autocomplete="address-line1" maxlength="160" /></label>
+            <label class="field"><span data-i18n="ship-line2">地址补充（选填）</span><input data-ship-line2 autocomplete="address-line2" maxlength="160" /></label>
+            <label class="field"><span data-i18n="ship-city">城市</span><input data-ship-city autocomplete="address-level2" maxlength="80" /></label>
+            <label class="field"><span data-i18n="ship-region">省/州</span><input data-ship-region autocomplete="address-level1" maxlength="80" /></label>
+            <label class="field"><span data-i18n="ship-postal">邮编</span><input data-ship-postal autocomplete="postal-code" maxlength="20" /></label>
+            <label class="field"><span data-i18n="ship-country">国家/地区</span><input data-ship-country autocomplete="country-name" maxlength="80" /></label>
+            <label class="check"><input type="checkbox" data-adult-confirm /><span data-i18n="adult-confirm">我是家长或成年人，孩子不会在此填写付款信息。</span></label>
+          </div>
+          <button class="primary" type="button" data-buy-print data-i18n="buy-print" style="margin-top:12px;width:100%">申请印刷并支付</button>
+        </div>
+        <p class="pay-unavailable" data-pay-note></p>
+        <p class="pay-unlocked" data-pay-unlocked hidden></p>
+        <div class="checkout-form" data-delivery-box hidden>
+          <label class="field"><span data-i18n="delivery-email">接收正式 PDF 的邮箱</span><input type="email" data-delivery-email autocomplete="email" maxlength="120" required /></label>
+          <p data-i18n="delivery-email-copy">请确认这个邮箱。我们只在服务器确认付款之后，把正式 A5 PDF 发到这里。成功页不会自动发信。</p>
+          <button class="primary" type="button" data-send-book-email data-i18n="send-book-email">确认邮箱并发送正式 PDF</button>
+        </div>
+        <div class="actions" data-paid-actions hidden>
+          <button class="primary" type="button" data-download-pdf data-i18n="download-pdf">下载已购买的 A5 PDF</button>
+        </div>
+      </section>
+
       <p class="trust">
         <span data-i18n="trust-meta">本机删除位置和拍摄信息</span>
         <span data-i18n="trust-private">默认保存在这台手机上</span>
-        <span data-i18n="trust-free">预览和短片免费 · 电子版 ¥19.9 · 软壳 ¥129 · 硬壳 ¥199</span>
+        <span data-i18n="trust-free">预览和短片免费</span>
       </p>
     </main>
 
     <div class="print-root" data-print-root aria-hidden="true"></div>
 
+    <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
+    <script src="artwork-prepare.js?v=20261111-1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
-    <script src="parent-book.js?v=20261110-3"></script>
+    <script src="parent-book.js?v=20261111-1"></script>
   </body>
 </html>

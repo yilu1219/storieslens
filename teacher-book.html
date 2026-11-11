@@ -57,6 +57,24 @@
           <span class="page-label" data-page-label></span>
           <button type="button" data-next data-i18n="next">下一页</button>
         </div>
+        <section class="suggest-card" data-reading-card hidden>
+          <h3 data-i18n="reading-kicker">认读确认</h3>
+          <p data-i18n="reading-copy">请学生把这一版读一遍。接受后记下认读，不改作业照片。也可以请语大师点评、改写和检查。</p>
+          <p data-reading-text></p>
+          <div class="suggest-actions">
+            <button class="primary" type="button" data-reading-accept data-i18n="reading-accept">接受</button>
+            <button class="secondary" type="button" data-reading-yu data-i18n="reading-yu">请语大师点评改写检查</button>
+          </div>
+          <p class="suggest-meta" data-reading-status></p>
+          <div data-yu-result hidden>
+            <p data-yu-comment></p>
+            <p data-yu-suggestion></p>
+            <div class="suggest-actions">
+              <button class="primary" type="button" data-yu-apply data-i18n="yu-apply">采用语大师的检查稿</button>
+              <button class="secondary" type="button" data-yu-keep data-i18n="yu-keep">保留原文</button>
+            </div>
+          </div>
+        </section>
         <div class="actions">
           <button class="secondary" type="button" data-download-preview data-i18n="download-preview">下载教师预览 A5 PDF</button>
           <button class="primary" type="button" data-create-share data-i18n="create-share">生成家长私密链接</button>
@@ -79,7 +97,9 @@
     <div class="print-root" data-print-root aria-hidden="true"></div>
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
+    <script src="artwork-prepare.js?v=20261111-1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
+    <script src="family-book-review.js?v=20261111-2"></script>
     <script src="teacher-book.js?v=20261110-3"></script>
   </body>
 </html>
