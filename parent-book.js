@@ -133,6 +133,10 @@
       "cover-style-legend": "封面样式",
       "cover-style-full": "重排封面",
       "cover-style-type": "文字封面",
+      "interior-legend": "内页样式",
+      "interior-original": "原画摆正",
+      "interior-polished": "精修插画",
+      "interior-hint": "默认使用孩子自己的画，只把纸摆正并排上文字。精修插画按同一张原画生成成品，文字仍单独排版。两种都会在最后加上手稿。",
       "set-cover": "设为封面",
       "rotate-photo": "旋转 90°",
       "manuscript-toggle": "手稿",
@@ -143,6 +147,8 @@
       "progress-prepare": "小羽正在这台设备上准备照片（第 {current} 张，共 {count} 张）",
       "progress-extract": "小羽正在提取这张作品的画和文字（第 {current} 张，共 {count} 张）",
       "progress-layout": "小羽正在把作品排到 A5 书页上",
+      "progress-illustrate": "小羽正在按原画准备精修插画（第 {current} 张，共 {count} 张）",
+      "polish-fallback": "精修插画这次没有生成，这一页仍使用摆正后的原画。这句话只出现在屏幕上。",
       "yu-name": "小羽",
       "official-kicker": "正式文件",
       "official-steps": "想下载没有标志的正式 A5 PDF：先付款，再填写接收邮箱，我们在服务器确认付款之后才会发送。成功页或链接不会解锁下载。",
@@ -313,6 +319,10 @@
       "cover-style-legend": "Cover style",
       "cover-style-full": "Rebuilt page",
       "cover-style-type": "Typographic cover",
+      "interior-legend": "Interior style",
+      "interior-original": "Original artwork",
+      "interior-polished": "Polished illustrations",
+      "interior-hint": "Original artwork is the default: the child’s drawing is straightened and the words are typeset. Polished illustrations are made from that same drawing, with the words kept in the caption. Both keep a manuscript section at the end.",
       "set-cover": "Set cover",
       "rotate-photo": "Rotate 90°",
       "manuscript-toggle": "Manuscript",
@@ -323,6 +333,8 @@
       "progress-prepare": "Yu is preparing the photo on this device ({current} of {count})",
       "progress-extract": "Yu is reading the drawing and the words ({current} of {count})",
       "progress-layout": "Yu is placing the work on A5 pages",
+      "progress-illustrate": "Yu is preparing a polished illustration from the original drawing ({current} of {count})",
+      "polish-fallback": "A polished illustration was not created, so this page keeps the straightened original artwork. This note stays on screen.",
       "yu-name": "Yu",
       "official-kicker": "Official file",
       "official-steps": "To download the official A5 PDF without the logo: pay first, then enter the delivery email. We send it only after the server confirms payment. A success page or link does not unlock the download.",
@@ -477,6 +489,8 @@
     pageKinds: [],
     coverId: "",
     coverStyle: "rebuilt",
+    interiorStyle: "original",
+    rebuildStamp: 0,
     noticeKey: "",
     announcePrepare: false,
     avatar: { originalDataUrl: "", illustratedDataUrl: "", mode: "", under18: true, consent: null },
@@ -523,7 +537,11 @@
 
   function showProgress(done, total, key, vars) {
     const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 0;
-    if (els.yuProgress) els.yuProgress.hidden = false;
+    if (els.yuProgress) {
+      els.yuProgress.hidden = false;
+      els.yuProgress.style.setProperty("--extract-progress", String(percent));
+      els.yuProgress.dataset.extractProgress = String(percent);
+    }
     if (els.progressPercent) els.progressPercent.textContent = `${percent}%`;
     if (els.progressLabel) els.progressLabel.textContent = t(key, vars || {});
     if (els.status) {
@@ -570,6 +588,7 @@
         authorName: els.authorName?.value || "",
         authorIntro: els.authorIntro?.value || "",
         coverStyle: state.coverStyle,
+        interiorStyle: state.interiorStyle,
         avatarConsent: state.avatar.consent,
         readingApproval: state.readingApproval
       }));
@@ -592,6 +611,9 @@
         const selected = document.querySelector(`[data-cover-style][value="${state.coverStyle}"]`);
         if (selected) selected.checked = true;
       }
+      state.interiorStyle = meta.interiorStyle === "polished" ? "polished" : "original";
+      const interior = document.querySelector(`[data-interior-style][value="${state.interiorStyle}"]`);
+      if (interior) interior.checked = true;
       if (meta.avatarConsent && typeof meta.avatarConsent === "object") state.avatar.consent = meta.avatarConsent;
       if (meta.readingApproval && meta.readingApproval.approved === true) state.readingApproval = meta.readingApproval;
     } catch (_error) {}
@@ -911,8 +933,7 @@
   }
 
   function coverHeroUrl(photo) {
-    if (!photo || photo.scanIsolated === false) return "";
-    return photo.scanDataUrl || photo.dataUrl || "";
+    return prepareApi().coverHeroSource(photo, state.interiorStyle);
   }
 
   function drawTypographicCover(context, pageNumber) {
@@ -1003,14 +1024,20 @@
 
   async function renderWorkPage(photo, extras = {}) {
     const { canvas, context } = pageCanvas();
+    const manuscript = extras.manuscript === true || photo.manuscript === true;
+    const art = prepareApi().interiorPageArt({
+      treatment: manuscript ? "original" : (extras.treatment || state.interiorStyle),
+      scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
+      polishedUrl: photo.polishedDataUrl || "",
+      polishOk: photo.polishStatus === "ok"
+    });
     const artworks = [];
-    for (const item of photo.artworks || []) {
-      const src = item && (item.dataUrl || item);
-      if (typeof src === "string" && src) artworks.push(await loadHtmlImage(src));
-    }
     let marks = null;
-    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || photo.scanDataUrl || "");
-    if (marksUrl) marks = await loadHtmlImage(marksUrl);
+    if (art.url) {
+      const image = await loadHtmlImage(art.url);
+      if (art.treatment === "polished") artworks.push(image);
+      else marks = image;
+    }
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
       pageHeight: PAGE_HEIGHT,
@@ -1020,7 +1047,8 @@
       text: photo.text || "",
       status: photo.textStatus,
       edited: photo.textEdited === true,
-      manuscript: photo.manuscript === true,
+      manuscript,
+      treatment: art.treatment,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
       paper: "#f6f0e4",
@@ -1045,7 +1073,18 @@
       if (els.bookEditFields) els.bookEditFields.replaceChildren();
       return;
     }
+    const stamp = (state.rebuildStamp += 1);
     ensureCover();
+    if (state.interiorStyle === "polished") {
+      const illustrated = await prepareApi().illustratePhotos(state.photos, {
+        style: "polished",
+        textFor: shownPhotoText,
+        onProgress: (index, total) => showProgress(index, Math.max(total, 1), "progress-illustrate", { current: index + 1, count: total })
+      });
+      if (stamp !== state.rebuildStamp) return;
+      if (illustrated.fallback) state.noticeKey = "polish-fallback";
+      else if (state.noticeKey === "polish-fallback") state.noticeKey = "";
+    }
     const plan = prepareApi().planBookPages({
       photos: state.photos,
       coverId: state.coverId,
@@ -1059,9 +1098,11 @@
       const photo = state.photos.find((entry) => entry.id === item.photoId);
       if (item.kind === "cover") pages.push(await renderCoverPage(photo, pageNumber));
       else if (item.kind === "author") pages.push(await renderAuthorPage(pageNumber));
+      else if (item.kind === "manuscript") pages.push(await renderWorkPage(photo, { pageNumber, manuscript: true, title: t("page-label-manuscript") }));
       else pages.push(await renderPhotoPage(photo, pageNumber));
       kinds.push(item.kind);
     }
+    if (stamp !== state.rebuildStamp) return;
     const previewPages = [];
     for (const page of pages) previewPages.push(await watermarkPage(page));
     state.pages = pages;
@@ -1079,7 +1120,9 @@
     startSuggestions();
     showReadingCheck();
     void refreshPricing();
-    setStatus(state.announcePrepare ? (prepareNotice() || t("ready")) : t("ready"));
+    hideProgress();
+    if (state.noticeKey === "polish-fallback") setStatus(t("polish-fallback"));
+    else setStatus(state.announcePrepare ? (prepareNotice() || t("ready")) : t("ready"));
     state.announcePrepare = false;
   }
 
@@ -2153,6 +2196,23 @@
     input.addEventListener("change", () => {
       if (!input.checked) return;
       state.coverStyle = input.value === "typographic" ? "typographic" : "rebuilt";
+      saveMeta();
+      if (state.photos.length) void rebuildBook();
+    });
+  });
+  document.querySelectorAll("[data-interior-style]").forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      const kept = prepareApi().retainBookEdits({
+        title: els.title.value,
+        author: els.authorName?.value || "",
+        coverId: state.coverId,
+        coverStyle: state.coverStyle,
+        photos: state.photos
+      }, input.value);
+      state.interiorStyle = kept.interiorStyle;
+      state.coverStyle = kept.coverStyle;
+      state.coverId = kept.coverId;
       saveMeta();
       if (state.photos.length) void rebuildBook();
     });

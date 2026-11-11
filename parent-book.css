@@ -183,6 +183,28 @@ label.field input {
   font-size: 13px;
   line-height: 1.5;
 }
+.choice-row {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.choice-row legend { font-weight: 800; padding: 0; }
+.choice-row .check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+.choice-row .check input { width: 22px; height: 22px; margin: 0; flex: none; }
+.choice-row .hint { font-weight: 500; }
 .yu-progress {
   display: grid;
   grid-template-columns: 96px 1fr;
@@ -194,6 +216,7 @@ label.field input {
   border-radius: 18px;
   background: #fff;
 }
+/* --extract-progress on [data-extract-progress] is 0–100 for a circular progress treatment. */
 .yu-progress img {
   width: 96px;
   height: 96px;

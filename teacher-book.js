@@ -17,6 +17,13 @@
       "class-label": "班级名称",
       "teacher-label": "教师姓名（选填）",
       "title-label": "书名",
+      "interior-legend": "内页样式",
+      "interior-original": "原画摆正",
+      "interior-polished": "精修插画",
+      "interior-hint": "默认使用学生自己的画，只把纸摆正并排上文字。精修插画按同一张原画生成成品，文字仍单独排版。两种都会在最后加上手稿。",
+      "page-label-manuscript": "手稿",
+      "progress-illustrate": "正在按原画准备精修插画（第 {current} 张，共 {count} 张）",
+      "polish-fallback": "精修插画这次没有生成，这一页仍使用摆正后的原画。这句话只出现在屏幕上。",
       "class-placeholder": "例如：三年二班",
       "teacher-placeholder": "例如：李老师",
       "title-placeholder": "例如：我们的春天画展",
@@ -90,6 +97,13 @@
       "class-label": "Class name",
       "teacher-label": "Teacher name (optional)",
       "title-label": "Book title",
+      "interior-legend": "Interior style",
+      "interior-original": "Original artwork",
+      "interior-polished": "Polished illustrations",
+      "interior-hint": "Original artwork is the default: the student’s drawing is straightened and the words are typeset. Polished illustrations are made from that same drawing, with the words kept in the caption. Both keep a manuscript section at the end.",
+      "page-label-manuscript": "Manuscript",
+      "progress-illustrate": "Preparing a polished illustration from the original drawing ({current} of {count})",
+      "polish-fallback": "A polished illustration was not created, so this page keeps the straightened original artwork. This note stays on screen.",
       "class-placeholder": "For example: Grade 3, Class 2",
       "teacher-placeholder": "For example: Ms. Li",
       "title-placeholder": "For example: Our Spring Art Show",
@@ -188,7 +202,7 @@
     yuKeep: document.querySelector("[data-yu-keep]")
   };
 
-  const state = { locale: "zh", photos: [], pages: [], previewPages: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false, readingApproval: null, yuOffer: null };
+  const state = { locale: "zh", photos: [], pages: [], previewPages: [], pageKinds: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false, readingApproval: null, yuOffer: null, interiorStyle: "original", rebuildStamp: 0 };
 
   const t = (key, vars) => {
     const table = copy[state.locale] || copy.zh;
@@ -339,9 +353,11 @@
   }
 
   function noteExtract(pages) {
-    const rank = { unavailable: 6, split: 5, uncertain: 4, extracted: 3, restored: 2 };
+    const rank = { unavailable: 6, scan: 5, split: 4, uncertain: 3, extracted: 2, restored: 1 };
     pages.forEach((page) => {
-      const key = page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
+      const key = page.extractReason === "scan_not_isolated" || page.scanIsolated === false
+        ? "scan"
+        : page.textStatus === "unavailable" ? "unavailable" : page.textStatus === "uncertain" ? "uncertain" : page.groupId ? "split" : "extracted";
       if ((rank[key] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = key;
     });
   }
@@ -358,8 +374,9 @@
       toPng: (rgba, width, height) => prepareApi().rgbaToPngDataUrl(rgba, width, height)
     });
     const groupId = built.split ? `split-${Date.now().toString(36)}` : "";
-    const photos = built.pages.map((page) => ({
-      dataUrl: page.dataUrl || (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl || page.scanDataUrl,
+    const photos = built.pages.map((page, index) => ({
+      id: `photo-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+      dataUrl: page.scanDataUrl || page.dataUrl || (page.artworks[0] && page.artworks[0].dataUrl) || page.marksDataUrl,
       scanIsolated: page.scanIsolated !== false,
       originalDataUrl,
       scanDataUrl: page.scanDataUrl,
@@ -413,6 +430,10 @@
     context.restore();
   }
 
+  function shownPhotoText(photo) {
+    return photo.textStatus === "ok" || photo.textStatus === "parent" || photo.textEdited ? (photo.text || "") : "";
+  }
+
   async function renderWorkPage(photo, extras = {}) {
     const canvas = document.createElement("canvas");
     canvas.width = PAGE_WIDTH;
@@ -420,14 +441,20 @@
     const context = canvas.getContext("2d", { alpha: false });
     context.fillStyle = "#f6f0e4";
     context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+    const manuscript = extras.manuscript === true || photo.manuscript === true;
+    const art = prepareApi().interiorPageArt({
+      treatment: manuscript ? "original" : state.interiorStyle,
+      scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
+      polishedUrl: photo.polishedDataUrl || "",
+      polishOk: photo.polishStatus === "ok"
+    });
     const artworks = [];
-    for (const item of photo.artworks || []) {
-      const src = item && (item.dataUrl || item);
-      if (typeof src === "string" && src) artworks.push(await loadHtmlImage(src));
-    }
     let marks = null;
-    const marksUrl = photo.scanIsolated === false ? "" : (photo.marksDataUrl || photo.scanDataUrl || "");
-    if (marksUrl) marks = await loadHtmlImage(marksUrl);
+    if (art.url) {
+      const image = await loadHtmlImage(art.url);
+      if (art.treatment === "polished") artworks.push(image);
+      else marks = image;
+    }
     prepareApi().drawRebuiltPage(context, {
       pageWidth: PAGE_WIDTH,
       pageHeight: PAGE_HEIGHT,
@@ -437,7 +464,8 @@
       text: photo.text || "",
       status: photo.textStatus,
       edited: photo.textEdited === true,
-      manuscript: photo.manuscript === true,
+      manuscript,
+      treatment: art.treatment,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
       paper: "#f6f0e4",
@@ -446,15 +474,15 @@
     return canvasToJpeg(canvas, 0.92);
   }
 
-  async function renderCoverPage(pageNumber = 1) {
-    const cover = state.photos[0];
+  async function renderCoverPage(photo, pageNumber = 1) {
+    const cover = photo || state.photos[0];
     const canvas = document.createElement("canvas");
     canvas.width = PAGE_WIDTH;
     canvas.height = PAGE_HEIGHT;
     const context = canvas.getContext("2d", { alpha: false });
     context.fillStyle = "#f6f0e4";
     context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
-    const heroUrl = cover && cover.scanIsolated !== false ? (cover.scanDataUrl || cover.dataUrl || "") : "";
+    const heroUrl = prepareApi().coverHeroSource(cover, state.interiorStyle);
     if (!heroUrl) {
       const frame = prepareApi().printSafeFrame(PAGE_WIDTH, PAGE_HEIGHT, pageNumber);
       const center = frame.x + frame.w / 2;
@@ -495,24 +523,57 @@
     if (!state.photos.length) {
       state.pages = [];
       state.previewPages = [];
+      state.pageKinds = [];
       els.previewCard.hidden = true;
       return;
     }
-    const pages = [await renderCoverPage(1)];
-    for (let index = 0; index < state.photos.length; index += 1) {
-      pages.push(await renderPhotoPage(state.photos[index], index, index + 2));
+    const stamp = (state.rebuildStamp += 1);
+    if (state.interiorStyle === "polished") {
+      const illustrated = await prepareApi().illustratePhotos(state.photos, {
+        style: "polished",
+        textFor: shownPhotoText,
+        onProgress: (index, total) => setStatus(t("progress-illustrate", { current: index + 1, count: total }))
+      });
+      if (stamp !== state.rebuildStamp) return;
+      if (illustrated.fallback) state.noticeKey = "polish-fallback";
+      else if (state.noticeKey === "polish-fallback") state.noticeKey = "";
     }
+    const plan = prepareApi().planBookPages({
+      photos: state.photos,
+      coverId: state.photos[0]?.id || "",
+      includeAuthor: false
+    });
+    const pages = [];
+    const kinds = [];
+    let storyIndex = 0;
+    for (let index = 0; index < plan.length; index += 1) {
+      const item = plan[index];
+      const photo = state.photos.find((entry) => entry.id === item.photoId);
+      if (item.kind === "cover") pages.push(await renderCoverPage(photo, index + 1));
+      else if (item.kind === "manuscript") pages.push(await renderWorkPage(photo, { pageNumber: index + 1, manuscript: true, title: t("page-label-manuscript") }));
+      else {
+        pages.push(await renderPhotoPage(photo, storyIndex, index + 1));
+        storyIndex += 1;
+      }
+      kinds.push(item.kind);
+    }
+    if (stamp !== state.rebuildStamp) return;
     const previewPages = [];
     for (const page of pages) previewPages.push(await watermarkPage(page));
     state.pages = pages;
     state.previewPages = previewPages;
+    state.pageKinds = kinds;
+    state.pagePhotoIds = plan.map((item) => item.photoId || "");
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
     renderPreview();
     els.previewCard.hidden = false;
     showReadingCheck();
-    const noticeKeys = { split: "split-done", uncertain: "extract-uncertain", unavailable: "extract-unavailable", extracted: "extract-done", restored: "restored" };
-    const notice = noticeKeys[state.noticeKey] ? t(noticeKeys[state.noticeKey]) : "";
-    setStatus(state.announcePrepare && notice ? notice : t("ready"));
+    if (state.noticeKey === "polish-fallback") setStatus(t("polish-fallback"));
+    else {
+      const noticeKeys = { split: "split-done", uncertain: "extract-uncertain", scan: "scan-not-isolated", unavailable: "extract-unavailable", extracted: "extract-done", restored: "restored" };
+      const notice = noticeKeys[state.noticeKey] ? t(noticeKeys[state.noticeKey]) : "";
+      setStatus(state.announcePrepare && notice ? notice : t("ready"));
+    }
     state.announcePrepare = false;
   }
 
@@ -520,7 +581,8 @@
     const shown = state.previewPages[state.pageIndex];
     if (!shown) return;
     els.pageImage.src = shown;
-    els.pageLabel.textContent = state.pageIndex === 0 ? t("page-label-cover") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
+    const kind = state.pageKinds[state.pageIndex];
+    els.pageLabel.textContent = kind === "cover" ? t("page-label-cover") : kind === "manuscript" ? t("page-label-manuscript") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
     els.prev.disabled = state.pageIndex === 0;
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
   }
@@ -806,10 +868,10 @@
           className: className(),
           teacherName: teacherName(),
           language: state.locale,
-          pages: state.pages.map((imageDataUrl, index) => ({
-            imageDataUrl,
-            studentName: index === 0 ? "" : (state.photos[index - 1]?.studentName || "")
-          }))
+          pages: state.pages.map((imageDataUrl, index) => {
+            const photo = state.photos.find((item) => item.id && item.id === state.pagePhotoIds?.[index]);
+            return { imageDataUrl, studentName: state.pageKinds[index] === "cover" ? "" : (photo?.studentName || "") };
+          })
         })
       });
       const result = await response.json();
@@ -829,6 +891,19 @@
   els.camera.addEventListener("change", (event) => { void addFiles(event.target.files); event.target.value = ""; });
   ["className", "teacherName", "title"].forEach((key) => {
     els[key].addEventListener("change", () => { if (state.photos.length) void rebuildBook(); });
+  });
+  document.querySelectorAll("[data-interior-style]").forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      const kept = prepareApi().retainBookEdits({
+        title: els.title.value,
+        author: teacherName(),
+        coverId: state.photos[0]?.id || "",
+        photos: state.photos
+      }, input.value);
+      state.interiorStyle = kept.interiorStyle;
+      if (state.photos.length) void rebuildBook();
+    });
   });
   els.prev.addEventListener("click", () => { if (state.pageIndex > 0) { state.pageIndex -= 1; renderPreview(); } });
   els.next.addEventListener("click", () => { if (state.pageIndex < state.pages.length - 1) { state.pageIndex += 1; renderPreview(); } });

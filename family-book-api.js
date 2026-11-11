@@ -5,10 +5,18 @@ const { getFamilyBookOffer } = require("./family-book-catalog");
 const { inspectParentBookRequest } = require("./parent-book-safety");
 const { mailConfigured, sendPaidBookPdf } = require("./family-book-mail");
 const { extractScanFromImage, logExtractFailure, parseImageDataUrl, unavailableMessage } = require("./pdf-craft-extract");
+const { illustrateFromReference } = require("./book-illustration");
 
-function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch, extractScan } = {}) {
+function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch, extractScan, illustrate } = {}) {
   const books = store || createFamilyBookStore();
   const scan = extractScan || ((image) => extractScanFromImage({ buffer: image.buffer, mimeType: image.mimeType, env }));
+  const paint = illustrate || ((image, text) => illustrateFromReference({
+    buffer: image.buffer,
+    mimeType: image.mimeType,
+    text,
+    env,
+    fetchImpl
+  }));
 
   async function officialPdfForOrder(order, body) {
     let pages = [];
@@ -91,6 +99,46 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
           rewritten: false,
           reason: "pdf_craft_failed",
           error: "pdf-craft could not read this photo. The original is still available."
+        });
+      }
+      return true;
+    }
+
+    if (pathName === "/api/family-book/illustrate" && request.method === "POST") {
+      if (consumeRateLimit && !consumeRateLimit(request, response, { bucket: "family-book-illustrate", limit: 20, windowMs: 60 * 60 * 1000 })) return true;
+      try {
+        const body = await readJsonBody(request, 8_000_000);
+        const image = parseImageDataUrl(body.imageDataUrl);
+        if (!image) {
+          sendJson(response, 400, {
+            status: "failed",
+            reason: "invalid_image",
+            imageDataUrl: "",
+            error: "A PNG or JPEG drawing is required."
+          });
+          return true;
+        }
+        const result = await paint(image, String(body.text || "").slice(0, 280));
+        const statusCode = result.status === "unavailable" ? 501 : result.status === "ok" ? 200 : 422;
+        sendJson(response, statusCode, {
+          status: result.status,
+          reason: result.reason,
+          imageDataUrl: result.status === "ok" ? result.imageDataUrl : "",
+          error: result.status === "unavailable"
+            ? "Polished illustrations are not configured. Set BOOK_ILLUSTRATION_API_KEY, or point PDF_CRAFT_OCR_BASE_URL at Novita so PDF_CRAFT_OCR_API_KEY can be reused. The straightened original artwork is still used."
+            : undefined
+        });
+      } catch (error) {
+        logExtractFailure({
+          reason: "illustration_failed",
+          errorType: error?.name || "Error",
+          message: error?.message || ""
+        });
+        sendJson(response, 422, {
+          status: "failed",
+          reason: "illustration_failed",
+          imageDataUrl: "",
+          error: "A polished illustration was not created. The straightened original artwork is still used."
         });
       }
       return true;

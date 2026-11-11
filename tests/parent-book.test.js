@@ -262,8 +262,16 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   const suggestAt = html.indexOf("data-suggest-card");
   assert.ok(previewAt > 0 && previewAt < editAt && editAt < suggestAt);
   assert.match(html.slice(previewAt, suggestAt), /data-book-edit-fields/);
-  assert.match(html, /parent-book\.js\?v=20261111-print1/);
-  assert.match(html, /parent-book\.css\?v=20261111-print1/);
+  assert.match(html, /parent-book\.js\?v=20261111-interior1/);
+  assert.match(html, /parent-book\.css\?v=20261111-interior1/);
+  assert.match(html, /artwork-prepare\.js\?v=20261111-interior1/);
+  assert.match(html, /data-interior-style checked/);
+  assert.match(html, /原画摆正/);
+  assert.match(html, /精修插画/);
+  assert.match(js, /interiorStyle: "original"/);
+  assert.match(js, /retainBookEdits/);
+  assert.match(read("teacher-book.html"), /data-interior-style checked/);
+  assert.match(read("teacher-book.js"), /planBookPages/);
   assert.match(js, /function commitPhotoText/);
   assert.match(js, /photo\.textEdited = true/);
   assert.match(js, /photo\.textStatus = "parent"/);
