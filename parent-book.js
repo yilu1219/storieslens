@@ -2357,7 +2357,7 @@
       state.interiorStyle = kept.interiorStyle;
       state.coverStyle = kept.coverStyle;
       state.coverId = kept.coverId;
-      state.photos.forEach((photo) => { photo.artSource = "style"; });
+      prepareApi().applyInteriorStyleArt(state.photos);
       saveMeta();
       if (state.photos.length) void rebuildBook();
     });

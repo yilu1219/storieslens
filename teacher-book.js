@@ -1007,7 +1007,7 @@
         photos: state.photos
       }, input.value);
       state.interiorStyle = kept.interiorStyle;
-      state.photos.forEach((photo) => { photo.artSource = "style"; });
+      prepareApi().applyInteriorStyleArt(state.photos);
       if (state.photos.length) void rebuildBook();
     });
   });

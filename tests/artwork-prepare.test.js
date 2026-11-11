@@ -30,6 +30,8 @@ const {
   composeScanLayers,
   proposeProofreading,
   applyAssistantProposal,
+  applyInteriorStyleArt,
+  coverHeroSource,
   dismissAssistantProposal,
   storyArtSources
 } = require("../artwork-prepare");
@@ -869,4 +871,53 @@ test("proofreading stays out of the book until Accept, and does not rewrite the 
   });
   assert.deepEqual(spread.urls, ["figure"]);
   assert.equal(spread.separated, true);
+});
+
+test("an accepted art cleanup stays after a style switch and can be the cover", () => {
+  const photo = { id: "a", scanDataUrl: "scan", scanIsolated: true, artSource: "", artOverrideUrl: "" };
+  const other = { id: "b", scanDataUrl: "scan", scanIsolated: true, polishedDataUrl: "data:image/png;base64,cccc", polishStatus: "ok", artSource: "" };
+  const accepted = applyAssistantProposal(photo, {
+    id: "art-1",
+    kind: "art",
+    changed: true,
+    accepted: true,
+    imageDataUrl: "data:image/png;base64,aaaa"
+  });
+  assert.equal(accepted.applied, true);
+  assert.equal(photo.artSource, "");
+  assert.equal(photo.artOverrideUrl, "");
+  const kept = retainBookEdits({
+    title: "春天",
+    author: "小羽",
+    coverId: "a",
+    photos: [accepted.photo, other]
+  }, "polished");
+  applyInteriorStyleArt(kept.photos);
+  assert.equal(kept.interiorStyle, "polished");
+  assert.equal(kept.photos[0].artSource, "accepted");
+  assert.equal(kept.photos[0].artOverrideUrl, "data:image/png;base64,aaaa");
+  assert.equal(kept.photos[1].artSource, "style");
+  assert.equal(kept.photos[1].artOverrideUrl || "", "");
+  const art = interiorPageArt({
+    treatment: "polished",
+    scanUrl: kept.photos[0].scanDataUrl,
+    polishedUrl: "data:image/png;base64,bbbb",
+    polishOk: true,
+    artOverrideUrl: kept.photos[0].artOverrideUrl,
+    artSource: kept.photos[0].artSource
+  });
+  assert.equal(art.treatment, "accepted");
+  assert.equal(art.url, "data:image/png;base64,aaaa");
+  const plain = interiorPageArt({
+    treatment: "polished",
+    scanUrl: kept.photos[1].scanDataUrl,
+    polishedUrl: kept.photos[1].polishedDataUrl,
+    polishOk: kept.photos[1].polishStatus === "ok",
+    artOverrideUrl: kept.photos[1].artOverrideUrl,
+    artSource: kept.photos[1].artSource
+  });
+  assert.equal(plain.treatment, "polished");
+  assert.equal(plain.url, "data:image/png;base64,cccc");
+  assert.equal(coverHeroSource(kept.photos[0], "original"), "data:image/png;base64,aaaa");
+  assert.equal(coverHeroSource(kept.photos[1], "polished"), "data:image/png;base64,cccc");
 });

@@ -292,6 +292,10 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   assert.match(js, /state\.coverId = state\.photos\[0\] \? state\.photos\[0\]\.id : ""/);
   assert.match(read("parent-book.html"), /data-cover-style checked/);
   assert.match(js, /bindBookAssistant/);
+  assert.match(js, /applyInteriorStyleArt\(state\.photos\)/);
+  assert.doesNotMatch(js, /photo\.artSource = "style"/);
+  assert.match(read("teacher-book.js"), /applyInteriorStyleArt\(state\.photos\)/);
+  assert.doesNotMatch(read("teacher-book.js"), /photo\.artSource = "style"/);
   assert.match(read("artwork-prepare.js"), /accepted: true/);
   assert.match(read("artwork-prepare.js"), /proposal\.accepted !== true/);
   assert.match(read("artwork-prepare.js"), /function proposeProofreading/);

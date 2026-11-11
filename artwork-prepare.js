@@ -488,6 +488,14 @@
     };
   }
 
+  function applyInteriorStyleArt(photos) {
+    (Array.isArray(photos) ? photos : []).forEach((photo) => {
+      if (!photo || photo.artSource === "accepted") return;
+      photo.artSource = "style";
+    });
+    return photos;
+  }
+
   function interiorPageArt({ treatment = "original", scanUrl = "", polishedUrl = "", polishOk = false, artOverrideUrl = "", artSource = "" } = {}) {
     if (artSource === "accepted" && artOverrideUrl) {
       return { url: artOverrideUrl, fallback: false, treatment: "accepted" };
@@ -525,12 +533,15 @@
   }
 
   function coverHeroSource(photo, style) {
-    if (!photo || photo.scanIsolated === false) return "";
+    if (!photo) return "";
+    if (photo.scanIsolated === false && photo.artSource !== "accepted") return "";
     return interiorPageArt({
       treatment: style,
-      scanUrl: photo.scanDataUrl || photo.marksDataUrl || "",
+      scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
       polishedUrl: photo.polishedDataUrl || "",
-      polishOk: photo.polishStatus === "ok"
+      polishOk: photo.polishStatus === "ok",
+      artOverrideUrl: photo.artOverrideUrl || "",
+      artSource: photo.artSource || ""
     }).url;
   }
 
@@ -2412,6 +2423,7 @@
     prepareArtwork,
     renderAuthorPreview,
     applyAssistantProposal,
+    applyInteriorStyleArt,
     bindBookAssistant,
     composeScanLayers,
     dismissAssistantProposal,
