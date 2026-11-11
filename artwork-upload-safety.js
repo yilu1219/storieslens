@@ -104,23 +104,27 @@
       const scale = Math.min(1, MAX_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight));
       const width = Math.max(1, Math.round(image.naturalWidth * scale));
       const height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const preserveAlpha = options.preserveAlpha === true;
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const context = canvas.getContext("2d", { alpha: false });
+      const context = canvas.getContext("2d", { alpha: preserveAlpha });
       if (!context) throw new Error("processing_unavailable");
-      context.fillStyle = "#ffffff";
-      context.fillRect(0, 0, width, height);
+      if (!preserveAlpha) {
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, width, height);
+      }
       context.drawImage(image, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/webp", 0.86);
+      const dataUrl = preserveAlpha ? canvas.toDataURL("image/png") : canvas.toDataURL("image/webp", 0.86);
       return {
         dataUrl,
-        type: dataUrl.startsWith("data:image/webp") ? "image/webp" : "image/png",
+        type: preserveAlpha ? "image/png" : (dataUrl.startsWith("data:image/webp") ? "image/webp" : "image/png"),
         width,
         height,
         metadataRemoved: true,
         convertedFromHeic,
-        originalNotUploaded: true
+        originalNotUploaded: true,
+        preserveAlpha
       };
     } finally {
       URL.revokeObjectURL(url);

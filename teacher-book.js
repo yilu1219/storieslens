@@ -45,6 +45,14 @@
       added: "已加入 {count} 张作业照片，正在生成预览…",
       ready: "班级书已准备好。请先预览，再生成发给家长的私密链接。",
       processing: "正在本机处理照片并删除拍摄信息…",
+      cutting: "正在去掉桌子和背景…",
+      "cutout-done": "已去掉周围的桌子和背景。",
+      "cutout-kept": "背景不好分开，已保留原图。可以重试或恢复原图。",
+      "split-done": "这张照片左右各有一幅作品，已分成两页。可以撤销拆分。",
+      restored: "已恢复原图。",
+      "restore-original": "原图",
+      "retry-cutout": "重试",
+      "undo-split": "撤销拆分",
       blocked: "这张照片不能使用。请不要上传证件、学生证，或带有电话、地址、邮箱、二维码的画面。",
       unsupported: "请选择 JPG、PNG、WEBP、HEIC 或 HEIF 图片。",
       "too-many": "一次最多 20 张照片。",
@@ -94,6 +102,14 @@
       added: "{count} photos added. Building the preview…",
       ready: "The class book is ready. Please review it, then create a private link for parents.",
       processing: "Preparing photos on this device and removing camera details…",
+      cutting: "Removing the table and background…",
+      "cutout-done": "The surrounding table and background were removed.",
+      "cutout-kept": "The background was not clear enough, so the original photo was kept. You can retry or restore it.",
+      "split-done": "This photo has a piece on the left and a piece on the right, so it became two pages. You can undo the split.",
+      restored: "The original photo is restored.",
+      "restore-original": "Original",
+      "retry-cutout": "Retry",
+      "undo-split": "Undo split",
       blocked: "That photo cannot be used. Please do not upload identity documents, school IDs, or images with a phone number, address, email, or QR code.",
       unsupported: "Please choose a JPG, PNG, WEBP, HEIC, or HEIF image.",
       "too-many": "You can add up to 20 photos at a time.",
@@ -131,7 +147,7 @@
     openShare: document.querySelector("[data-open-share]")
   };
 
-  const state = { locale: "zh", photos: [], pages: [], pageIndex: 0, share: null, busy: false };
+  const state = { locale: "zh", photos: [], pages: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false };
 
   const t = (key, vars) => {
     const table = copy[state.locale] || copy.zh;
@@ -201,26 +217,53 @@
     return canvas.toDataURL("image/jpeg", quality);
   }
 
-  async function toJpegDataUrl(source) {
-    const image = await loadHtmlImage(source);
+  function prepareApi() {
+    return window.StoriesLensArtworkPrepare;
+  }
+
+  async function pixelsFromDataUrl(dataUrl) {
+    const image = await loadHtmlImage(dataUrl);
     const canvas = document.createElement("canvas");
     canvas.width = image.naturalWidth || image.width;
     canvas.height = image.naturalHeight || image.height;
-    const context = canvas.getContext("2d", { alpha: false });
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvasToJpeg(canvas);
+    const context = canvas.getContext("2d", { alpha: true });
+    context.drawImage(image, 0, 0);
+    return context.getImageData(0, 0, canvas.width, canvas.height);
   }
 
-  async function sanitizeFile(file) {
+  async function sanitizeToPng(file) {
     const artwork = window.StoriesLensArtworkSafety;
     if (artwork?.removeMetadata) {
-      const sanitized = await artwork.removeMetadata(file);
-      return toJpegDataUrl(sanitized.dataUrl);
+      const sanitized = await artwork.removeMetadata(file, { preserveAlpha: true });
+      return sanitized.dataUrl;
     }
     const url = URL.createObjectURL(file);
-    try { return await toJpegDataUrl(url); } finally { URL.revokeObjectURL(url); }
+    try {
+      const image = await loadHtmlImage(url);
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth || image.width;
+      canvas.height = image.naturalHeight || image.height;
+      const context = canvas.getContext("2d", { alpha: true });
+      context.drawImage(image, 0, 0);
+      return canvas.toDataURL("image/png");
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  function notePrepare(prepared) {
+    const rank = { split: 5, low_confidence: 4, cutout: 3 };
+    if ((rank[prepared.reason] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = prepared.reason;
+  }
+
+  function photosFromPrepared(prepared, originalDataUrl, fileName) {
+    const groupId = prepared.split ? `split-${Date.now().toString(36)}` : "";
+    return prepared.pages.map((page, index) => ({
+      dataUrl: prepareApi().rgbaToPngDataUrl(page.rgba, page.width, page.height),
+      originalDataUrl,
+      name: fileName || "",
+      studentName: "",
+      groupId,
+      keptOriginal: prepared.keptOriginal === true
+    }));
   }
 
   function wrapText(context, text, maxWidth) {
@@ -245,39 +288,27 @@
     context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
   }
 
+  function overlayCaption(context, text, y, size) {
+    context.save();
+    context.textAlign = "center";
+    context.font = `700 ${size}px ${getComputedStyle(document.body).fontFamily}`;
+    context.lineWidth = 10;
+    context.strokeStyle = "rgba(246,240,228,0.88)";
+    context.strokeText(text, PAGE_WIDTH / 2, y);
+    context.fillStyle = "#1c2420";
+    context.fillText(text, PAGE_WIDTH / 2, y);
+    context.restore();
+  }
+
   async function renderCoverPage() {
     const canvas = document.createElement("canvas");
     canvas.width = PAGE_WIDTH;
     canvas.height = PAGE_HEIGHT;
     const context = canvas.getContext("2d", { alpha: false });
-    context.fillStyle = "#f6f0e4";
-    context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
-    context.strokeStyle = "#0f6244";
-    context.lineWidth = 6;
-    context.strokeRect(64, 64, PAGE_WIDTH - 128, PAGE_HEIGHT - 128);
     const image = await loadHtmlImage(state.photos[0].dataUrl);
-    context.save();
-    context.beginPath();
-    context.rect(200, 220, PAGE_WIDTH - 400, 900);
-    context.clip();
-    context.fillStyle = "#fff";
-    context.fillRect(200, 220, PAGE_WIDTH - 400, 900);
-    drawImageContained(context, image, 220, 240, PAGE_WIDTH - 440, 860);
-    context.restore();
-    context.fillStyle = "#0f6244";
-    context.textAlign = "center";
-    context.font = "700 32px " + getComputedStyle(document.body).fontFamily;
-    context.fillText((className() || t("default-class")).toUpperCase(), PAGE_WIDTH / 2, 180);
-    context.fillStyle = "#101817";
-    context.font = "700 84px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
-    wrapText(context, bookTitle(), PAGE_WIDTH - 280).forEach((line, index) => {
-      context.fillText(line, PAGE_WIDTH / 2, 1260 + index * 96);
-    });
-    if (teacherName()) {
-      context.fillStyle = "#3d4a44";
-      context.font = "600 36px " + getComputedStyle(document.body).fontFamily;
-      context.fillText(t("byline", { name: teacherName() }), PAGE_WIDTH / 2, PAGE_HEIGHT - 180);
-    }
+    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
+    overlayCaption(context, bookTitle(), PAGE_HEIGHT - 140, 64);
+    if (className() || teacherName()) overlayCaption(context, className() || teacherName(), PAGE_HEIGHT - 70, 32);
     return canvasToJpeg(canvas, 0.9);
   }
 
@@ -286,17 +317,10 @@
     canvas.width = PAGE_WIDTH;
     canvas.height = PAGE_HEIGHT;
     const context = canvas.getContext("2d", { alpha: false });
-    context.fillStyle = "#f6f0e4";
-    context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
     const image = await loadHtmlImage(photo.dataUrl);
-    drawImageContained(context, image, 120, 120, PAGE_WIDTH - 240, PAGE_HEIGHT - 320);
-    context.fillStyle = "#3d4a44";
-    context.textAlign = "center";
-    context.font = "600 36px " + getComputedStyle(document.body).fontFamily;
-    if (photo.studentName) context.fillText(photo.studentName, PAGE_WIDTH / 2, PAGE_HEIGHT - 140);
-    context.fillStyle = "#7a756b";
-    context.font = "600 28px " + getComputedStyle(document.body).fontFamily;
-    context.fillText(String(index + 1), PAGE_WIDTH / 2, PAGE_HEIGHT - 80);
+    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
+    if (photo.studentName) overlayCaption(context, photo.studentName, PAGE_HEIGHT - 120, 36);
+    overlayCaption(context, String(index + 1), PAGE_HEIGHT - 70, 28);
     return canvasToJpeg(canvas, 0.9);
   }
 
@@ -314,7 +338,9 @@
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
     renderPreview();
     els.previewCard.hidden = false;
-    setStatus(t("ready"));
+    const notice = state.noticeKey === "split" ? t("split-done") : state.noticeKey === "low_confidence" ? t("cutout-kept") : state.noticeKey === "cutout" ? t("cutout-done") : "";
+    setStatus(state.announcePrepare && notice ? notice : t("ready"));
+    state.announcePrepare = false;
   }
 
   function renderPreview() {
@@ -325,18 +351,54 @@
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
   }
 
+  function replacePhotoGroup(photo, replacements) {
+    const index = state.photos.findIndex((item) => (photo.groupId && item.groupId === photo.groupId) || item === photo);
+    state.photos = state.photos.filter((item) => photo.groupId ? item.groupId !== photo.groupId : item !== photo);
+    replacements.forEach((item) => { item.studentName = photo.studentName || ""; });
+    state.photos.splice(Math.max(0, index), 0, ...replacements);
+  }
+
   function renderThumbs() {
     els.thumbs.innerHTML = "";
     state.photos.forEach((photo, index) => {
       const item = document.createElement("div");
       item.className = "thumb";
+      const frame = document.createElement("div");
+      frame.className = "thumb-frame";
       const image = document.createElement("img");
       image.src = photo.dataUrl;
       const remove = document.createElement("button");
       remove.className = "thumb-remove";
       remove.type = "button";
       remove.textContent = "×";
-      remove.addEventListener("click", () => { state.photos.splice(index, 1); renderThumbs(); void rebuildBook(); });
+      remove.addEventListener("click", () => {
+        state.photos = state.photos.filter((item) => photo.groupId ? item.groupId !== photo.groupId : item !== photo);
+        renderThumbs();
+        void rebuildBook();
+      });
+      frame.append(image, remove);
+      const tools = document.createElement("div");
+      tools.className = "thumb-tools";
+      const restore = document.createElement("button");
+      restore.type = "button";
+      restore.textContent = t("restore-original");
+      restore.addEventListener("click", () => {
+        replacePhotoGroup(photo, [{ dataUrl: photo.originalDataUrl, originalDataUrl: photo.originalDataUrl, name: photo.name, studentName: photo.studentName, groupId: "", keptOriginal: true }]);
+        renderThumbs();
+        void rebuildBook().then(() => setStatus(t("restored")));
+      });
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = t("retry-cutout");
+      retry.addEventListener("click", () => { void reprocessPhoto(photo, { retry: true }); });
+      tools.append(restore, retry);
+      if (photo.groupId) {
+        const undo = document.createElement("button");
+        undo.type = "button";
+        undo.textContent = t("undo-split");
+        undo.addEventListener("click", () => { void reprocessPhoto(photo, { allowSplit: false }); });
+        tools.append(undo);
+      }
       const name = document.createElement("input");
       name.className = "thumb-name";
       name.maxLength = 40;
@@ -353,9 +415,20 @@
         photo.studentName = name.value.trim();
         void rebuildBook();
       });
-      item.append(image, remove, name);
+      item.append(frame, tools, name);
       els.thumbs.append(item);
     });
+  }
+
+  async function reprocessPhoto(photo, options) {
+    setStatus(t("cutting"));
+    const pixels = await pixelsFromDataUrl(photo.originalDataUrl);
+    const prepared = prepareApi().prepareArtwork(pixels.data, pixels.width, pixels.height, options);
+    notePrepare(prepared);
+    replacePhotoGroup(photo, photosFromPrepared(prepared, photo.originalDataUrl, photo.name));
+    state.announcePrepare = true;
+    renderThumbs();
+    await rebuildBook();
   }
 
   async function addFiles(fileList) {
@@ -363,7 +436,8 @@
     if (!files.length) return;
     if (state.photos.length + files.length > MAX_PHOTOS) return setStatus(t("too-many"), true);
     state.busy = true;
-    setStatus(t("processing"));
+    state.noticeKey = "";
+    setStatus(t("cutting"));
     try {
       for (const file of files) {
         if (inspectUpload(file).blocked) { setStatus(t("blocked"), true); continue; }
@@ -372,14 +446,20 @@
           : /image\//.test(file.type || "") || /\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(file.name || "");
         if (!supported) { setStatus(t("unsupported"), true); continue; }
         try {
-          state.photos.push({ dataUrl: await sanitizeFile(file), name: file.name || "", studentName: "" });
+          const originalDataUrl = await sanitizeToPng(file);
+          const pixels = await pixelsFromDataUrl(originalDataUrl);
+          const prepared = prepareApi().prepareArtwork(pixels.data, pixels.width, pixels.height);
+          const photos = photosFromPrepared(prepared, originalDataUrl, file.name || "");
+          if (state.photos.length + photos.length > MAX_PHOTOS) { setStatus(t("too-many"), true); break; }
+          notePrepare(prepared);
+          state.photos.push(...photos);
         } catch (_error) {
           setStatus(t("unsupported"), true);
         }
       }
       renderThumbs();
       if (state.photos.length) {
-        setStatus(t("added", { count: state.photos.length }));
+        state.announcePrepare = true;
         await rebuildBook();
       }
     } finally {

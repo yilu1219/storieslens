@@ -2,12 +2,14 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const { PDFDocument } = require("pdf-lib");
 const {
   A5_HEIGHT_MM,
   A5_HEIGHT_PT,
   A5_WIDTH_MM,
   A5_WIDTH_PT,
   MAX_PAGES,
+  buildInformalPreviewPdf,
   buildParentBookPdf,
   isA5PageSize,
   readPdfPageSize
@@ -125,11 +127,89 @@ test("parent book page, routes, and homepage entry are wired for China and inter
   assert.match(js, /StoriesLensArtworkSafety/);
   assert.doesNotMatch(js, /reviewSanitizedArtwork|processArtwork\(/);
   assert.match(js, /\/api\/family-book\/download/);
-  assert.doesNotMatch(js, /PDFDocument/);
+  assert.match(js, /downloadPreviewPdf/);
+  assert.match(js, /preserveAlpha: true/);
+  assert.match(js, /drawImageFullBleed/);
+  assert.match(js, /avatarUseDecision/);
+  assert.match(js, /planBookPages/);
+  assert.doesNotMatch(js, /toJpegDataUrl/);
+  assert.doesNotMatch(js, /height: 980/);
+  assert.match(html, /data-download-preview/);
+  assert.match(html, /预览 PDF/);
+  assert.match(html, /data-signature/);
+  assert.match(html, /data-avatar-illustrated|avatar-illustrated/);
+  assert.match(html, /artwork-prepare\.js/);
+  assert.doesNotMatch(html.split("price-grid")[0], /¥19\.9|¥129|¥199/);
+  assert.match(html, /¥19\.9/);
   assert.match(index, /href="parent-book"/);
   assert.match(index, /data-audience="parent-book"/);
   assert.match(homeJs, /parent-book-cta/);
   assert.match(read("chinese-studio.html"), /parent-book\.html/);
   assert(fs.existsSync(path.join(root, "vendor/pdf-lib.min.js")));
   assert.equal(MAX_PAGES, 24);
+});
+
+test("informal preview PDF is created without payment and still fills A5", async () => {
+  const result = await buildInformalPreviewPdf({
+    title: "预览",
+    pages: [{ buffer: png, mimeType: "image/png" }]
+  });
+  assert.equal(result.preview, true);
+  assert.equal(result.official, false);
+  assert.equal(result.paid, false);
+  assert.match(result.filename, /preview/);
+  assert.equal(result.buffer.subarray(0, 5).toString("ascii"), "%PDF-");
+  const doc = await PDFDocument.load(result.buffer);
+  assert.match(String(doc.getSubject() || ""), /preview|预览/);
+  assert.equal(isA5PageSize(await readPdfPageSize(result.buffer)), true);
+});
+
+test("a success query string does not unlock the official download or email", async () => {
+  const os = require("node:os");
+  const { createFamilyBookStore } = require("../family-book-store");
+  const { createFamilyBookApi } = require("../family-book-api");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "parent-book-pay-"));
+  const store = createFamilyBookStore({ root: dir });
+  const unpaid = store.createOrder({
+    offerId: "family-digital",
+    contact: { name: "Parent Yi", email: "parent@example.com" },
+    adultConfirmed: true
+  });
+  let lastBody = null;
+  const api = createFamilyBookApi({
+    store,
+    env: {},
+    sendJson(response, status, body) {
+      response.statusCode = status;
+      response.body = body;
+    },
+    sendBinary() {},
+    async readJsonBody() { return lastBody; },
+    consumeRateLimit() { return true; }
+  });
+  async function call(method, pathName, body) {
+    lastBody = body;
+    const response = { statusCode: 200, headers: {}, body: null, setHeader() {} };
+    await api.handle({ method }, response, new URL(pathName, "http://127.0.0.1"));
+    return response;
+  }
+  const entitlement = await call("GET", `/api/family-book/entitlement?paid=1&success=true&order=${unpaid.id}`);
+  assert.equal(entitlement.body.paid, false);
+  assert.notEqual(entitlement.body.reason, "server_confirmed");
+  const download = await call("POST", "/api/family-book/download?paid=1&success=true", {
+    orderId: unpaid.id,
+    grantToken: "not-a-grant",
+    pages: [{ imageDataUrl: `data:image/png;base64,${png.toString("base64")}` }]
+  });
+  assert.equal(download.statusCode, 402);
+  assert.equal(download.body.paid, false);
+  const email = await call("POST", "/api/family-book/email?paid=1&success=true", {
+    orderId: unpaid.id,
+    grantToken: "not-a-grant",
+    email: "parent@example.com",
+    pages: [{ imageDataUrl: `data:image/png;base64,${png.toString("base64")}` }]
+  });
+  assert.equal(email.statusCode, 402);
+  assert.equal(email.body.paid, false);
+  assert.equal(email.body.sent, false);
 });

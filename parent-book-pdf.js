@@ -61,7 +61,7 @@ function fitRect(imageWidth, imageHeight, boxWidth, boxHeight) {
   };
 }
 
-async function buildParentBookPdf({ pages = [], title = "", childName = "", language = "zh", marginMm = 0, filenameHint = "" } = {}) {
+async function buildParentBookPdf({ pages = [], title = "", childName = "", language = "zh", marginMm = 0, filenameHint = "", preview = false } = {}) {
   if (!Array.isArray(pages) || !pages.length) {
     throw Object.assign(new Error("pages_required"), { statusCode: 400 });
   }
@@ -73,9 +73,13 @@ async function buildParentBookPdf({ pages = [], title = "", childName = "", lang
   const bookTitle = String(title || "").trim() || (language === "en" ? "Our Family Book" : "我们的家庭绘本");
   pdf.setTitle(bookTitle);
   pdf.setAuthor(String(childName || "").trim() || "StoriesLens");
-  pdf.setCreator("StoriesLens Parent Book");
+  pdf.setCreator(preview ? "StoriesLens Informal Preview" : "StoriesLens Parent Book");
   pdf.setProducer("StoriesLens");
   pdf.setLanguage(language === "en" ? "en" : "zh-CN");
+  if (preview) {
+    pdf.setSubject("StoriesLens informal preview. Not an official paid PDF. 非正式预览");
+    pdf.setKeywords(["preview", "informal", "预览"]);
+  }
 
   const margin = Number(marginMm) > 0 ? Number(marginMm) * MM_TO_PT : 0;
 
@@ -107,8 +111,16 @@ async function buildParentBookPdf({ pages = [], title = "", childName = "", lang
       heightPt: A5_HEIGHT_PT,
       widthMm: A5_WIDTH_MM,
       heightMm: A5_HEIGHT_MM
-    }
+    },
+    preview: preview === true,
+    official: preview !== true,
+    paid: false
   };
+}
+
+async function buildInformalPreviewPdf(options = {}) {
+  const filenameHint = options.filenameHint || `${options.title || "storieslens"}-preview`;
+  return buildParentBookPdf({ ...options, filenameHint, preview: true });
 }
 
 async function readPdfPageSize(buffer) {
@@ -139,6 +151,7 @@ module.exports = {
   MAX_IMAGE_BYTES,
   MAX_PAGES,
   MM_TO_PT,
+  buildInformalPreviewPdf,
   buildParentBookPdf,
   cleanFilename,
   isA5PageSize,

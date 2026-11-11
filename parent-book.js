@@ -3,6 +3,8 @@
 
   const PAGE_WIDTH = 1480;
   const PAGE_HEIGHT = 2100;
+  const A5_WIDTH_PT = 148 * 72 / 25.4;
+  const A5_HEIGHT_PT = 210 * 72 / 25.4;
   const MAX_PHOTOS = 20;
   const META_KEY = "storieslens_parent_book_meta";
   const LOCALE_KEY = "storieslens_locale";
@@ -12,7 +14,7 @@
       "brand-sub": "家长出书",
       kicker: "FOR PARENTS · 家长出书",
       title: "用手机照片，几分钟做成一本 A5 书",
-      lede: "上传孩子的画或作文照片，马上预览成书，并可一键生成短片。预览和短片免费。正式电子版 ¥19.9（约 $2.99），确认付款并核对邮箱后发送 PDF。印刷请先选软壳 ¥129（约 $17.99）或精美硬壳 ¥199（约 $27.99），确认付款后由我们人工安排首批寄送。",
+      lede: "上传孩子的画、手工或作文照片，几分钟预览成一本 A5 书，也可以生成短片。",
       "details-kicker": "书籍信息",
       "title-label": "书名",
       "name-label": "孩子的署名（选填）",
@@ -90,7 +92,7 @@
       "share-film": "分享短片",
       "trust-meta": "本机删除位置和拍摄信息",
       "trust-private": "默认保存在这台手机上",
-      "trust-free": "预览和短片免费 · 电子版 ¥19.9 · 软壳 ¥129 · 硬壳 ¥199",
+      "trust-free": "预览和短片免费",
       "default-title": "我们的家庭绘本",
       "byline": "作者 · {name}",
       "page-of": "第 {current} 页，共 {total} 页",
@@ -112,13 +114,49 @@
       "wechat-film": "短片可在本页直接播放。微信 iOS 往往无法直接下载文件：请长按视频尝试保存，或点击右上角 ···，选择“在浏览器中打开”后再保存。",
       "cover-kicker": "STORIESLENS · 家长出书",
       "page-label-cover": "封面",
+      "cover-style-legend": "封面样式",
+      "cover-style-full": "全幅封面",
+      "cover-style-type": "文字封面",
+      "set-cover": "设为封面",
+      "manuscript-toggle": "手稿",
+      "restore-original": "原图",
+      "retry-cutout": "重试",
+      "undo-split": "撤销拆分",
+      cutting: "正在去掉桌子和背景…",
+      "cutout-done": "已去掉周围的桌子和背景。",
+      "cutout-kept": "背景不好分开，已保留原图。可以重试或恢复原图。",
+      "cutout-scan": "这张看起来已经是干净扫描，已保持原样。",
+      "cutout-clear": "这张已经是透明背景，已保持原样。",
+      "split-done": "这张照片左右各有一幅作品，已分成两页。可以撤销拆分。",
+      restored: "已恢复原图。",
+      "download-preview": "下载预览 PDF",
+      "preview-pdf-note": "非正式预览 PDF，不需要付款。正式 PDF 仍要等服务器确认付款后才会发送。",
+      "preview-pdf-working": "正在生成预览 PDF…",
+      "preview-pdf-ready": "预览 PDF 已准备好，可以下载。这不是已付款的正式文件。",
+      "preview-pdf-failed": "预览 PDF 暂时无法生成，请再试一次。",
+      "page-label-manuscript": "手稿",
+      "avatar-label": "作者头像",
+      "avatar-upload": "上传头像",
+      "avatar-photo": "真实照片",
+      "avatar-illustrated": "动画头像",
+      "avatar-under18": "这是未满 18 岁的真人照片",
+      "avatar-hint": "可以选择真实照片，或在本机做成动画头像。未满 18 岁的真人照片需要家长签名后才会用在作者简介页。动画头像不需要签名。",
+      "consent-copy": "我是家长或监护人，同意把这张未满 18 岁的真人照片用作本书作者简介页的头像。",
+      "consent-name": "家长姓名",
+      "consent-sign": "请在框里签名",
+      "consent-clear": "清除签名",
+      "consent-save": "确认签名",
+      "consent-needed": "未满 18 岁的真人照片需要家长签名后才会放上作者简介页。",
+      "consent-saved": "已记下家长签名。这张真人头像可以用在作者简介页。",
+      "consent-missing": "请写上家长姓名，并在框里签名。",
+      "avatar-blocked": "这张头像不能使用。请不要上传证件，或带有电话、地址、邮箱、二维码的画面。",
       docTitle: "家长出书 · StoriesLens"
     },
     en: {
       "brand-sub": "Parent book",
       kicker: "FOR PARENTS",
       title: "Turn phone photos into an A5 book in minutes",
-      lede: "Upload photos of your child’s drawings or writing, preview the book, and make a short film. Preview and the film are free. The official digital PDF is ¥19.9 (about $2.99) and is emailed after you confirm an address. For print, choose softcover ¥129 (about $17.99) or premium hardcover ¥199 (about $27.99). The first batch is arranged by hand after a confirmed payment.",
+      lede: "Upload photos of your child’s drawings, crafts, or writing. Preview an A5 book in minutes and make a short film.",
       "details-kicker": "BOOK DETAILS",
       "title-label": "Book title",
       "name-label": "Child’s display name (optional)",
@@ -196,7 +234,7 @@
       "share-film": "Share film",
       "trust-meta": "Location and camera details removed on this device",
       "trust-private": "Kept on this phone by default",
-      "trust-free": "Preview and film are free · Digital ¥19.9 · Softcover ¥129 · Hardcover ¥199",
+      "trust-free": "Preview and the short film are free",
       "default-title": "Our Family Book",
       "byline": "By {name}",
       "page-of": "Page {current} of {total}",
@@ -218,6 +256,42 @@
       "wechat-film": "You can play the film on this page. WeChat on iOS often blocks file downloads: try a long press on the video, or tap ··· and choose Open in Browser to save it.",
       "cover-kicker": "STORIESLENS · PARENT BOOK",
       "page-label-cover": "Cover",
+      "cover-style-legend": "Cover style",
+      "cover-style-full": "Full-bleed cover",
+      "cover-style-type": "Typographic cover",
+      "set-cover": "Set cover",
+      "manuscript-toggle": "Manuscript",
+      "restore-original": "Original",
+      "retry-cutout": "Retry",
+      "undo-split": "Undo split",
+      cutting: "Removing the table and background…",
+      "cutout-done": "The surrounding table and background were removed.",
+      "cutout-kept": "The background was not clear enough, so the original photo was kept. You can retry or restore it.",
+      "cutout-scan": "This already looks like a clean scan, so it was left as it is.",
+      "cutout-clear": "This already has a transparent background, so it was left as it is.",
+      "split-done": "This photo has a piece on the left and a piece on the right, so it became two pages. You can undo the split.",
+      restored: "The original photo is restored.",
+      "download-preview": "Download preview PDF",
+      "preview-pdf-note": "This informal preview PDF does not require payment. The official PDF is sent only after the server confirms payment.",
+      "preview-pdf-working": "Creating the preview PDF…",
+      "preview-pdf-ready": "The preview PDF is ready. It is not the paid official file.",
+      "preview-pdf-failed": "The preview PDF could not be created. Please try again.",
+      "page-label-manuscript": "Manuscript",
+      "avatar-label": "Author portrait",
+      "avatar-upload": "Upload a portrait",
+      "avatar-photo": "Real photo",
+      "avatar-illustrated": "Illustrated avatar",
+      "avatar-under18": "This is a real photo of someone under 18",
+      "avatar-hint": "Use a real photo, or make an illustrated avatar on this device. A real photo of someone under 18 is used only after a parent signs. An illustrated avatar does not need that signature.",
+      "consent-copy": "I am the parent or guardian and I agree to use this real photo of a person under 18 as the author portrait in this book.",
+      "consent-name": "Parent name",
+      "consent-sign": "Sign in the box",
+      "consent-clear": "Clear signature",
+      "consent-save": "Confirm signature",
+      "consent-needed": "A real photo of someone under 18 stays off the author page until a parent signs.",
+      "consent-saved": "The parent signature is saved. This real portrait can appear on the author page.",
+      "consent-missing": "Enter the parent’s name and sign in the box.",
+      "avatar-blocked": "This portrait cannot be used. Do not upload an identity document or an image with a phone number, address, email, or QR code.",
       docTitle: "Parent book · StoriesLens"
     }
   };
@@ -267,6 +341,15 @@
     print: document.querySelector("[data-print]"),
     printPdf: document.querySelector("[data-print-pdf]"),
     makeFilm: document.querySelector("[data-make-film]"),
+    downloadPreview: document.querySelector("[data-download-preview]"),
+    avatarFile: document.querySelector("[data-avatar-file]"),
+    under18Row: document.querySelector("[data-under18-row]"),
+    under18: document.querySelector("[data-avatar-under18]"),
+    consentBox: document.querySelector("[data-consent-box]"),
+    consentName: document.querySelector("[data-consent-name]"),
+    signature: document.querySelector("[data-signature]"),
+    signatureClear: document.querySelector("[data-signature-clear]"),
+    signatureSave: document.querySelector("[data-signature-save]"),
     pdfBox: document.querySelector("[data-pdf-box]"),
     pdfFrame: document.querySelector("[data-pdf-frame]"),
     pdfHelp: document.querySelector("[data-pdf-help]"),
@@ -296,7 +379,12 @@
     suggestionHistory: [],
     pricing: null,
     entitlement: { paid: false, kind: "" },
-    pageKinds: []
+    pageKinds: [],
+    coverId: "",
+    coverStyle: "fullbleed",
+    noticeKey: "",
+    announcePrepare: false,
+    avatar: { originalDataUrl: "", illustratedDataUrl: "", mode: "", under18: true, consent: null }
   };
 
   const t = (key, vars) => {
@@ -362,7 +450,9 @@
         title: els.title.value,
         childName: els.childName.value,
         authorName: els.authorName?.value || "",
-        authorIntro: els.authorIntro?.value || ""
+        authorIntro: els.authorIntro?.value || "",
+        coverStyle: state.coverStyle,
+        avatarConsent: state.avatar.consent
       }));
       localStorage.setItem(LOCALE_KEY, state.locale);
     } catch (_error) {}
@@ -377,6 +467,12 @@
       if (typeof meta.childName === "string") els.childName.value = meta.childName;
       if (els.authorName && typeof meta.authorName === "string") els.authorName.value = meta.authorName;
       if (els.authorIntro && typeof meta.authorIntro === "string") els.authorIntro.value = meta.authorIntro;
+      if (meta.coverStyle === "typographic" || meta.coverStyle === "fullbleed") {
+        state.coverStyle = meta.coverStyle;
+        const selected = document.querySelector(`[data-cover-style][value="${state.coverStyle}"]`);
+        if (selected) selected.checked = true;
+      }
+      if (meta.avatarConsent && typeof meta.avatarConsent === "object") state.avatar.consent = meta.avatarConsent;
     } catch (_error) {}
   }
 
@@ -396,6 +492,7 @@
     });
     saveMeta();
     renderIntroTemplates();
+    renderThumbs();
     syncCoverPrice();
     syncDeliveryUi();
     if (state.photos.length) void rebuildBook();
@@ -424,31 +521,94 @@
     return canvas.toDataURL("image/jpeg", quality);
   }
 
-  async function toJpegDataUrl(source) {
-    const image = await loadHtmlImage(source);
+  function prepareApi() {
+    return window.StoriesLensArtworkPrepare;
+  }
+
+  async function pixelsFromDataUrl(dataUrl) {
+    const image = await loadHtmlImage(dataUrl);
     const canvas = document.createElement("canvas");
     canvas.width = image.naturalWidth || image.width;
     canvas.height = image.naturalHeight || image.height;
-    const context = canvas.getContext("2d", { alpha: false });
+    const context = canvas.getContext("2d", { alpha: true });
     if (!context) throw new Error("processing_unavailable");
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvasToJpeg(canvas);
+    context.drawImage(image, 0, 0);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    return { rgba: imageData.data, width: canvas.width, height: canvas.height };
   }
 
-  async function sanitizeFile(file) {
+  async function sanitizeToPng(file) {
     const artwork = window.StoriesLensArtworkSafety;
     if (artwork?.removeMetadata) {
-      const sanitized = await artwork.removeMetadata(file);
-      return toJpegDataUrl(sanitized.dataUrl);
+      const sanitized = await artwork.removeMetadata(file, { preserveAlpha: true });
+      return sanitized.dataUrl;
     }
     const url = URL.createObjectURL(file);
     try {
-      return await toJpegDataUrl(url);
+      const image = await loadHtmlImage(url);
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth || image.width;
+      canvas.height = image.naturalHeight || image.height;
+      const context = canvas.getContext("2d", { alpha: true });
+      if (!context) throw new Error("processing_unavailable");
+      context.drawImage(image, 0, 0);
+      return canvas.toDataURL("image/png");
     } finally {
       URL.revokeObjectURL(url);
     }
+  }
+
+  function pngFromRgba(rgba, width, height) {
+    return prepareApi().rgbaToPngDataUrl(rgba, width, height);
+  }
+
+  function newPhotoId(index) {
+    return `photo-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 6)}`;
+  }
+
+  function notePrepare(prepared) {
+    const rank = { split: 5, low_confidence: 4, cutout: 3, clean_scan: 2, already_transparent: 2, restored: 1 };
+    if ((rank[prepared.reason] || 0) >= (rank[state.noticeKey] || 0)) state.noticeKey = prepared.reason;
+  }
+
+  function prepareNotice() {
+    const keys = {
+      split: "split-done",
+      low_confidence: "cutout-kept",
+      cutout: "cutout-done",
+      clean_scan: "cutout-scan",
+      already_transparent: "cutout-clear"
+    };
+    return state.noticeKey && keys[state.noticeKey] ? t(keys[state.noticeKey]) : "";
+  }
+
+  function photosFromPrepared(prepared, originalDataUrl, fileName, manuscript) {
+    const groupId = prepared.split ? `split-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}` : "";
+    return prepared.pages.map((page, index) => ({
+      id: newPhotoId(index),
+      dataUrl: pngFromRgba(page.rgba, page.width, page.height),
+      originalDataUrl,
+      name: fileName || "",
+      manuscript: Boolean(manuscript),
+      groupId,
+      groupIndex: index,
+      cutoutReason: prepared.reason,
+      keptOriginal: prepared.keptOriginal === true
+    }));
+  }
+
+  function ensureCover() {
+    if (state.photos.some((photo) => photo.id === state.coverId)) return;
+    const main = state.photos.find((photo) => !photo.manuscript) || state.photos[0];
+    state.coverId = main ? main.id : "";
+  }
+
+  function replacePhotoGroup(photo, replacements) {
+    const index = state.photos.findIndex((item) => (photo.groupId && item.groupId === photo.groupId) || item === photo);
+    const covered = state.photos.some((item) => item.id === state.coverId && ((photo.groupId && item.groupId === photo.groupId) || item === photo));
+    state.photos = state.photos.filter((item) => photo.groupId ? item.groupId !== photo.groupId : item !== photo);
+    state.photos.splice(Math.max(0, index), 0, ...replacements);
+    if (covered || !state.photos.some((item) => item.id === state.coverId)) state.coverId = replacements[0]?.id || "";
   }
 
   function roundedRect(context, x, y, width, height, radius) {
@@ -490,96 +650,117 @@
     return { dx, dy, drawWidth, drawHeight };
   }
 
-  async function renderCoverPage(coverUrl) {
+  function pageCanvas() {
     const canvas = document.createElement("canvas");
     canvas.width = PAGE_WIDTH;
     canvas.height = PAGE_HEIGHT;
     const context = canvas.getContext("2d", { alpha: false });
     context.fillStyle = "#f6f0e4";
     context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
-    context.strokeStyle = "#0f6244";
-    context.lineWidth = 6;
-    context.strokeRect(64, 64, PAGE_WIDTH - 128, PAGE_HEIGHT - 128);
-    context.lineWidth = 2;
-    context.strokeRect(84, 84, PAGE_WIDTH - 168, PAGE_HEIGHT - 168);
+    return { canvas, context };
+  }
 
-    context.fillStyle = "#0f6244";
-    context.font = "700 36px " + getComputedStyle(document.body).fontFamily;
-    context.textAlign = "center";
-    context.fillText(t("cover-kicker"), PAGE_WIDTH / 2, 180);
-
-    const image = await loadHtmlImage(coverUrl);
-    const frame = { x: 200, y: 240, width: PAGE_WIDTH - 400, height: 980 };
+  function overlayCaption(context, text, y, size = 42) {
     context.save();
-    context.fillStyle = "#fff";
-    roundedRect(context, frame.x, frame.y, frame.width, frame.height, 18);
-    context.fill();
-    context.clip();
-    drawImageContained(context, image, frame.x + 24, frame.y + 24, frame.width - 48, frame.height - 48);
+    context.textAlign = "center";
+    context.font = `700 ${size}px ${getComputedStyle(document.body).fontFamily}`;
+    context.lineWidth = 10;
+    context.strokeStyle = "rgba(246,240,228,0.88)";
+    context.strokeText(text, PAGE_WIDTH / 2, y);
+    context.fillStyle = "#1c2420";
+    context.fillText(text, PAGE_WIDTH / 2, y);
     context.restore();
+  }
 
-    context.fillStyle = "#101817";
-    context.font = "700 92px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
-    const titleLines = wrapText(context, bookTitle(), PAGE_WIDTH - 280);
-    titleLines.forEach((line, index) => {
-      context.fillText(line, PAGE_WIDTH / 2, 1400 + index * 108);
+  function avatarDecision() {
+    return prepareApi().avatarUseDecision({
+      mode: state.avatar.mode,
+      under18: state.avatar.under18 === true,
+      adultName: state.avatar.consent?.adultName,
+      signature: state.avatar.consent
     });
-    if (displayAuthor()) {
-      context.fillStyle = "#3d4a44";
-      context.font = "600 42px " + getComputedStyle(document.body).fontFamily;
-      context.fillText(t("byline", { name: displayAuthor() }), PAGE_WIDTH / 2, 1400 + titleLines.length * 108 + 24);
+  }
+
+  async function renderCoverPage(photo) {
+    const { canvas, context } = pageCanvas();
+    context.textAlign = "center";
+    if (state.coverStyle === "typographic" || !photo) {
+      context.fillStyle = "#0f6244";
+      context.font = "700 36px " + getComputedStyle(document.body).fontFamily;
+      context.fillText(t("cover-kicker"), PAGE_WIDTH / 2, 280);
+      context.fillStyle = "#101817";
+      context.font = "700 92px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
+      wrapText(context, bookTitle(), PAGE_WIDTH - 180).forEach((line, index) => {
+        context.fillText(line, PAGE_WIDTH / 2, 860 + index * 108);
+      });
+      if (displayAuthor()) {
+        context.fillStyle = "#3d4a44";
+        context.font = "600 42px " + getComputedStyle(document.body).fontFamily;
+        context.fillText(t("byline", { name: displayAuthor() }), PAGE_WIDTH / 2, PAGE_HEIGHT - 280);
+      }
+      return canvasToJpeg(canvas, 0.9);
     }
-    context.fillStyle = "#7a756b";
-    context.font = "600 28px " + getComputedStyle(document.body).fontFamily;
-    context.fillText(String(new Date().getFullYear()), PAGE_WIDTH / 2, PAGE_HEIGHT - 140);
+    const image = await loadHtmlImage(photo.dataUrl);
+    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
+    context.font = "700 64px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
+    const titleLines = wrapText(context, bookTitle(), PAGE_WIDTH - 160);
+    titleLines.forEach((line, index) => {
+      overlayCaption(context, line, PAGE_HEIGHT - 120 - (titleLines.length - index) * 72, 64);
+    });
+    if (displayAuthor()) overlayCaption(context, t("byline", { name: displayAuthor() }), PAGE_HEIGHT - 64, 32);
     return canvasToJpeg(canvas, 0.9);
   }
 
-
   async function renderAuthorPage() {
-    const canvas = document.createElement("canvas");
-    canvas.width = PAGE_WIDTH;
-    canvas.height = PAGE_HEIGHT;
-    const context = canvas.getContext("2d", { alpha: false });
-    context.fillStyle = "#f6f0e4";
-    context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+    const { canvas, context } = pageCanvas();
+    const decision = avatarDecision();
+    const avatarUrl = state.avatar.mode === "illustrated" ? state.avatar.illustratedDataUrl : state.avatar.originalDataUrl;
+    let textTop = 260;
+    if (decision.allowed && avatarUrl) {
+      const image = await loadHtmlImage(avatarUrl);
+      const size = 520;
+      const x = (PAGE_WIDTH - size) / 2;
+      const y = 160;
+      context.save();
+      roundedRect(context, x, y, size, size, 48);
+      context.clip();
+      const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+      const drawWidth = image.naturalWidth * scale;
+      const drawHeight = image.naturalHeight * scale;
+      context.drawImage(image, x + (size - drawWidth) / 2, y + (size - drawHeight) / 2, drawWidth, drawHeight);
+      context.restore();
+      textTop = y + size + 90;
+    }
     context.fillStyle = "#0f6244";
     context.textAlign = "center";
     context.font = "700 36px " + getComputedStyle(document.body).fontFamily;
-    context.fillText(t("about-author"), PAGE_WIDTH / 2, 260);
+    context.fillText(t("about-author"), PAGE_WIDTH / 2, textTop);
     context.fillStyle = "#101817";
     context.font = "700 72px " + (state.locale === "zh" ? '"Songti SC","STSong","SimSun","Times New Roman",serif' : '"Times New Roman",Times,serif');
-    context.fillText(displayAuthor() || bookTitle(), PAGE_WIDTH / 2, 420);
+    context.fillText(displayAuthor() || bookTitle(), PAGE_WIDTH / 2, textTop + 120);
     context.fillStyle = "#3d4a44";
     context.font = "500 44px " + getComputedStyle(document.body).fontFamily;
-    const lines = wrapText(context, authorIntro(), PAGE_WIDTH - 280);
-    lines.forEach((line, index) => {
-      context.fillText(line, PAGE_WIDTH / 2, 560 + index * 72);
+    wrapText(context, authorIntro(), PAGE_WIDTH - 220).forEach((line, index) => {
+      context.fillText(line, PAGE_WIDTH / 2, textTop + 220 + index * 72);
     });
     if (childName() && childName() !== authorName()) {
       context.fillStyle = "#7a756b";
       context.font = "600 32px " + getComputedStyle(document.body).fontFamily;
-      context.fillText(t("credit-line", { name: childName() }), PAGE_WIDTH / 2, PAGE_HEIGHT - 180);
+      context.fillText(t("credit-line", { name: childName() }), PAGE_WIDTH / 2, PAGE_HEIGHT - 120);
     }
     return canvasToJpeg(canvas, 0.9);
   }
 
-  async function renderPhotoPage(photoUrl, index, total) {
-    const canvas = document.createElement("canvas");
-    canvas.width = PAGE_WIDTH;
-    canvas.height = PAGE_HEIGHT;
-    const context = canvas.getContext("2d", { alpha: false });
-    context.fillStyle = "#f6f0e4";
-    context.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
-    const image = await loadHtmlImage(photoUrl);
-    drawImageContained(context, image, 120, 120, PAGE_WIDTH - 240, PAGE_HEIGHT - 280);
-    context.fillStyle = "#7a756b";
-    context.font = "600 32px " + getComputedStyle(document.body).fontFamily;
-    context.textAlign = "center";
-    context.fillText(String(index + 1), PAGE_WIDTH / 2, PAGE_HEIGHT - 90);
-    context.font = "600 22px " + getComputedStyle(document.body).fontFamily;
-    context.fillText("StoriesLens", PAGE_WIDTH / 2, PAGE_HEIGHT - 50);
+  async function renderPhotoPage(photo, label) {
+    const { canvas, context } = pageCanvas();
+    const image = await loadHtmlImage(photo.dataUrl);
+    prepareApi().drawImageFullBleed(context, image, PAGE_WIDTH, PAGE_HEIGHT, "#f6f0e4");
+    if (label) overlayCaption(context, label, 90, 36);
     return canvasToJpeg(canvas, 0.9);
+  }
+
+  function showAuthorPage() {
+    return Boolean(authorName() || authorIntro() || state.avatar.originalDataUrl || state.avatar.illustratedDataUrl);
   }
 
   async function rebuildBook() {
@@ -588,15 +769,20 @@
       els.previewCard.hidden = true;
       return;
     }
-    const pages = [await renderCoverPage(state.photos[0].dataUrl)];
-    const kinds = ["cover"];
-    if (authorName() || authorIntro()) {
-      pages.push(await renderAuthorPage());
-      kinds.push("author");
-    }
-    for (let index = 0; index < state.photos.length; index += 1) {
-      pages.push(await renderPhotoPage(state.photos[index].dataUrl, index, state.photos.length));
-      kinds.push("photo");
+    ensureCover();
+    const plan = prepareApi().planBookPages({
+      photos: state.photos,
+      coverId: state.coverId,
+      includeAuthor: showAuthorPage()
+    });
+    const pages = [];
+    const kinds = [];
+    for (const item of plan) {
+      const photo = state.photos.find((entry) => entry.id === item.photoId);
+      if (item.kind === "cover") pages.push(await renderCoverPage(photo));
+      else if (item.kind === "author") pages.push(await renderAuthorPage());
+      else pages.push(await renderPhotoPage(photo, item.kind === "manuscript" ? t("page-label-manuscript") : ""));
+      kinds.push(item.kind);
     }
     state.pages = pages;
     state.pageKinds = kinds;
@@ -610,14 +796,15 @@
     if (els.priceBox) els.priceBox.hidden = false;
     startSuggestions();
     void refreshPricing();
-    setStatus(t("ready"));
+    setStatus(state.announcePrepare ? (prepareNotice() || t("ready")) : t("ready"));
+    state.announcePrepare = false;
   }
 
   function renderPreview() {
     if (!state.pages.length) return;
     els.pageImage.src = state.pages[state.pageIndex];
     const kind = state.pageKinds[state.pageIndex];
-    const label = kind === "cover" ? t("page-label-cover") : kind === "author" ? t("page-label-author") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
+    const label = kind === "cover" ? t("page-label-cover") : kind === "author" ? t("page-label-author") : kind === "manuscript" ? t("page-label-manuscript") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
     els.pageImage.alt = label;
     els.pageLabel.textContent = label;
     els.prev.disabled = state.pageIndex === 0;
@@ -625,10 +812,13 @@
   }
 
   function renderThumbs() {
+    if (!els.thumbs) return;
     els.thumbs.innerHTML = "";
     state.photos.forEach((photo, index) => {
       const item = document.createElement("div");
       item.className = "thumb";
+      const frame = document.createElement("div");
+      frame.className = "thumb-frame";
       const image = document.createElement("img");
       image.src = photo.dataUrl;
       image.alt = photo.name || `${index + 1}`;
@@ -637,10 +827,49 @@
       remove.type = "button";
       remove.textContent = "×";
       remove.addEventListener("click", () => {
-        state.photos.splice(index, 1);
+        const removeIds = photo.groupId ? state.photos.filter((item) => item.groupId === photo.groupId).map((item) => item.id) : [photo.id];
+        state.photos = state.photos.filter((item) => !removeIds.includes(item.id));
+        ensureCover();
         renderThumbs();
         void rebuildBook();
       });
+      frame.append(image, remove);
+      const tools = document.createElement("div");
+      tools.className = "thumb-tools";
+      const cover = document.createElement("button");
+      cover.type = "button";
+      cover.textContent = t("set-cover");
+      cover.classList.toggle("is-on", photo.id === state.coverId);
+      cover.addEventListener("click", () => {
+        state.coverId = photo.id;
+        renderThumbs();
+        void rebuildBook();
+      });
+      const manuscript = document.createElement("button");
+      manuscript.type = "button";
+      manuscript.textContent = t("manuscript-toggle");
+      manuscript.classList.toggle("is-on", photo.manuscript === true);
+      manuscript.addEventListener("click", () => {
+        photo.manuscript = !photo.manuscript;
+        renderThumbs();
+        void rebuildBook();
+      });
+      const restore = document.createElement("button");
+      restore.type = "button";
+      restore.textContent = t("restore-original");
+      restore.addEventListener("click", () => { void restoreOriginal(photo); });
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = t("retry-cutout");
+      retry.addEventListener("click", () => { void retryCutout(photo); });
+      tools.append(cover, manuscript, restore, retry);
+      if (photo.groupId) {
+        const undo = document.createElement("button");
+        undo.type = "button";
+        undo.textContent = t("undo-split");
+        undo.addEventListener("click", () => { void undoSplit(photo); });
+        tools.append(undo);
+      }
       const actions = document.createElement("div");
       actions.className = "thumb-actions";
       const up = document.createElement("button");
@@ -664,9 +893,54 @@
         void rebuildBook();
       });
       actions.append(up, down);
-      item.append(image, remove, actions);
+      item.append(frame, tools, actions);
       els.thumbs.append(item);
     });
+  }
+
+  async function restoreOriginal(photo) {
+    const single = {
+      id: newPhotoId(0),
+      dataUrl: photo.originalDataUrl,
+      originalDataUrl: photo.originalDataUrl,
+      name: photo.name,
+      manuscript: photo.manuscript,
+      groupId: "",
+      groupIndex: 0,
+      cutoutReason: "restored",
+      keptOriginal: true
+    };
+    replacePhotoGroup(photo, [single]);
+    renderThumbs();
+    await rebuildBook();
+    setStatus(t("restored"));
+  }
+
+  async function retryCutout(photo) {
+    setStatus(t("cutting"));
+    const pixels = await pixelsFromDataUrl(photo.originalDataUrl);
+    const prepared = prepareApi().prepareArtwork(pixels.rgba, pixels.width, pixels.height, { retry: true });
+    notePrepare(prepared);
+    const photos = photosFromPrepared(prepared, photo.originalDataUrl, photo.name, photo.manuscript);
+    if (state.photos.length - (photo.groupId ? state.photos.filter((item) => item.groupId === photo.groupId).length : 1) + photos.length > MAX_PHOTOS) {
+      setStatus(t("too-many"), true);
+      return;
+    }
+    replacePhotoGroup(photo, photos);
+    state.announcePrepare = true;
+    renderThumbs();
+    await rebuildBook();
+  }
+
+  async function undoSplit(photo) {
+    setStatus(t("cutting"));
+    const pixels = await pixelsFromDataUrl(photo.originalDataUrl);
+    const prepared = prepareApi().prepareArtwork(pixels.rgba, pixels.width, pixels.height, { allowSplit: false });
+    const photos = photosFromPrepared(prepared, photo.originalDataUrl, photo.name, photo.manuscript);
+    replacePhotoGroup(photo, photos);
+    renderThumbs();
+    await rebuildBook();
+    setStatus(t("restored"));
   }
 
   async function addFiles(fileList) {
@@ -677,7 +951,8 @@
       return;
     }
     state.busy = true;
-    setStatus(t("processing"));
+    state.noticeKey = "";
+    setStatus(t("cutting"));
     try {
       for (const file of files) {
         const inspection = inspectUpload(file);
@@ -693,15 +968,25 @@
           continue;
         }
         try {
-          const dataUrl = await sanitizeFile(file);
-          state.photos.push({ dataUrl, name: file.name || "" });
-        } catch (error) {
+          const originalDataUrl = await sanitizeToPng(file);
+          const pixels = await pixelsFromDataUrl(originalDataUrl);
+          const prepared = prepareApi().prepareArtwork(pixels.rgba, pixels.width, pixels.height);
+          const manuscript = prepareApi().looksLikeManuscript(file.name);
+          const photos = photosFromPrepared(prepared, originalDataUrl, file.name || "", manuscript);
+          if (state.photos.length + photos.length > MAX_PHOTOS) {
+            setStatus(t("too-many"), true);
+            break;
+          }
+          notePrepare(prepared);
+          state.photos.push(...photos);
+          if (!state.coverId) state.coverId = (photos.find((item) => !item.manuscript) || photos[0]).id;
+        } catch (_error) {
           setStatus(t("unsupported"), true);
         }
       }
       renderThumbs();
       if (state.photos.length) {
-        setStatus(t("added", { count: state.photos.length }));
+        state.announcePrepare = true;
         await rebuildBook();
       } else {
         setStatus(t("need-photos"), true);
@@ -1195,6 +1480,106 @@
     }
   }
 
+  function dataUrlToBytes(dataUrl) {
+    const match = String(dataUrl || "").match(/^data:image\/(?:jpeg|jpg|png);base64,([a-zA-Z0-9+/=\s]+)$/i);
+    if (!match) throw new Error("invalid_image");
+    const binary = atob(match[1].replace(/\s+/g, ""));
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return bytes;
+  }
+
+  async function downloadPreviewPdf() {
+    if (!state.pages.length) return setStatus(t("need-photos"), true);
+    if (!window.PDFLib?.PDFDocument) return setStatus(t("preview-pdf-failed"), true);
+    setStatus(t("preview-pdf-working"));
+    try {
+      const pdf = await window.PDFLib.PDFDocument.create();
+      pdf.setTitle(bookTitle());
+      pdf.setSubject("StoriesLens informal preview. Not an official paid PDF. 非正式预览");
+      pdf.setCreator("StoriesLens Informal Preview");
+      pdf.setKeywords(["preview", "informal", "预览"]);
+      for (const pageDataUrl of state.pages) {
+        const bytes = dataUrlToBytes(pageDataUrl);
+        const image = /^data:image\/png/i.test(pageDataUrl) ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+        const page = pdf.addPage([A5_WIDTH_PT, A5_HEIGHT_PT]);
+        page.drawImage(image, { x: 0, y: 0, width: A5_WIDTH_PT, height: A5_HEIGHT_PT });
+      }
+      const bytes = await pdf.save();
+      triggerDownload(new Blob([bytes], { type: "application/pdf" }), suggestedPdfName().replace(/\.pdf$/i, "-preview.pdf"));
+      setStatus(t("preview-pdf-ready"));
+    } catch (_error) {
+      setStatus(t("preview-pdf-failed"), true);
+    }
+  }
+
+  function syncAvatarUi() {
+    const photoMode = state.avatar.mode === "photo";
+    if (els.under18Row) els.under18Row.hidden = !photoMode;
+    if (els.under18) els.under18.checked = state.avatar.under18 !== false;
+    if (els.consentBox) els.consentBox.hidden = !(photoMode && state.avatar.under18 !== false);
+    document.querySelectorAll("[data-avatar-mode]").forEach((input) => {
+      input.checked = input.value === state.avatar.mode;
+    });
+    if (els.consentName && state.avatar.consent?.adultName && !els.consentName.value) {
+      els.consentName.value = state.avatar.consent.adultName;
+    }
+  }
+
+  async function illustrateCurrentAvatar() {
+    if (!state.avatar.originalDataUrl) return;
+    const pixels = await pixelsFromDataUrl(state.avatar.originalDataUrl);
+    const art = prepareApi().illustrateAvatar(pixels.rgba, pixels.width, pixels.height);
+    state.avatar.illustratedDataUrl = pngFromRgba(art, pixels.width, pixels.height);
+  }
+
+  function signatureHasInk(canvas) {
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let ink = 0;
+    for (let index = 0; index < data.length; index += 16) {
+      if (data[index] < 90 && data[index + 1] < 90 && data[index + 2] < 90 && data[index + 3] > 40) ink += 1;
+    }
+    return ink > 8;
+  }
+
+  function prepareSignaturePad(canvas) {
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.lineWidth = 4;
+    context.lineCap = "round";
+    context.strokeStyle = "#102824";
+    let drawing = false;
+    const point = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const source = event.touches ? event.touches[0] : event;
+      return {
+        x: (source.clientX - rect.left) * canvas.width / rect.width,
+        y: (source.clientY - rect.top) * canvas.height / rect.height
+      };
+    };
+    canvas.addEventListener("pointerdown", (event) => {
+      drawing = true;
+      const next = point(event);
+      context.beginPath();
+      context.moveTo(next.x, next.y);
+      event.preventDefault();
+    });
+    canvas.addEventListener("pointermove", (event) => {
+      if (!drawing) return;
+      const next = point(event);
+      context.lineTo(next.x, next.y);
+      context.stroke();
+      event.preventDefault();
+    });
+    const stop = () => { drawing = false; };
+    canvas.addEventListener("pointerup", stop);
+    canvas.addEventListener("pointerleave", stop);
+  }
+
+  if (els.signature) prepareSignaturePad(els.signature);
+
   els.album.addEventListener("change", (event) => {
     void addFiles(event.target.files);
     event.target.value = "";
@@ -1254,6 +1639,76 @@
     window.print();
   });
   els.makeFilm.addEventListener("click", () => void makeFilm());
+  els.downloadPreview?.addEventListener("click", () => void downloadPreviewPdf());
+  document.querySelectorAll("[data-cover-style]").forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      state.coverStyle = input.value === "typographic" ? "typographic" : "fullbleed";
+      saveMeta();
+      if (state.photos.length) void rebuildBook();
+    });
+  });
+  document.querySelectorAll("[data-avatar-mode]").forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      state.avatar.mode = input.value === "illustrated" ? "illustrated" : "photo";
+      if (state.avatar.mode === "photo" && state.avatar.under18 !== false && !avatarDecision().allowed) setStatus(t("consent-needed"), true);
+      const refresh = async () => {
+        if (state.avatar.mode === "illustrated") await illustrateCurrentAvatar();
+        syncAvatarUi();
+        if (state.photos.length) await rebuildBook();
+      };
+      void refresh();
+    });
+  });
+  els.avatarFile?.addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    void (async () => {
+      if (inspectUpload(file).blocked) return setStatus(t("avatar-blocked"), true);
+      try {
+        state.avatar.originalDataUrl = await sanitizeToPng(file);
+        state.avatar.illustratedDataUrl = "";
+        if (!state.avatar.mode) state.avatar.mode = "photo";
+        if (state.avatar.mode === "illustrated") await illustrateCurrentAvatar();
+        syncAvatarUi();
+        if (state.avatar.mode === "photo" && state.avatar.under18 !== false && !avatarDecision().allowed) setStatus(t("consent-needed"), true);
+        if (state.photos.length) await rebuildBook();
+      } catch (_error) {
+        setStatus(t("unsupported"), true);
+      }
+    })();
+  });
+  els.under18?.addEventListener("change", () => {
+    state.avatar.under18 = els.under18.checked;
+    syncAvatarUi();
+    if (state.avatar.under18 && state.avatar.mode === "photo" && !avatarDecision().allowed) setStatus(t("consent-needed"), true);
+    if (state.photos.length) void rebuildBook();
+  });
+  els.signatureClear?.addEventListener("click", () => {
+    if (!els.signature) return;
+    const context = els.signature.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, els.signature.width, els.signature.height);
+    state.avatar.consent = null;
+    saveMeta();
+    if (state.photos.length) void rebuildBook();
+  });
+  els.signatureSave?.addEventListener("click", () => {
+    const adultName = els.consentName?.value.trim() || "";
+    if (!adultName || !els.signature || !signatureHasInk(els.signature)) return setStatus(t("consent-missing"), true);
+    state.avatar.consent = {
+      adultName,
+      ink: true,
+      dataUrl: els.signature.toDataURL("image/png"),
+      signedAt: new Date().toISOString(),
+      statement: t("consent-copy")
+    };
+    saveMeta();
+    setStatus(t("consent-saved"));
+    if (state.photos.length) void rebuildBook();
+  });
   els.saveFilm.addEventListener("click", () => {
     if (state.filmBlob) triggerDownload(state.filmBlob, state.filmName);
   });
@@ -1267,6 +1722,7 @@
   });
 
   loadMeta();
+  syncAvatarUi();
   applyLocale(detectLocale());
   renderIntroTemplates();
   void refreshPricing();

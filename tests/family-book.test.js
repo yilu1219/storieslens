@@ -373,9 +373,10 @@ test("parent and teacher pages, share links, and homepage entries are wired with
   assert.match(index, /href="teacher-book"/);
   assert.match(index, /data-audience="teacher-book"/);
   assert.match(homeJs, /teacher-book-cta/);
-  assert.match(homeJs, /¥19\.9/);
-  assert.match(homeJs, /¥199/);
-  assert.match(index, /hardcover/);
+  assert.doesNotMatch(homeJs, /¥19\.9|¥129|¥199|hardcover|softcover/);
+  assert.doesNotMatch(index, /¥|hardcover|softcover/);
+  assert.match(parentHtml, /¥19\.9/);
+  assert.match(parentHtml, /¥199/);
   assert.match(read("chinese-studio.html"), /teacher-book\.html/);
   assert.match(envExample, /STRIPE_PRICE_FAMILY_DIGITAL=/);
   assert.match(envExample, /STRIPE_PRICE_FAMILY_PRINT=/);
