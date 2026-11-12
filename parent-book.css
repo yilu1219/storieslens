@@ -531,6 +531,23 @@ label.field input {
   background: transparent;
 }
 .page-editor-note { text-align: center; }
+.proof-banner {
+  width: min(100%, 420px);
+  margin: 12px auto 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #f3faf6;
+}
+.proof-banner.is-alert {
+  border-color: #9a3412;
+  background: #fff7ed;
+  box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.16);
+}
+.proof-banner p { margin: 0; }
+.proof-banner .suggest-actions { margin-top: 10px; }
+.proof-banner .assist-sample { margin-top: 8px; }
+.proof-banner.is-alert [data-proof-banner-text] { font-weight: 800; }
 .pager {
   display: flex;
   align-items: center;

@@ -8,7 +8,7 @@
     <title>教师班级出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261112-page1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261112-proof1" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -69,6 +69,16 @@
           </div>
         </div>
         <p class="hint page-editor-note" data-page-editor-note hidden></p>
+        <div class="proof-banner" data-proof-banner hidden role="status">
+          <p data-proof-banner-text></p>
+          <p class="assist-sample" data-proof-banner-before hidden></p>
+          <p class="assist-sample" data-proof-banner-after hidden></p>
+          <div class="suggest-actions">
+            <button class="primary" type="button" data-proof-banner-accept hidden data-i18n="assistant-accept">接受</button>
+            <button class="secondary" type="button" data-proof-banner-reject hidden data-i18n="assistant-reject">不采用</button>
+            <button class="secondary" type="button" data-proof-banner-jump hidden data-i18n="assistant-proof-jump">打开有问题的那一页</button>
+          </div>
+        </div>
         <div class="pager">
           <button type="button" data-prev data-i18n="prev">上一页</button>
           <span class="page-label" data-page-label></span>
@@ -76,7 +86,7 @@
         </div>
         <section class="book-assistant" data-book-assistant hidden>
           <h3 data-i18n="assistant-kicker">排版助手</h3>
-          <p class="hint" data-i18n="assistant-hint">可以建议间距、换行、图文比例、画面整理，以及校对。每条建议都会先对照显示。只有你点接受，才会写进这本书。</p>
+          <p class="hint" data-i18n="assistant-hint">可以建议间距、换行、图文比例和画面整理。校对会标出错别字、拼写和明显语法。每条建议都会先对照显示。只有你点接受，才会写进这本书。</p>
           <div class="suggest-actions">
             <button class="secondary" type="button" data-assist-type data-i18n="assistant-type">整理间距和换行</button>
             <button class="secondary" type="button" data-assist-layout data-i18n="assistant-layout">调整图文比例</button>
@@ -136,9 +146,9 @@
     <div class="print-root" data-print-root aria-hidden="true"></div>
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261112-page1"></script>
+    <script src="artwork-prepare.js?v=20261112-proof1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-review.js?v=20261111-2"></script>
-    <script src="teacher-book.js?v=20261112-page1"></script>
+    <script src="teacher-book.js?v=20261112-proof1"></script>
   </body>
 </html>
