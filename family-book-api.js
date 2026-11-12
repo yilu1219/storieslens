@@ -128,7 +128,7 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
           reason: result.reason,
           imageDataUrl: result.status === "ok" ? result.imageDataUrl : "",
           error: result.status === "unavailable"
-            ? "Polished illustrations are not configured. Set BOOK_ILLUSTRATION_API_KEY, or point PDF_CRAFT_OCR_BASE_URL at Novita so PDF_CRAFT_OCR_API_KEY can be reused. The straightened original artwork is still used."
+            ? "Polished illustrations are not configured. Set ARK_API_KEY or VOLCENGINE_ARK_API_KEY for Volcengine Ark Seedream, or BOOK_ILLUSTRATION_API_KEY. If that Novita key is empty and PDF_CRAFT_OCR_BASE_URL is a novita.ai host, PDF_CRAFT_OCR_API_KEY is reused. The straightened original artwork is still used."
             : undefined
         });
       } catch (error) {
