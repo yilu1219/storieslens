@@ -22,7 +22,7 @@
       "interior-polished": "精修插画",
       "interior-hint": "默认是原画摆正：画在安全框里，学生的话单独排成文字层。精修插画只换画面层，文字仍是排版，不会画进图里。两种最后都保留手稿。",
       "assistant-kicker": "排版助手",
-      "assistant-hint": "可以建议间距、换行、图文比例、画面整理，以及校对。每条建议都会先对照显示。只有你点接受，才会写进这本书。",
+      "assistant-hint": "可以建议间距、换行、图文比例和画面整理。校对会标出错别字、拼写和明显语法。每条建议都会先对照显示。只有你点接受，才会写进这本书。",
       "page-edit-note": "这一页可以直接改排好的文字，也可以在安全框里拖动或缩放画面。学生的原文和原画不会自动改。助手要改用词或换画面时，会先标明，等你接受。",
       "page-text-label": "这一页的文字",
       "art-move-label": "拖动画面",
@@ -52,7 +52,11 @@
       "assistant-after": "建议写成",
       "assistant-empty": "（空，没有猜词）",
       "assistant-share": "文字层约占 {n}%",
-      "assistant-proof-clear": "没有要校对的问题。学生的话保持原样。",
+      "assistant-proof-clear": "这一页看起来没有问题。",
+      "assistant-proof-alert": "这一页有拼写或语法建议。点接受才会改文字。",
+      "assistant-proof-other": "还有页面有校对建议。",
+      "assistant-proof-jump": "打开有问题的那一页",
+      "assistant-proof-manuscript": "手稿页保持原笔迹，不会自动改字。",
       "assistant-proof-done": "校对建议已看完。未接受的内容没有写入。",
       "page-label-manuscript": "手稿",
       "progress-illustrate": "正在按原画准备精修插画（第 {current} 张，共 {count} 张）",
@@ -135,7 +139,7 @@
       "interior-polished": "Polished illustrations",
       "interior-hint": "Original artwork is the default: the drawing sits in a print-safe frame and the student’s words are a separate text layer. Polished illustrations replace only the art layer. The words stay typeset and are not drawn into the picture. Both end with the manuscript.",
       "assistant-kicker": "Editing assistant",
-      "assistant-hint": "It can suggest spacing, line breaks, the picture-and-text balance, art cleanup, and proofreading. Each suggestion is shown first. Nothing enters the book until you accept it.",
+      "assistant-hint": "It can suggest spacing, line breaks, the picture-and-text balance, and art cleanup. Proofreading flags misspellings, wrong characters, and clear grammar. Each suggestion is shown first. Nothing enters the book until you accept it.",
       "page-edit-note": "Edit the typeset words on this page, or drag and resize the picture inside the safe area. The student’s wording and original art stay as they are until you change them. Assistant wording or art changes stay labeled and wait for Accept.",
       "page-text-label": "Text on this page",
       "art-move-label": "Move the picture",
@@ -165,7 +169,11 @@
       "assistant-after": "Suggested text",
       "assistant-empty": "(empty — nothing was guessed)",
       "assistant-share": "The text layer is about {n}% of the page",
-      "assistant-proof-clear": "Nothing to proofread. The student’s words stay as they are.",
+      "assistant-proof-clear": "This page looks clear.",
+      "assistant-proof-alert": "This page has spelling or grammar suggestions. The words change only if you accept.",
+      "assistant-proof-other": "Another page has proofreading suggestions.",
+      "assistant-proof-jump": "Open the page that needs proofreading",
+      "assistant-proof-manuscript": "This manuscript page stays as handwriting.",
       "assistant-proof-done": "Those proofreading suggestions are finished. Anything you did not accept was left out.",
       "page-label-manuscript": "Manuscript",
       "progress-illustrate": "Preparing a polished illustration from the original drawing ({current} of {count})",
@@ -270,6 +278,7 @@
   };
 
   const state = { locale: "zh", photos: [], pages: [], previewPages: [], pageKinds: [], pageIndex: 0, share: null, busy: false, noticeKey: "", announcePrepare: false, readingApproval: null, yuOffer: null, interiorStyle: "original", rebuildStamp: 0 };
+  let pageProof = null;
 
   const t = (key, vars) => {
     const table = copy[state.locale] || copy.zh;
@@ -634,6 +643,24 @@
     return renderWorkPage(photo, { subtitle, pageNumber });
   }
 
+  function storyProofIndex() {
+    const kinds = state.pageKinds || [];
+    for (let index = 0; index < kinds.length; index += 1) {
+      if (kinds[index] !== "photo") continue;
+      const id = state.pagePhotoIds && state.pagePhotoIds[index];
+      const photo = state.photos.find((item) => item.id === id);
+      if (!photo || photo.manuscript) continue;
+      const items = prepareApi().proposeProofreading({
+        text: shownPhotoText(photo),
+        textStatus: photo.textStatus,
+        lines: photo.lines,
+        edited: photo.textEdited === true
+      });
+      if (items.length) return index;
+    }
+    return -1;
+  }
+
   async function rebuildBook() {
     if (!state.photos.length) {
       state.pages = [];
@@ -641,6 +668,7 @@
       state.pageKinds = [];
       els.previewCard.hidden = true;
       if (els.bookAssistant) els.bookAssistant.hidden = true;
+      pageProof?.hideBanner();
       return;
     }
     const stamp = (state.rebuildStamp += 1);
@@ -681,11 +709,15 @@
     state.pageKinds = kinds;
     state.pagePhotoIds = plan.map((item) => item.photoId || "");
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
+    const proofAt = storyProofIndex();
+    if (state.announcePrepare && proofAt >= 0) state.pageIndex = proofAt;
     renderPreview();
     els.previewCard.hidden = false;
     if (els.bookAssistant) els.bookAssistant.hidden = false;
     showReadingCheck();
-    if (state.noticeKey === "polish-fallback") setStatus(t("polish-fallback"));
+    pageProof?.showProofreading();
+    if (state.announcePrepare && proofAt >= 0) setStatus(t("assistant-proof-alert"));
+    else if (state.noticeKey === "polish-fallback") setStatus(t("polish-fallback"));
     else {
       const noticeKeys = { split: "split-done", uncertain: "extract-uncertain", scan: "scan-not-isolated", unavailable: "extract-unavailable", extracted: "extract-done", restored: "restored" };
       const notice = noticeKeys[state.noticeKey] ? t(noticeKeys[state.noticeKey]) : "";
@@ -1117,12 +1149,29 @@
       if (state.photos.length) void rebuildBook();
     });
   });
-  els.prev.addEventListener("click", () => { if (state.pageIndex > 0) { state.pageIndex -= 1; renderPreview(); } });
-  els.next.addEventListener("click", () => { if (state.pageIndex < state.pages.length - 1) { state.pageIndex += 1; renderPreview(); } });
+  els.prev.addEventListener("click", () => { if (state.pageIndex > 0) { state.pageIndex -= 1; renderPreview(); pageProof?.showProofreading(); } });
+  els.next.addEventListener("click", () => { if (state.pageIndex < state.pages.length - 1) { state.pageIndex += 1; renderPreview(); pageProof?.showProofreading(); } });
   els.downloadPreview.addEventListener("click", () => void downloadPreviewPdf());
-  prepareApi().bindBookAssistant(els.bookAssistant, {
+  pageProof = prepareApi().bindBookAssistant(els.bookAssistant, {
     photo: assistantPhoto,
     photoById: (id) => state.photos.find((photo) => photo.id === id) || null,
+    pagePhoto: () => {
+      const kind = state.pageKinds[state.pageIndex] || "";
+      const id = state.pagePhotoIds && state.pagePhotoIds[state.pageIndex];
+      const photo = id ? state.photos.find((item) => item.id === id) || null : null;
+      return { kind, photo };
+    },
+    hasWordingProof: () => {
+      const index = storyProofIndex();
+      return index >= 0 && index !== state.pageIndex;
+    },
+    focusWordingProof: () => {
+      const index = storyProofIndex();
+      if (index < 0) return;
+      state.pageIndex = index;
+      renderPreview();
+      pageProof?.showProofreading();
+    },
     text: shownPhotoText,
     illustrate: (photo) => prepareApi().requestBookIllustration(photo.scanDataUrl || photo.marksDataUrl || "", shownPhotoText(photo)),
     commit: commitAssistantPhoto,
@@ -1140,7 +1189,10 @@
     workingLabel: () => t("assistant-working"),
     artFailedLabel: () => t("assistant-art-failed"),
     proofClearLabel: () => t("assistant-proof-clear"),
-    proofDoneLabel: () => t("assistant-proof-done")
+    proofDoneLabel: () => t("assistant-proof-done"),
+    proofAlertLabel: () => t("assistant-proof-alert"),
+    otherProofLabel: () => t("assistant-proof-other"),
+    manuscriptLabel: () => t("assistant-proof-manuscript")
   });
   els.readingAccept?.addEventListener("click", () => acceptReading());
   els.readingYu?.addEventListener("click", () => void askYuToReview());

@@ -143,7 +143,7 @@
       "interior-polished": "精修插画",
       "interior-hint": "默认是原画摆正：画在安全框里，孩子的话单独排成文字层。精修插画只换画面层，文字仍是排版，不会画进图里。两种最后都保留手稿。",
       "assistant-kicker": "排版助手",
-      "assistant-hint": "可以建议间距、换行、图文比例、画面整理，以及校对。每条建议都会先对照显示。只有你点接受，才会写进这本书。",
+      "assistant-hint": "可以建议间距、换行、图文比例和画面整理。校对会标出错别字、拼写和明显语法。每条建议都会先对照显示。只有你点接受，才会写进这本书。",
       "assistant-type": "整理间距和换行",
       "assistant-layout": "调整图文比例",
       "assistant-art": "整理画面",
@@ -169,7 +169,11 @@
       "assistant-after": "建议写成",
       "assistant-empty": "（空，没有猜词）",
       "assistant-share": "文字层约占 {n}%",
-      "assistant-proof-clear": "没有要校对的问题。孩子的话保持原样。",
+      "assistant-proof-clear": "这一页看起来没有问题。",
+      "assistant-proof-alert": "这一页有拼写或语法建议。点接受才会改文字。",
+      "assistant-proof-other": "还有页面有校对建议。",
+      "assistant-proof-jump": "打开有问题的那一页",
+      "assistant-proof-manuscript": "手稿页保持原笔迹，不会自动改字。",
       "assistant-proof-done": "校对建议已看完。未接受的内容没有写入。",
       "set-cover": "设为封面",
       "rotate-photo": "旋转 90°",
@@ -362,7 +366,7 @@
       "interior-polished": "Polished illustrations",
       "interior-hint": "Original artwork is the default: the drawing sits in a print-safe frame and the child’s words are a separate text layer. Polished illustrations replace only the art layer. The words stay typeset and are not drawn into the picture. Both end with the manuscript.",
       "assistant-kicker": "Editing assistant",
-      "assistant-hint": "It can suggest spacing, line breaks, the picture-and-text balance, art cleanup, and proofreading. Each suggestion is shown first. Nothing enters the book until you accept it.",
+      "assistant-hint": "It can suggest spacing, line breaks, the picture-and-text balance, and art cleanup. Proofreading flags misspellings, wrong characters, and clear grammar. Each suggestion is shown first. Nothing enters the book until you accept it.",
       "assistant-type": "Tidy spacing and line breaks",
       "assistant-layout": "Adjust the picture and text",
       "assistant-art": "Clean up the picture",
@@ -388,7 +392,11 @@
       "assistant-after": "Suggested text",
       "assistant-empty": "(empty — nothing was guessed)",
       "assistant-share": "The text layer is about {n}% of the page",
-      "assistant-proof-clear": "Nothing to proofread. The child’s words stay as they are.",
+      "assistant-proof-clear": "This page looks clear.",
+      "assistant-proof-alert": "This page has spelling or grammar suggestions. The words change only if you accept.",
+      "assistant-proof-other": "Another page has proofreading suggestions.",
+      "assistant-proof-jump": "Open the page that needs proofreading",
+      "assistant-proof-manuscript": "This manuscript page stays as handwriting.",
       "assistant-proof-done": "Those proofreading suggestions are finished. Anything you did not accept was left out.",
       "set-cover": "Set cover",
       "rotate-photo": "Rotate 90°",
@@ -567,6 +575,7 @@
     readingApproval: null,
     yuOffer: null
   };
+  let pageProof = null;
 
   const t = (key, vars) => {
     const table = copy[state.locale] || copy.zh;
@@ -1165,6 +1174,24 @@
     return Boolean(authorName() || authorIntro() || state.avatar.originalDataUrl || state.avatar.illustratedDataUrl);
   }
 
+  function storyProofIndex() {
+    const kinds = state.pageKinds || [];
+    for (let index = 0; index < kinds.length; index += 1) {
+      if (kinds[index] !== "photo") continue;
+      const id = state.pagePhotoIds && state.pagePhotoIds[index];
+      const photo = state.photos.find((item) => item.id === id);
+      if (!photo || photo.manuscript) continue;
+      const items = prepareApi().proposeProofreading({
+        text: shownPhotoText(photo),
+        textStatus: photo.textStatus,
+        lines: photo.lines,
+        edited: photo.textEdited === true
+      });
+      if (items.length) return index;
+    }
+    return -1;
+  }
+
   async function rebuildBook() {
     if (!state.photos.length) {
       state.pages = [];
@@ -1172,6 +1199,7 @@
       els.previewCard.hidden = true;
       if (els.bookAssistant) els.bookAssistant.hidden = true;
       if (els.bookEditFields) els.bookEditFields.replaceChildren();
+      pageProof?.hideBanner();
       return;
     }
     const stamp = (state.rebuildStamp += 1);
@@ -1211,6 +1239,8 @@
     state.previewPages = previewPages;
     state.pageKinds = kinds;
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
+    const proofAt = storyProofIndex();
+    if (state.announcePrepare && proofAt >= 0) state.pageIndex = proofAt;
     state.pdfBlob = null;
     if (state.pdfUrl) URL.revokeObjectURL(state.pdfUrl);
     state.pdfUrl = "";
@@ -1224,7 +1254,9 @@
     showReadingCheck();
     void refreshPricing();
     hideProgress();
-    if (state.noticeKey === "polish-fallback") setStatus(t("polish-fallback"));
+    pageProof?.showProofreading();
+    if (state.announcePrepare && proofAt >= 0) setStatus(t("assistant-proof-alert"));
+    else if (state.noticeKey === "polish-fallback") setStatus(t("polish-fallback"));
     else setStatus(state.announcePrepare ? (prepareNotice() || t("ready")) : t("ready"));
     state.announcePrepare = false;
   }
@@ -2349,9 +2381,26 @@
   els.childName.addEventListener("change", () => { saveMeta(); if (state.photos.length) void rebuildBook(); });
   els.authorName?.addEventListener("change", () => { saveMeta(); if (state.photos.length) void rebuildBook(); });
   els.authorIntro?.addEventListener("change", () => { saveMeta(); renderIntroTemplates(); if (state.photos.length) void rebuildBook(); });
-  prepareApi().bindBookAssistant(els.bookAssistant, {
+  pageProof = prepareApi().bindBookAssistant(els.bookAssistant, {
     photo: assistantPhoto,
     photoById: (id) => state.photos.find((photo) => photo.id === id) || null,
+    pagePhoto: () => {
+      const kind = state.pageKinds[state.pageIndex] || "";
+      const id = state.pagePhotoIds && state.pagePhotoIds[state.pageIndex];
+      const photo = id ? state.photos.find((item) => item.id === id) || null : null;
+      return { kind, photo };
+    },
+    hasWordingProof: () => {
+      const index = storyProofIndex();
+      return index >= 0 && index !== state.pageIndex;
+    },
+    focusWordingProof: () => {
+      const index = storyProofIndex();
+      if (index < 0) return;
+      state.pageIndex = index;
+      renderPreview();
+      pageProof?.showProofreading();
+    },
     text: shownPhotoText,
     illustrate: (photo) => prepareApi().requestBookIllustration(photo.scanDataUrl || photo.marksDataUrl || "", shownPhotoText(photo)),
     commit: commitAssistantPhoto,
@@ -2369,7 +2418,10 @@
     workingLabel: () => t("assistant-working"),
     artFailedLabel: () => t("assistant-art-failed"),
     proofClearLabel: () => t("assistant-proof-clear"),
-    proofDoneLabel: () => t("assistant-proof-done")
+    proofDoneLabel: () => t("assistant-proof-done"),
+    proofAlertLabel: () => t("assistant-proof-alert"),
+    otherProofLabel: () => t("assistant-proof-other"),
+    manuscriptLabel: () => t("assistant-proof-manuscript")
   });
   els.suggestAccept?.addEventListener("click", () => acceptSuggestion());
   els.suggestSkip?.addEventListener("click", () => skipSuggestion());
@@ -2388,12 +2440,14 @@
     if (state.pageIndex > 0) {
       state.pageIndex -= 1;
       renderPreview();
+      pageProof?.showProofreading();
     }
   });
   els.next.addEventListener("click", () => {
     if (state.pageIndex < state.pages.length - 1) {
       state.pageIndex += 1;
       renderPreview();
+      pageProof?.showProofreading();
     }
   });
   els.downloadPdf?.addEventListener("click", async () => {

@@ -875,10 +875,42 @@ test("a sheet splits into an art frame and a text layer, and uncertain OCR does 
   assert.equal(story.caption.leading, 1.35);
 });
 
-test("proofreading stays out of the book until Accept, and does not rewrite the child’s spelling", () => {
-  const invented = proposeProofreading({ text: "teh catt sat", textStatus: "ok" });
-  assert.equal(invented.some((item) => String(item.after).includes("the cat")), false);
-  assert.equal(invented.every((item) => item.accepted === false), true);
+test("proofreading proposes spelling and 错别字, waits for Accept, and leaves names alone", () => {
+  const typo = proposeProofreading({ text: "teh catt sat", textStatus: "ok" });
+  const spelling = typo.find((item) => item.category === "wording");
+  assert.equal(spelling.altersWords, true);
+  assert.equal(spelling.accepted, false);
+  assert.equal(spelling.after, "the cat sat");
+  const typoPhoto = { id: "typo", text: "teh catt sat", textStatus: "ok", manuscript: false, artOverrideUrl: "", scanDataUrl: "scan" };
+  assert.equal(applyAssistantProposal(typoPhoto, spelling).applied, false);
+  assert.equal(typoPhoto.text, "teh catt sat");
+  assert.equal(typoPhoto.scanDataUrl, "scan");
+  const acceptedTypo = applyAssistantProposal(typoPhoto, { ...spelling, accepted: true });
+  assert.equal(acceptedTypo.applied, true);
+  assert.equal(acceptedTypo.photo.text, "the cat sat");
+  assert.equal(acceptedTypo.photo.textEdited, true);
+  assert.equal(acceptedTypo.photo.artOverrideUrl || "", "");
+  assert.equal(typoPhoto.text, "teh catt sat");
+  assert.equal(typesetText({ text: "teh catt sat", status: "ok", manuscript: true }), "");
+  assert.equal(typesetText({ text: acceptedTypo.photo.text, status: "parent", edited: true, manuscript: true }), "");
+  const named = proposeProofreading({ text: "Zorblax sat with Bibble and the wuggle", textStatus: "ok" });
+  assert.equal(named.some((item) => item.changed), false);
+  const coined = proposeProofreading({ text: "bibble sat down", textStatus: "ok" });
+  assert.equal(coined.some((item) => item.changed && item.altersWords), false);
+  const madeUp = proposeProofreading({ text: "波波星和喵喵怪在玩", textStatus: "ok" });
+  assert.equal(madeUp.some((item) => item.changed), false);
+  const chineseTypo = proposeProofreading({ text: "小朋友因该回家", textStatus: "ok" }).find((item) => item.category === "wording");
+  assert.equal(chineseTypo.after, "小朋友应该回家");
+  assert.equal(chineseTypo.altersWords, true);
+  assert.equal(applyAssistantProposal({ text: "小朋友因该回家", textStatus: "ok" }, chineseTypo).applied, false);
+  const grammar = proposeProofreading({ text: "a apple sat", textStatus: "ok" }).find((item) => item.category === "wording");
+  assert.equal(grammar.after, "an apple sat");
+  assert.equal(grammar.altersWords, true);
+  const adverb = proposeProofreading({ text: "小猫慢慢的走", textStatus: "ok" }).find((item) => item.category === "wording");
+  assert.equal(adverb.after, "小猫慢慢地走");
+  assert.equal(adverb.altersWords, true);
+  const clear = proposeProofreading({ text: "the cat sat on the mat", textStatus: "ok" });
+  assert.equal(clear.some((item) => item.changed), false);
   const photo = { id: "p", text: "the the cat", textStatus: "ok", textEdited: false };
   const wording = proposeProofreading({ text: photo.text, textStatus: "ok" }).find((item) => item.category === "wording");
   assert.equal(wording.altersWords, true);
@@ -908,6 +940,8 @@ test("proofreading stays out of the book until Accept, and does not rewrite the 
   const uncertain = proposeProofreading({ text: "guessed sentence", textStatus: "uncertain" });
   assert.equal(uncertain.length, 1);
   assert.equal(uncertain[0].category, "confirm");
+  const unreadTypo = proposeProofreading({ text: "teh cat", textStatus: "uncertain" });
+  assert.equal(unreadTypo.some((item) => String(item.after).includes("the cat")), false);
   assert.equal(uncertain[0].before, "");
   assert.equal(uncertain[0].after, "");
   const confirmed = applyAssistantProposal({ text: "", textStatus: "uncertain" }, { ...uncertain[0], accepted: true });

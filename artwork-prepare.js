@@ -1040,6 +1040,18 @@
     return String(value || "").replace(/[\s\p{P}\p{S}]+/gu, "");
   }
 
+  function spellingTokens(value) {
+    return String(value || "").match(/[A-Za-z]+(?:'[A-Za-z]+)?|[\u3400-\u9fff]/g) || [];
+  }
+
+  function wordingChanged(before, after) {
+    if (wordCore(before) !== wordCore(after)) return true;
+    const left = spellingTokens(before);
+    const right = spellingTokens(after);
+    if (left.length !== right.length) return true;
+    return left.some((token, index) => token !== right[index]);
+  }
+
   function punctuationFix(text) {
     const source = String(text || "");
     let next = source.replace(/[ \t\u3000]+([,.;:!?，。！？；：、])/g, "$1");
@@ -1063,6 +1075,243 @@
     const cjk = source.match(/([\u3400-\u9fff]{2,})\1/);
     if (cjk) return { before: source, after: source.replace(cjk[0], cjk[1]) };
     return null;
+  }
+
+  const EN_DICTIONARY = new Set(`
+    a an the and or of to in on at for with from by as into over under about up down out off all some any
+    is are was were be been being am
+    have has had do does did done doing
+    go goes went gone going come came coming
+    look looks looked looking see saw seen seeing say says said
+    can could will would should must may might
+    not no nor yes it its he she they them we you i me my your his her their our
+    this that these those there here then than
+    what when where who whom whose why how which
+    if so but because very just again once
+    one two three four five six seven eight nine ten eleven twelve
+    little big small good bad happy sad kind nice great fun funny pretty
+    friend friends school home house mom dad mother father family
+    cat dog bird fish tree sun moon star water day night morning boy girl child children people
+    play played playing like liked love loved run ran jump jumped sat sit set
+    read write draw make made take took get got give gave want wanted
+    new old first last next time today tomorrow yesterday please thank thanks hello goodbye
+    book page color red blue green yellow black white brown pink orange purple
+    eat ate food cake apple banana milk sleep slept walk walked talk talked
+    laugh laughed help helped find found think thought know knew
+    house room door window flower garden park story
+    car bus ball bed table chair rain snow wind sky cloud
+    rabbit bear fox frog duck pig cow horse
+    sister brother baby teacher class
+    was saw from form there three their where were here
+    own won quiet quite trail trial angel angle
+    too all off see good god look book moon tree school hello little happy sorry
+    been ben feed fed meet met need feel week deep keep feet door floor room food foot
+    cool pool noon soon boot wood wool green sleep sheep sweet free three
+    yellow really finally family until separate definitely receive people grammar remember
+    occurred happened running swimming dropped stopped letter better butter summer dinner
+    grass class glass dress miss kiss pass ball call fall tall wall tell well will still small spell
+    add egg buzz door floor
+    don't can't won't isn't that's what's I'll I'm I'd we're they're let's
+    son daughter name morning after before around through something anything everything nothing
+    another always never every many much more most other only own
+    open close start stop try tried upon together today
+    hour honest honor honour heir one university useful user euro
+    gift down sat mat
+  `.trim().split(/\s+/).filter(Boolean));
+
+  const EN_TYPOS = new Map([
+    ["teh", "the"],
+    ["adn", "and"],
+    ["waht", "what"],
+    ["taht", "that"],
+    ["siad", "said"],
+    ["freind", "friend"],
+    ["recieve", "receive"],
+    ["becuase", "because"],
+    ["becasue", "because"],
+    ["becouse", "because"],
+    ["beacuse", "because"],
+    ["peple", "people"],
+    ["frist", "first"],
+    ["wierd", "weird"],
+    ["seperate", "separate"],
+    ["definately", "definitely"],
+    ["tommorow", "tomorrow"],
+    ["tommorrow", "tomorrow"],
+    ["alot", "a lot"],
+    ["jsut", "just"],
+    ["thier", "their"],
+    ["whith", "with"],
+    ["grammer", "grammar"],
+    ["rember", "remember"],
+    ["occured", "occurred"],
+    ["untill", "until"],
+    ["realy", "really"],
+    ["finaly", "finally"],
+    ["famly", "family"],
+    ["frend", "friend"],
+    ["scool", "school"],
+    ["shool", "school"],
+    ["wher", "where"],
+    ["whne", "when"],
+    ["wnat", "want"],
+    ["hwat", "what"],
+    ["droped", "dropped"],
+    ["runing", "running"],
+    ["swiming", "swimming"],
+    ["comming", "coming"],
+    ["happend", "happened"],
+    ["dont", "don't"],
+    ["cant", "can't"],
+    ["wont", "won't"],
+    ["isnt", "isn't"]
+  ]);
+
+  const ZH_PAIRS = [
+    ["小朋有", "小朋友"],
+    ["因该", "应该"],
+    ["己经", "已经"],
+    ["既使", "即使"],
+    ["即然", "既然"],
+    ["必竟", "毕竟"],
+    ["天汽", "天气"],
+    ["成积", "成绩"],
+    ["安照", "按照"],
+    ["已后", "以后"],
+    ["已前", "以前"],
+    ["再这里", "在这里"],
+    ["再那里", "在那里"],
+    ["再哪里", "在哪里"],
+    ["兴高彩烈", "兴高采烈"],
+    ["兴高采列", "兴高采烈"],
+    ["再接再励", "再接再厉"],
+    ["走头无路", "走投无路"],
+    ["金壁辉煌", "金碧辉煌"],
+    ["世外桃园", "世外桃源"],
+    ["做为", "作为"],
+    ["象样", "像样"],
+    ["变本加利", "变本加厉"],
+    ["甘败下风", "甘拜下风"],
+    ["一愁莫展", "一筹莫展"],
+    ["不记其数", "不计其数"],
+    ["默默无蚊", "默默无闻"],
+    ["穿流不息", "川流不息"],
+    ["美仑美奂", "美轮美奂"],
+    ["沤心沥血", "呕心沥血"],
+    ["按步就班", "按部就班"],
+    ["谈笑风声", "谈笑风生"],
+    ["自立更生", "自力更生"],
+    ["黄梁一梦", "黄粱一梦"]
+  ];
+
+  function applyCase(source, replacement) {
+    const next = String(replacement || "");
+    if (!next) return source;
+    if (source === source.toUpperCase()) return next.toUpperCase();
+    if (source[0] && source[0] === source[0].toUpperCase()) {
+      return next.charAt(0).toUpperCase() + next.slice(1);
+    }
+    return next;
+  }
+
+  function uniqueDictHit(candidates) {
+    const hits = [];
+    candidates.forEach((word) => {
+      if (word && word.length >= 3 && EN_DICTIONARY.has(word) && !hits.includes(word)) hits.push(word);
+    });
+    return hits.length === 1 ? hits[0] : "";
+  }
+
+  function transpositions(word) {
+    const out = [];
+    for (let index = 0; index < word.length - 1; index += 1) {
+      if (word[index] === word[index + 1]) continue;
+      out.push(word.slice(0, index) + word[index + 1] + word[index] + word.slice(index + 2));
+    }
+    return out;
+  }
+
+  function doubleDeletions(word) {
+    const out = [];
+    for (let index = 0; index < word.length - 1; index += 1) {
+      if (word[index] === word[index + 1]) out.push(word.slice(0, index) + word.slice(index + 1));
+    }
+    return out;
+  }
+
+  function correctEnglishToken(token) {
+    const lower = token.toLowerCase();
+    if (EN_DICTIONARY.has(lower)) return token;
+    if (/[A-Z]/.test(token)) {
+      return EN_TYPOS.has(lower) ? applyCase(token, EN_TYPOS.get(lower)) : token;
+    }
+    if (EN_TYPOS.has(lower)) return applyCase(token, EN_TYPOS.get(lower));
+    if (lower.length < 3 || lower.includes("'")) return token;
+    const transposed = uniqueDictHit(transpositions(lower));
+    if (transposed) return transposed;
+    const doubled = uniqueDictHit(doubleDeletions(lower));
+    if (doubled) return doubled;
+    return token;
+  }
+
+  function fixEnglishWords(text) {
+    return String(text || "").replace(/[A-Za-z]+(?:'[A-Za-z]+)?/g, (token) => correctEnglishToken(token));
+  }
+
+  function fixPronounI(text) {
+    return String(text || "").replace(/\bi\b(?!\.)/g, "I");
+  }
+
+  function wantsAn(word) {
+    const lower = String(word || "").toLowerCase();
+    if (/^(one|uni|use|ufo|euro)/.test(lower)) return false;
+    if (/^(hour|honest|honor|honour|heir)/.test(lower)) return true;
+    return /^[aeiou]/i.test(lower);
+  }
+
+  function fixArticles(text) {
+    return String(text || "").replace(/\b(an?)(\s+)([A-Za-z][A-Za-z']*)/gi, (full, article, space, word) => {
+      const need = wantsAn(word);
+      const isAn = article.toLowerCase() === "an";
+      if (need === isAn) return full;
+      const next = need ? "an" : "a";
+      const cased = article[0] === article[0].toUpperCase() ? next.charAt(0).toUpperCase() + next.slice(1) : next;
+      return cased + space + word;
+    });
+  }
+
+  function applyChineseFixes(text) {
+    let next = String(text || "");
+    ZH_PAIRS.forEach(([from, to]) => {
+      if (next.includes(from)) next = next.split(from).join(to);
+    });
+    next = next.replace(/(?<!妈)妈吗(?!妈)/g, "妈妈");
+    next = next.replace(/做业(?!余)/g, "作业");
+    next = next.replace(/在次(?!序|数|第)/g, "再次");
+    next = next.replace(/(?<!目)的很(?=$|[。！？!?\s])/g, "得很");
+    next = next.replace(/(慢慢|快快|轻轻|静静|好好|悄悄|渐渐|高高)的(走|跑|说|看|飞|跳|笑|唱|来|去|玩|吃|睡)/g, "$1地$2");
+    return next;
+  }
+
+  function applyDuplicateWords(text) {
+    let current = String(text || "");
+    for (let index = 0; index < 3; index += 1) {
+      const next = duplicateWordingFix(current);
+      if (!next || next.after === current) break;
+      current = next.after;
+    }
+    return current;
+  }
+
+  function wordingFix(text) {
+    const source = String(text || "");
+    let next = applyChineseFixes(source);
+    next = fixEnglishWords(next);
+    next = fixPronounI(next);
+    next = fixArticles(next);
+    next = applyDuplicateWords(next);
+    if (!next || next === source) return null;
+    return { before: source, after: next };
   }
 
   function proofItem({ category, before, after, changed, altersWords, id }) {
@@ -1093,15 +1342,15 @@
     const source = String(text || "");
     if (!source.trim()) return [];
     const suggestions = [];
-    const tidy = tidyTypography(source);
-    if (tidy.changed && wordCore(tidy.text) === wordCore(source)) {
+    const wording = wordingFix(source);
+    if (wording && wording.after !== wording.before && wordingChanged(wording.before, wording.after)) {
       suggestions.push(proofItem({
-        category: "layout",
-        before: source,
-        after: tidy.text,
+        category: "wording",
+        before: wording.before,
+        after: wording.after,
         changed: true,
-        altersWords: false,
-        id: "proof-layout"
+        altersWords: true,
+        id: "proof-wording"
       }));
     }
     const punct = punctuationFix(source);
@@ -1115,15 +1364,15 @@
         id: "proof-punctuation"
       }));
     }
-    const duplicate = duplicateWordingFix(source);
-    if (duplicate && wordCore(duplicate.after) !== wordCore(source)) {
+    const tidy = tidyTypography(source);
+    if (tidy.changed && wordCore(tidy.text) === wordCore(source)) {
       suggestions.push(proofItem({
-        category: "wording",
-        before: duplicate.before,
-        after: duplicate.after,
+        category: "layout",
+        before: source,
+        after: tidy.text,
         changed: true,
-        altersWords: true,
-        id: "proof-wording"
+        altersWords: false,
+        id: "proof-layout"
       }));
     }
     const seen = new Set();
@@ -1267,8 +1516,18 @@
     const accept = section.querySelector("[data-assist-accept]");
     const note = section.querySelector("[data-assist-note]");
     const meta = section.querySelector("[data-assist-meta]");
+    const doc = section.ownerDocument || null;
+    const banner = doc && typeof doc.querySelector === "function" ? doc.querySelector("[data-proof-banner]") : null;
+    const bannerText = banner ? banner.querySelector("[data-proof-banner-text]") : null;
+    const bannerBefore = banner ? banner.querySelector("[data-proof-banner-before]") : null;
+    const bannerAfter = banner ? banner.querySelector("[data-proof-banner-after]") : null;
+    const bannerAccept = banner ? banner.querySelector("[data-proof-banner-accept]") : null;
+    const bannerReject = banner ? banner.querySelector("[data-proof-banner-reject]") : null;
+    const bannerJump = banner ? banner.querySelector("[data-proof-banner-jump]") : null;
     let pending = null;
+    let bannerProposal = null;
     let proofQueue = [];
+    const dismissed = new Set();
     const hide = () => {
       pending = null;
       proofQueue = [];
@@ -1286,8 +1545,46 @@
       if (!text && proposal && proposal.category === "confirm" && api.emptyLabel) return api.emptyLabel();
       return text;
     };
+    const proofKey = (photo, item) => `${photo && photo.id || ""}:${item.id}:${item.before}`;
+    const renderBanner = ({ mode = "clear", text = "", beforeText = "", afterText = "" } = {}) => {
+      if (!banner) return;
+      banner.hidden = false;
+      banner.classList.toggle("is-alert", mode === "alert" || mode === "other");
+      if (bannerText) bannerText.textContent = text;
+      const samples = mode === "alert" || mode === "note";
+      if (bannerBefore) {
+        bannerBefore.hidden = !samples;
+        bannerBefore.textContent = beforeText;
+      }
+      if (bannerAfter) {
+        bannerAfter.hidden = !samples;
+        bannerAfter.textContent = afterText;
+      }
+      if (bannerAccept) bannerAccept.hidden = !samples;
+      if (bannerReject) bannerReject.hidden = !samples;
+      if (bannerJump) bannerJump.hidden = mode !== "other";
+    };
+    const hideBanner = () => {
+      bannerProposal = null;
+      if (banner) banner.hidden = true;
+    };
+    const renderProofBanner = (proposal) => {
+      bannerProposal = proposal;
+      const wording = proposal.altersWords === true;
+      const beforeBody = reading(proposal.before, proposal);
+      const afterBody = reading(proposal.after, proposal);
+      renderBanner({
+        mode: wording ? "alert" : "note",
+        text: wording
+          ? (api.proofAlertLabel ? api.proofAlertLabel() : (api.label ? api.label(proposal) : ""))
+          : (api.label ? api.label(proposal) : ""),
+        beforeText: api.beforeLabel ? `${api.beforeLabel()}\n${beforeBody}` : beforeBody,
+        afterText: api.afterLabel ? `${api.afterLabel()}\n${afterBody}` : afterBody
+      });
+    };
     const show = (proposal) => {
       pending = proposal;
+      if (proposal && proposal.kind === "proofread") renderProofBanner(proposal);
       if (!proposalBox) return;
       proposalBox.hidden = false;
       if (summary) summary.textContent = api.label ? api.label(proposal) : proposal.kind;
@@ -1318,14 +1615,111 @@
       if (meta) meta.textContent = api.pendingLabel ? api.pendingLabel() : "";
     };
     const currentPhoto = () => (api.photo ? api.photo() : null);
+    const pageContext = () => (api.pagePhoto ? api.pagePhoto() : { kind: "photo", photo: currentPhoto() });
+    const proofItems = (photo) => proposeProofreading({
+      text: api.text ? api.text(photo) : (photo.text || ""),
+      textStatus: photo.textStatus,
+      lines: photo.lines,
+      edited: photo.textEdited === true
+    });
+    const showFinished = (photo, items) => {
+      hide();
+      bannerProposal = null;
+      const keptWording = items.some((item) => item.altersWords === true && item.changed === true && dismissed.has(proofKey(photo, item)));
+      const text = keptWording
+        ? (api.proofDoneLabel ? api.proofDoneLabel() : "")
+        : (api.proofClearLabel ? api.proofClearLabel() : "");
+      renderBanner({ mode: keptWording ? "done" : "clear", text });
+      if (meta) meta.textContent = text;
+    };
     const showNextProof = () => {
       const next = proofQueue.shift();
       if (!next) {
         hide();
+        bannerProposal = null;
+        renderBanner({ mode: "clear", text: api.proofClearLabel ? api.proofClearLabel() : "" });
         if (meta) meta.textContent = api.proofDoneLabel ? api.proofDoneLabel() : "";
         return;
       }
       show(next);
+    };
+    const showProofreading = ({ reset = false } = {}) => {
+      const ctx = pageContext();
+      if (ctx.kind === "manuscript") {
+        hide();
+        bannerProposal = null;
+        renderBanner({
+          mode: "clear",
+          text: api.manuscriptLabel ? api.manuscriptLabel() : (api.proofClearLabel ? api.proofClearLabel() : "")
+        });
+        if (meta) meta.textContent = api.manuscriptLabel ? api.manuscriptLabel() : "";
+        return;
+      }
+      if (ctx.kind !== "photo" || !ctx.photo) {
+        hide();
+        bannerProposal = null;
+        if (api.hasWordingProof && api.hasWordingProof()) {
+          renderBanner({ mode: "other", text: api.otherProofLabel ? api.otherProofLabel() : "" });
+          if (meta) meta.textContent = api.otherProofLabel ? api.otherProofLabel() : "";
+          return;
+        }
+        renderBanner({ mode: "clear", text: api.proofClearLabel ? api.proofClearLabel() : "" });
+        if (meta) meta.textContent = api.proofClearLabel ? api.proofClearLabel() : "";
+        return;
+      }
+      const photo = ctx.photo;
+      if (reset) {
+        [...dismissed].forEach((key) => {
+          if (key.startsWith(`${photo.id}:`)) dismissed.delete(key);
+        });
+      }
+      const items = proofItems(photo);
+      proofQueue = items
+        .filter((item) => !dismissed.has(proofKey(photo, item)))
+        .map((item) => ({ ...item, photoId: photo.id }));
+      if (!proofQueue.length) {
+        if (api.hasWordingProof && api.hasWordingProof()) {
+          hide();
+          bannerProposal = null;
+          renderBanner({ mode: "other", text: api.otherProofLabel ? api.otherProofLabel() : "" });
+          if (meta) meta.textContent = api.otherProofLabel ? api.otherProofLabel() : "";
+          return;
+        }
+        showFinished(photo, items);
+        return;
+      }
+      showNextProof();
+    };
+    const acceptProposal = (proposal) => {
+      if (!proposal) return;
+      const photo = api.photoById ? api.photoById(proposal.photoId) : currentPhoto();
+      if (!photo) return;
+      const outcome = applyAssistantProposal(photo, { ...proposal, accepted: true });
+      if (!outcome.applied) {
+        if (meta) meta.textContent = api.unchangedLabel ? api.unchangedLabel() : "";
+        return;
+      }
+      if (proposal.kind === "proofread") dismissed.add(proofKey(photo, proposal));
+      if (api.commit) api.commit(outcome.photo);
+      if (proposal.kind === "proofread") {
+        showProofreading();
+        return;
+      }
+      hide();
+      if (meta && api.acceptedLabel) meta.textContent = api.acceptedLabel();
+    };
+    const rejectProposal = (proposal) => {
+      if (!proposal) return;
+      const photo = (proposal.photoId && api.photoById ? api.photoById(proposal.photoId) : null) || currentPhoto();
+      dismissAssistantProposal(photo, proposal);
+      if (proposal.kind === "proofread" && photo) {
+        dismissed.add(proofKey(photo, proposal));
+        showProofreading();
+        if (meta && api.dismissedLabel) meta.textContent = api.dismissedLabel();
+        return;
+      }
+      hide();
+      if (meta && api.dismissedLabel) meta.textContent = api.dismissedLabel();
     };
     section.querySelector("[data-assist-type]")?.addEventListener("click", () => {
       proofQueue = [];
@@ -1380,50 +1774,16 @@
       show(proposal);
     });
     section.querySelector("[data-assist-proof]")?.addEventListener("click", () => {
-      const photo = currentPhoto();
-      if (!photo) return;
-      proofQueue = proposeProofreading({
-        text: api.text(photo),
-        textStatus: photo.textStatus,
-        lines: photo.lines,
-        edited: photo.textEdited === true
-      }).map((item) => ({ ...item, photoId: photo.id }));
-      if (!proofQueue.length) {
-        hide();
-        if (meta) meta.textContent = api.proofClearLabel ? api.proofClearLabel() : "";
-        return;
-      }
-      showNextProof();
+      showProofreading({ reset: true });
     });
-    accept?.addEventListener("click", () => {
-      if (!pending) return;
-      const photo = api.photoById ? api.photoById(pending.photoId) : currentPhoto();
-      if (!photo) return;
-      const advancing = pending.kind === "proofread" && proofQueue.length > 0;
-      const outcome = applyAssistantProposal(photo, { ...pending, accepted: true });
-      if (!outcome.applied) {
-        if (meta) meta.textContent = api.unchangedLabel ? api.unchangedLabel() : "";
-        return;
-      }
-      if (api.commit) api.commit(outcome.photo);
-      if (advancing) {
-        showNextProof();
-        return;
-      }
-      hide();
-      if (meta && api.acceptedLabel) meta.textContent = api.acceptedLabel();
+    accept?.addEventListener("click", () => acceptProposal(pending));
+    bannerAccept?.addEventListener("click", () => acceptProposal(bannerProposal || pending));
+    section.querySelector("[data-assist-reject]")?.addEventListener("click", () => rejectProposal(pending));
+    bannerReject?.addEventListener("click", () => rejectProposal(bannerProposal || pending));
+    bannerJump?.addEventListener("click", () => {
+      if (api.focusWordingProof) api.focusWordingProof();
     });
-    section.querySelector("[data-assist-reject]")?.addEventListener("click", () => {
-      if (!pending) return;
-      const advancing = pending.kind === "proofread" && proofQueue.length > 0;
-      dismissAssistantProposal(currentPhoto(), pending);
-      if (advancing) {
-        showNextProof();
-        return;
-      }
-      hide();
-      if (meta && api.dismissedLabel) meta.textContent = api.dismissedLabel();
-    });
+    return { showProofreading, hideBanner };
   }
 
   function typesetText({ text = "", status = "ok", edited = false, manuscript = false } = {}) {
