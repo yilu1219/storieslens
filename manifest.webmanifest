@@ -1,7 +1,7 @@
 {
   "name": "StoriesLens · 语镜故事",
   "short_name": "StoriesLens",
-  "description": "Turn artwork, words and voice into stories, books and films with a thoughtful AI mentor.",
+  "description": "Turn phone photos of children’s drawings into an ebook, or turn artwork, words and voice into stories, books and films with a thoughtful AI mentor.",
   "id": "/solo-story",
   "start_url": "/solo-story?mode=solo&source=pwa",
   "scope": "/",

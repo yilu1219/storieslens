@@ -3307,8 +3307,12 @@
         }
         if (!active) return;
         if (mark && next.markUrl) {
-          mark.src = next.markUrl;
-          mark.alt = "";
+          if (mark.tagName === "IMG") {
+            mark.src = next.markUrl;
+            mark.alt = "";
+          } else {
+            mark.style.backgroundImage = `url("${String(next.markUrl).replace(/"/g, "")}")`;
+          }
         }
         text.hidden = !next.showText;
         if (next.showText && next.textBox) {

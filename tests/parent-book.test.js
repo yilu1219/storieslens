@@ -135,8 +135,9 @@ test("parent book page, routes, and homepage entry are wired for China and inter
   const index = read("index.html");
   const homeJs = read("portal-home.js");
 
-  assert.match(server, /"\/parent-book": "\/parent-book.html"/);
-  assert.match(server, /"\/family-book": "\/parent-book.html"/);
+  assert.match(server, /\/photos-to-ebook/);
+  assert.match(server, /照片成为电子书/);
+  assert.match(server, /LEGACY_PARENT_PATHS/);
   assert.match(server, /\/api\/parent-book\/pdf/);
   assert.match(server, /\/api\/parent-book\/film/);
   assert.doesNotMatch(html, /fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com/);
@@ -165,10 +166,10 @@ test("parent book page, routes, and homepage entry are wired for China and inter
   assert.match(html, /artwork-prepare\.js/);
   assert.doesNotMatch(html.split("price-grid")[0], /¥19\.9|¥129|¥199/);
   assert.match(html, /¥19\.9/);
-  assert.match(index, /href="parent-book"/);
+  assert.match(index, /href="\/photos-to-ebook"/);
   assert.match(index, /data-audience="parent-book"/);
   assert.match(homeJs, /parent-book-cta/);
-  assert.match(read("chinese-studio.html"), /parent-book\.html/);
+  assert.match(read("chinese-studio.html"), /照片成为电子书/);
   assert(fs.existsSync(path.join(root, "vendor/pdf-lib.min.js")));
   assert.equal(MAX_PAGES, 24);
 });
@@ -262,9 +263,10 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   const suggestAt = html.indexOf("data-suggest-card");
   assert.ok(previewAt > 0 && previewAt < editAt && editAt < suggestAt);
   assert.match(html.slice(previewAt, suggestAt), /data-book-edit-fields/);
-  assert.match(html, /parent-book\.js\?v=20261112-proof1/);
-  assert.match(html, /parent-book\.css\?v=20261112-proof1/);
-  assert.match(html, /artwork-prepare\.js\?v=20261112-proof1/);
+  assert.match(html, /parent-book\.js\?v=20261112-proof-ebook/);
+  assert.match(html, /parent-book\.css\?v=20261112-proof-ebook/);
+  assert.match(html, /artwork-prepare\.js\?v=20261112-proof-ebook/);
+  assert.match(html, /preview-watermark\.js\?v=20261112-proof-ebook/);
   assert.match(html, /data-book-assistant/);
   assert.match(html, /data-assist-proof/);
   assert.match(html, /data-assist-accept/);
@@ -286,9 +288,10 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   assert.match(js, /retainBookEdits/);
   const teacherHtml = read("teacher-book.html");
   assert.match(teacherHtml, /data-interior-style checked/);
-  assert.match(teacherHtml, /parent-book\.css\?v=20261112-proof1/);
-  assert.match(teacherHtml, /artwork-prepare\.js\?v=20261112-proof1/);
-  assert.match(teacherHtml, /teacher-book\.js\?v=20261112-proof1/);
+  assert.match(teacherHtml, /parent-book\.css\?v=20261112-proof-ebook/);
+  assert.match(teacherHtml, /artwork-prepare\.js\?v=20261112-proof-ebook/);
+  assert.match(teacherHtml, /teacher-book\.js\?v=20261112-proof-ebook/);
+  assert.match(teacherHtml, /preview-watermark\.js\?v=20261112-proof-ebook/);
   assert.match(teacherHtml, /data-assist-proof/);
   assert.match(read("teacher-book.js"), /planBookPages/);
   assert.match(js, /function commitPhotoText/);
@@ -346,7 +349,7 @@ test("parent book shows staged Yu progress, a watermarked preview, and pay-then-
   assert.match(locale, /showProgress\(current\.done, current\.total, current\.key, current\.vars\)/);
   assert.match(show, /progressState = \{ done, total, key, vars: vars \|\| \{\} \}/);
   assert.match(css, /\.yu-progress-value \{ stroke: var\(--leaf-deep\); \}/);
-  assert.match(read("teacher-book.html"), /parent-book\.css\?v=20261112-proof1/);
+  assert.match(read("teacher-book.html"), /parent-book\.css\?v=20261112-proof-ebook/);
   assert.doesNotMatch(js, /setStatus\(t\("cutting"\)\)/);
   assert.doesNotMatch(js, /Extracting the drawing and the words with pdf-craft/);
   assert.match(js, /assets\/storieslens-logo\.png/);

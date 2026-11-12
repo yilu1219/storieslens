@@ -8,7 +8,7 @@
     <title>教师班级出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261112-proof1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261112-proof-ebook" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -65,7 +65,7 @@
               <button type="button" class="page-art-handle" data-art-handle aria-label="缩放画面"></button>
             </div>
             <div class="page-text" data-page-text contenteditable="true" role="textbox" spellcheck="true" aria-multiline="true"></div>
-            <img class="page-watermark" data-page-mark alt="" src="assets/storieslens-logo.png" />
+            <div class="page-watermark" data-page-mark aria-hidden="true"></div>
           </div>
         </div>
         <p class="hint page-editor-note" data-page-editor-note hidden></p>
@@ -146,9 +146,10 @@
     <div class="print-root" data-print-root aria-hidden="true"></div>
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261112-proof1"></script>
+    <script src="artwork-prepare.js?v=20261112-proof-ebook"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-review.js?v=20261111-2"></script>
-    <script src="teacher-book.js?v=20261112-proof1"></script>
+    <script src="preview-watermark.js?v=20261112-proof-ebook"></script>
+    <script src="teacher-book.js?v=20261112-proof-ebook"></script>
   </body>
 </html>

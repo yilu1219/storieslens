@@ -31,7 +31,7 @@
       "hero-kicker": "YOUR PERSONAL AI STORY MENTOR",
       "hero-title-one": "Your next storybook or short film starts with",
       "hero-title-two": "something you made.",
-      "hero-lede": "Upload your artwork or photo—or speak or type one idea. Yu asks three questions and guides you toward a first scene written in your voice.",
+      "hero-lede": "Turn phone photos of a child’s drawings or writing into an ebook—or upload something you made. Yu asks three questions and guides you toward a first scene written in your voice.",
       "yu-profile-cta": "Meet Yu",
       "yu-profile-sub": "See how your bilingual mentor is trained",
       "sign-in": "Sign in",
@@ -66,10 +66,10 @@
       "metadata-removed": "Location and camera details removed",
       "private-default": "Private by default",
       "type-link": "Prefer to type? Start with words →",
-      "parent-book-kicker": "FOR PARENTS · 家长出书",
-      "parent-book-title": "Turn phone photos into an A5 book and a short film.",
-      "parent-book-copy": "Upload photos of your child's drawings or writing. Preview the book and make a short film on this phone.",
-      "parent-book-cta": "Make a book from photos →",
+      "parent-book-kicker": "PHOTOS TO EBOOK · 照片做成电子书",
+      "parent-book-title": "Turn phone photos of children’s drawings or writing into an ebook.",
+      "parent-book-copy": "Upload a photo of the artwork or the writing. Preview the whole book on this phone, then keep the ebook.",
+      "parent-book-cta": "Make an ebook from photos →",
       "teacher-book-kicker": "FOR TEACHERS · 教师出书",
       "teacher-book-title": "Turn student work into a class ebook parents can open.",
       "teacher-book-copy": "Upload student work, preview a class book, and share a private link with families.",
@@ -138,7 +138,7 @@
       "hero-kicker": "你的专属 AI 故事与写作导师",
       "hero-title-one": "让你的作品，成为",
       "hero-title-two": "一本书或一部短片。",
-      "hero-lede": "上传一幅画、一张照片，或说出、写下一个想法。你的 AI 故事导师 Yu 会先提出三个问题，再陪你写出属于自己的故事第一幕。",
+      "hero-lede": "可以把孩子的画和作文照片做成电子书。也可以上传一幅画、一张照片，或说出、写下一个想法。Yu 会先提出三个问题，再陪你写出属于自己的故事第一幕。",
       "yu-profile-cta": "认识羽大师",
       "yu-profile-sub": "看看中英文语言导师是怎样训练出来的",
       "sign-in": "邮箱登录",
@@ -173,10 +173,10 @@
       "metadata-removed": "删除位置和拍摄设备信息",
       "private-default": "默认私密",
       "type-link": "更喜欢打字？从文字开始 →",
-      "parent-book-kicker": "家长出书",
-      "parent-book-title": "用手机照片，几分钟做成 A5 书和短片。",
-      "parent-book-copy": "上传孩子的画或作文照片，在手机上预览成书，并做成短片。",
-      "parent-book-cta": "开始用照片做书 →",
+      "parent-book-kicker": "照片做成电子书",
+      "parent-book-title": "把孩子的画和作文照片做成电子书。",
+      "parent-book-copy": "用手机拍下画作或作文，先免费预览整本，再保存成电子书。",
+      "parent-book-cta": "照片成为电子书 →",
       "teacher-book-kicker": "教师出书",
       "teacher-book-title": "把学生作业做成可以分享给家长的班级电子书。",
       "teacher-book-copy": "上传学生作业，预览班级书，再用私密链接分享给家长。",
@@ -264,7 +264,17 @@
     });
     const squadLink = document.querySelector("[data-audience='cocreate']");
     if (squadLink) squadLink.href = `start.html?mode=squad&storyLang=${homeLocale === "zh" ? "zh" : "en"}`;
-    document.title = homeLocale === "zh" ? "语镜故事｜从你的作品开始创作" : "StoriesLens | Start with your creation";
+    const parentLink = document.querySelector("[data-audience='parent-book']");
+    if (parentLink) parentLink.href = homeLocale === "zh" ? "/照片成为电子书" : "/photos-to-ebook";
+    document.title = homeLocale === "zh"
+      ? "语镜故事｜照片做成电子书 · 从你的作品开始"
+      : "StoriesLens | 照片做成电子书 · Turn photos into an ebook";
+    const description = document.querySelector('meta[name="description"]');
+    if (description) {
+      description.setAttribute("content", homeLocale === "zh"
+        ? "把孩子的画和作文照片做成电子书。也可以从一幅作品开始，让 Yu 提问，你始终是作者。"
+        : "Turn phone photos of children’s drawings or writing into an ebook. Yu still asks three questions when a story starts from something you made. 照片做成电子书。");
+    }
   };
 
   const setStatus = (message, error = false) => {

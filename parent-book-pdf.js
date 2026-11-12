@@ -1,4 +1,7 @@
+const fs = require("fs");
+const path = require("path");
 const { PDFDocument, rgb } = require("pdf-lib");
+const { OPACITY, tileWatermarkPlacements } = require("./preview-watermark");
 
 const A5_WIDTH_MM = 148;
 const A5_HEIGHT_MM = 210;
@@ -109,6 +112,7 @@ async function buildParentBookPdf({ pages = [], title = "", childName = "", lang
   const margin = Number(marginMm) > 0 ? Number(marginMm) * MM_TO_PT : 0;
   const imageBoxWidth = Math.max(1, BLEED_WIDTH_PT - margin * 2);
   const imageBoxHeight = Math.max(1, BLEED_HEIGHT_PT - margin * 2);
+  const watermark = preview ? await pdf.embedPng(fs.readFileSync(path.join(__dirname, "assets", "storieslens-logo.png"))) : null;
 
   for (const page of pages) {
     const imageInput = normalizeImageInput(page);
@@ -142,6 +146,18 @@ async function buildParentBookPdf({ pages = [], title = "", childName = "", lang
         y: margin + fitted.y,
         width: fitted.width,
         height: fitted.height
+      });
+    }
+    if (watermark) {
+      const { width, height } = pdfPage.getSize();
+      tileWatermarkPlacements(width, height).forEach((tile) => {
+        pdfPage.drawImage(watermark, {
+          x: tile.x,
+          y: height - tile.y - tile.size,
+          width: tile.size,
+          height: tile.size,
+          opacity: OPACITY
+        });
       });
     }
   }

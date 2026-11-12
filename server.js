@@ -30,7 +30,9 @@ const mimeTypes = {
   ".webp": "image/webp",
   ".mp4": "video/mp4",
   ".pdf": "application/pdf",
-  ".ico": "image/x-icon"
+  ".ico": "image/x-icon",
+  ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8"
 };
 
 function loadLocalEnv() {
@@ -160,6 +162,23 @@ function resolveRequestPath(urlPathname) {
   return filePath;
 }
 
+const PHOTO_EBOOK_ZH = "/照片成为电子书";
+const PHOTO_EBOOK_EN = "/photos-to-ebook";
+const LEGACY_PARENT_PATHS = new Set(["/parent-book", "/parent-book.html", "/family-book", "/family-book.html"]);
+
+function photoEbookPathForLanguage(acceptLanguage) {
+  const first = String(acceptLanguage || "").split(",")[0].split(";")[0].trim().toLowerCase();
+  return first.startsWith("en") ? PHOTO_EBOOK_EN : PHOTO_EBOOK_ZH;
+}
+
+function decodedPathname(requestUrl) {
+  try {
+    return decodeURIComponent(requestUrl.pathname);
+  } catch (_error) {
+    return requestUrl.pathname;
+  }
+}
+
 const pageAliases = Object.freeze({
   "/app": "/app.html",
   "/create": "/app.html",
@@ -169,8 +188,8 @@ const pageAliases = Object.freeze({
   "/admin-allowances": "/admin-credits.html",
   "/studio": "/movie-studio.html",
   "/classroom": "/classroom-archive.html",
-  "/parent-book": "/parent-book.html",
-  "/family-book": "/parent-book.html",
+  [PHOTO_EBOOK_ZH]: "/parent-book.html",
+  [PHOTO_EBOOK_EN]: "/parent-book.html",
   "/teacher-book": "/teacher-book.html",
   "/class-book": "/teacher-book.html",
   "/book-share": "/book-share.html",
@@ -1910,7 +1929,17 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  const requestedPath = resolveRequestPath(pageAliases[requestUrl.pathname] || requestUrl.pathname);
+  const pathname = decodedPathname(requestUrl);
+  if ((request.method === "GET" || request.method === "HEAD") && LEGACY_PARENT_PATHS.has(pathname)) {
+    response.writeHead(301, {
+      Location: encodeURI(photoEbookPathForLanguage(request.headers["accept-language"])) + requestUrl.search,
+      "Cache-Control": "public, max-age=86400"
+    });
+    response.end();
+    return;
+  }
+
+  const requestedPath = resolveRequestPath(pageAliases[pathname] || requestUrl.pathname);
 
   if (!requestedPath) {
     response.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });

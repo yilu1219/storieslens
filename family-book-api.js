@@ -231,8 +231,8 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
         const session = await createFamilyCheckoutSession({
           order,
           offer,
-          successPath: body.returnPath || "/parent-book",
-          cancelPath: body.cancelPath || body.returnPath || "/parent-book"
+          successPath: body.returnPath || "/照片成为电子书",
+          cancelPath: body.cancelPath || body.returnPath || "/照片成为电子书"
         });
         books.attachStripeSession(order.id, session.id);
         sendJson(response, 201, { checkoutUrl: session.url, sessionId: session.id, orderId: order.id, checkoutConfigured: true, paid: false });

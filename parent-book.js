@@ -11,10 +11,10 @@
 
   const copy = {
     zh: {
-      "brand-sub": "家长出书",
-      kicker: "FOR PARENTS · 家长出书",
-      title: "用手机照片，几分钟做成一本 A5 书",
-      lede: "上传孩子的画、手工或作文照片，几分钟预览成一本 A5 书，也可以生成短片。",
+      "brand-sub": "照片做成电子书",
+      kicker: "照片做成电子书",
+      title: "把照片做成电子书",
+      lede: "上传孩子的画、手工或作文照片，免费预览成一本电子书，也可以生成短片。",
       "details-kicker": "书籍信息",
       "title-label": "书名",
       "name-label": "孩子的署名（选填）",
@@ -231,13 +231,14 @@
       "consent-saved": "已记下家长签名。这张真人头像可以用在作者简介页。",
       "consent-missing": "请写上家长姓名，并在框里签名。",
       "avatar-blocked": "这张头像不能使用。请不要上传证件，或带有电话、地址、邮箱、二维码的画面。",
-      docTitle: "家长出书 · StoriesLens"
+      docTitle: "照片做成电子书 · StoriesLens",
+      metaDescription: "把手机照片做成电子书。上传孩子的画作或作文照片，免费预览整本，付款并确认邮箱后获得无水印正式 A5 电子书。"
     },
     en: {
-      "brand-sub": "Parent book",
-      kicker: "FOR PARENTS",
-      title: "Turn phone photos into an A5 book in minutes",
-      lede: "Upload photos of your child’s drawings, crafts, or writing. Preview an A5 book in minutes and make a short film.",
+      "brand-sub": "Photos to ebook",
+      kicker: "PHOTOS TO EBOOK",
+      title: "Turn phone photos into an ebook",
+      lede: "Upload photos of your child’s drawings, crafts, or writing. Preview an ebook in minutes and make a short film.",
       "details-kicker": "BOOK DETAILS",
       "title-label": "Book title",
       "name-label": "Child’s display name (optional)",
@@ -454,7 +455,8 @@
       "consent-saved": "The parent signature is saved. This real portrait can appear on the author page.",
       "consent-missing": "Enter the parent’s name and sign in the box.",
       "avatar-blocked": "This portrait cannot be used. Do not upload an identity document or an image with a phone number, address, email, or QR code.",
-      docTitle: "Parent book · StoriesLens"
+      docTitle: "Photos to ebook · StoriesLens",
+      metaDescription: "Turn phone photos of a child’s drawings or writing into an ebook. Preview the whole book free, then receive the clean A5 PDF after payment and a confirmed email."
     }
   };
 
@@ -711,10 +713,26 @@
     } catch (_error) {}
   }
 
+  function publicBookPath() {
+    return state.locale === "en" ? "/photos-to-ebook" : "/照片成为电子书";
+  }
+
   function applyLocale(next) {
     state.locale = next === "en" ? "en" : "zh";
     document.documentElement.lang = state.locale === "zh" ? "zh-CN" : "en";
     document.title = t("docTitle");
+    const description = t("metaDescription");
+    const canonicalUrl = `https://www.storieslens.com${publicBookPath()}`;
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+    if (descriptionMeta) descriptionMeta.setAttribute("content", description);
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute("href", canonicalUrl);
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", t("docTitle"));
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    if (ogDescription) ogDescription.setAttribute("content", description);
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.setAttribute("content", canonicalUrl);
     document.querySelectorAll("[data-i18n]").forEach((node) => {
       node.textContent = t(node.dataset.i18n);
     });
@@ -809,12 +827,9 @@
     canvas.height = height;
     const context = canvas.getContext("2d");
     context.drawImage(page, 0, 0, width, height);
-    const mark = Math.round(width * 0.16);
-    const margin = Math.round(width * 0.045);
-    context.save();
-    context.globalAlpha = 0.62;
-    context.drawImage(logo, width - mark - margin, margin, mark, mark);
-    context.restore();
+    const api = window.StoriesLensPreviewWatermark;
+    if (!api) throw new Error("watermark_unavailable");
+    api.paintTiledWatermark(context, logo, width, height);
     return canvasToJpeg(canvas, 0.92);
   }
 
@@ -1969,8 +1984,8 @@
           contact: contactPayload(),
           shipping: isPrint ? shippingPayload() : undefined,
           locale: state.locale,
-          returnPath: "/parent-book",
-          cancelPath: "/parent-book"
+          returnPath: publicBookPath(),
+          cancelPath: publicBookPath()
         })
       });
       const result = await response.json().catch(() => ({}));
