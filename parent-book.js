@@ -91,7 +91,11 @@
       camera: "拍照上传",
       "upload-start": "这里开始上传照片",
       "edit-kicker": "修改内容",
-      "edit-hint": "改书名、作者和每张作品的文字层。画面层只在你接受助手建议后才会更换。预览只在你修改之后更新。我们不会自动改孩子的画或原文。",
+      "edit-hint": "改书名、作者和每张作品的文字层。也可以直接在书页上改文字，并在安全框里拖动或缩放画面。画面内容只在你接受助手建议后才会更换。我们不会自动改孩子的画或原文。",
+      "page-edit-note": "这一页可以直接改排好的文字，也可以在安全框里拖动或缩放画面。孩子的原文和原画不会自动改。助手要改用词或换画面时，会先标明，等你接受。",
+      "page-text-label": "这一页的文字",
+      "art-move-label": "拖动画面",
+      "art-resize-label": "缩放画面",
       "edit-piece": "第 {n} 张的文字层",
       "safety-notice": "请上传孩子的画、作文或手工作品照片。不要上传身份证、学生证、校园卡，也不要拍到电话、地址、邮箱或二维码。位置和拍摄信息会在本机删除。",
       "adult-note": "这条出书线是给家长或成年人使用的。孩子不必、也不应进入任何付款页面。",
@@ -306,7 +310,11 @@
       camera: "Take a photo",
       "upload-start": "Start uploading photos here",
       "edit-kicker": "Edit this book",
-      "edit-hint": "Edit the title, the author, and the text layer on each piece. The art layer changes only after you accept an assistant suggestion. The preview updates after you make a change. We do not rewrite the child’s pictures or words on our own.",
+      "edit-hint": "Edit the title, the author, and the text layer on each piece. You can also edit the words on the page and drag or resize the picture inside the safe area. The picture itself changes only after you accept an assistant suggestion. We do not rewrite the child’s pictures or words on our own.",
+      "page-edit-note": "Edit the typeset words on this page, or drag and resize the picture inside the safe area. The child’s wording and original art stay as they are until you change them. Assistant wording or art changes stay labeled and wait for Accept.",
+      "page-text-label": "Text on this page",
+      "art-move-label": "Move the picture",
+      "art-resize-label": "Resize the picture",
       "edit-piece": "Text layer on piece {n}",
       "safety-notice": "Upload photos of your child’s artwork or writing. Do not upload identity documents, student or school IDs, or images that show a phone number, address, email, or QR code. Location and camera details are removed on this device.",
       "adult-note": "This flow is for a parent or another adult. A child should not enter a checkout page.",
@@ -888,6 +896,8 @@
       marksDataUrl: page.marksDataUrl,
       sheetCleaned: page.sheetCleaned === true,
       scanIsolated: page.scanIsolated !== false,
+      keptSheet: page.keptSheet === true,
+      artFrame: null,
       artworks: page.artworks,
       lines: Array.isArray(page.lines) ? page.lines : [],
       layersSeparated: page.layersSeparated === true,
@@ -1060,7 +1070,8 @@
       paper: "#f6f0e4",
       fontFamily: bodyFont(),
       titleFont: `700 ${ptToPx(22)}px ${serifFont()}`,
-      subtitleFont: `600 ${ptToPx(12)}px ${bodyFont()}`
+      subtitleFont: `600 ${ptToPx(12)}px ${bodyFont()}`,
+      artFrame: photo && photo.artFrame
     });
     return canvasToJpeg(canvas, 0.92);
   }
@@ -1137,6 +1148,7 @@
       treatment: sources.treatment,
       separated: sources.separated,
       textShare: photo.layoutTextShare || 0,
+      artFrame: manuscript ? null : photo.artFrame,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
       paper: "#f6f0e4",
@@ -1217,6 +1229,95 @@
     state.announcePrepare = false;
   }
 
+  function workArtUrl(photo) {
+    if (!photo) return "";
+    const sources = prepareApi().storyArtSources({
+      manuscript: photo.manuscript === true,
+      treatment: state.interiorStyle,
+      scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
+      polishedUrl: photo.polishedDataUrl || "",
+      polishOk: photo.polishStatus === "ok",
+      artOverrideUrl: photo.artOverrideUrl || "",
+      artSource: photo.artSource || "",
+      artworks: photo.artworks,
+      layersSeparated: photo.layersSeparated === true
+    });
+    return (sources.urls && sources.urls[0]) || sources.marksUrl || "";
+  }
+
+  let editorContext = null;
+  const pageEditor = prepareApi().bindPageEditor({
+    frame: document.querySelector(".book-frame"),
+    image: els.pageImage,
+    editor: document.querySelector("[data-page-editor]"),
+    art: document.querySelector("[data-page-art]"),
+    artImage: document.querySelector("[data-page-art-image]"),
+    handle: document.querySelector("[data-art-handle]"),
+    text: document.querySelector("[data-page-text]"),
+    mark: document.querySelector("[data-page-mark]"),
+    note: document.querySelector("[data-page-editor-note]")
+  }, {
+    onText(value) {
+      if (!editorContext || !editorContext.photo) return;
+      if (editorContext.kind === "cover") {
+        if (els.title) els.title.value = value.slice(0, 80);
+        saveMeta();
+        void rebuildBook();
+        return;
+      }
+      commitPhotoText(editorContext.photo, value);
+    },
+    onFrame(frame, done) {
+      if (!editorContext || !editorContext.photo || editorContext.photo.manuscript) return;
+      editorContext.photo.artFrame = frame && frame.scale === 1 && !frame.x && !frame.y ? null : frame;
+      if (done) void rebuildBook();
+    }
+  });
+
+  function syncPageEditor() {
+    const kind = state.pageKinds[state.pageIndex];
+    const id = state.pagePhotoIds && state.pagePhotoIds[state.pageIndex];
+    const photo = id ? state.photos.find((item) => item.id === id) : null;
+    const manuscript = kind === "manuscript" || (photo && photo.manuscript === true);
+    const pageNumber = state.pageIndex + 1;
+    const artUrl = !photo || manuscript ? "" : (kind === "cover" ? coverHeroUrl(photo) : workArtUrl(photo));
+    const active = Boolean(artUrl) && (kind === "photo" || kind === "cover") && !manuscript;
+    editorContext = active ? { kind, photo } : null;
+    if (!active) {
+      pageEditor.sync({ active: false });
+      return;
+    }
+    const text = kind === "cover" ? bookTitle() : shownPhotoText(photo);
+    const showText = kind === "cover" ? Boolean(text) : Boolean(text);
+    const layout = kind === "cover"
+      ? prepareApi().layoutCoverPage({ pageWidth: PAGE_WIDTH, pageHeight: PAGE_HEIGHT, pageNumber })
+      : prepareApi().layoutRebuiltPage({
+        pageWidth: PAGE_WIDTH,
+        pageHeight: PAGE_HEIGHT,
+        artworkCount: 1,
+        showText,
+        pageNumber,
+        textShare: photo.layoutTextShare || 0
+      });
+    pageEditor.sync({
+      active: true,
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      artBox: layout.art,
+      artFrame: photo.artFrame,
+      artUrl,
+      showText: Boolean(showText && (kind === "cover" ? layout.title : layout.text)),
+      textBox: kind === "cover" ? layout.title : layout.text,
+      text,
+      textLabel: t("page-text-label"),
+      moveLabel: t("art-move-label"),
+      resizeLabel: t("art-resize-label"),
+      note: t("page-edit-note"),
+      markUrl: "assets/storieslens-logo.png",
+      fontFamily: serifFont()
+    });
+  }
+
   function renderPreview() {
     const shown = state.previewPages[state.pageIndex];
     if (!shown) return;
@@ -1227,6 +1328,7 @@
     els.pageLabel.textContent = label;
     els.prev.disabled = state.pageIndex === 0;
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
+    syncPageEditor();
   }
 
   function assistantPhoto() {

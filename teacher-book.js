@@ -23,6 +23,10 @@
       "interior-hint": "默认是原画摆正：画在安全框里，学生的话单独排成文字层。精修插画只换画面层，文字仍是排版，不会画进图里。两种最后都保留手稿。",
       "assistant-kicker": "排版助手",
       "assistant-hint": "可以建议间距、换行、图文比例、画面整理，以及校对。每条建议都会先对照显示。只有你点接受，才会写进这本书。",
+      "page-edit-note": "这一页可以直接改排好的文字，也可以在安全框里拖动或缩放画面。学生的原文和原画不会自动改。助手要改用词或换画面时，会先标明，等你接受。",
+      "page-text-label": "这一页的文字",
+      "art-move-label": "拖动画面",
+      "art-resize-label": "缩放画面",
       "assistant-type": "整理间距和换行",
       "assistant-layout": "调整图文比例",
       "assistant-art": "整理画面",
@@ -132,6 +136,10 @@
       "interior-hint": "Original artwork is the default: the drawing sits in a print-safe frame and the student’s words are a separate text layer. Polished illustrations replace only the art layer. The words stay typeset and are not drawn into the picture. Both end with the manuscript.",
       "assistant-kicker": "Editing assistant",
       "assistant-hint": "It can suggest spacing, line breaks, the picture-and-text balance, art cleanup, and proofreading. Each suggestion is shown first. Nothing enters the book until you accept it.",
+      "page-edit-note": "Edit the typeset words on this page, or drag and resize the picture inside the safe area. The student’s wording and original art stay as they are until you change them. Assistant wording or art changes stay labeled and wait for Accept.",
+      "page-text-label": "Text on this page",
+      "art-move-label": "Move the picture",
+      "art-resize-label": "Resize the picture",
       "assistant-type": "Tidy spacing and line breaks",
       "assistant-layout": "Adjust the picture and text",
       "assistant-art": "Clean up the picture",
@@ -447,6 +455,8 @@
       artworks: page.artworks,
       lines: Array.isArray(page.lines) ? page.lines : [],
       layersSeparated: page.layersSeparated === true,
+      keptSheet: page.keptSheet === true,
+      artFrame: null,
       layoutTextShare: 0,
       artOverrideUrl: "",
       artSource: "",
@@ -569,6 +579,7 @@
       treatment: sources.treatment,
       separated: sources.separated,
       textShare: photo.layoutTextShare || 0,
+      artFrame: manuscript ? null : photo.artFrame,
       title: extras.title || "",
       subtitle: extras.subtitle || "",
       paper: "#f6f0e4",
@@ -612,7 +623,8 @@
       title: bookTitle(),
       subtitle: className() || teacherName() || "",
       paper: "#f6f0e4",
-      fontFamily: bodyFont()
+      fontFamily: bodyFont(),
+      artFrame: cover && cover.artFrame
     });
     return canvasToJpeg(canvas, 0.92);
   }
@@ -682,6 +694,99 @@
     state.announcePrepare = false;
   }
 
+  function workArtUrl(photo) {
+    if (!photo) return "";
+    const sources = prepareApi().storyArtSources({
+      manuscript: photo.manuscript === true,
+      treatment: state.interiorStyle,
+      scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
+      polishedUrl: photo.polishedDataUrl || "",
+      polishOk: photo.polishStatus === "ok",
+      artOverrideUrl: photo.artOverrideUrl || "",
+      artSource: photo.artSource || "",
+      artworks: photo.artworks,
+      layersSeparated: photo.layersSeparated === true
+    });
+    return (sources.urls && sources.urls[0]) || sources.marksUrl || "";
+  }
+
+  let editorContext = null;
+  const pageEditor = prepareApi().bindPageEditor({
+    frame: document.querySelector(".book-frame"),
+    image: els.pageImage,
+    editor: document.querySelector("[data-page-editor]"),
+    art: document.querySelector("[data-page-art]"),
+    artImage: document.querySelector("[data-page-art-image]"),
+    handle: document.querySelector("[data-art-handle]"),
+    text: document.querySelector("[data-page-text]"),
+    mark: document.querySelector("[data-page-mark]"),
+    note: document.querySelector("[data-page-editor-note]")
+  }, {
+    onText(value) {
+      if (!editorContext || !editorContext.photo) return;
+      if (editorContext.kind === "cover") {
+        if (els.title) els.title.value = value.slice(0, 80);
+        void rebuildBook();
+        return;
+      }
+      editorContext.photo.text = value;
+      editorContext.photo.textEdited = true;
+      editorContext.photo.textStatus = "parent";
+      renderThumbs();
+      void rebuildBook();
+    },
+    onFrame(frame, done) {
+      if (!editorContext || !editorContext.photo || editorContext.photo.manuscript) return;
+      editorContext.photo.artFrame = frame && frame.scale === 1 && !frame.x && !frame.y ? null : frame;
+      if (done) void rebuildBook();
+    }
+  });
+
+  function syncPageEditor() {
+    const kind = state.pageKinds[state.pageIndex];
+    const id = state.pagePhotoIds && state.pagePhotoIds[state.pageIndex];
+    const photo = id ? state.photos.find((item) => item.id === id) : null;
+    const manuscript = kind === "manuscript" || (photo && photo.manuscript === true);
+    const pageNumber = state.pageIndex + 1;
+    const artUrl = !photo || manuscript ? "" : (kind === "cover" ? prepareApi().coverHeroSource(photo, state.interiorStyle) : workArtUrl(photo));
+    const active = Boolean(artUrl) && (kind === "photo" || kind === "cover") && !manuscript;
+    editorContext = active ? { kind, photo } : null;
+    if (!active) {
+      pageEditor.sync({ active: false });
+      return;
+    }
+    const text = kind === "cover" ? bookTitle() : shownPhotoText(photo);
+    const showText = Boolean(text);
+    const layout = kind === "cover"
+      ? prepareApi().layoutCoverPage({ pageWidth: PAGE_WIDTH, pageHeight: PAGE_HEIGHT, pageNumber })
+      : prepareApi().layoutRebuiltPage({
+        pageWidth: PAGE_WIDTH,
+        pageHeight: PAGE_HEIGHT,
+        artworkCount: 1,
+        showText,
+        title: "",
+        pageNumber,
+        textShare: photo.layoutTextShare || 0
+      });
+    pageEditor.sync({
+      active: true,
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      artBox: layout.art,
+      artFrame: photo.artFrame,
+      artUrl,
+      showText: Boolean(showText && (kind === "cover" ? layout.title : layout.text)),
+      textBox: kind === "cover" ? layout.title : layout.text,
+      text,
+      textLabel: t("page-text-label"),
+      moveLabel: t("art-move-label"),
+      resizeLabel: t("art-resize-label"),
+      note: t("page-edit-note"),
+      markUrl: "assets/storieslens-logo.png",
+      fontFamily: bodyFont()
+    });
+  }
+
   function renderPreview() {
     const shown = state.previewPages[state.pageIndex];
     if (!shown) return;
@@ -690,6 +795,7 @@
     els.pageLabel.textContent = kind === "cover" ? t("page-label-cover") : kind === "manuscript" ? t("page-label-manuscript") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
     els.prev.disabled = state.pageIndex === 0;
     els.next.disabled = state.pageIndex >= state.pages.length - 1;
+    syncPageEditor();
   }
 
   function replacePhotoGroup(photo, replacements) {

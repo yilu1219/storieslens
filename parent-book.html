@@ -12,7 +12,7 @@
     <title>家长出书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261111-edit1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261112-page1" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -135,7 +135,16 @@
         <h2 class="kicker" data-i18n="preview-kicker">PREVIEW</h2>
         <div class="book-frame">
           <img data-page-image alt="" />
+          <div class="page-editor" data-page-editor hidden>
+            <div class="page-art" data-page-art>
+              <img data-page-art-image alt="" />
+              <button type="button" class="page-art-handle" data-art-handle aria-label="缩放画面"></button>
+            </div>
+            <div class="page-text" data-page-text contenteditable="true" role="textbox" spellcheck="true" aria-multiline="true"></div>
+            <img class="page-watermark" data-page-mark alt="" src="assets/storieslens-logo.png" />
+          </div>
         </div>
+        <p class="hint page-editor-note" data-page-editor-note hidden></p>
         <div class="pager">
           <button type="button" data-prev data-i18n="prev">上一页</button>
           <span class="page-label" data-page-label></span>
@@ -307,10 +316,10 @@
 
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261111-edit1"></script>
+    <script src="artwork-prepare.js?v=20261112-page1"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
-    <script src="parent-book.js?v=20261111-edit1"></script>
+    <script src="parent-book.js?v=20261112-page1"></script>
   </body>
 </html>

@@ -262,9 +262,9 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   const suggestAt = html.indexOf("data-suggest-card");
   assert.ok(previewAt > 0 && previewAt < editAt && editAt < suggestAt);
   assert.match(html.slice(previewAt, suggestAt), /data-book-edit-fields/);
-  assert.match(html, /parent-book\.js\?v=20261111-edit1/);
-  assert.match(html, /parent-book\.css\?v=20261111-edit1/);
-  assert.match(html, /artwork-prepare\.js\?v=20261111-edit1/);
+  assert.match(html, /parent-book\.js\?v=20261112-page1/);
+  assert.match(html, /parent-book\.css\?v=20261112-page1/);
+  assert.match(html, /artwork-prepare\.js\?v=20261112-page1/);
   assert.match(html, /data-book-assistant/);
   assert.match(html, /data-assist-proof/);
   assert.match(html, /data-assist-accept/);
@@ -276,9 +276,9 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   assert.match(js, /retainBookEdits/);
   const teacherHtml = read("teacher-book.html");
   assert.match(teacherHtml, /data-interior-style checked/);
-  assert.match(teacherHtml, /parent-book\.css\?v=20261111-edit1/);
-  assert.match(teacherHtml, /artwork-prepare\.js\?v=20261111-edit1/);
-  assert.match(teacherHtml, /teacher-book\.js\?v=20261111-edit1/);
+  assert.match(teacherHtml, /parent-book\.css\?v=20261112-page1/);
+  assert.match(teacherHtml, /artwork-prepare\.js\?v=20261112-page1/);
+  assert.match(teacherHtml, /teacher-book\.js\?v=20261112-page1/);
   assert.match(teacherHtml, /data-assist-proof/);
   assert.match(read("teacher-book.js"), /planBookPages/);
   assert.match(js, /function commitPhotoText/);
@@ -299,6 +299,12 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   assert.match(read("artwork-prepare.js"), /accepted: true/);
   assert.match(read("artwork-prepare.js"), /proposal\.accepted !== true/);
   assert.match(read("artwork-prepare.js"), /function proposeProofreading/);
+  assert.match(html, /data-page-editor/);
+  assert.match(html, /data-page-text/);
+  assert.match(js, /bindPageEditor/);
+  assert.match(js, /artFrame/);
+  assert.match(read("teacher-book.js"), /bindPageEditor/);
+  assert.match(read("teacher-book.html"), /data-page-editor/);
   assert.match(js, /function renderBookEditor/);
   assert.match(js, /renderBookEditor\(\)/);
   const acceptReading = js.slice(js.indexOf("function acceptReading"), js.indexOf("async function askYuToReview"));
@@ -330,7 +336,7 @@ test("parent book shows staged Yu progress, a watermarked preview, and pay-then-
   assert.match(locale, /showProgress\(current\.done, current\.total, current\.key, current\.vars\)/);
   assert.match(show, /progressState = \{ done, total, key, vars: vars \|\| \{\} \}/);
   assert.match(css, /\.yu-progress-value \{ stroke: var\(--leaf-deep\); \}/);
-  assert.match(read("teacher-book.html"), /parent-book\.css\?v=20261111-edit1/);
+  assert.match(read("teacher-book.html"), /parent-book\.css\?v=20261112-page1/);
   assert.doesNotMatch(js, /setStatus\(t\("cutting"\)\)/);
   assert.doesNotMatch(js, /Extracting the drawing and the words with pdf-craft/);
   assert.match(js, /assets\/storieslens-logo\.png/);

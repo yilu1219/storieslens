@@ -312,6 +312,8 @@ test("parent and teacher books call pdf-craft and rebuild pages instead of a ful
   assert.match(script, /from pdf_craft import/);
   assert.match(script, /DeepSeekOCRVendorConfig/);
   assert.match(script, /DeepSeekOCR2VendorConfig/);
+  assert.match(script, /ConcurrentExecutor\(FixedCapacity\(2\)\)/);
+  assert.match(script, /PDFOptions\(ocr=ocr, ocr_executor=ocr_executor\)/);
   assert.match(script, /convert_pdf_to_markdown/);
   assert.match(script, /max_page_image_file_size/);
   assert.match(script, /def redact/);
