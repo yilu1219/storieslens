@@ -195,7 +195,7 @@ test("co-create film routes and homepage CTA are wired, without breaking parent 
   assert.doesNotMatch(html + js, /fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com/);
   assert.match(index, /href="cocreate-film"/);
   assert.match(index, /data-audience="cocreate-film"/);
-  assert.match(index, /href="parent-book"/);
+  assert.match(index, /href="\/photos-to-ebook"/);
   assert.match(index, /href="teacher-book"/);
   assert.equal((index.match(/class="portal-card-case"/g) || []).length, 3);
   assert.match(homeJs, /cocreate-film-cta/);

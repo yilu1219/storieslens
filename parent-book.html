@@ -8,11 +8,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="StoriesLens" />
-    <meta name="description" content="Upload phone photos of a child’s drawings or writing and turn them into an A5 book and a short film. Download or print the digital edition." />
-    <title>家长出书 · StoriesLens</title>
+    <meta name="description" content="把手机照片做成电子书。上传孩子的画作或作文照片，免费预览整本，付款并确认邮箱后获得无水印正式 A5 电子书。Turn phone photos of a child’s drawings or writing into an ebook." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://www.storieslens.com/照片成为电子书" />
+    <link rel="alternate" hreflang="zh-CN" href="https://www.storieslens.com/照片成为电子书" />
+    <link rel="alternate" hreflang="en" href="https://www.storieslens.com/photos-to-ebook" />
+    <link rel="alternate" hreflang="x-default" href="https://www.storieslens.com/照片成为电子书" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:title" content="照片做成电子书 · StoriesLens" />
+    <meta property="og:description" content="把孩子的画和作文照片做成电子书。免费整页预览，正式无水印 PDF 在付款并确认邮箱后发送。" />
+    <meta property="og:url" content="https://www.storieslens.com/照片成为电子书" />
+    <meta property="og:image" content="https://www.storieslens.com/assets/storieslens-logo.png" />
+    <title>照片做成电子书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261112-proof1" />
+    <link rel="stylesheet" href="parent-book.css?v=20261112-proof-ebook" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -22,7 +34,7 @@
         <img src="assets/storieslens-logo.png" alt="" width="40" height="40" />
         <span>
           <strong class="brand-name">StoriesLens</strong>
-          <small data-i18n="brand-sub">家长出书</small>
+          <small data-i18n="brand-sub">照片做成电子书</small>
         </span>
       </a>
       <div class="topbar-actions">
@@ -34,9 +46,9 @@
     </header>
 
     <main id="main" class="wrap">
-      <p class="kicker" data-i18n="kicker">FOR PARENTS · 家长出书</p>
-      <h1 data-i18n="title">用手机照片，几分钟做成一本 A5 书</h1>
-      <p class="lede" data-i18n="lede">上传孩子的画、手工或作文照片，几分钟预览成一本 A5 书，也可以生成短片。</p>
+      <p class="kicker" data-i18n="kicker">照片做成电子书</p>
+      <h1 data-i18n="title">把照片做成电子书</h1>
+      <p class="lede" data-i18n="lede">上传孩子的画、手工或作文照片，免费预览成一本电子书，也可以生成短片。</p>
 
       <section class="card" aria-labelledby="details-title">
         <h2 id="details-title" class="kicker" data-i18n="details-kicker">BOOK DETAILS</h2>
@@ -141,7 +153,7 @@
               <button type="button" class="page-art-handle" data-art-handle aria-label="缩放画面"></button>
             </div>
             <div class="page-text" data-page-text contenteditable="true" role="textbox" spellcheck="true" aria-multiline="true"></div>
-            <img class="page-watermark" data-page-mark alt="" src="assets/storieslens-logo.png" />
+            <div class="page-watermark" data-page-mark aria-hidden="true"></div>
           </div>
         </div>
         <p class="hint page-editor-note" data-page-editor-note hidden></p>
@@ -326,10 +338,11 @@
 
     <script src="vendor/pdf-lib.min.js"></script>
     <script src="artwork-upload-safety.js?v=20260922-mobile-heic-1"></script>
-    <script src="artwork-prepare.js?v=20261112-proof1"></script>
+    <script src="artwork-prepare.js?v=20261112-proof-ebook"></script>
     <script src="parent-book-safety.js?v=20261110-1"></script>
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
-    <script src="parent-book.js?v=20261112-proof1"></script>
+    <script src="preview-watermark.js?v=20261112-proof-ebook"></script>
+    <script src="parent-book.js?v=20261112-proof-ebook"></script>
   </body>
 </html>

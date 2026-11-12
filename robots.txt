@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /book-share
+Disallow: /b/
+Disallow: /f/
+Disallow: /shared-story
+Disallow: /checkout
+Disallow: /payment-success
+Disallow: /login
+Disallow: /admin-credits
+Disallow: /admin-allowances
+Disallow: /my-stories
+Disallow: /teacher-login
+
+Sitemap: https://www.storieslens.com/sitemap.xml

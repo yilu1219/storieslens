@@ -391,12 +391,9 @@
     canvas.height = height;
     const context = canvas.getContext("2d");
     context.drawImage(page, 0, 0, width, height);
-    const mark = Math.round(width * 0.16);
-    const margin = Math.round(width * 0.045);
-    context.save();
-    context.globalAlpha = 0.62;
-    context.drawImage(logo, width - mark - margin, margin, mark, mark);
-    context.restore();
+    const api = window.StoriesLensPreviewWatermark;
+    if (!api) throw new Error("watermark_unavailable");
+    api.paintTiledWatermark(context, logo, width, height);
     return canvasToJpeg(canvas, 0.92);
   }
 

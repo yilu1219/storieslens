@@ -16,7 +16,7 @@ npm start
 Then open (default port 3000 unless `PORT` is set):
 
 - Homepage entries: `http://localhost:3000/` — parent card and teacher card
-- Parent flow: `http://localhost:3000/parent-book` (aliases: `/family-book`, `/parent-book.html`)
+- Parent flow: `http://localhost:3000/照片成为电子书` and `http://localhost:3000/photos-to-ebook` (`/parent-book`, `/parent-book.html`, and `/family-book` redirect here)
 - Teacher flow: `http://localhost:3000/teacher-book` (aliases: `/class-book`, `/teacher-book.html`)
 - Parent opening a teacher share: `http://localhost:3000/book-share?t=<token>` or `http://localhost:3000/book-share?c=<CODE>` or `http://localhost:3000/b/<CODE>`
 - Chinese studio entries: `http://localhost:3000/chinese-studio.html`
@@ -121,7 +121,7 @@ Then open:
 - Short code: `http://localhost:3000/cocreate-film?c=<CODE>` or `http://localhost:3000/f/<CODE>`
 - Chinese studio entry: `http://localhost:3000/chinese-studio.html`
 
-The existing parent/teacher URLs are unchanged: `/parent-book`, `/teacher-book`, `/book-share`.
+The parent book public URL is `/照片成为电子书` and `/photos-to-ebook`. `/parent-book` redirects there. `/teacher-book` and `/book-share` are unchanged.
 
 ## How create, join, and share work
 

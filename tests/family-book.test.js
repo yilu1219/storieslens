@@ -427,7 +427,7 @@ test("parent and teacher pages, share links, and homepage entries are wired with
   assert.match(shareJs, /family-print-hardcover/);
   assert.match(shareJs, /\/api\/family-book\/email/);
   assert.doesNotMatch(shareJs, /offerId === "family-print"/);
-  assert.match(index, /href="parent-book"/);
+  assert.match(index, /href="\/photos-to-ebook"/);
   assert.match(index, /href="teacher-book"/);
   assert.match(index, /data-audience="teacher-book"/);
   assert.match(homeJs, /teacher-book-cta/);
@@ -494,7 +494,7 @@ test("print checkout offers softcover and hardcover with manual-batch address fi
     },
     order: { id: hardcover.id, contactEmail: "parent@example.com" },
     offer: getFamilyBookOffer("family-print-hardcover"),
-    successPath: "/parent-book",
+    successPath: "/photos-to-ebook",
     fetchImpl: async (_url, options) => {
       calls.push(options.body);
       return { ok: true, json: async () => ({ id: "cs_test_hardcover", url: "https://checkout.stripe.com/c/pay/cs_test_hardcover" }) };

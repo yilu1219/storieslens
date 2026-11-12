@@ -107,10 +107,10 @@ async function createFamilyCheckoutSession({ env = process.env, order, offer, su
   if (keyMode === "live" && !priceId) {
     throw Object.assign(new Error("This live Stripe product price is not configured yet."), { statusCode: 503, code: "STRIPE_PRICE_NOT_CONFIGURED" });
   }
-  const successUrl = new URL(successPath || "/parent-book", origin);
+  const successUrl = new URL(successPath || "/照片成为电子书", origin);
   successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
   successUrl.searchParams.set("order", order.id);
-  const cancelUrl = new URL(cancelPath || successPath || "/parent-book", origin);
+  const cancelUrl = new URL(cancelPath || successPath || "/照片成为电子书", origin);
   cancelUrl.searchParams.set("cancelled", "1");
   const form = new URLSearchParams();
   form.set("mode", "payment");
