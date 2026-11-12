@@ -306,7 +306,7 @@ def main() -> int:
         return 2
 
     try:
-        from pdf_craft import PDFCraft, PDFOptions
+        from pdf_craft import ConcurrentExecutor, ExtractionOptions, FixedCapacity, PDFCraft, PDFOptions
         if backend == "unlimited":
             from pdf_craft import UnlimitedOCRVendorConfig
             ocr_kwargs = {"ak": settings["ak"], "sk": settings["sk"]}
@@ -327,10 +327,12 @@ def main() -> int:
                 api_key=settings["api_key"],
                 model=settings["model"],
             )
-        from pdf_craft import ExtractionOptions
         source_pdf, scan_png = normalize_pdf(args.pdf)
+        # Vendor OCR (DeepSeek, DeepSeek OCR 2, Unlimited) refuses to run unless
+        # PDFOptions carries an explicit executor. Keys stay in the process env.
+        ocr_executor = ConcurrentExecutor(FixedCapacity(2))
         # No translator: pdf-craft must return the child's words, not a rewrite.
-        PDFCraft(pdf=PDFOptions(ocr=ocr)).convert_pdf_to_markdown(
+        PDFCraft(pdf=PDFOptions(ocr=ocr, ocr_executor=ocr_executor)).convert_pdf_to_markdown(
             source_pdf,
             args.markdown,
             assets_path=args.assets,

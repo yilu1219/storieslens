@@ -99,9 +99,82 @@
     return transparent / pixels > 0.02;
   }
 
+  function channelChroma(red, green, blue) {
+    return Math.max(red, green, blue) - Math.min(red, green, blue);
+  }
+
+  function channelLuma(red, green, blue) {
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  }
+
+  function isYellowPaper(red, green, blue) {
+    return channelLuma(red, green, blue) > 130
+      && red > 165
+      && green > 140
+      && blue < 155
+      && green > blue + 40
+      && red > blue + 45
+      && green > red * 0.72;
+  }
+
+  function isWhitePaper(red, green, blue) {
+    return !isYellowPaper(red, green, blue)
+      && channelLuma(red, green, blue) >= 228
+      && channelChroma(red, green, blue) <= 42;
+  }
+
+  function isSkinTone(red, green, blue) {
+    const chroma = channelChroma(red, green, blue);
+    return red > 140
+      && green > 90
+      && blue > 70
+      && red >= green
+      && green >= blue - 12
+      && red - blue > 22
+      && red - green < 80
+      && chroma > 16
+      && chroma < 120
+      && !isYellowPaper(red, green, blue);
+  }
+
+  function paperClass(red, green, blue) {
+    if (isSkinTone(red, green, blue)) return 0;
+    if (isYellowPaper(red, green, blue)) return 2;
+    if (isWhitePaper(red, green, blue)) return 1;
+    return 0;
+  }
+
   function isCleanScan(rgba, width, height) {
     const border = sampleBorder(rgba, width, height);
-    return isPaperLike(border.med[0], border.med[1], border.med[2]) && border.paperRatio >= 0.72;
+    if (!isPaperLike(border.med[0], border.med[1], border.med[2]) || border.paperRatio < 0.72) return false;
+    return !hasContrastingInsetSheet(rgba, width, height, border);
+  }
+
+  function hasContrastingInsetSheet(rgba, width, height, border) {
+    const view = downscaleNearest(rgba, width, height, 180);
+    const mask = new Uint8Array(view.width * view.height);
+    let count = 0;
+    for (let index = 0; index < mask.length; index += 1) {
+      const offset = index * 4;
+      const red = view.rgba[offset];
+      const green = view.rgba[offset + 1];
+      const blue = view.rgba[offset + 2];
+      const dist = Math.hypot(red - border.med[0], green - border.med[1], blue - border.med[2]);
+      if (paperClass(red, green, blue) && dist > 32) {
+        mask[index] = 1;
+        count += 1;
+      }
+    }
+    if (count < mask.length * 0.12) return false;
+    const labeled = maskComponents(mask, view.width, view.height);
+    return labeled.comps.some((comp) => {
+      const areaFrac = comp.area / mask.length;
+      if (areaFrac < 0.12) return false;
+      return comp.minX > view.width * 0.02
+        || comp.minY > view.height * 0.02
+        || comp.maxX < view.width * 0.98
+        || comp.maxY < view.height * 0.98;
+    });
   }
 
   function matchLimit(mad, retry) {
@@ -534,7 +607,10 @@
 
   function coverHeroSource(photo, style) {
     if (!photo) return "";
-    if (photo.scanIsolated === false && photo.artSource !== "accepted") return "";
+    if (photo.scanIsolated === false && photo.artSource !== "accepted") {
+      const kept = photo.keptSheet && Array.isArray(photo.artworks) ? photo.artworks[0] : null;
+      return kept && kept.dataUrl ? kept.dataUrl : "";
+    }
     return interiorPageArt({
       treatment: style,
       scanUrl: photo.scanIsolated === false ? "" : (photo.scanDataUrl || photo.marksDataUrl || ""),
@@ -693,6 +769,54 @@
       dw,
       dh,
       scale,
+      fit: "contain"
+    };
+  }
+
+  function normalizeArtFrame(frame) {
+    if (!frame || typeof frame !== "object") return null;
+    const scale = Number(frame.scale);
+    const x = Number(frame.x);
+    const y = Number(frame.y);
+    const next = {
+      x: Number.isFinite(x) ? Math.max(-1, Math.min(1, x)) : 0,
+      y: Number.isFinite(y) ? Math.max(-1, Math.min(1, y)) : 0,
+      scale: Number.isFinite(scale) ? Math.max(0.35, Math.min(1, scale)) : 1
+    };
+    if (!next.x && !next.y && next.scale === 1) return null;
+    return next;
+  }
+
+  function placeArt(srcWidth, srcHeight, box, frame) {
+    const base = containPlacement(srcWidth, srcHeight, box);
+    const nudge = normalizeArtFrame(frame);
+    if (!nudge) return base;
+    let dw = base.dw * nudge.scale;
+    let dh = base.dh * nudge.scale;
+    let dx = base.dx + (base.dw - dw) / 2 + nudge.x * box.w;
+    let dy = base.dy + (base.dh - dh) / 2 + nudge.y * box.h;
+    if (dw >= box.w) {
+      dw = box.w;
+      dx = box.x;
+    } else {
+      dx = Math.min(box.x + box.w - dw, Math.max(box.x, dx));
+    }
+    if (dh >= box.h) {
+      dh = box.h;
+      dy = box.y;
+    } else {
+      dy = Math.min(box.y + box.h - dh, Math.max(box.y, dy));
+    }
+    return {
+      sx: 0,
+      sy: 0,
+      sw: Math.max(1, srcWidth || 1),
+      sh: Math.max(1, srcHeight || 1),
+      dx,
+      dy,
+      dw,
+      dh,
+      scale: dw / Math.max(1, srcWidth || 1),
       fit: "contain"
     };
   }
@@ -1422,8 +1546,8 @@
     return [src[index] || 0, src[index + 1] || 0, src[index + 2] || 0, src[index + 3] || 0];
   }
 
-  function blitContain(out, pageWidth, pageHeight, src, srcWidth, srcHeight, box) {
-    const placement = containPlacement(srcWidth, srcHeight, box);
+  function blitContain(out, pageWidth, pageHeight, src, srcWidth, srcHeight, box, artFrame) {
+    const placement = placeArt(srcWidth, srcHeight, box, artFrame);
     const x0 = Math.max(0, Math.floor(placement.dx));
     const y0 = Math.max(0, Math.floor(placement.dy));
     const x1 = Math.min(pageWidth, Math.ceil(placement.dx + placement.dw));
@@ -1459,7 +1583,8 @@
     pageNumber = 1,
     treatment = "",
     separated = false,
-    textShare = 0
+    textShare = 0,
+    artFrame = null
   } = {}) {
     const shownText = typesetText({ text, status, edited, manuscript });
     const pictures = selectPagePictures({
@@ -1492,7 +1617,7 @@
       const band = layout.art.h / pictures.length;
       pictures.forEach((artwork, index) => {
         const box = { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band };
-        const drawn = blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, box);
+        const drawn = blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, box, artFrame);
         if (!placement) placement = drawn;
       });
     }
@@ -1513,7 +1638,7 @@
     };
   }
 
-  function paintCoverPage({ pageWidth, pageHeight, artwork = null, paper, pageNumber = 1 } = {}) {
+  function paintCoverPage({ pageWidth, pageHeight, artwork = null, paper, pageNumber = 1, artFrame = null } = {}) {
     const layout = layoutCoverPage({ pageWidth, pageHeight, pageNumber });
     const ink = paper || PAPER;
     const out = new Uint8ClampedArray(pageWidth * pageHeight * 4);
@@ -1524,7 +1649,7 @@
       out[index + 3] = 255;
     }
     const placement = artwork
-      ? blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, layout.art)
+      ? blitContain(out, pageWidth, pageHeight, artwork.rgba, artwork.width, artwork.height, layout.art, artFrame)
       : null;
     return {
       rgba: out,
@@ -1961,31 +2086,188 @@
     }, extra);
   }
 
-  function scanArtwork(rgba, width, height) {
-    const source = opaqueResult(toUint8(rgba, width, height));
-    const missed = { isolated: false, rgba: null, width: 0, height: 0, confidence: 0, turns: 0, skew: 0 };
-    if (!width || !height || width < 8 || height < 8) return missed;
-    if (isCleanScan(source, width, height)) {
-      return isolatedResult({ rgba: source, width, height }, 1, { loose: false });
+  function maskComponents(mask, width, height) {
+    const labels = new Int32Array(width * height);
+    const comps = [];
+    const queueX = new Int32Array(width * height);
+    const queueY = new Int32Array(width * height);
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const start = y * width + x;
+        const klass = mask[start];
+        if (!klass || labels[start]) continue;
+        const id = comps.length + 1;
+        let tail = 1;
+        queueX[0] = x;
+        queueY[0] = y;
+        labels[start] = id;
+        let minX = x;
+        let maxX = x;
+        let minY = y;
+        let maxY = y;
+        let area = 0;
+        for (let head = 0; head < tail; head += 1) {
+          const cx = queueX[head];
+          const cy = queueY[head];
+          area += 1;
+          if (cx < minX) minX = cx;
+          if (cx > maxX) maxX = cx;
+          if (cy < minY) minY = cy;
+          if (cy > maxY) maxY = cy;
+          const next = [[cx - 1, cy], [cx + 1, cy], [cx, cy - 1], [cx, cy + 1]];
+          for (let step = 0; step < next.length; step += 1) {
+            const nx = next[step][0];
+            const ny = next[step][1];
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+            const pixel = ny * width + nx;
+            if (mask[pixel] !== klass || labels[pixel]) continue;
+            labels[pixel] = id;
+            queueX[tail] = nx;
+            queueY[tail] = ny;
+            tail += 1;
+          }
+        }
+        comps.push({ id, minX, maxX, minY, maxY, area, klass });
+      }
     }
-    const view = downscaleNearest(source, width, height, 480);
-    const analysis = analyzeForeground(view.rgba, view.width, view.height, {});
-    if (!analysis || analysis.confidence < 0.45 || !analysis.keptIds || !analysis.keptIds.size) return missed;
-    const smallBox = componentBounds(analysis.labels, analysis.keptIds, view.width, view.height);
-    if (!smallBox) return missed;
-    const loose = () => isolatedResult(
-      cropBounds(source, width, height, smallBox, view.scaleX, view.scaleY),
-      analysis.confidence,
-      { loose: true }
-    );
-    const smallCorners = pageCorners(analysis.labels, analysis.keptIds, view.width, view.height);
-    if (!smallCorners || !cornersReach(smallCorners, smallBox)) return loose();
-    const corners = smallCorners.map((point) => ({
-      x: (point.x + 0.5) * view.scaleX - 0.5,
-      y: (point.y + 0.5) * view.scaleY - 0.5
-    }));
+    return { labels, comps };
+  }
+
+  function erodeMask(mask, width, height) {
+    const out = new Uint8Array(mask.length);
+    for (let y = 1; y < height - 1; y += 1) {
+      for (let x = 1; x < width - 1; x += 1) {
+        const pixel = y * width + x;
+        const klass = mask[pixel];
+        if (!klass) continue;
+        if (mask[pixel - 1] === klass && mask[pixel + 1] === klass && mask[pixel - width] === klass && mask[pixel + width] === klass) {
+          out[pixel] = klass;
+        }
+      }
+    }
+    return out;
+  }
+
+  function selectDilated(mask, labels, width, height, id) {
+    const chosen = new Uint8Array(mask.length);
+    let klass = 0;
+    for (let index = 0; index < mask.length; index += 1) {
+      if (labels[index] !== id) continue;
+      chosen[index] = 1;
+      klass = mask[index];
+    }
+    const out = new Uint8Array(mask.length);
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const pixel = y * width + x;
+        if (mask[pixel] !== klass) continue;
+        let near = chosen[pixel];
+        if (!near && x > 0 && chosen[pixel - 1]) near = 1;
+        if (!near && x + 1 < width && chosen[pixel + 1]) near = 1;
+        if (!near && y > 0 && chosen[pixel - width]) near = 1;
+        if (!near && y + 1 < height && chosen[pixel + width]) near = 1;
+        if (near) out[pixel] = 1;
+      }
+    }
+    return out;
+  }
+
+  function sheetScore(comp, width, height) {
+    const frame = width * height;
+    const areaFrac = comp.area / frame;
+    if (areaFrac < 0.1 || areaFrac > 0.92) return 0;
+    const boxWidth = comp.maxX - comp.minX + 1;
+    const boxHeight = comp.maxY - comp.minY + 1;
+    if ((boxWidth * boxHeight) / frame > 0.96) return 0;
+    const edgeTouch = (comp.minX <= 1 ? 1 : 0)
+      + (comp.minY <= 1 ? 1 : 0)
+      + (comp.maxX >= width - 2 ? 1 : 0)
+      + (comp.maxY >= height - 2 ? 1 : 0);
+    if (edgeTouch >= 4) return 0;
+    const cx = (comp.minX + comp.maxX) / 2 / width - 0.5;
+    const cy = (comp.minY + comp.maxY) / 2 / height - 0.5;
+    const central = 1 - Math.min(1, Math.hypot(cx, cy) * 2.1);
+    return areaFrac * (0.4 + 0.6 * central);
+  }
+
+  function fillProfile(selected, width, box, axis) {
+    const fills = [];
+    if (axis === "row") {
+      const span = Math.max(1, box.maxX - box.minX + 1);
+      for (let y = box.minY; y <= box.maxY; y += 1) {
+        let count = 0;
+        for (let x = box.minX; x <= box.maxX; x += 1) if (selected[y * width + x]) count += 1;
+        fills.push(count / span);
+      }
+      return fills;
+    }
+    const span = Math.max(1, box.maxY - box.minY + 1);
+    for (let x = box.minX; x <= box.maxX; x += 1) {
+      let count = 0;
+      for (let y = box.minY; y <= box.maxY; y += 1) if (selected[y * width + x]) count += 1;
+      fills.push(count / span);
+    }
+    return fills;
+  }
+
+  function abruptTrim(fills) {
+    if (fills.length < 8) return null;
+    const sorted = fills.slice().sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    if (median < 0.62) return null;
+    const cut = Math.min(0.5, median * 0.62);
+    let start = 0;
+    let end = fills.length - 1;
+    while (start < end && fills[start] < cut) start += 1;
+    while (end > start && fills[end] < cut) end -= 1;
+    const removed = start + (fills.length - 1 - end);
+    if (!removed || removed > fills.length * 0.4) return null;
+    if (start && fills[start] - fills[start - 1] < 0.22) return null;
+    if (end < fills.length - 1 && fills[end] - fills[end + 1] < 0.22) return null;
+    return [start, end];
+  }
+
+  function tightenBox(selected, width, box) {
+    let current = {
+      minX: box.minX,
+      minY: box.minY,
+      maxX: box.maxX,
+      maxY: box.maxY
+    };
+    const rowTrim = abruptTrim(fillProfile(selected, width, current, "row"));
+    if (rowTrim) {
+      const minY = current.minY + rowTrim[0];
+      current = { ...current, minY, maxY: current.minY + rowTrim[1] };
+    }
+    const colTrim = abruptTrim(fillProfile(selected, width, current, "col"));
+    if (colTrim) {
+      const minX = current.minX + colTrim[0];
+      current = { ...current, minX, maxX: current.minX + colTrim[1] };
+    }
+    if (current.maxX <= current.minX + 2 || current.maxY <= current.minY + 2) return box;
+    return current;
+  }
+
+  function sheetFillsItsBox(labels, width, height, box) {
+    let top = 0;
+    let bottom = 0;
+    let left = 0;
+    let right = 0;
+    for (let x = box.minX; x <= box.maxX; x += 1) {
+      if (labels[box.minY * width + x]) top += 1;
+      if (labels[box.maxY * width + x]) bottom += 1;
+    }
+    for (let y = box.minY; y <= box.maxY; y += 1) {
+      if (labels[y * width + box.minX]) left += 1;
+      if (labels[y * width + box.maxX]) right += 1;
+    }
+    const spanX = box.maxX - box.minX + 1;
+    const spanY = box.maxY - box.minY + 1;
+    return top > spanX * 0.72 && bottom > spanX * 0.72 && left > spanY * 0.72 && right > spanY * 0.72;
+  }
+
+  function convexQuad(corners) {
     let turn = 0;
-    let convex = true;
     for (let index = 0; index < corners.length; index += 1) {
       const current = corners[index];
       const next = corners[(index + 1) % corners.length];
@@ -1993,31 +2275,177 @@
       const cross = (next.x - current.x) * (after.y - next.y) - (next.y - current.y) * (after.x - next.x);
       if (Math.abs(cross) < 1) continue;
       const sign = Math.sign(cross);
-      if (turn && sign !== turn) convex = false;
+      if (turn && sign !== turn) return false;
       turn = sign || turn;
     }
-    if (!convex) return loose();
+    return true;
+  }
+
+  function borderLooksLikeSheet(rgba, width, height) {
+    const bands = Math.max(1, Math.min(2, Math.floor(Math.min(width, height) * 0.03)));
+    let paper = 0;
+    let total = 0;
+    const take = (x, y) => {
+      const index = (y * width + x) * 4;
+      total += 1;
+      const red = rgba[index];
+      const green = rgba[index + 1];
+      const blue = rgba[index + 2];
+      if (isYellowPaper(red, green, blue) || isWhitePaper(red, green, blue) || isPaperLike(red, green, blue)) paper += 1;
+    };
+    for (let y = 0; y < height; y += 2) {
+      for (let band = 0; band < bands; band += 1) {
+        take(Math.min(width - 1, band), y);
+        take(Math.max(0, width - 1 - band), y);
+      }
+    }
+    for (let x = bands; x < width - bands; x += 2) {
+      for (let band = 0; band < bands; band += 1) {
+        take(x, Math.min(height - 1, band));
+        take(x, Math.max(0, height - 1 - band));
+      }
+    }
+    return total > 0 && paper / total >= 0.55;
+  }
+
+  function letterboxOnCream(rgba, width, height) {
+    const fitted = width > SCAN_MAX_EDGE || height > SCAN_MAX_EDGE
+      ? downscaleNearest(rgba, width, height, SCAN_MAX_EDGE)
+      : { rgba, width, height };
+    const padX = Math.max(2, Math.round(fitted.width * 0.04));
+    const padY = Math.max(2, Math.round(fitted.height * 0.04));
+    const outWidth = fitted.width + padX * 2;
+    const outHeight = fitted.height + padY * 2;
+    const out = new Uint8ClampedArray(outWidth * outHeight * 4);
+    for (let index = 0; index < out.length; index += 4) {
+      out[index] = PAPER[0];
+      out[index + 1] = PAPER[1];
+      out[index + 2] = PAPER[2];
+      out[index + 3] = 255;
+    }
+    for (let y = 0; y < fitted.height; y += 1) {
+      const src = y * fitted.width * 4;
+      const dst = ((y + padY) * outWidth + padX) * 4;
+      out.set(fitted.rgba.subarray(src, src + fitted.width * 4), dst);
+    }
+    return { rgba: out, width: outWidth, height: outHeight };
+  }
+
+  function findPaperSheet(rgba, width, height) {
+    const view = downscaleNearest(rgba, width, height, 420);
+    const total = view.width * view.height;
+    const mask = new Uint8Array(total);
+    let paperPixels = 0;
+    for (let index = 0; index < total; index += 1) {
+      const offset = index * 4;
+      const klass = paperClass(view.rgba[offset], view.rgba[offset + 1], view.rgba[offset + 2]);
+      if (!klass) continue;
+      mask[index] = klass;
+      paperPixels += 1;
+    }
+    if (paperPixels < total * 0.08) return null;
+    const eroded = erodeMask(mask, view.width, view.height);
+    let labeled = maskComponents(eroded, view.width, view.height);
+    const erodedUsable = labeled.comps.some((comp) => comp.area > total * 0.06);
+    if (!erodedUsable) labeled = maskComponents(mask, view.width, view.height);
+    let best = null;
+    let bestScore = 0;
+    labeled.comps.forEach((comp) => {
+      const score = sheetScore(comp, view.width, view.height);
+      if (score > bestScore) {
+        bestScore = score;
+        best = comp;
+      }
+    });
+    const keep = paperPixels > total * 0.12;
+    if (!best) return keep ? { confident: false, keep: true, confidence: 0.2 } : null;
+    const selected = erodedUsable
+      ? selectDilated(mask, labeled.labels, view.width, view.height, best.id)
+      : Uint8Array.from(labeled.labels, (label) => (label === best.id ? 1 : 0));
+    const labels = new Int32Array(total);
+    const keptIds = new Set([1]);
+    for (let index = 0; index < total; index += 1) if (selected[index]) labels[index] = 1;
+    const rawBox = componentBounds(labels, keptIds, view.width, view.height);
+    const smallBox = rawBox ? tightenBox(selected, view.width, rawBox) : null;
+    if (!smallBox) return keep ? { confident: false, keep: true, confidence: bestScore } : null;
+    const confidence = Math.max(0.5, Math.min(0.95, bestScore * 3));
+    if (sheetFillsItsBox(labels, view.width, view.height, smallBox)) {
+      const span = Math.min(smallBox.maxX - smallBox.minX + 1, smallBox.maxY - smallBox.minY + 1);
+      if (span < Math.min(view.width, view.height) * 0.12) {
+        return { confident: false, keep: true, confidence: bestScore };
+      }
+      return {
+        confident: true,
+        keep: true,
+        confidence,
+        mode: "crop",
+        box: smallBox,
+        scaleX: view.scaleX,
+        scaleY: view.scaleY
+      };
+    }
+    const smallCorners = pageCorners(labels, keptIds, view.width, view.height);
+    if (!smallCorners || !cornersReach(smallCorners, smallBox)) {
+      return { confident: false, keep: true, confidence: bestScore };
+    }
+    const corners = smallCorners.map((point) => ({
+      x: (point.x + 0.5) * view.scaleX - 0.5,
+      y: (point.y + 0.5) * view.scaleY - 0.5
+    }));
+    if (!convexQuad(corners)) return { confident: false, keep: true, confidence: bestScore };
     const area = quadArea(corners);
     const frame = width * height;
     const minEdge = Math.min(
       Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y),
       Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y)
     );
-    if (area < frame * 0.08 || minEdge < Math.min(width, height) * 0.12) return missed;
-    if (area > frame * 0.94 || axisAlignedQuad(smallCorners)) return loose();
-    const warped = warpPage(source, width, height, corners, SCAN_MAX_EDGE);
-    if (!warped) return loose();
-    const upright = uprightSheet(warped);
+    if (area < frame * 0.08 || area > frame * 0.94 || minEdge < Math.min(width, height) * 0.12) {
+      return { confident: false, keep: true, confidence: bestScore };
+    }
     return {
-      isolated: true,
-      rgba: upright.rgba,
-      width: upright.width,
-      height: upright.height,
-      confidence: analysis.confidence,
-      turns: upright.turns,
-      skew: upright.skew,
-      loose: false
+      confident: true,
+      keep: true,
+      confidence,
+      mode: "warp",
+      box: smallBox,
+      corners,
+      scaleX: view.scaleX,
+      scaleY: view.scaleY
     };
+  }
+
+  function uncertainSheet(rgba, width, height, confidence) {
+    const boxed = letterboxOnCream(rgba, width, height);
+    return {
+      isolated: false,
+      letterboxed: true,
+      rgba: boxed.rgba,
+      width: boxed.width,
+      height: boxed.height,
+      confidence: confidence || 0,
+      turns: 0,
+      skew: 0,
+      loose: true
+    };
+  }
+
+  function scanArtwork(rgba, width, height) {
+    const source = opaqueResult(toUint8(rgba, width, height));
+    const missed = { isolated: false, rgba: null, width: 0, height: 0, confidence: 0, turns: 0, skew: 0 };
+    if (!width || !height || width < 8 || height < 8) return missed;
+    if (isCleanScan(source, width, height)) {
+      return isolatedResult({ rgba: source, width, height }, 1, { loose: false });
+    }
+    const found = findPaperSheet(source, width, height);
+    if (!found) return missed;
+    if (!found.confident) return uncertainSheet(source, width, height, found.confidence);
+    const sheet = found.mode === "warp"
+      ? warpPage(source, width, height, found.corners, SCAN_MAX_EDGE)
+      : cropBounds(source, width, height, found.box, found.scaleX, found.scaleY);
+    if (!sheet || !borderLooksLikeSheet(sheet.rgba, sheet.width, sheet.height)) {
+      return uncertainSheet(source, width, height, found.confidence);
+    }
+    return isolatedResult(sheet, found.confidence, { loose: false });
   }
 
   function creamPlaceholder(toPng) {
@@ -2125,14 +2553,19 @@
     for (const page of split.pages) {
       const scanned = scanArtwork(page.rgba, page.width, page.height);
       if (!scanned.isolated) {
-        const placeholder = creamPlaceholder(toPng);
+        const kept = scanned.letterboxed && scanned.rgba
+          ? (typeof toPng === "function" ? toPng(scanned.rgba, scanned.width, scanned.height) : "")
+          : "";
+        const placeholder = kept || creamPlaceholder(toPng);
         pages.push({
           dataUrl: placeholder,
           scanDataUrl: "",
           marksDataUrl: "",
           sheetCleaned: false,
           scanIsolated: false,
-          artworks: [],
+          keptSheet: Boolean(kept),
+          artworks: kept ? [{ dataUrl: kept }] : [],
+          layersSeparated: Boolean(kept),
           text: "",
           textStatus: "uncertain",
           textEdited: false,
@@ -2206,11 +2639,11 @@
     return lines.slice(0, 12);
   }
 
-  function drawContain(context, image, box) {
+  function drawContain(context, image, box, artFrame) {
     const srcWidth = image.naturalWidth || image.width;
     const srcHeight = image.naturalHeight || image.height;
     if (!srcWidth || !srcHeight || !box) return null;
-    const placement = containPlacement(srcWidth, srcHeight, box);
+    const placement = placeArt(srcWidth, srcHeight, box, artFrame);
     context.drawImage(image, placement.dx, placement.dy, placement.dw, placement.dh);
     return placement;
   }
@@ -2248,7 +2681,7 @@
     if (layout.art && pictures.length) {
       const band = layout.art.h / pictures.length;
       pictures.forEach((image, index) => {
-        drawContain(context, image, { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band });
+        drawContain(context, image, { x: layout.art.x, y: layout.art.y + band * index, w: layout.art.w, h: band }, options.artFrame);
       });
     }
     const paintedText = [];
@@ -2304,7 +2737,7 @@
     });
     context.fillStyle = options.paper || PAPER_HEX;
     context.fillRect(0, 0, pageWidth, pageHeight);
-    if (options.image) drawContain(context, options.image, layout.art);
+    if (options.image) drawContain(context, options.image, layout.art, options.artFrame);
     const band = layout.title;
     const titleSize = Math.max(1, 22 * pageHeight / PAGE_HEIGHT_MM * 25.4 / 72);
     const subSize = Math.max(1, 12 * pageHeight / PAGE_HEIGHT_MM * 25.4 / 72);
@@ -2367,6 +2800,185 @@
     return placement;
   }
 
+  function bindPageEditor(nodes, hooks) {
+    const editor = nodes && nodes.editor;
+    const art = nodes && nodes.art;
+    const artImage = nodes && nodes.artImage;
+    const handle = nodes && nodes.handle;
+    const text = nodes && nodes.text;
+    const frame = nodes && nodes.frame;
+    const mark = nodes && nodes.mark;
+    const note = nodes && nodes.note;
+    if (!editor || !art || !artImage || !text || !hooks) return { sync() {} };
+    let view = null;
+    let drag = null;
+
+    function applyBox(element, box, pageWidth, pageHeight) {
+      if (!element || !box) return;
+      element.style.left = `${box.x / pageWidth * 100}%`;
+      element.style.top = `${box.y / pageHeight * 100}%`;
+      element.style.width = `${box.w / pageWidth * 100}%`;
+      element.style.height = `${box.h / pageHeight * 100}%`;
+    }
+
+    function place() {
+      if (!view || !view.artBox || !artImage.naturalWidth) return;
+      const placed = placeArt(artImage.naturalWidth, artImage.naturalHeight, view.artBox, view.artFrame);
+      applyBox(art, { x: placed.dx, y: placed.dy, w: placed.dw, h: placed.dh }, view.pageWidth, view.pageHeight);
+    }
+
+    function clientSpan() {
+      const rect = editor.getBoundingClientRect();
+      return {
+        width: Math.max(1, rect.width * view.artBox.w / view.pageWidth),
+        height: Math.max(1, rect.height * view.artBox.h / view.pageHeight)
+      };
+    }
+
+    function currentFrame() {
+      const frameValue = view && view.artFrame;
+      return {
+        x: frameValue && Number.isFinite(Number(frameValue.x)) ? Number(frameValue.x) : 0,
+        y: frameValue && Number.isFinite(Number(frameValue.y)) ? Number(frameValue.y) : 0,
+        scale: frameValue && Number.isFinite(Number(frameValue.scale)) ? Number(frameValue.scale) : 1
+      };
+    }
+
+    art.tabIndex = 0;
+    art.addEventListener("keydown", (event) => {
+      if (!view || !view.artBox) return;
+      const frameValue = currentFrame();
+      const step = event.shiftKey ? 0.05 : 0.02;
+      let next = null;
+      if (event.key === "ArrowLeft") next = { ...frameValue, x: frameValue.x - step };
+      else if (event.key === "ArrowRight") next = { ...frameValue, x: frameValue.x + step };
+      else if (event.key === "ArrowUp") next = { ...frameValue, y: frameValue.y - step };
+      else if (event.key === "ArrowDown") next = { ...frameValue, y: frameValue.y + step };
+      else if (event.key === "+" || event.key === "=") next = { ...frameValue, scale: frameValue.scale + 0.06 };
+      else if (event.key === "-" || event.key === "_") next = { ...frameValue, scale: frameValue.scale - 0.06 };
+      if (!next) return;
+      event.preventDefault();
+      view.artFrame = normalizeArtFrame(next) || { x: 0, y: 0, scale: 1 };
+      if (hooks.onFrame) hooks.onFrame(view.artFrame, true);
+      place();
+    });
+    art.addEventListener("pointerdown", (event) => {
+      if (!view || !view.artBox || event.button > 0) return;
+      if (handle && event.target === handle) return;
+      drag = { mode: "move", id: event.pointerId, x: event.clientX, y: event.clientY, frame: currentFrame() };
+      art.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    if (handle) {
+      handle.addEventListener("pointerdown", (event) => {
+        if (!view || !view.artBox || event.button > 0) return;
+        const rect = art.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        drag = {
+          mode: "resize",
+          id: event.pointerId,
+          frame: currentFrame(),
+          centerX,
+          centerY,
+          start: Math.max(12, Math.hypot(event.clientX - centerX, event.clientY - centerY))
+        };
+        handle.setPointerCapture(event.pointerId);
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    }
+    const move = (event) => {
+      if (!drag || event.pointerId !== drag.id || !view) return;
+      let next = drag.frame;
+      if (drag.mode === "move") {
+        const span = clientSpan();
+        next = {
+          x: drag.frame.x + (event.clientX - drag.x) / span.width,
+          y: drag.frame.y + (event.clientY - drag.y) / span.height,
+          scale: drag.frame.scale
+        };
+      } else {
+        const distance = Math.hypot(event.clientX - drag.centerX, event.clientY - drag.centerY);
+        next = { x: drag.frame.x, y: drag.frame.y, scale: drag.frame.scale * (distance / drag.start) };
+      }
+      view.artFrame = normalizeArtFrame(next) || { x: 0, y: 0, scale: 1 };
+      if (hooks.onFrame) hooks.onFrame(view.artFrame, false);
+      place();
+    };
+    const end = (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const finished = view && view.artFrame;
+      drag = null;
+      if (hooks.onFrame) hooks.onFrame(finished, true);
+    };
+    art.addEventListener("pointermove", move);
+    art.addEventListener("pointerup", end);
+    art.addEventListener("pointercancel", end);
+    if (handle) {
+      handle.addEventListener("pointermove", move);
+      handle.addEventListener("pointerup", end);
+      handle.addEventListener("pointercancel", end);
+    }
+    text.addEventListener("paste", (event) => {
+      const plain = event.clipboardData ? event.clipboardData.getData("text/plain") : "";
+      if (!plain) return;
+      event.preventDefault();
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
+      selection.deleteFromDocument();
+      selection.getRangeAt(0).insertNode(document.createTextNode(plain.slice(0, 4000)));
+    });
+    text.addEventListener("blur", () => {
+      if (!view || !view.showText) return;
+      const value = String(text.textContent || "").replace(/\u00a0/g, " ").trim().slice(0, 4000);
+      if (value !== String(view.text || "")) hooks.onText(value);
+    });
+
+    return {
+      sync(next) {
+        view = next && next.active ? next : null;
+        const active = Boolean(view);
+        editor.hidden = !active;
+        if (frame) frame.classList.toggle("is-editing", active);
+        if (note) {
+          note.hidden = !active;
+          if (active) note.textContent = next.note || "";
+        }
+        if (!active) return;
+        if (mark && next.markUrl) {
+          mark.src = next.markUrl;
+          mark.alt = "";
+        }
+        text.hidden = !next.showText;
+        if (next.showText && next.textBox) {
+          applyBox(text, next.textBox, next.pageWidth, next.pageHeight);
+          const height = editor.getBoundingClientRect().height || next.pageHeight;
+          text.style.fontSize = `${Math.max(16, 11 * height / 216 * 25.4 / 72)}px`;
+          text.style.lineHeight = "1.35";
+          text.style.fontFamily = next.fontFamily || "Georgia, serif";
+          if (document.activeElement !== text) text.textContent = next.text || "";
+          text.setAttribute("aria-label", next.textLabel || "Text");
+        }
+        const showArt = Boolean(next.artUrl && next.artBox);
+        art.hidden = !showArt;
+        if (handle) {
+          handle.hidden = !showArt;
+          handle.setAttribute("aria-label", next.resizeLabel || "Resize");
+        }
+        art.setAttribute("aria-label", next.moveLabel || "Move");
+        if (!showArt) return;
+        if (artImage.getAttribute("src") !== next.artUrl) {
+          artImage.onload = () => place();
+          artImage.alt = "";
+          artImage.src = next.artUrl;
+        } else {
+          place();
+        }
+      }
+    };
+  }
+
   return {
     PAPER,
     PAPER_HEX,
@@ -2395,6 +3007,8 @@
     TRIM_WIDTH_PT,
     captionMetrics,
     containPlacement,
+    normalizeArtFrame,
+    placeArt,
     coverHeroSource,
     cropSheet,
     drawCoverPage,
@@ -2425,6 +3039,7 @@
     applyAssistantProposal,
     applyInteriorStyleArt,
     bindBookAssistant,
+    bindPageEditor,
     composeScanLayers,
     dismissAssistantProposal,
     normalizeScanBlocks,

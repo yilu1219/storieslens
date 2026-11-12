@@ -22,6 +22,7 @@ const {
   renderAuthorPreview,
   retainBookEdits,
   rotateQuarter,
+  placeArt,
   scanArtwork,
   paintFullBleed,
   splitScanPages,
@@ -643,6 +644,75 @@ test("a full sheet keeps marks at all four edges, and a square page is letterbox
   assert.ok(countColor(squarePage.rgba, 154, 216, [20, 180, 40]) > 0);
   assert.ok(countColor(squarePage.rgba, 154, 216, [20, 40, 220]) > 0);
   assert.ok(countColor(squarePage.rgba, 154, 216, [230, 200, 20]) > 0);
+});
+
+function paintPoly(rgba, width, height, points, color) {
+  const minY = Math.max(0, Math.floor(Math.min(...points.map((point) => point.y))));
+  const maxY = Math.min(height - 1, Math.ceil(Math.max(...points.map((point) => point.y))));
+  for (let y = minY; y <= maxY; y += 1) {
+    const xs = [];
+    for (let index = 0; index < points.length; index += 1) {
+      const start = points[index];
+      const end = points[(index + 1) % points.length];
+      if ((start.y <= y && end.y > y) || (end.y <= y && start.y > y)) {
+        xs.push(start.x + (y - start.y) / (end.y - start.y) * (end.x - start.x));
+      }
+    }
+    xs.sort((a, b) => a - b);
+    for (let index = 0; index + 1 < xs.length; index += 2) {
+      const x0 = Math.max(0, Math.ceil(xs[index]));
+      const x1 = Math.min(width - 1, Math.floor(xs[index + 1]));
+      for (let x = x0; x <= x1; x += 1) {
+        const offset = (y * width + x) * 4;
+        rgba[offset] = color[0];
+        rgba[offset + 1] = color[1];
+        rgba[offset + 2] = color[2];
+        rgba[offset + 3] = 255;
+      }
+    }
+  }
+}
+
+test("a keystone sheet is lifted off the desk, and a parent can move art inside the safe box", () => {
+  const width = 160;
+  const height = 120;
+  const rgba = fill(width, height, [220, 220, 216]);
+  paintRect(rgba, width, 2, 2, 40, 30, [252, 252, 248]);
+  paintPoly(rgba, width, height, [{ x: 36, y: 22 }, { x: 128, y: 14 }, { x: 146, y: 102 }, { x: 24, y: 108 }], [242, 206, 48]);
+  paintRect(rgba, width, 70, 48, 16, 16, [40, 140, 200]);
+  paintRect(rgba, width, 130, 40, 28, 50, [230, 176, 150]);
+  const scanned = scanArtwork(rgba, width, height);
+  assert.equal(scanned.isolated, true);
+  assert.ok(scanned.width < width - 8);
+  assert.ok(scanned.height < height);
+  assert.ok(countColor(scanned.rgba, scanned.width, scanned.height, [40, 140, 200], 50) > 40);
+  assert.equal(countColor(scanned.rgba, scanned.width, scanned.height, [252, 252, 248], 4), 0);
+  assert.ok(countColor(scanned.rgba, scanned.width, scanned.height, [230, 176, 150], 18) < 700);
+  const corner = pixel(scanned.rgba, scanned.width, 0, 0);
+  assert.ok(Math.abs(corner[0] - 220) > 12);
+
+  const pageWidth = 140;
+  const pageHeight = 110;
+  const page = fill(pageWidth, pageHeight, [208, 208, 204]);
+  paintRect(page, pageWidth, 6, 4, 34, 16, [252, 252, 250]);
+  paintRect(page, pageWidth, 18, 20, 100, 78, [250, 248, 240]);
+  paintRect(page, pageWidth, 36, 40, 40, 5, [15, 15, 15]);
+  paintRect(page, pageWidth, 108, 36, 30, 48, [232, 180, 154]);
+  const white = scanArtwork(page, pageWidth, pageHeight);
+  assert.equal(white.isolated, true);
+  assert.ok(white.width < pageWidth - 8);
+  assert.ok(countColor(white.rgba, white.width, white.height, [15, 15, 15], 12) > 20);
+  assert.ok(countColor(white.rgba, white.width, white.height, [232, 180, 154], 16) < 40);
+
+  const box = { x: 10, y: 12, w: 100, h: 80 };
+  const base = placeArt(40, 20, box, null);
+  const moved = placeArt(40, 20, box, { x: 1, y: 1, scale: 0.5 });
+  assert.ok(moved.dw < base.dw - 1);
+  assert.ok(moved.dx >= box.x - 0.01);
+  assert.ok(moved.dy >= box.y - 0.01);
+  assert.ok(moved.dx + moved.dw <= box.x + box.w + 0.01);
+  assert.ok(moved.dy + moved.dh <= box.y + box.h + 0.01);
+  assert.deepEqual(placeArt(40, 20, box, { x: 0, y: 0, scale: 1 }), base);
 });
 
 test("sideways, upside-down, and tilted sheets are made upright without a second crop", () => {

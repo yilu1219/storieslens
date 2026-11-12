@@ -455,6 +455,7 @@ label.field input {
 .piece-edit { display: grid; gap: 8px; }
 .piece-edit .secondary { width: 100%; }
 .book-frame {
+  position: relative;
   width: min(100%, 420px);
   margin: 0 auto;
   aspect-ratio: 154 / 216;
@@ -472,6 +473,64 @@ label.field input {
   display: block;
   background: #f6f0e4;
 }
+.book-frame.is-editing > [data-page-image] { visibility: hidden; }
+.page-editor {
+  position: absolute;
+  inset: 0;
+  background: #f6f0e4;
+}
+.page-editor[hidden] { display: none; }
+.page-art {
+  position: absolute;
+  touch-action: none;
+  cursor: grab;
+  border: 1.5px dashed rgba(16, 24, 23, .38);
+  box-sizing: border-box;
+}
+.page-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  display: block;
+  background: transparent;
+}
+.page-art-handle {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #1c2420;
+  background: #fff;
+  cursor: nwse-resize;
+}
+.page-text {
+  position: absolute;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  color: #1c2420;
+  background: #f6f0e4;
+  outline: none;
+  white-space: pre-wrap;
+}
+.page-text:focus { box-shadow: inset 0 0 0 1.5px rgba(15, 98, 68, .5); }
+.page-watermark {
+  position: absolute;
+  top: 4.5%;
+  right: 4.5%;
+  width: 16%;
+  height: auto;
+  opacity: .62;
+  pointer-events: none;
+  object-fit: contain;
+  background: transparent;
+}
+.page-editor-note { text-align: center; }
 .pager {
   display: flex;
   align-items: center;
