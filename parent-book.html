@@ -233,7 +233,8 @@
         </div>
         <section class="card">
           <h3 data-i18n="ai-movie-title">根据故事生成 AI 电影</h3>
-          <p data-i18n="ai-movie-note">约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 6 个视频点数。每个成功镜头分别扣 1 点。如果后续镜头失败，已成功的镜头仍保存在私人素材库。</p>
+          <label class="field"><span data-i18n="ai-movie-model">选择 AI 电影画质</span><select data-ai-movie-tier><option value="mini" data-i18n="ai-movie-mini">Seedance 2.0 Mini · 720p</option><option value="2.5" data-i18n="ai-movie-premium" disabled>Seedance 2.5 · 720p（尚未接通）</option></select></label>
+          <p data-ai-movie-estimate role="status" aria-live="polite">约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 6 个视频点数。</p>
           <label class="check"><input type="checkbox" data-ai-movie-consent /><span data-i18n="ai-movie-consent">我是家长或监护人，同意将选中的作品和故事文字发送给网站配置的 AI 视频服务生成电影。</span></label>
           <button class="primary" type="button" data-ai-movie-create data-i18n="ai-movie-create">一键生成 AI 电影</button>
           <p data-ai-movie-progress role="status" aria-live="polite"></p>

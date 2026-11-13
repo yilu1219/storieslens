@@ -131,7 +131,7 @@ h1 {
 }
 .fields { display: grid; gap: 14px; }
 label.field { display: grid; gap: 7px; font-size: 14px; font-weight: 700; }
-label.field input {
+label.field input, label.field select {
   width: 100%;
   min-height: 52px;
   padding: 0 14px;

@@ -122,6 +122,7 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
       CHINA_ARK_BASE_URL: `http://127.0.0.1:${provider.address().port}`,
       CHINA_ARK_API_KEY: "test-ark-key",
       CHINA_ARK_VIDEO_ENABLED: "true",
+      CHINA_ARK_VIDEO_25_ENABLED: "true",
       CHINA_ARK_VIDEO_MODEL: "doubao-seedance-2-0-mini-260615",
       CHINA_ARK_VIDEO_API_URL: `http://127.0.0.1:${provider.address().port}/contents/generations/tasks`,
       CHINA_ARK_VIDEO_COST_CNY_PER_SECOND: "0.10",
@@ -143,6 +144,7 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
     await waitForServer(baseUrl, child);
     const platformStatus = await jsonRequest(baseUrl, "/api/platform/status");
     assert.equal(platformStatus.payload.features.chinaVideoRoute, true);
+    assert.equal(platformStatus.payload.features.chinaVideo25Route, true);
     const adminLogin = await jsonRequest(baseUrl, "/api/admin/session", { method: "POST", body: { accessKey }, origin: true });
     const adminCookie = cookieValue(adminLogin.response);
     const invite = await jsonRequest(baseUrl, "/api/admin/invites", {
@@ -186,6 +188,20 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
     assert.equal(privateVideo.status, 200);
     assert.equal(privateVideo.headers.get("content-type"), "video/mp4");
     assert.deepEqual(Buffer.from(await privateVideo.arrayBuffer()), testVideo);
+
+    const creditsBeforePremium = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    const premium = await jsonRequest(baseUrl, "/api/generate-video", {
+      method: "POST", cookie: accountCookie,
+      body: { imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", prompt: "A child-safe paper bird flies.", videoTier: "2.5", model: "unapproved-client-model", duration: 5, resolution: "1080p", aspectRatio: "16:9" }
+    });
+    assert.equal(premium.response.status, 202);
+    assert.equal(submittedPayload.model, "doubao-seedance-2-5-260628");
+    assert.equal(submittedPayload.ratio, "9:16");
+    assert.equal(submittedPayload.resolution, "720p");
+    const premiumCompleted = await jsonRequest(baseUrl, premium.payload.pollUrl, { cookie: accountCookie });
+    assert.equal(premiumCompleted.payload.status, "completed");
+    const creditsAfterPremium = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    assert.equal(creditsAfterPremium.payload.usage.resources.videoClips.remaining, creditsBeforePremium.payload.usage.resources.videoClips.remaining - 3);
 
     const creditsBeforeRejection = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
     rejectGeneratedFrames = true;

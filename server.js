@@ -586,27 +586,34 @@ function getVideoConfig() {
   };
 }
 
-function getChinaVideoConfig() {
+function getChinaVideoConfig(tier = "mini") {
   const baseUrl = String(process.env.CHINA_ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3").replace(/\/+$/, "");
+  const premium = tier === "2.5";
   return {
     provider: "VOLCENGINE_ARK",
-    model: process.env.CHINA_ARK_VIDEO_MODEL || "doubao-seedance-2-0-mini-260615",
+    model: premium ? "doubao-seedance-2-5-260628" : "doubao-seedance-2-0-mini-260615",
+    tier,
+    creditsPerFiveSeconds: premium ? 3 : 1,
     duration: Number(process.env.VIDEO_DURATION || 5),
-    aspectRatio: process.env.CHINA_ARK_VIDEO_ASPECT_RATIO || "9:16",
-    resolution: process.env.VIDEO_RESOLUTION || "720p",
+    aspectRatio: "9:16",
+    resolution: "720p",
     apiKey: process.env.CHINA_ARK_API_KEY || "",
     videoTaskApiUrl: process.env.CHINA_ARK_VIDEO_API_URL || `${baseUrl}/contents/generations/tasks`,
-    costCnyPerSecond: Number(process.env.CHINA_ARK_VIDEO_COST_CNY_PER_SECOND || 0),
+    costCnyPerSecond: Number(process.env[premium ? "CHINA_ARK_VIDEO_25_COST_CNY_PER_SECOND" : "CHINA_ARK_VIDEO_COST_CNY_PER_SECOND"] || 0),
     cnyPerUsd: Number(process.env.CHINA_CNY_PER_USD || 7.2),
     watermark: process.env.CHINA_ARK_VIDEO_WATERMARK !== "false",
     generateAudio: process.env.CHINA_ARK_VIDEO_GENERATE_AUDIO === "true"
   };
 }
 
-function createVideoProviderConfig(region = "") {
-  if (region !== "cn") return { ...getVideoConfig(), provider: "OPENROUTER" };
-  const config = getChinaVideoConfig();
-  if (process.env.CHINA_ARK_VIDEO_ENABLED !== "true" || !config.apiKey || !config.model) {
+function createVideoProviderConfig(region = "", tier = "mini") {
+  if (region !== "cn") {
+    if (tier !== "mini") throw Object.assign(new Error("This video model is available to Mainland accounts only."), { statusCode: 400 });
+    return { ...getVideoConfig(), provider: "OPENROUTER" };
+  }
+  if (!["mini", "2.5"].includes(tier)) throw Object.assign(new Error("Choose a supported video model."), { statusCode: 400 });
+  const config = getChinaVideoConfig(tier);
+  if (process.env.CHINA_ARK_VIDEO_ENABLED !== "true" || (tier === "2.5" && process.env.CHINA_ARK_VIDEO_25_ENABLED !== "true") || !config.apiKey) {
     throw Object.assign(new Error("China video generation is not configured yet. Enable an approved Ark Seedance model before using this feature."), {
       statusCode: 503,
       code: "CHINA_VIDEO_ROUTE_UNAVAILABLE"
@@ -687,9 +694,9 @@ function buildVideoProviderPayload(config, body, sourceImage, requestedDuration)
         { type: "text", text: prompt },
         { type: "image_url", image_url: { url: sourceImage }, role: "first_frame" }
       ],
-      duration: Math.max(4, Math.min(15, requestedDuration)),
-      ratio: body.aspectRatio || body.aspect_ratio || config.aspectRatio,
-      resolution: body.resolution || config.resolution,
+      duration: Math.max(4, Math.min(config.tier === "2.5" ? 30 : 15, requestedDuration)),
+      ratio: config.aspectRatio,
+      resolution: config.resolution,
       watermark: config.watermark,
       generate_audio: config.generateAudio
     };
@@ -741,7 +748,7 @@ async function handleGenerateVideo(request, response) {
     }
     await enforceTextSafety(buildVideoPrompt(body), { media: true });
     const providerRegion = handlePlatformApi.creditManager.accountRegion(request, response);
-    const config = createVideoProviderConfig(providerRegion);
+    const config = createVideoProviderConfig(providerRegion, body.videoTier || "mini");
     if (config.provider === "OPENROUTER" && !config.openRouterApiKey) {
       sendJson(response, 501, { error: "Video generation is not configured yet." });
       return;
@@ -750,7 +757,10 @@ async function handleGenerateVideo(request, response) {
     const sourceImage = resolveLocalImageDataUrl(body.imageUrl);
     await enforceImageSafety(sourceImage);
     const requestedDuration = Math.max(1, Math.min(60, Number(body.duration || config.duration) || 5));
-    const clipUnits = Math.ceil(requestedDuration / 5);
+    if (config.provider === "VOLCENGINE_ARK" && (requestedDuration < 4 || requestedDuration > (config.tier === "2.5" ? 30 : 15))) {
+      throw Object.assign(new Error("Choose a supported video duration for this model."), { statusCode: 400 });
+    }
+    const clipUnits = Math.ceil(requestedDuration / 5) * (config.creditsPerFiveSeconds || 1);
     const payload = buildVideoProviderPayload(config, body, sourceImage, requestedDuration);
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
       resource: "videoClips",
@@ -784,6 +794,7 @@ async function handleGenerateVideo(request, response) {
       provider: config.provider,
       providerRegion,
       model: payload.model,
+      videoTier: config.tier || "mini",
       ownerId: creditReservation.userId,
       requesterId,
       status: normalizeVideoStatus(upstreamData.status),
@@ -891,7 +902,7 @@ async function handleGetVideoJob(request, response, jobId) {
   }
 
   try {
-    const config = job.provider === "VOLCENGINE_ARK" ? getChinaVideoConfig() : getVideoConfig();
+    const config = job.provider === "VOLCENGINE_ARK" ? getChinaVideoConfig(job.videoTier) : getVideoConfig();
     const upstreamResponse = await fetch(job.pollingUrl, {
       headers: videoProviderHeaders(config)
     });

@@ -3122,6 +3122,12 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
             && Boolean(process.env.CHINA_ARK_API_KEY)
             && Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
             && Boolean(resolveFfmpegBinary()),
+          chinaVideo25Route: process.env.CHINA_ARK_VIDEO_ENABLED === "true"
+            && process.env.CHINA_ARK_VIDEO_25_ENABLED === "true"
+            && process.env.SAFE_VIDEO_GENERATION_ENABLED === "true"
+            && Boolean(process.env.CHINA_ARK_API_KEY)
+            && Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
+            && Boolean(resolveFfmpegBinary()),
           safetyReview: Boolean(process.env.OPENAI_MODERATION_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY)
         },
         mediaStorage: mediaStorage.status(),

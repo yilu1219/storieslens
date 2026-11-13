@@ -141,7 +141,11 @@
       "family-share-revoked": "分享已撤回，原链接和二维码不能再打开。",
       "family-share-failed": "分享暂时未完成，请稍后重试。",
       "ai-movie-title": "根据故事生成 AI 电影",
-      "ai-movie-note": "约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 6 个视频点数。每个成功镜头分别扣 1 点。如果后续镜头失败，已成功的镜头仍保存在私人素材库。",
+      "ai-movie-model": "选择 AI 电影画质",
+      "ai-movie-mini": "Seedance 2.0 Mini · 720p",
+      "ai-movie-premium": "Seedance 2.5 · 720p",
+      "ai-movie-premium-off": "Seedance 2.5 · 720p（尚未接通）",
+      "ai-movie-estimate": "约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 {credits} 个视频点数（每镜头 {perScene} 点）。成功镜头分别扣点；后续失败时，已完成镜头仍保存在私人素材库。",
       "ai-movie-consent": "我是家长或监护人，同意将选中的作品和故事文字发送给网站配置的 AI 视频服务生成电影。",
       "ai-movie-create": "一键生成 AI 电影",
       "ai-movie-download": "下载 AI 电影 MP4",
@@ -389,7 +393,11 @@
       "family-share-revoked": "Sharing revoked. The old link and QR code no longer open.",
       "family-share-failed": "Sharing did not finish. Please try again.",
       "ai-movie-title": "Make an AI movie from this story",
-      "ai-movie-note": "About 30 seconds in 9:16, six 5-second scenes; estimated cost: six video credits. Each successful scene uses one credit. If a later scene fails, completed scenes remain in your private library.",
+      "ai-movie-model": "Choose AI movie quality",
+      "ai-movie-mini": "Seedance 2.0 Mini · 720p",
+      "ai-movie-premium": "Seedance 2.5 · 720p",
+      "ai-movie-premium-off": "Seedance 2.5 · 720p (not connected yet)",
+      "ai-movie-estimate": "About 30 seconds in 9:16, six 5-second scenes; estimated cost: {credits} video credits ({perScene} per scene). Completed scenes use credits separately and remain in your private library if a later scene fails.",
       "ai-movie-consent": "I am a parent or guardian and agree to send the selected artwork and story text to the configured AI video provider.",
       "ai-movie-create": "Create AI movie in one click",
       "ai-movie-download": "Download AI movie MP4",
@@ -576,6 +584,8 @@
     printPdf: document.querySelector("[data-print-pdf]"),
     makeFilm: document.querySelector("[data-make-film]"),
     aiMovieCreate: document.querySelector("[data-ai-movie-create]"),
+    aiMovieTier: document.querySelector("[data-ai-movie-tier]"),
+    aiMovieEstimate: document.querySelector("[data-ai-movie-estimate]"),
     aiMovieConsent: document.querySelector("[data-ai-movie-consent]"),
     aiMovieProgress: document.querySelector("[data-ai-movie-progress]"),
     aiMovieResult: document.querySelector("[data-ai-movie-result]"),
@@ -798,6 +808,7 @@
     document.querySelectorAll("[data-i18n]").forEach((node) => {
       node.textContent = t(node.dataset.i18n);
     });
+    updateAiMovieEstimate();
     els.title.placeholder = t("title-placeholder");
     els.childName.placeholder = t("name-placeholder");
     if (els.yuMark) els.yuMark.alt = t("yu-name");
@@ -2379,6 +2390,29 @@
     }
   }
 
+  function updateAiMovieEstimate() {
+    if (!els.aiMovieTier || !els.aiMovieEstimate) return;
+    const premium = els.aiMovieTier.value === "2.5";
+    const perScene = premium ? 3 : 1;
+    els.aiMovieEstimate.textContent = t("ai-movie-estimate", { credits: 6 * perScene, perScene });
+    const premiumOption = els.aiMovieTier.querySelector('option[value="2.5"]');
+    if (premiumOption) premiumOption.textContent = t(premiumOption.disabled ? "ai-movie-premium-off" : "ai-movie-premium");
+  }
+
+  async function refreshAiMovieOptions() {
+    const premiumOption = els.aiMovieTier?.querySelector('option[value="2.5"]');
+    if (!premiumOption) return;
+    try {
+      const response = await fetch("/api/platform/status");
+      const status = await response.json();
+      premiumOption.disabled = !response.ok || status.features?.chinaVideo25Route !== true;
+    } catch (_error) {
+      premiumOption.disabled = true;
+    }
+    if (premiumOption.disabled && els.aiMovieTier.value === "2.5") els.aiMovieTier.value = "mini";
+    updateAiMovieEstimate();
+  }
+
   function aiMovieScenes() {
     const photos = state.photos.filter((photo) => !photo.manuscript && workArtUrl(photo));
     if (!photos.length) return [];
@@ -2414,8 +2448,10 @@
     state.busy = true;
     els.aiMovieCreate.disabled = true;
     try {
+      const videoTier = els.aiMovieTier?.value === "2.5" ? "2.5" : "mini";
+      const requiredCredits = videoTier === "2.5" ? 18 : 6;
       const credits = await aiMovieJson("/api/credits");
-      if (!credits.betaUnlimitedCreation && Number(credits.usage?.resources?.videoClips?.remaining || 0) < 6) {
+      if (!credits.betaUnlimitedCreation && Number(credits.usage?.resources?.videoClips?.remaining || 0) < requiredCredits) {
         throw Object.assign(new Error("credits_required"), { status: 402 });
       }
       const videoUrls = [];
@@ -2424,7 +2460,7 @@
         const started = await aiMovieJson("/api/generate-video", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-          body: JSON.stringify(scenes[index])
+          body: JSON.stringify({ ...scenes[index], videoTier })
         });
         let job = started;
         for (let attempt = 0; attempt < 80 && !job.videoUrl; attempt += 1) {
@@ -2736,6 +2772,7 @@
   });
   els.makeFilm.addEventListener("click", () => void makeFilm());
   els.aiMovieCreate?.addEventListener("click", () => void makeAiMovie());
+  els.aiMovieTier?.addEventListener("change", updateAiMovieEstimate);
   els.downloadPreview?.addEventListener("click", () => void downloadPreviewPdf());
   els.scrollOfficial?.addEventListener("click", () => {
     document.getElementById("official-download")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -2850,4 +2887,5 @@
   applyLocale(detectLocale());
   renderIntroTemplates();
   void refreshPricing();
+  void refreshAiMovieOptions();
 })();
