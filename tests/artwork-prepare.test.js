@@ -330,7 +330,7 @@ test("manuscript photos close the book and the chosen cover is not stuck on the 
     coverId: "c",
     includeAuthor: true
   });
-  assert.deepEqual(pages.map((page) => page.kind), ["cover", "author", "photo", "photo", "manuscript", "manuscript", "manuscript"]);
+  assert.deepEqual(pages.map((page) => page.kind), ["cover", "contents", "author", "photo", "photo", "manuscript", "manuscript", "manuscript"]);
   assert.equal(pages[0].photoId, "c");
   assert.deepEqual(pages.filter((page) => page.kind === "manuscript").map((page) => page.photoId), ["a", "c", "b"]);
   assert.equal(pages.at(-1).kind, "manuscript");
@@ -910,7 +910,7 @@ test("interior style defaults to original artwork, keeps edits, and does not inv
   assert.equal(back.interiorStyle, "original");
   assert.equal(back.photos[0].text, "家长改正");
   const plan = planBookPages({ photos: kept.photos, coverId: kept.coverId, includeAuthor: false });
-  assert.deepEqual(plan.map((page) => page.kind), ["cover", "photo", "manuscript"]);
+  assert.deepEqual(plan.map((page) => page.kind), ["cover", "contents", "photo", "manuscript"]);
   assert.equal(typesetText({ text: "invented caption", status: "uncertain" }), "");
   const fallbackSentence = "A polished illustration was not created, so this page keeps the straightened original artwork.";
   const painted = paintRebuiltPage({

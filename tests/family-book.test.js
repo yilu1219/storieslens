@@ -37,6 +37,31 @@ function tempStore() {
   return { dir, store: createFamilyBookStore({ root: dir }) };
 }
 
+test("family preview sharing requires parent consent and can be revoked without exposing its management key", async () => {
+  const { store } = tempStore();
+  const api = createTestApi(store);
+  const input = { kind: "family-preview", title: "小画家", pages: [{ imageDataUrl: pngDataUrl }] };
+  const denied = await api.call("POST", "/api/family-book/shares", input);
+  assert.equal(denied.response.statusCode, 400);
+  const created = await api.call("POST", "/api/family-book/shares", { ...input, parentConsent: true });
+  assert.equal(created.response.statusCode, 201);
+  assert.match(created.response.body.qrDataUrl, /^data:image\/png;base64,/);
+  const { token, manageToken } = created.response.body.share;
+  assert.ok(manageToken);
+  const viewed = await api.call("GET", `/api/family-book/shares/${token}`);
+  assert.equal(viewed.response.statusCode, 200);
+  assert.equal(viewed.response.body.share.manageToken, undefined);
+  assert.throws(() => store.createOrder({ offerId: "family-digital", shareToken: token, adultConfirmed: true, contact: { email: "parent@example.com" } }), /preview_only_share/);
+  const wrong = await api.call("DELETE", `/api/family-book/shares/${token}`, { manageToken: "0".repeat(48) });
+  assert.equal(wrong.response.statusCode, 403);
+  const revoked = await api.call("DELETE", `/api/family-book/shares/${token}`, { manageToken });
+  assert.equal(revoked.response.statusCode, 200);
+  const gone = await api.call("GET", `/api/family-book/shares/${token}`);
+  assert.equal(gone.response.statusCode, 404);
+  const goneByCode = await api.call("GET", `/api/family-book/codes/${created.response.body.share.code}`);
+  assert.equal(goneByCode.response.statusCode, 404);
+});
+
 function mockResponse() {
   return {
     statusCode: 200,

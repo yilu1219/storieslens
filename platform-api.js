@@ -3314,6 +3314,15 @@ function createPlatformApi({ root, sendJson, readJsonBody, enforceTextSafety, en
       });
       return publicMedia(media);
     },
+    async loadOwnedGeneratedVideo(request, response, url) {
+      const match = String(url || "").match(/^\/api\/media\/([a-f0-9-]+)$/i);
+      if (!match) return null;
+      const { database, user } = sessionFor(request, response, { create: false });
+      if (!user) return null;
+      const media = database.media.find((item) => item.id === match[1] && item.ownerId === user.id && item.kind === "video" && !item.deletedAt);
+      const stored = media ? await mediaStorage.get(media) : null;
+      return stored?.body || null;
+    },
     recordUsage(request, response, { operation, model, costUsd = null, providerUsage = null }) {
       const { user } = sessionFor(request, response);
       return store.mutate((database) => {

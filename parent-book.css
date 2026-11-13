@@ -601,6 +601,14 @@ label.field input {
   background: #000;
 }
 .film-box video { max-height: 70vh; }
+[data-ai-movie-result] video {
+  display: block;
+  width: min(100%, 280px);
+  max-height: 60vh;
+  margin-top: 14px;
+  border-radius: 12px;
+  background: #111817;
+}
 .file-box iframe { height: 62vh; background: #fff; }
 .wechat-help, .share-note {
   margin: 10px 0 0;

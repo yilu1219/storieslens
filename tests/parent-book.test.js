@@ -263,8 +263,8 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   const suggestAt = html.indexOf("data-suggest-card");
   assert.ok(previewAt > 0 && previewAt < editAt && editAt < suggestAt);
   assert.match(html.slice(previewAt, suggestAt), /data-book-edit-fields/);
-  assert.match(html, /parent-book\.js\?v=20261112-proof-ebook/);
-  assert.match(html, /parent-book\.css\?v=20261112-proof-ebook/);
+  assert.match(html, /parent-book\.js\?v=20261113-ai-film/);
+  assert.match(html, /parent-book\.css\?v=20261113-ai-film/);
   assert.match(html, /artwork-prepare\.js\?v=20261113-scan-sheet/);
   assert.match(html, /preview-watermark\.js\?v=20261112-proof-ebook/);
   assert.match(html, /data-book-assistant/);

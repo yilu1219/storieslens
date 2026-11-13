@@ -70,6 +70,12 @@
       "parent-book-title": "Turn phone photos of children’s drawings or writing into an ebook.",
       "parent-book-copy": "Upload a photo of the artwork or the writing. Preview the whole book on this phone, then keep the ebook.",
       "parent-book-cta": "Make an ebook from photos →",
+      "example-kicker": "ORIGINAL → GENERATED",
+      "example-title": "One drawing. Two ways to see the story.",
+      "example-copy": "Compare the child's original drawing with an AI-generated story scene inspired by its characters and crayon style. The book keeps the original art at the back, while the story text stays editable.",
+      "example-cta": "Make a book from your artwork",
+      "example-before": "ORIGINAL · Child's drawing",
+      "example-after": "AI-GENERATED · Story scene",
       "teacher-book-kicker": "FOR TEACHERS · 教师出书",
       "teacher-book-title": "Turn student work into a class ebook parents can open.",
       "teacher-book-copy": "Upload student work, preview a class book, and share a private link with families.",
@@ -177,6 +183,12 @@
       "parent-book-title": "把孩子的画和作文照片做成电子书。",
       "parent-book-copy": "用手机拍下画作或作文，先免费预览整本，再保存成电子书。",
       "parent-book-cta": "照片成为电子书 →",
+      "example-kicker": "原画 → AI 生成",
+      "example-title": "一张原画，两种故事画面。",
+      "example-copy": "对比孩子的原画与根据角色和蜡笔风格生成的故事插画。原画保留在书的后半部分，故事文字可以单独编辑。",
+      "example-cta": "用自己的画做一本书",
+      "example-before": "ORIGINAL · 孩子的原画",
+      "example-after": "AI-GENERATED · 故事插画",
       "teacher-book-kicker": "教师出书",
       "teacher-book-title": "把学生作业做成可以分享给家长的班级电子书。",
       "teacher-book-copy": "上传学生作业，预览班级书，再用私密链接分享给家长。",
@@ -264,8 +276,9 @@
     });
     const squadLink = document.querySelector("[data-audience='cocreate']");
     if (squadLink) squadLink.href = `start.html?mode=squad&storyLang=${homeLocale === "zh" ? "zh" : "en"}`;
-    const parentLink = document.querySelector("[data-audience='parent-book']");
-    if (parentLink) parentLink.href = homeLocale === "zh" ? "/照片成为电子书" : "/photos-to-ebook";
+    document.querySelectorAll("[data-audience='parent-book'], [data-audience='parent-book-example']").forEach((link) => {
+      link.href = homeLocale === "zh" ? "/照片成为电子书" : "/photos-to-ebook";
+    });
     document.title = homeLocale === "zh"
       ? "语镜故事｜照片做成电子书 · 从你的作品开始"
       : "StoriesLens | 照片做成电子书 · Turn photos into an ebook";

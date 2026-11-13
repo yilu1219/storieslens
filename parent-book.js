@@ -4,7 +4,7 @@
   const printSpec = () => window.StoriesLensArtworkPrepare;
   const PAGE_WIDTH = printSpec().PAGE_WIDTH_PX;
   const PAGE_HEIGHT = printSpec().PAGE_HEIGHT_PX;
-  const MAX_PHOTOS = 20;
+  const MAX_PHOTOS = 10;
   const PROGRESS_RING_LENGTH = 2 * Math.PI * 52;
   const META_KEY = "storieslens_parent_book_meta";
   const LOCALE_KEY = "storieslens_locale";
@@ -122,7 +122,7 @@
       "processing": "正在本机处理照片并删除拍摄信息…",
       "blocked": "这张照片不能使用。请不要上传证件、学生证，或带有电话、地址、邮箱、二维码的画面。",
       "unsupported": "请选择 JPG、PNG、WEBP、HEIC 或 HEIF 图片。",
-      "too-many": "一次最多 20 张照片。",
+      "too-many": "一本书最多 10 张作品照片；每张都会有故事页和原画页。",
       "need-photos": "请先从相册选择或拍摄至少一张照片。",
       "pdf-working": "正在生成 A5 PDF…",
       "pdf-ready": "已购买的 A5 PDF 已准备好，可以下载。",
@@ -131,6 +131,27 @@
       "film-ready": "短片已生成，可直接播放、保存或分享。",
       "film-failed": "短片暂时无法生成，请再试一次。",
       "share-unavailable": "当前浏览器不支持系统分享，请使用打开或保存。",
+      "family-share-title": "家长授权分享预览",
+      "family-share-note": "分享版带水印。持有链接或二维码的人可以翻阅；请先确认你有权分享书中每位孩子的作品。",
+      "family-share-consent": "我是家长或监护人，并已取得书中其他孩子的家长许可，同意分享这本书的预览。",
+      "family-share-create": "生成私密链接和二维码",
+      "family-share-revoke": "撤回分享",
+      "family-share-required": "请先确认家长分享许可。",
+      "family-share-ready": "私密预览已生成。持有链接的人可查看，随时可以撤回。",
+      "family-share-revoked": "分享已撤回，原链接和二维码不能再打开。",
+      "family-share-failed": "分享暂时未完成，请稍后重试。",
+      "ai-movie-title": "根据故事生成 AI 电影",
+      "ai-movie-note": "约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 6 个视频点数。每个成功镜头分别扣 1 点。如果后续镜头失败，已成功的镜头仍保存在私人素材库。",
+      "ai-movie-consent": "我是家长或监护人，同意将选中的作品和故事文字发送给网站配置的 AI 视频服务生成电影。",
+      "ai-movie-create": "一键生成 AI 电影",
+      "ai-movie-download": "下载 AI 电影 MP4",
+      "ai-movie-need-consent": "请先确认作品和故事文字可以用于 AI 视频生成。",
+      "ai-movie-need-credit": "视频点数不足，或尚未登录成人账号。请先在“我的故事”中查看点数。",
+      "ai-movie-need-story": "请先检查并确认故事文字，再根据故事生成电影。",
+      "ai-movie-progress": "正在制作第 {current} / 6 个 AI 镜头…",
+      "ai-movie-assembling": "6 个镜头已完成，正在合成为电影…",
+      "ai-movie-ready": "AI 电影已完成，可播放或下载。",
+      "ai-movie-failed": "AI 电影未完成。已成功的镜头保存在私人素材库；请检查视频服务状态后重试。",
       "wechat-pdf": "在微信里，请先预览或点击“打开 PDF”。如需保存，可点击右上角 ···，选择“在浏览器中打开”，再下载到手机。",
       "wechat-film": "短片可在本页直接播放。微信 iOS 往往无法直接下载文件：请长按视频尝试保存，或点击右上角 ···，选择“在浏览器中打开”后再保存。",
       "cover-kicker": "STORIESLENS · 家长出书",
@@ -216,6 +237,9 @@
       "preview-pdf-ready": "预览 PDF 已准备好，可以下载。这不是已付款的正式文件。",
       "preview-pdf-failed": "预览 PDF 暂时无法生成，请再试一次。",
       "page-label-manuscript": "手稿",
+      "page-label-contents": "目录",
+      "contents-story": "故事",
+      "contents-originals": "小画家原作",
       "avatar-label": "作者头像",
       "avatar-upload": "上传头像",
       "avatar-photo": "真实照片",
@@ -346,7 +370,7 @@
       "processing": "Preparing photos on this device and removing camera details…",
       "blocked": "That photo cannot be used. Please do not upload identity documents, school IDs, or images with a phone number, address, email, or QR code.",
       "unsupported": "Please choose a JPG, PNG, WEBP, HEIC, or HEIF image.",
-      "too-many": "You can add up to 20 photos at a time.",
+      "too-many": "A book holds up to 10 artwork photos; each gets a story page and an original page.",
       "need-photos": "Please choose or take at least one photo first.",
       "pdf-working": "Creating the A5 PDF…",
       "pdf-ready": "Your purchased A5 PDF is ready to download.",
@@ -355,6 +379,27 @@
       "film-ready": "Your short film is ready to play, save, or share.",
       "film-failed": "The short film could not be created. Please try again.",
       "share-unavailable": "Sharing is not available in this browser. Use Open or Save instead.",
+      "family-share-title": "Share with parent permission",
+      "family-share-note": "The shared preview has a watermark. Anyone with the link or QR code can read it. Confirm permission for every child's work first.",
+      "family-share-consent": "I am a parent or guardian and have permission from other children's parents to share this book preview.",
+      "family-share-create": "Create private link and QR code",
+      "family-share-revoke": "Revoke sharing",
+      "family-share-required": "Confirm parent permission before sharing.",
+      "family-share-ready": "Private preview created. Anyone with the link can read it until you revoke it.",
+      "family-share-revoked": "Sharing revoked. The old link and QR code no longer open.",
+      "family-share-failed": "Sharing did not finish. Please try again.",
+      "ai-movie-title": "Make an AI movie from this story",
+      "ai-movie-note": "About 30 seconds in 9:16, six 5-second scenes; estimated cost: six video credits. Each successful scene uses one credit. If a later scene fails, completed scenes remain in your private library.",
+      "ai-movie-consent": "I am a parent or guardian and agree to send the selected artwork and story text to the configured AI video provider.",
+      "ai-movie-create": "Create AI movie in one click",
+      "ai-movie-download": "Download AI movie MP4",
+      "ai-movie-need-consent": "Confirm permission to use the artwork and story text for AI video first.",
+      "ai-movie-need-credit": "You need more video credits or an adult account. Check My Stories first.",
+      "ai-movie-need-story": "Review and confirm the story text before making a movie from it.",
+      "ai-movie-progress": "Creating AI scene {current} of 6…",
+      "ai-movie-assembling": "Six scenes are ready. Combining the movie…",
+      "ai-movie-ready": "Your AI movie is ready to play or download.",
+      "ai-movie-failed": "The AI movie did not finish. Completed scenes remain in your private library; check the video service and try again.",
       "wechat-pdf": "In WeChat, preview the PDF or tap Open PDF. To save it, tap the ··· menu and choose Open in Browser, then download it there.",
       "wechat-film": "You can play the film on this page. WeChat on iOS often blocks file downloads: try a long press on the video, or tap ··· and choose Open in Browser to save it.",
       "cover-kicker": "STORIESLENS · PARENT BOOK",
@@ -440,6 +485,9 @@
       "preview-pdf-ready": "The preview PDF is ready. It is not the paid official file.",
       "preview-pdf-failed": "The preview PDF could not be created. Please try again.",
       "page-label-manuscript": "Manuscript",
+      "page-label-contents": "Contents",
+      "contents-story": "Story",
+      "contents-originals": "Original artwork",
       "avatar-label": "Author portrait",
       "avatar-upload": "Upload a portrait",
       "avatar-photo": "Real photo",
@@ -527,6 +575,12 @@
     print: document.querySelector("[data-print]"),
     printPdf: document.querySelector("[data-print-pdf]"),
     makeFilm: document.querySelector("[data-make-film]"),
+    aiMovieCreate: document.querySelector("[data-ai-movie-create]"),
+    aiMovieConsent: document.querySelector("[data-ai-movie-consent]"),
+    aiMovieProgress: document.querySelector("[data-ai-movie-progress]"),
+    aiMovieResult: document.querySelector("[data-ai-movie-result]"),
+    aiMoviePlayer: document.querySelector("[data-ai-movie-player]"),
+    aiMovieLink: document.querySelector("[data-ai-movie-link]"),
     downloadPreview: document.querySelector("[data-download-preview]"),
     avatarFile: document.querySelector("[data-avatar-file]"),
     under18Row: document.querySelector("[data-under18-row]"),
@@ -546,6 +600,13 @@
     filmHelp: document.querySelector("[data-film-help]"),
     saveFilm: document.querySelector("[data-save-film]"),
     shareFilm: document.querySelector("[data-share-film]"),
+    familyShareSection: document.querySelector("[data-family-share-section]"),
+    familyShareConsent: document.querySelector("[data-family-share-consent]"),
+    familyShareCreate: document.querySelector("[data-family-share-create]"),
+    familyShareResult: document.querySelector("[data-family-share-result]"),
+    familyShareQr: document.querySelector("[data-family-share-qr]"),
+    familyShareLink: document.querySelector("[data-family-share-link]"),
+    familyShareRevoke: document.querySelector("[data-family-share-revoke]"),
     printRoot: document.querySelector("[data-print-root]")
   };
 
@@ -577,6 +638,7 @@
     readingApproval: null,
     yuOffer: null
   };
+  let familyShare = null;
   let pageProof = null;
 
   const t = (key, vars) => {
@@ -1142,6 +1204,35 @@
     return canvasToJpeg(canvas, 0.92);
   }
 
+  function renderContentsPage(plan, pageNumber) {
+    const { canvas, context } = pageCanvas();
+    const frame = prepareApi().printSafeFrame(PAGE_WIDTH, PAGE_HEIGHT, pageNumber);
+    context.fillStyle = "#0f6244";
+    context.font = `700 ${ptToPx(29)}px ${serifFont()}`;
+    context.fillText(t("page-label-contents"), frame.x, frame.y + ptToPx(42));
+    context.fillStyle = "#24352c";
+    context.font = `500 ${ptToPx(13)}px ${bodyFont()}`;
+    const entries = plan.map((item, index) => ({ ...item, number: index + 1 }))
+      .filter((item) => item.kind === "author" || item.kind === "photo" || item.kind === "manuscript")
+      .filter((item, index, list) => item.kind !== "manuscript" || list.findIndex((entry) => entry.kind === "manuscript") === index);
+    let storyNumber = 0;
+    entries.forEach((item, index) => {
+      let title = item.kind === "author" ? t("page-label-author") : item.kind === "manuscript" ? t("contents-originals") : "";
+      if (item.kind === "photo") {
+        storyNumber += 1;
+        const photo = state.photos.find((entry) => entry.id === item.photoId);
+        const excerpt = shownPhotoText(photo || {}).replace(/\s+/g, " ").trim().slice(0, 18);
+        title = `${t("contents-story")} ${storyNumber}${excerpt ? ` · ${excerpt}` : ""}`;
+      }
+      const y = frame.y + ptToPx(77 + index * 25);
+      context.fillText(title, frame.x, y, frame.w - ptToPx(30));
+      context.textAlign = "right";
+      context.fillText(String(item.number), frame.x + frame.w, y);
+      context.textAlign = "left";
+    });
+    return canvasToJpeg(canvas, 0.92);
+  }
+
   async function renderWorkPage(photo, extras = {}) {
     const { canvas, context } = pageCanvas();
     const manuscript = extras.manuscript === true || photo.manuscript === true;
@@ -1242,6 +1333,7 @@
       const pageNumber = index + 1;
       const photo = state.photos.find((entry) => entry.id === item.photoId);
       if (item.kind === "cover") pages.push(await renderCoverPage(photo, pageNumber));
+      else if (item.kind === "contents") pages.push(renderContentsPage(plan, pageNumber));
       else if (item.kind === "author") pages.push(await renderAuthorPage(pageNumber));
       else if (item.kind === "manuscript") pages.push(await renderWorkPage(photo, { pageNumber, manuscript: true, title: t("page-label-manuscript") }));
       else pages.push(await renderPhotoPage(photo, pageNumber));
@@ -1252,6 +1344,7 @@
     for (const page of pages) previewPages.push(await watermarkPage(page));
     state.pages = pages;
     state.previewPages = previewPages;
+    if (els.familyShareSection) els.familyShareSection.hidden = false;
     state.pageKinds = kinds;
     state.pageIndex = Math.min(state.pageIndex, pages.length - 1);
     const proofAt = storyProofIndex();
@@ -1370,7 +1463,7 @@
     if (!shown) return;
     els.pageImage.src = shown;
     const kind = state.pageKinds[state.pageIndex];
-    const label = kind === "cover" ? t("page-label-cover") : kind === "author" ? t("page-label-author") : kind === "manuscript" ? t("page-label-manuscript") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
+    const label = kind === "cover" ? t("page-label-cover") : kind === "contents" ? t("page-label-contents") : kind === "author" ? t("page-label-author") : kind === "manuscript" ? t("page-label-manuscript") : t("page-of", { current: state.pageIndex + 1, total: state.pages.length });
     els.pageImage.alt = label;
     els.pageLabel.textContent = label;
     els.prev.disabled = state.pageIndex === 0;
@@ -1668,7 +1761,9 @@
         try {
           const originalDataUrl = await sanitizeToPng(file);
           const manuscript = prepareApi().looksLikeManuscript(file.name);
-          const photos = await photosFromScan(originalDataUrl, file.name || "", manuscript);
+          const photos = await photosFromScan(originalDataUrl, file.name || "", manuscript, {
+            allowSplit: files.length + state.photos.length < MAX_PHOTOS
+          });
           if (state.photos.length + photos.length > MAX_PHOTOS) {
             setStatus(t("too-many"), true);
             break;
@@ -2284,6 +2379,81 @@
     }
   }
 
+  function aiMovieScenes() {
+    const photos = state.photos.filter((photo) => !photo.manuscript && workArtUrl(photo));
+    if (!photos.length) return [];
+    const story = photos.map(shownPhotoText).filter(Boolean).join(" ").trim().slice(0, 1800);
+    if (!story) return [];
+    const shots = ["wide establishing view", "gentle tracking view", "close view of the main action", "side view", "detail view", "closing wide view"];
+    return shots.map((shot, index) => {
+      const photo = photos[Math.round(index * (photos.length - 1) / 5)];
+      const words = shownPhotoText(photo).slice(0, 800);
+      return {
+        imageUrl: workArtUrl(photo),
+        prompt: `Create one 5-second ${shot} from this child's illustrated story. Keep the visible characters and art style. Follow only the supplied story; do not invent a new plot or add readable text. Full story: ${story}. Scene text: ${words || story.slice(0, 300)}`,
+        studentWriting: words,
+        duration: 5,
+        aspectRatio: "9:16",
+        resolution: "720p"
+      };
+    });
+  }
+
+  async function aiMovieJson(path, options) {
+    const response = await fetch(path, options);
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw Object.assign(new Error(result.error || "ai_movie_failed"), { status: response.status });
+    return result;
+  }
+
+  async function makeAiMovie() {
+    if (!els.aiMovieConsent?.checked) return setStatus(t("ai-movie-need-consent"), true);
+    const scenes = aiMovieScenes();
+    if (state.busy) return;
+    if (!scenes.length) return setStatus(state.photos.length ? t("ai-movie-need-story") : t("need-photos"), true);
+    state.busy = true;
+    els.aiMovieCreate.disabled = true;
+    try {
+      const credits = await aiMovieJson("/api/credits");
+      if (!credits.betaUnlimitedCreation && Number(credits.usage?.resources?.videoClips?.remaining || 0) < 6) {
+        throw Object.assign(new Error("credits_required"), { status: 402 });
+      }
+      const videoUrls = [];
+      for (let index = 0; index < scenes.length; index += 1) {
+        els.aiMovieProgress.textContent = t("ai-movie-progress", { current: index + 1 });
+        const started = await aiMovieJson("/api/generate-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
+          body: JSON.stringify(scenes[index])
+        });
+        let job = started;
+        for (let attempt = 0; attempt < 80 && !job.videoUrl; attempt += 1) {
+          if (["failed", "cancelled", "expired"].includes(job.status)) throw new Error(job.error || "ai_movie_failed");
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          job = await aiMovieJson(job.pollUrl || `/api/video-jobs/${encodeURIComponent(started.jobId)}`);
+        }
+        if (!job.videoUrl) throw new Error("ai_movie_timeout");
+        videoUrls.push(job.videoUrl);
+      }
+      els.aiMovieProgress.textContent = t("ai-movie-assembling");
+      const finished = await aiMovieJson("/api/family-book/ai-film/assemble", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoUrls })
+      });
+      els.aiMoviePlayer.src = finished.movieUrl;
+      els.aiMovieLink.href = finished.movieUrl;
+      els.aiMovieResult.hidden = false;
+      els.aiMovieProgress.textContent = t("ai-movie-ready");
+    } catch (error) {
+      els.aiMovieProgress.textContent = error.status === 402 ? t("ai-movie-need-credit") : `${t("ai-movie-failed")} ${error.message || ""}`;
+      setStatus(els.aiMovieProgress.textContent, true);
+    } finally {
+      state.busy = false;
+      els.aiMovieCreate.disabled = false;
+    }
+  }
+
   function dataUrlToBytes(dataUrl) {
     const match = String(dataUrl || "").match(/^data:image\/(?:jpeg|jpg|png);base64,([a-zA-Z0-9+/=\s]+)$/i);
     if (!match) throw new Error("invalid_image");
@@ -2384,6 +2554,72 @@
 
   if (els.signature) prepareSignaturePad(els.signature);
 
+  const FAMILY_SHARE_KEY = "storieslens_family_preview_share";
+
+  function showFamilyShare() {
+    if (els.familyShareSection) els.familyShareSection.hidden = !state.pages.length && !familyShare;
+    if (!els.familyShareResult) return;
+    els.familyShareResult.hidden = !familyShare;
+    if (!familyShare) return;
+    els.familyShareQr.src = familyShare.qrDataUrl;
+    els.familyShareLink.href = familyShare.shareUrl;
+    els.familyShareLink.textContent = familyShare.shareUrl;
+    els.familyShareCreate.disabled = true;
+  }
+
+  async function createFamilyShare() {
+    if (!els.familyShareConsent.checked) return setStatus(t("family-share-required"), true);
+    if (!state.previewPages.length || familyShare) return;
+    els.familyShareCreate.disabled = true;
+    try {
+      const response = await fetch("/api/family-book/shares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "family-preview",
+          parentConsent: true,
+          title: bookTitle(),
+          childName: childName(),
+          language: state.locale,
+          pages: state.previewPages.map((imageDataUrl) => ({ imageDataUrl }))
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.share?.manageToken || !result.qrDataUrl) throw new Error("share_failed");
+      familyShare = { token: result.share.token, manageToken: result.share.manageToken, shareUrl: result.shareUrl, qrDataUrl: result.qrDataUrl };
+      try { localStorage.setItem(FAMILY_SHARE_KEY, JSON.stringify(familyShare)); } catch (_error) {}
+      showFamilyShare();
+      setStatus(t("family-share-ready"));
+    } catch (_error) {
+      els.familyShareCreate.disabled = false;
+      setStatus(t("family-share-failed"), true);
+    }
+  }
+
+  async function revokeFamilyShare() {
+    if (!familyShare) return;
+    els.familyShareRevoke.disabled = true;
+    try {
+      const response = await fetch(`/api/family-book/shares/${familyShare.token}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manageToken: familyShare.manageToken })
+      });
+      if (!response.ok) throw new Error("revoke_failed");
+      familyShare = null;
+      try { localStorage.removeItem(FAMILY_SHARE_KEY); } catch (_error) {}
+      els.familyShareCreate.disabled = false;
+      showFamilyShare();
+      setStatus(t("family-share-revoked"));
+    } catch (_error) {
+      setStatus(t("family-share-failed"), true);
+    } finally {
+      els.familyShareRevoke.disabled = false;
+    }
+  }
+
+  els.familyShareCreate?.addEventListener("click", () => void createFamilyShare());
+  els.familyShareRevoke?.addEventListener("click", () => void revokeFamilyShare());
   els.album.addEventListener("change", (event) => {
     void addFiles(event.target.files);
     event.target.value = "";
@@ -2499,6 +2735,7 @@
     fillPrintRoot();
   });
   els.makeFilm.addEventListener("click", () => void makeFilm());
+  els.aiMovieCreate?.addEventListener("click", () => void makeAiMovie());
   els.downloadPreview?.addEventListener("click", () => void downloadPreviewPdf());
   els.scrollOfficial?.addEventListener("click", () => {
     document.getElementById("official-download")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -2607,6 +2844,8 @@
   });
 
   loadMeta();
+  try { familyShare = JSON.parse(localStorage.getItem(FAMILY_SHARE_KEY) || "null"); } catch (_error) {}
+  showFamilyShare();
   syncAvatarUi();
   applyLocale(detectLocale());
   renderIntroTemplates();

@@ -23,7 +23,7 @@ test("SOLO exposes an explicit, opt-in server fallback without weakening safety 
   assert.match(browserSafety, /reviewSanitizedArtwork\(sanitized\.dataUrl\)/);
   assert.match(preview, /pendingHeicFiles/);
   assert.match(server, /\/api\/convert-heic/);
-  assert.match(server, /heic-conversion.*limit: 6/);
+  assert.match(server, /heic-conversion.*limit: 20/);
 });
 
 test("all phone-photo entry points inherit automatic HEIC fallback and fresh PWA assets", () => {

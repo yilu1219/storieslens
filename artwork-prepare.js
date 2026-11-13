@@ -538,6 +538,7 @@
     const cover = list.find((photo) => photo.id === coverId) || main[0] || list[0] || null;
     const pages = [];
     if (cover) pages.push({ kind: "cover", photoId: cover.id });
+    if (cover) pages.push({ kind: "contents" });
     if (includeAuthor) pages.push({ kind: "author" });
     main.forEach((photo) => pages.push({ kind: "photo", photoId: photo.id }));
     main.forEach((photo) => pages.push({ kind: "manuscript", photoId: photo.id }));

@@ -11,6 +11,7 @@ const { createPlatformApi } = require("./platform-api");
 const { applyDeclaredGrammarChanges, cleanGrammarChanges, grammarSuggestionNeedsRepair } = require("./grammar-review");
 const { buildParentBookPdf, cleanFilename } = require("./parent-book-pdf");
 const { renderParentBookFilm } = require("./parent-book-film");
+const { assembleFamilyAiFilm } = require("./family-ai-film");
 const { inspectParentBookRequest } = require("./parent-book-safety");
 const { createFamilyBookApi } = require("./family-book-api");
 const { createCocreateFilmApi } = require("./cocreate-film-api");
@@ -801,6 +802,31 @@ async function handleGenerateVideo(request, response) {
     const message = error.message || "The video request could not be started.";
     const statusCode = error.statusCode || (message.includes("Generate an image") || message.includes("source image") ? 400 : 500);
     sendJson(response, statusCode, { code: error.code || "VIDEO_GENERATION_FAILED", error: message, remaining: error.remaining, required: error.required });
+  }
+}
+
+async function handleAssembleFamilyAiFilm(request, response) {
+  try {
+    const body = await readJsonBody(request, 10_000);
+    const urls = body.videoUrls;
+    if (!Array.isArray(urls) || urls.length < 1 || urls.length > 6) {
+      sendJson(response, 400, { error: "Choose up to six completed story clips." });
+      return;
+    }
+    const clips = [];
+    for (const url of urls) {
+      const buffer = await handlePlatformApi.creditManager.loadOwnedGeneratedVideo(request, response, url);
+      if (!buffer) {
+        sendJson(response, 403, { error: "A story clip is unavailable or belongs to another account." });
+        return;
+      }
+      clips.push(buffer);
+    }
+    const movie = await assembleFamilyAiFilm(clips);
+    const saved = await handlePlatformApi.creditManager.storeGeneratedVideo(request, response, { buffer: movie });
+    sendJson(response, 201, { movieUrl: saved.url, sceneCount: clips.length, kind: "ai-generated-scenes" });
+  } catch (error) {
+    sendJson(response, error.statusCode || 500, { error: error.message || "movie_assembly_failed" });
   }
 }
 
@@ -1889,7 +1915,7 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (requestUrl.pathname === "/api/convert-heic") {
-    if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "heic-conversion", limit: 6, windowMs: 60 * 60 * 1000 })) return;
+    if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "heic-conversion", limit: 20, windowMs: 60 * 60 * 1000 })) return;
     handleHeicConversion(request, response);
     return;
   }
@@ -1909,6 +1935,12 @@ const server = http.createServer(async (request, response) => {
   if (requestUrl.pathname === "/api/generate-video") {
     if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "video-generation", limit: 12, windowMs: 60 * 60 * 1000 })) return;
     handleGenerateVideo(request, response);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/family-book/ai-film/assemble" && request.method === "POST") {
+    if (!handlePlatformApi.consumeRateLimit(request, response, { bucket: "family-ai-film-assemble", limit: 4, windowMs: 60 * 60 * 1000 })) return;
+    handleAssembleFamilyAiFilm(request, response);
     return;
   }
 

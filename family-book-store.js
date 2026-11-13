@@ -99,6 +99,7 @@ function createFamilyBookStore({ root } = {}) {
     const metaPath = path.join(sharesDir, safe, "meta.json");
     if (!fs.existsSync(metaPath)) return null;
     const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+    if (meta.revokedAt) return null;
     if (Date.parse(meta.expiresAt) < Date.now()) return null;
     const pages = (meta.pageFiles || []).map((file, index) => {
       const filePath = path.join(sharesDir, safe, file.name);
@@ -115,6 +116,9 @@ function createFamilyBookStore({ root } = {}) {
   }
 
   function createShare(input = {}) {
+    if (input.kind === "family-preview" && input.parentConsent !== true) {
+      throw Object.assign(new Error("parent_consent_required"), { statusCode: 400 });
+    }
     const pagesIn = Array.isArray(input.pages) ? input.pages : [];
     if (!pagesIn.length) throw Object.assign(new Error("pages_required"), { statusCode: 400 });
     if (pagesIn.length > MAX_PAGES) throw Object.assign(new Error("too_many_pages"), { statusCode: 400 });
@@ -142,6 +146,7 @@ function createFamilyBookStore({ root } = {}) {
     while (index.codes[code]) code = makeCode();
 
     const id = crypto.randomUUID();
+    const manageToken = input.kind === "family-preview" ? makeToken() : "";
     const createdAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + SHARE_TTL_MS).toISOString();
     const dir = path.join(sharesDir, token);
@@ -156,7 +161,8 @@ function createFamilyBookStore({ root } = {}) {
       id,
       token,
       code,
-      kind: input.kind === "family" ? "family" : "class",
+      kind: input.kind === "family-preview" ? "family-preview" : input.kind === "family" ? "family" : "class",
+      manageTokenHash: manageToken ? crypto.createHash("sha256").update(manageToken).digest("hex") : "",
       title: String(input.title || "").trim().slice(0, 80),
       className: String(input.className || "").trim().slice(0, 80),
       teacherName: String(input.teacherName || "").trim().slice(0, 80),
@@ -172,7 +178,22 @@ function createFamilyBookStore({ root } = {}) {
     index.shares[token] = { id, code, expiresAt, kind: meta.kind };
     index.codes[code] = token;
     writeIndex(index);
-    return publicShare({ ...meta, pages: parsedPages }, { includePages: false });
+    return { ...publicShare({ ...meta, pages: parsedPages }, { includePages: false }), manageToken };
+  }
+
+  function revokeShare(token, manageToken) {
+    const safe = String(token || "");
+    if (!/^[a-f0-9]{48}$/i.test(safe) || !/^[a-f0-9]{48}$/i.test(String(manageToken || ""))) return false;
+    const metaPath = path.join(sharesDir, safe, "meta.json");
+    if (!fs.existsSync(metaPath)) return false;
+    const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+    if (!meta.manageTokenHash || meta.revokedAt) return false;
+    const actual = Buffer.from(crypto.createHash("sha256").update(manageToken).digest("hex"), "hex");
+    const expected = Buffer.from(meta.manageTokenHash, "hex");
+    if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) return false;
+    meta.revokedAt = new Date().toISOString();
+    writeJson(metaPath, meta);
+    return true;
   }
 
   function inspectStudentName(value) {
@@ -197,6 +218,9 @@ function createFamilyBookStore({ root } = {}) {
   }
 
   function createOrder({ offerId, shareToken, contact, shipping, adultConfirmed, bookSnapshot, locale }) {
+    if (shareToken && getShareByToken(shareToken)?.kind === "family-preview") {
+      throw Object.assign(new Error("preview_only_share"), { statusCode: 400 });
+    }
     const offer = getFamilyBookOffer(offerId);
     if (!offer) throw Object.assign(new Error("invalid_offer"), { statusCode: 400 });
     if (adultConfirmed !== true) throw Object.assign(new Error("adult_confirmation_required"), { statusCode: 400, reasonCode: "adult_confirmation_required" });
@@ -380,7 +404,8 @@ function createFamilyBookStore({ root } = {}) {
     paidOrderForDownload,
     publicOrder,
     saveDeliveryEmail,
-    publicShare
+    publicShare,
+    revokeShare
   };
 }
 

@@ -24,7 +24,7 @@
     <title>照片做成电子书 · StoriesLens</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/app-icon-192.png" />
-    <link rel="stylesheet" href="parent-book.css?v=20261112-proof-ebook" />
+    <link rel="stylesheet" href="parent-book.css?v=20261113-ai-film" />
     <link rel="stylesheet" href="family-book-ui.css?v=20261110-3" />
   </head>
   <body>
@@ -231,6 +231,17 @@
           <button class="secondary" type="button" data-download-preview data-i18n="download-preview">下载预览 PDF</button>
           <button class="primary" type="button" data-make-film data-i18n="make-film">一键生成短片（免费）</button>
         </div>
+        <section class="card">
+          <h3 data-i18n="ai-movie-title">根据故事生成 AI 电影</h3>
+          <p data-i18n="ai-movie-note">约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 6 个视频点数。每个成功镜头分别扣 1 点。如果后续镜头失败，已成功的镜头仍保存在私人素材库。</p>
+          <label class="check"><input type="checkbox" data-ai-movie-consent /><span data-i18n="ai-movie-consent">我是家长或监护人，同意将选中的作品和故事文字发送给网站配置的 AI 视频服务生成电影。</span></label>
+          <button class="primary" type="button" data-ai-movie-create data-i18n="ai-movie-create">一键生成 AI 电影</button>
+          <p data-ai-movie-progress role="status" aria-live="polite"></p>
+          <div data-ai-movie-result hidden>
+            <video data-ai-movie-player controls playsinline webkit-playsinline></video>
+            <p><a data-ai-movie-link download data-i18n="ai-movie-download">下载 AI 电影 MP4</a></p>
+          </div>
+        </section>
         <p class="hint" data-i18n="preview-pdf-note">这是带 StoriesLens 标志的免费预览，不需要付款。没有标志的正式 PDF 要先付款，再确认邮箱，服务器确认后才会发送。</p>
         <section class="official-path" data-official-path>
           <h3 data-i18n="official-kicker">正式文件</h3>
@@ -327,6 +338,18 @@
         </section>
       </section>
 
+      <section class="card" data-family-share-section hidden>
+        <h2 data-i18n="family-share-title">家长授权分享预览</h2>
+        <p data-i18n="family-share-note">分享版带水印。持有链接或二维码的人可以翻阅；请先确认你有权分享书中每位孩子的作品。</p>
+        <label class="check"><input type="checkbox" data-family-share-consent /><span data-i18n="family-share-consent">我是家长或监护人，并已取得书中其他孩子的家长许可，同意分享这本书的预览。</span></label>
+        <button class="primary" type="button" data-family-share-create data-i18n="family-share-create">生成私密链接和二维码</button>
+        <div data-family-share-result hidden>
+          <img data-family-share-qr alt="私密书二维码" width="256" height="256" />
+          <p><a data-family-share-link target="_blank" rel="noopener noreferrer"></a></p>
+          <button class="secondary" type="button" data-family-share-revoke data-i18n="family-share-revoke">撤回分享</button>
+        </div>
+      </section>
+
       <p class="trust">
         <span data-i18n="trust-meta">本机删除位置和拍摄信息</span>
         <span data-i18n="trust-private">默认保存在这台手机上</span>
@@ -343,6 +366,6 @@
     <script src="family-book-catalog.js?v=20261110-2"></script>
     <script src="family-book-review.js?v=20261110-2"></script>
     <script src="preview-watermark.js?v=20261112-proof-ebook"></script>
-    <script src="parent-book.js?v=20261112-proof-ebook"></script>
+    <script src="parent-book.js?v=20261113-ai-film"></script>
   </body>
 </html>

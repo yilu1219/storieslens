@@ -6,6 +6,7 @@ const { inspectParentBookRequest } = require("./parent-book-safety");
 const { mailConfigured, sendPaidBookPdf } = require("./family-book-mail");
 const { extractScanFromImage, logExtractFailure, parseImageDataUrl, unavailableMessage } = require("./pdf-craft-extract");
 const { illustrateFromReference } = require("./book-illustration");
+const QRCode = require("qrcode");
 
 function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consumeRateLimit, publicBaseUrl, env = process.env, fetchImpl = fetch, extractScan, illustrate } = {}) {
   const books = store || createFamilyBookStore();
@@ -155,11 +156,13 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
         const origin = String(publicBaseUrl || process.env.PUBLIC_BASE_URL || "").replace(/\/+$/, "") || "";
         const sharePath = `/book-share?t=${encodeURIComponent(share.token)}`;
         const codePath = `/book-share?c=${encodeURIComponent(share.code)}`;
+        const shareUrl = origin ? `${origin}${sharePath}` : new URL(sharePath, requestUrl.origin).href;
         sendJson(response, 201, {
           share,
           sharePath,
           codePath,
-          shareUrl: origin ? `${origin}${sharePath}` : sharePath,
+          shareUrl,
+          qrDataUrl: share.kind === "family-preview" ? await QRCode.toDataURL(shareUrl, { margin: 2, width: 256 }) : "",
           codeUrl: origin ? `${origin}${codePath}` : codePath,
           noticeZh: "这是一条私密链接，不会出现在公开目录或搜索结果里。任何拿到链接的人都可以预览这本书。",
           noticeEn: "This is a private link. It is not listed publicly or submitted to search. Anyone with the link can preview the book."
@@ -171,6 +174,12 @@ function createFamilyBookApi({ store, sendJson, sendBinary, readJsonBody, consum
     }
 
     const shareMatch = pathName.match(/^\/api\/family-book\/shares\/([a-f0-9]+)$/i);
+    if (shareMatch && request.method === "DELETE") {
+      const body = await readJsonBody(request, 1000).catch(() => ({}));
+      const revoked = books.revokeShare(shareMatch[1], body.manageToken);
+      sendJson(response, revoked ? 200 : 403, { revoked });
+      return true;
+    }
     if (shareMatch && request.method === "GET") {
       noIndex(response);
       const share = books.getShareByToken(shareMatch[1], { includePages: true });

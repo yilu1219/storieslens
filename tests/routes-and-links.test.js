@@ -18,6 +18,7 @@ test("all static local page links and assets resolve", () => {
   const missing = [];
   const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
   const routeAliases = new Set([...server.matchAll(/^\s*"([^"]+)":\s*"[^"]+",?$/gm)].map((match) => match[1].replace(/^\//, "")));
+  for (const match of server.matchAll(/^const PHOTO_EBOOK_(?:ZH|EN) = "\/([^"]+)";$/gm)) routeAliases.add(match[1]);
   htmlFiles.forEach((file) => {
     const html = fs.readFileSync(path.join(root, file), "utf8");
     const staticMarkup = html.split(/<script\b/i)[0];

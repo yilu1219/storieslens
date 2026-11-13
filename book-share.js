@@ -211,6 +211,9 @@
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.share) return setStatus(t("missing"), true);
     state.share = result.share;
+    if (state.share.kind === "family-preview") {
+      document.querySelector("[data-price-box]")?.setAttribute("hidden", "");
+    }
     els.title.textContent = result.share.title || result.share.className || "StoriesLens";
     els.lede.textContent = t("ledeClass", { className: result.share.className || result.share.title || "StoriesLens" });
     els.previewCard.hidden = false;
