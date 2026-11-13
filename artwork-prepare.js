@@ -2384,7 +2384,7 @@
         points.push({ x: x - view.width / 2, y: y - view.height / 2 });
       }
     }
-    if (points.length < 12) return 0;
+    if (points.length < 12 || points.length > view.width * view.height * 0.35) return 0;
     let best = 0;
     const base = projectionEnergy(points, 0);
     let bestScore = base;
@@ -2535,15 +2535,16 @@
   function sheetScore(comp, width, height) {
     const frame = width * height;
     const areaFrac = comp.area / frame;
-    if (areaFrac < 0.1 || areaFrac > 0.92) return 0;
+    if (areaFrac < 0.1 || areaFrac > 0.94) return 0;
     const boxWidth = comp.maxX - comp.minX + 1;
     const boxHeight = comp.maxY - comp.minY + 1;
-    if ((boxWidth * boxHeight) / frame > 0.96) return 0;
-    const edgeTouch = (comp.minX <= 1 ? 1 : 0)
-      + (comp.minY <= 1 ? 1 : 0)
-      + (comp.maxX >= width - 2 ? 1 : 0)
-      + (comp.maxY >= height - 2 ? 1 : 0);
-    if (edgeTouch >= 4) return 0;
+    if ((boxWidth * boxHeight) / frame > 0.97 && areaFrac > 0.9) return 0;
+    const near = (value, limit) => Math.abs(value - limit) <= 1;
+    const corners = (near(comp.minX, 0) && near(comp.minY, 0) ? 1 : 0)
+      + (near(comp.maxX, width - 1) && near(comp.minY, 0) ? 1 : 0)
+      + (near(comp.minX, 0) && near(comp.maxY, height - 1) ? 1 : 0)
+      + (near(comp.maxX, width - 1) && near(comp.maxY, height - 1) ? 1 : 0);
+    if (corners >= 4 && areaFrac > 0.8) return 0;
     const cx = (comp.minX + comp.maxX) / 2 / width - 0.5;
     const cy = (comp.minY + comp.maxY) / 2 / height - 0.5;
     const central = 1 - Math.min(1, Math.hypot(cx, cy) * 2.1);
@@ -2643,14 +2644,18 @@
 
   function borderLooksLikeSheet(rgba, width, height) {
     const bands = Math.max(1, Math.min(2, Math.floor(Math.min(width, height) * 0.03)));
+    const reds = [];
+    const greens = [];
+    const blues = [];
     let paper = 0;
-    let total = 0;
     const take = (x, y) => {
       const index = (y * width + x) * 4;
-      total += 1;
       const red = rgba[index];
       const green = rgba[index + 1];
       const blue = rgba[index + 2];
+      reds.push(red);
+      greens.push(green);
+      blues.push(blue);
       if (isYellowPaper(red, green, blue) || isWhitePaper(red, green, blue) || isPaperLike(red, green, blue)) paper += 1;
     };
     for (let y = 0; y < height; y += 2) {
@@ -2665,7 +2670,18 @@
         take(x, Math.max(0, height - 1 - band));
       }
     }
-    return total > 0 && paper / total >= 0.55;
+    const total = reds.length;
+    if (total > 0 && paper / total >= 0.55) return true;
+    const med = [median(reds), median(greens), median(blues)];
+    let close = 0;
+    for (let index = 0; index < total; index += 1) {
+      if (Math.hypot(reds[index] - med[0], greens[index] - med[1], blues[index] - med[2]) <= 36) close += 1;
+    }
+    if (!total || close / total < 0.62 || isSkinTone(med[0], med[1], med[2])) return false;
+    const chroma = channelChroma(med[0], med[1], med[2]);
+    const luma = channelLuma(med[0], med[1], med[2]);
+    if (chroma >= 18 && luma >= 85 && luma <= 210) return true;
+    return luma >= 168 && chroma <= 52;
   }
 
   function letterboxOnCream(rgba, width, height) {
@@ -2691,68 +2707,275 @@
     return { rgba: out, width: outWidth, height: outHeight };
   }
 
-  function findPaperSheet(rgba, width, height) {
-    const view = downscaleNearest(rgba, width, height, 420);
-    const total = view.width * view.height;
-    const mask = new Uint8Array(total);
-    let paperPixels = 0;
-    for (let index = 0; index < total; index += 1) {
-      const offset = index * 4;
-      const klass = paperClass(view.rgba[offset], view.rgba[offset + 1], view.rgba[offset + 2]);
-      if (!klass) continue;
-      mask[index] = klass;
-      paperPixels += 1;
+  function isIndoorWhite(red, green, blue, border) {
+    if (isSkinTone(red, green, blue) || isYellowPaper(red, green, blue)) return false;
+    const luma = channelLuma(red, green, blue);
+    const chroma = channelChroma(red, green, blue);
+    if (luma < 168 || chroma > 56) return false;
+    const borderLuma = channelLuma(border.med[0], border.med[1], border.med[2]);
+    const dist = Math.hypot(red - border.med[0], green - border.med[1], blue - border.med[2]);
+    if (dist < 20) return false;
+    const warm = red >= blue + 6 && green + 2 >= blue && red + green >= blue * 1.8;
+    if (warm && luma >= borderLuma - 6 && dist >= 18) return true;
+    return chroma <= 38 && luma >= borderLuma + 24 && luma >= 186 && dist >= 28;
+  }
+
+  function isColoredCard(red, green, blue, border) {
+    if (isSkinTone(red, green, blue) || isYellowPaper(red, green, blue) || isWhitePaper(red, green, blue) || isIndoorWhite(red, green, blue, border)) return false;
+    const luma = channelLuma(red, green, blue);
+    const chroma = channelChroma(red, green, blue);
+    if (luma < 90 || luma > 200 || chroma < 24) return false;
+    return Math.hypot(red - border.med[0], green - border.med[1], blue - border.med[2]) >= 32;
+  }
+
+  function fillEnclosed(mask, width, height, klass) {
+    const binary = !klass;
+    const seen = new Uint8Array(mask.length);
+    const queueX = new Int32Array(mask.length);
+    const queueY = new Int32Array(mask.length);
+    let tail = 0;
+    const push = (x, y) => {
+      if (x < 0 || y < 0 || x >= width || y >= height) return;
+      const pixel = y * width + x;
+      if (seen[pixel]) return;
+      if (binary ? mask[pixel] : mask[pixel] === klass) return;
+      seen[pixel] = 1;
+      queueX[tail] = x;
+      queueY[tail] = y;
+      tail += 1;
+    };
+    for (let x = 0; x < width; x += 1) {
+      push(x, 0);
+      push(x, height - 1);
     }
-    if (paperPixels < total * 0.08) return null;
-    const eroded = erodeMask(mask, view.width, view.height);
-    let labeled = maskComponents(eroded, view.width, view.height);
+    for (let y = 0; y < height; y += 1) {
+      push(0, y);
+      push(width - 1, y);
+    }
+    for (let head = 0; head < tail; head += 1) {
+      const x = queueX[head];
+      const y = queueY[head];
+      push(x - 1, y);
+      push(x + 1, y);
+      push(x, y - 1);
+      push(x, y + 1);
+    }
+    for (let pixel = 0; pixel < mask.length; pixel += 1) {
+      if (seen[pixel] || mask[pixel]) continue;
+      mask[pixel] = binary ? 1 : klass;
+    }
+  }
+
+  function spanGap(start, end, otherStart, otherEnd) {
+    if (end < otherStart) return otherStart - end - 1;
+    if (otherEnd < start) return start - otherEnd - 1;
+    return 0;
+  }
+
+  function spanOverlap(start, end, otherStart, otherEnd) {
+    const overlap = Math.min(end, otherEnd) - Math.max(start, otherStart) + 1;
+    if (overlap <= 0) return 0;
+    return overlap / Math.min(end - start + 1, otherEnd - otherStart + 1);
+  }
+
+  function shouldJoinSheets(left, right, width, height) {
+    const across = spanGap(left.minX, left.maxX, right.minX, right.maxX);
+    const down = spanGap(left.minY, left.maxY, right.minY, right.maxY);
+    const sideBySide = across <= Math.max(3, Math.round(width * 0.08)) && spanOverlap(left.minY, left.maxY, right.minY, right.maxY) >= 0.55;
+    const stacked = down <= Math.max(3, Math.round(height * 0.08)) && spanOverlap(left.minX, left.maxX, right.minX, right.maxX) >= 0.55;
+    if (!sideBySide && !stacked) return false;
+    const ratio = Math.min(left.area, right.area) / Math.max(left.area, right.area);
+    if (ratio < 0.22) return false;
+    const unionW = Math.max(left.maxX, right.maxX) - Math.min(left.minX, right.minX) + 1;
+    const unionH = Math.max(left.maxY, right.maxY) - Math.min(left.minY, right.minY) + 1;
+    return unionW * unionH <= width * height * 0.95;
+  }
+
+  function componentScore(comp, mask, width, height) {
+    const base = sheetScore(comp, width, height);
+    if (base > 0) return base;
+    const boxWidth = comp.maxX - comp.minX + 1;
+    const boxHeight = comp.maxY - comp.minY + 1;
+    const boxFrac = (boxWidth * boxHeight) / (width * height);
+    if (boxFrac < 0.18 || boxFrac > 0.94 || boxWidth < 8 || boxHeight < 8) return 0;
+    let top = 0;
+    let bottom = 0;
+    let left = 0;
+    let right = 0;
+    for (let x = comp.minX; x <= comp.maxX; x += 1) {
+      if (mask[comp.minY * width + x] === comp.klass) top += 1;
+      if (mask[comp.maxY * width + x] === comp.klass) bottom += 1;
+    }
+    for (let y = comp.minY; y <= comp.maxY; y += 1) {
+      if (mask[y * width + comp.minX] === comp.klass) left += 1;
+      if (mask[y * width + comp.maxX] === comp.klass) right += 1;
+    }
+    const strong = [top / boxWidth, bottom / boxWidth, left / boxHeight, right / boxHeight]
+      .filter((value) => value >= 0.45).length;
+    if (strong < 3) return 0;
+    const cx = (comp.minX + comp.maxX) / 2 / width - 0.5;
+    const cy = (comp.minY + comp.maxY) / 2 / height - 0.5;
+    const central = 1 - Math.min(1, Math.hypot(cx, cy) * 2.1);
+    return boxFrac * (0.4 + 0.6 * central) * 0.85;
+  }
+
+  function locateSheet(mask, width, height) {
+    const total = width * height;
+    let seeds = 0;
+    const classes = [];
+    for (let index = 0; index < total; index += 1) {
+      const klass = mask[index];
+      if (!klass) continue;
+      seeds += 1;
+      if (classes.indexOf(klass) === -1) classes.push(klass);
+    }
+    if (seeds < total * 0.08) return { seeds, score: 0, selected: null };
+    classes.forEach((klass) => fillEnclosed(mask, width, height, klass));
+    const eroded = erodeMask(mask, width, height);
+    let labeled = maskComponents(eroded, width, height);
     const erodedUsable = labeled.comps.some((comp) => comp.area > total * 0.06);
-    if (!erodedUsable) labeled = maskComponents(mask, view.width, view.height);
+    if (!erodedUsable) labeled = maskComponents(mask, width, height);
+    const scoreMask = erodedUsable ? eroded : mask;
     let best = null;
     let bestScore = 0;
     labeled.comps.forEach((comp) => {
-      const score = sheetScore(comp, view.width, view.height);
+      const score = componentScore(comp, scoreMask, width, height);
       if (score > bestScore) {
         bestScore = score;
         best = comp;
       }
     });
-    const keep = paperPixels > total * 0.12;
-    if (!best) return keep ? { confident: false, keep: true, confidence: 0.2 } : null;
-    const selected = erodedUsable
-      ? selectDilated(mask, labeled.labels, view.width, view.height, best.id)
-      : Uint8Array.from(labeled.labels, (label) => (label === best.id ? 1 : 0));
-    const labels = new Int32Array(total);
+    if (!best) return { seeds, score: 0, selected: null };
+    const ids = [best.id];
+    labeled.comps.forEach((comp) => {
+      if (comp.id === best.id || comp.klass !== best.klass || comp.area < total * 0.08) return;
+      if (shouldJoinSheets(best, comp, width, height)) ids.push(comp.id);
+    });
+    const selected = new Uint8Array(total);
+    ids.forEach((id) => {
+      const part = erodedUsable
+        ? selectDilated(mask, labeled.labels, width, height, id)
+        : null;
+      if (part) {
+        for (let index = 0; index < total; index += 1) if (part[index]) selected[index] = 1;
+        return;
+      }
+      for (let index = 0; index < total; index += 1) if (labeled.labels[index] === id) selected[index] = 1;
+    });
+    fillEnclosed(selected, width, height, 0);
+    return { seeds, score: bestScore, selected };
+  }
+
+  function selectedBoxArea(selected, width) {
+    if (!selected) return 0;
+    let minX = width;
+    let minY = selected.length;
+    let maxX = -1;
+    let maxY = -1;
+    for (let index = 0; index < selected.length; index += 1) {
+      if (!selected[index]) continue;
+      const x = index % width;
+      const y = (index - x) / width;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+    if (maxX < 0) return 0;
+    return (maxX - minX + 1) * (maxY - minY + 1);
+  }
+
+  function countDarkInk(rgba, width, box) {
+    let count = 0;
+    for (let y = box.minY; y <= box.maxY; y += 1) {
+      for (let x = box.minX; x <= box.maxX; x += 1) {
+        const offset = (y * width + x) * 4;
+        if (channelLuma(rgba[offset], rgba[offset + 1], rgba[offset + 2]) < 72) count += 1;
+      }
+    }
+    return count;
+  }
+
+  function pointInConvex(x, y, corners) {
+    let sign = 0;
+    for (let index = 0; index < corners.length; index += 1) {
+      const current = corners[index];
+      const next = corners[(index + 1) % corners.length];
+      const cross = (next.x - current.x) * (y - current.y) - (next.y - current.y) * (x - current.x);
+      if (Math.abs(cross) <= 1) continue;
+      const nextSign = Math.sign(cross);
+      if (sign && nextSign !== sign) return false;
+      sign = nextSign;
+    }
+    return true;
+  }
+
+  function quadCoversMask(selected, width, height, corners) {
+    let total = 0;
+    let inside = 0;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (!selected[y * width + x]) continue;
+        total += 1;
+        if (pointInConvex(x, y, corners)) inside += 1;
+      }
+    }
+    return total ? inside / total : 0;
+  }
+
+  function findPaperSheet(rgba, width, height) {
+    const view = downscaleNearest(rgba, width, height, 420);
+    const border = sampleBorder(view.rgba, view.width, view.height);
+    const paperMask = new Uint8Array(view.width * view.height);
+    const coloredMask = new Uint8Array(view.width * view.height);
+    for (let index = 0; index < paperMask.length; index += 1) {
+      const offset = index * 4;
+      const red = view.rgba[offset];
+      const green = view.rgba[offset + 1];
+      const blue = view.rgba[offset + 2];
+      if (isSkinTone(red, green, blue)) continue;
+      if (isYellowPaper(red, green, blue)) paperMask[index] = 2;
+      else if (isWhitePaper(red, green, blue) || isIndoorWhite(red, green, blue, border)) paperMask[index] = 1;
+      else if (isColoredCard(red, green, blue, border)) coloredMask[index] = 3;
+    }
+    const paper = locateSheet(paperMask, view.width, view.height);
+    const colored = locateSheet(coloredMask, view.width, view.height);
+    const paperBox = selectedBoxArea(paper.selected, view.width);
+    const coloredBox = selectedBoxArea(colored.selected, view.width);
+    const chosen = paper.selected && (!colored.selected || paperBox >= coloredBox * 0.85) ? paper : colored;
+    const seedFraction = (paper.seeds + colored.seeds) / paperMask.length;
+    if (!chosen.selected) {
+      return seedFraction > 0.45 ? { confident: false, keep: true, confidence: 0.35 } : null;
+    }
+    const selected = chosen.selected;
+    const labels = new Int32Array(selected.length);
     const keptIds = new Set([1]);
-    for (let index = 0; index < total; index += 1) if (selected[index]) labels[index] = 1;
+    for (let index = 0; index < selected.length; index += 1) if (selected[index]) labels[index] = 1;
     const rawBox = componentBounds(labels, keptIds, view.width, view.height);
-    const smallBox = rawBox ? tightenBox(selected, view.width, rawBox) : null;
-    if (!smallBox) return keep ? { confident: false, keep: true, confidence: bestScore } : null;
+    let smallBox = rawBox ? tightenBox(selected, view.width, rawBox) : null;
+    if (rawBox && smallBox && countDarkInk(view.rgba, view.width, rawBox) - countDarkInk(view.rgba, view.width, smallBox) > 10) {
+      smallBox = rawBox;
+    }
+    const bestScore = chosen.score;
+    if (!smallBox) return seedFraction > 0.12 ? { confident: false, keep: true, confidence: bestScore } : null;
     const confidence = Math.max(0.5, Math.min(0.95, bestScore * 3));
+    const scales = { scaleX: view.scaleX, scaleY: view.scaleY };
     if (sheetFillsItsBox(labels, view.width, view.height, smallBox)) {
       const span = Math.min(smallBox.maxX - smallBox.minX + 1, smallBox.maxY - smallBox.minY + 1);
       if (span < Math.min(view.width, view.height) * 0.12) {
         return { confident: false, keep: true, confidence: bestScore };
       }
-      return {
-        confident: true,
-        keep: true,
-        confidence,
-        mode: "crop",
-        box: smallBox,
-        scaleX: view.scaleX,
-        scaleY: view.scaleY
-      };
+      return Object.assign({ confident: true, keep: true, confidence, mode: "crop", box: smallBox }, scales);
     }
     const smallCorners = pageCorners(labels, keptIds, view.width, view.height);
-    if (!smallCorners || !cornersReach(smallCorners, smallBox)) {
-      return { confident: false, keep: true, confidence: bestScore };
+    if (!smallCorners || !cornersReach(smallCorners, smallBox) || !convexQuad(smallCorners) || quadCoversMask(selected, view.width, view.height, smallCorners) < 0.86) {
+      return Object.assign({ confident: true, keep: true, confidence, mode: "crop", box: rawBox }, scales);
     }
     const corners = smallCorners.map((point) => ({
       x: (point.x + 0.5) * view.scaleX - 0.5,
       y: (point.y + 0.5) * view.scaleY - 0.5
     }));
-    if (!convexQuad(corners)) return { confident: false, keep: true, confidence: bestScore };
+    if (!convexQuad(corners)) return Object.assign({ confident: true, keep: true, confidence, mode: "crop", box: rawBox }, scales);
     const area = quadArea(corners);
     const frame = width * height;
     const minEdge = Math.min(
@@ -2760,18 +2983,16 @@
       Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y)
     );
     if (area < frame * 0.08 || area > frame * 0.94 || minEdge < Math.min(width, height) * 0.12) {
-      return { confident: false, keep: true, confidence: bestScore };
+      return Object.assign({ confident: true, keep: true, confidence, mode: "crop", box: rawBox }, scales);
     }
-    return {
+    return Object.assign({
       confident: true,
       keep: true,
       confidence,
       mode: "warp",
       box: smallBox,
-      corners,
-      scaleX: view.scaleX,
-      scaleY: view.scaleY
-    };
+      corners
+    }, scales);
   }
 
   function uncertainSheet(rgba, width, height, confidence) {

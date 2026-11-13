@@ -424,6 +424,117 @@ test("a phone photo is scanned off the desk before recognition, and a failed sca
   assert.equal(missed.pages[0].extractReason, "scan_not_isolated");
 });
 
+test("indoor phone photos isolate the sheet instead of a blank cream placeholder", async () => {
+  const desk = [172, 170, 166];
+  const coolPaper = [198, 204, 210];
+  const wash = [164, 186, 216];
+  const ink = [20, 20, 20];
+  const red = [180, 30, 40];
+  const skin = [232, 180, 154];
+  const folder = [90, 150, 80];
+  const binder = [40, 70, 160];
+  const green = [98, 162, 90];
+  const moon = [236, 206, 70];
+
+  function lightDesk(width, height) {
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+        const noise = (n - Math.floor(n) - 0.5) * 18;
+        const index = (y * width + x) * 4;
+        rgba[index] = desk[0] + noise;
+        rgba[index + 1] = desk[1] + noise * 0.8;
+        rgba[index + 2] = desk[2] + noise * 0.6;
+        rgba[index + 3] = 255;
+      }
+    }
+    return rgba;
+  }
+
+  function fraction(rgba, width, height, color, tolerance = 18) {
+    return countColor(rgba, width, height, color, tolerance) / (width * height);
+  }
+
+  const empty = scanArtwork(lightDesk(90, 70), 90, 70);
+  assert.equal(empty.isolated, false);
+  assert.notEqual(empty.letterboxed, true);
+
+  const width = 200;
+  const height = 150;
+  const rgba = lightDesk(width, height);
+  paintRect(rgba, width, 2, 30, 14, 90, folder);
+  paintRect(rgba, width, 24, 16, 140, 118, coolPaper);
+  paintRect(rgba, width, 34, 26, 120, 114, wash);
+  paintRect(rgba, width, 26, 20, 6, 6, red);
+  paintRect(rgba, width, 70, 60, 16, 8, ink);
+  paintRect(rgba, width, 180, 20, 16, 100, binder);
+  paintRect(rgba, width, 0, 0, 8, 36, skin);
+  const cool = scanArtwork(rgba, width, height);
+  assert.equal(cool.isolated, true);
+  assert.ok(Math.max(cool.width, cool.height) < Math.max(width, height) - 8);
+  assert.ok(countColor(cool.rgba, cool.width, cool.height, ink, 12) >= 40, "handwriting was cropped off the cool sheet");
+  assert.ok(countColor(cool.rgba, cool.width, cool.height, red, 16) >= 20, "margin drawing was cropped off the cool sheet");
+  assert.ok(fraction(cool.rgba, cool.width, cool.height, desk) < 0.12);
+  assert.ok(countColor(cool.rgba, cool.width, cool.height, skin, 16) < 20);
+  assert.ok(countColor(cool.rgba, cool.width, cool.height, folder, 16) < 30);
+  assert.ok(countColor(cool.rgba, cool.width, cool.height, binder, 16) < 30);
+  let scanWidth = 0;
+  let extracts = 0;
+  const built = await pagesFromPhonePhoto({
+    rgba,
+    width,
+    height,
+    toPng: (pixels, scanW, scanH) => {
+      scanWidth = scanW;
+      assert.ok(countColor(pixels, scanW, scanH, ink, 12) >= 40);
+      return "data:image/png;base64,sheet";
+    },
+    extract: async () => {
+      extracts += 1;
+      return { textStatus: "uncertain", text: "", artworks: [], reason: "ocr_uncertain" };
+    }
+  });
+  assert.equal(built.split, false);
+  assert.equal(built.pages.length, 1);
+  assert.equal(extracts, 1);
+  assert.equal(built.pages[0].scanIsolated, true);
+  assert.equal(built.pages[0].scanDataUrl, "data:image/png;base64,sheet");
+  assert.ok(scanWidth > 80, `scan fell back to a cream placeholder (${scanWidth}px)`);
+
+  const coverWidth = 180;
+  const coverHeight = 150;
+  const cover = lightDesk(coverWidth, coverHeight);
+  paintRect(cover, coverWidth, 0, 20, 16, 70, skin);
+  paintRect(cover, coverWidth, 20, 14, 130, 120, green);
+  paintRect(cover, coverWidth, 36, 28, 18, 18, moon);
+  paintRect(cover, coverWidth, 48, 70, 50, 6, ink);
+  const greenSheet = scanArtwork(cover, coverWidth, coverHeight);
+  assert.equal(greenSheet.isolated, true);
+  assert.ok(Math.max(greenSheet.width, greenSheet.height) < Math.max(coverWidth, coverHeight) - 8);
+  assert.ok(countColor(greenSheet.rgba, greenSheet.width, greenSheet.height, green, 20) > 400);
+  assert.ok(countColor(greenSheet.rgba, greenSheet.width, greenSheet.height, moon, 18) >= 40, "colored cover lost the drawing");
+  assert.ok(countColor(greenSheet.rgba, greenSheet.width, greenSheet.height, ink, 12) >= 40, "colored cover lost the writing");
+  assert.ok(countColor(greenSheet.rgba, greenSheet.width, greenSheet.height, skin, 16) < 20);
+  assert.ok(fraction(greenSheet.rgba, greenSheet.width, greenSheet.height, desk) < 0.08);
+
+  const bookWidth = 200;
+  const bookHeight = 140;
+  const book = lightDesk(bookWidth, bookHeight);
+  paintRect(book, bookWidth, 0, 40, 8, 50, skin);
+  paintRect(book, bookWidth, 12, 16, 80, 108, coolPaper);
+  paintRect(book, bookWidth, 100, 16, 84, 108, coolPaper);
+  paintRect(book, bookWidth, 24, 40, 12, 8, ink);
+  paintRect(book, bookWidth, 124, 60, 12, 8, red);
+  const spread = scanArtwork(book, bookWidth, bookHeight);
+  assert.equal(spread.isolated, true);
+  assert.ok(countColor(spread.rgba, spread.width, spread.height, ink, 12) >= 40, "open book lost the left page");
+  assert.ok(countColor(spread.rgba, spread.width, spread.height, red, 16) >= 40, "open book lost the right page");
+  assert.ok(countColor(spread.rgba, spread.width, spread.height, skin, 16) < 20);
+  assert.ok(fraction(spread.rgba, spread.width, spread.height, desk) < 0.15);
+  assert.ok(Math.max(spread.width, spread.height) < Math.max(bookWidth, bookHeight) - 8);
+});
+
 test("system status copy is never painted, and uncertain OCR does not invent a caption", () => {
   const art = fill(30, 40, [200, 30, 40]);
   const base = {

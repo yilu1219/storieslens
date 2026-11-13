@@ -265,7 +265,7 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   assert.match(html.slice(previewAt, suggestAt), /data-book-edit-fields/);
   assert.match(html, /parent-book\.js\?v=20261112-proof-ebook/);
   assert.match(html, /parent-book\.css\?v=20261112-proof-ebook/);
-  assert.match(html, /artwork-prepare\.js\?v=20261112-proof-ebook/);
+  assert.match(html, /artwork-prepare\.js\?v=20261113-scan-sheet/);
   assert.match(html, /preview-watermark\.js\?v=20261112-proof-ebook/);
   assert.match(html, /data-book-assistant/);
   assert.match(html, /data-assist-proof/);
@@ -289,7 +289,7 @@ test("artwork upload is labeled after the signature, and the preview can be edit
   const teacherHtml = read("teacher-book.html");
   assert.match(teacherHtml, /data-interior-style checked/);
   assert.match(teacherHtml, /parent-book\.css\?v=20261112-proof-ebook/);
-  assert.match(teacherHtml, /artwork-prepare\.js\?v=20261112-proof-ebook/);
+  assert.match(teacherHtml, /artwork-prepare\.js\?v=20261113-scan-sheet/);
   assert.match(teacherHtml, /teacher-book\.js\?v=20261112-proof-ebook/);
   assert.match(teacherHtml, /preview-watermark\.js\?v=20261112-proof-ebook/);
   assert.match(teacherHtml, /data-assist-proof/);
