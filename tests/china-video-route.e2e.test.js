@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const http = require("node:http");
 const os = require("node:os");
@@ -45,31 +45,54 @@ async function jsonRequest(baseUrl, pathname, { method = "GET", body, cookie, or
 
 test("a Mainland account uses Ark Seedance and saves the result in private regional media", { timeout: 20_000 }, async (t) => {
   const dataDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "storieslens-cn-video-"));
+  const ffmpeg = require("../ffmpeg-movie-renderer").resolveBinary();
+  assert(ffmpeg, "FFmpeg is needed to verify generated video frames");
+  const videoFile = path.join(dataDirectory, "test-output.mp4");
+  const rendered = spawnSync(ffmpeg, ["-y", "-f", "lavfi", "-i", "color=c=green:s=160x284:r=4", "-t", "1", "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", videoFile], { stdio: "ignore" });
+  assert.equal(rendered.status, 0);
+  const testVideo = fs.readFileSync(videoFile);
+  await assert.rejects(
+    require("../video-output-safety").reviewVideoOutput(testVideo, async () => { throw new Error("unsafe-frame"); }),
+    /unsafe-frame/
+  );
   let submittedPayload;
+  let moderationCalls = 0;
+  let submittedTasks = 0;
+  let rejectGeneratedFrames = false;
   const provider = http.createServer((request, response) => {
+    if (request.url === "/chat/completions" && request.method === "POST") {
+      const chunks = [];
+      request.on("data", (chunk) => chunks.push(chunk));
+      request.on("end", () => {
+        moderationCalls += 1;
+        const isGeneratedFrame = Buffer.concat(chunks).toString("utf8").includes("data:image/jpeg;base64,");
+        response.writeHead(200, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ safe: !(rejectGeneratedFrames && isGeneratedFrame) }) } }] }));
+      });
+      return;
+    }
     if (request.url === "/contents/generations/tasks" && request.method === "POST") {
       const chunks = [];
       request.on("data", (chunk) => chunks.push(chunk));
       request.on("end", () => {
         submittedPayload = JSON.parse(Buffer.concat(chunks).toString("utf8"));
         response.writeHead(200, { "Content-Type": "application/json" });
-        response.end(JSON.stringify({ id: "cgt-cn-test-1", status: "queued" }));
+        response.end(JSON.stringify({ id: `cgt-cn-test-${++submittedTasks}`, status: "queued" }));
       });
       return;
     }
-    if (request.url === "/contents/generations/tasks/cgt-cn-test-1" && request.method === "GET") {
+    if (/^\/contents\/generations\/tasks\/cgt-cn-test-\d+$/.test(request.url) && request.method === "GET") {
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(JSON.stringify({
-        id: "cgt-cn-test-1",
+        id: request.url.split("/").pop(),
         status: "succeeded",
         content: { video_url: `http://127.0.0.1:${provider.address().port}/result.mp4` }
       }));
       return;
     }
     if (request.url === "/result.mp4") {
-      const video = Buffer.from("private-test-video");
-      response.writeHead(200, { "Content-Type": "video/mp4", "Content-Length": video.length });
-      response.end(video);
+      response.writeHead(200, { "Content-Type": "video/mp4", "Content-Length": testVideo.length });
+      response.end(testVideo);
       return;
     }
     response.writeHead(404).end();
@@ -90,7 +113,11 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
       INVITE_CODE_AUTH_ENABLED: "true",
       BETA_INVITE_ONLY: "true",
       ALLOWED_ACCOUNT_REGIONS: "cn",
-      REQUIRE_EXTERNAL_MEDIA_MODERATION: "false",
+      REQUIRE_EXTERNAL_MEDIA_MODERATION: "true",
+      OPENAI_MODERATION_API_KEY: "",
+      OPENAI_API_KEY: "",
+      OPENROUTER_API_KEY: "test-moderation-key",
+      OPENROUTER_BASE_URL: `http://127.0.0.1:${provider.address().port}`,
       SAFE_VIDEO_GENERATION_ENABLED: "true",
       CHINA_ARK_BASE_URL: `http://127.0.0.1:${provider.address().port}`,
       CHINA_ARK_API_KEY: "test-ark-key",
@@ -114,6 +141,8 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
 
   try {
     await waitForServer(baseUrl, child);
+    const platformStatus = await jsonRequest(baseUrl, "/api/platform/status");
+    assert.equal(platformStatus.payload.features.chinaVideoRoute, true);
     const adminLogin = await jsonRequest(baseUrl, "/api/admin/session", { method: "POST", body: { accessKey }, origin: true });
     const adminCookie = cookieValue(adminLogin.response);
     const invite = await jsonRequest(baseUrl, "/api/admin/invites", {
@@ -135,6 +164,7 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
       body: {
         imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
         prompt: "A child-safe paper bird opens its wings.",
+        model: "unapproved-client-model",
         duration: 5,
         projectId: "cn-test-story"
       }
@@ -142,6 +172,7 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
     assert.equal(started.response.status, 202);
     assert.equal(started.payload.jobId, "cgt-cn-test-1");
     assert.equal(submittedPayload.model, "doubao-seedance-2-0-mini-260615");
+    assert.equal(submittedPayload.ratio, "9:16");
     assert.equal(submittedPayload.content[1].role, "first_frame");
     assert.equal(submittedPayload.generate_audio, false);
     assert.equal(submittedPayload.watermark, true);
@@ -149,11 +180,25 @@ test("a Mainland account uses Ark Seedance and saves the result in private regio
     const completed = await jsonRequest(baseUrl, started.payload.pollUrl, { cookie: accountCookie });
     assert.equal(completed.response.status, 200);
     assert.equal(completed.payload.status, "completed");
+    assert(moderationCalls >= 2, "source art and generated frames both require safety review");
     assert.match(completed.payload.videoUrl, /^\/api\/media\//);
     const privateVideo = await fetch(`${baseUrl}${completed.payload.videoUrl}`, { headers: { Cookie: accountCookie } });
     assert.equal(privateVideo.status, 200);
     assert.equal(privateVideo.headers.get("content-type"), "video/mp4");
-    assert.equal(await privateVideo.text(), "private-test-video");
+    assert.deepEqual(Buffer.from(await privateVideo.arrayBuffer()), testVideo);
+
+    const creditsBeforeRejection = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    rejectGeneratedFrames = true;
+    const blocked = await jsonRequest(baseUrl, "/api/generate-video", {
+      method: "POST", cookie: accountCookie,
+      body: { imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", prompt: "A child-safe paper bird opens its wings.", duration: 5 }
+    });
+    assert.equal(blocked.response.status, 202);
+    const reviewed = await jsonRequest(baseUrl, blocked.payload.pollUrl, { cookie: accountCookie });
+    assert.equal(reviewed.payload.status, "failed");
+    assert.equal(reviewed.payload.videoUrl, undefined);
+    const creditsAfterRejection = await jsonRequest(baseUrl, "/api/credits", { cookie: accountCookie });
+    assert.equal(creditsAfterRejection.payload.usage.resources.videoClips.remaining, creditsBeforeRejection.payload.usage.resources.videoClips.remaining);
   } catch (error) {
     throw new Error(`${error.message}\nServer output:\n${output}`);
   }

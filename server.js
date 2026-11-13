@@ -12,6 +12,7 @@ const { applyDeclaredGrammarChanges, cleanGrammarChanges, grammarSuggestionNeeds
 const { buildParentBookPdf, cleanFilename } = require("./parent-book-pdf");
 const { renderParentBookFilm } = require("./parent-book-film");
 const { assembleFamilyAiFilm } = require("./family-ai-film");
+const { reviewVideoOutput } = require("./video-output-safety");
 const { inspectParentBookRequest } = require("./parent-book-safety");
 const { createFamilyBookApi } = require("./family-book-api");
 const { createCocreateFilmApi } = require("./cocreate-film-api");
@@ -105,6 +106,11 @@ async function enforceImageSafety(imageUrl) {
   if (!result.safe) {
     throw new SafetyPolicyError("The generated image did not pass the StoriesLens safe-content review.");
   }
+}
+
+async function enforceVideoFrameSafety(imageUrl) {
+  const result = await checkImageSafety(imageUrl, { requireExternal: true });
+  if (result.unavailable || !result.safe) throw new SafetyPolicyError("The generated video frame did not pass external safety review.", 503);
 }
 
 function discardUnsafeLocalImage(imageUrl) {
@@ -586,7 +592,7 @@ function getChinaVideoConfig() {
     provider: "VOLCENGINE_ARK",
     model: process.env.CHINA_ARK_VIDEO_MODEL || "doubao-seedance-2-0-mini-260615",
     duration: Number(process.env.VIDEO_DURATION || 5),
-    aspectRatio: process.env.VIDEO_ASPECT_RATIO || "16:9",
+    aspectRatio: process.env.CHINA_ARK_VIDEO_ASPECT_RATIO || "9:16",
     resolution: process.env.VIDEO_RESOLUTION || "720p",
     apiKey: process.env.CHINA_ARK_API_KEY || "",
     videoTaskApiUrl: process.env.CHINA_ARK_VIDEO_API_URL || `${baseUrl}/contents/generations/tasks`,
@@ -676,7 +682,7 @@ function buildVideoProviderPayload(config, body, sourceImage, requestedDuration)
   const prompt = buildVideoPrompt(body);
   if (config.provider === "VOLCENGINE_ARK") {
     return {
-      model: body.model || config.model,
+      model: config.model,
       content: [
         { type: "text", text: prompt },
         { type: "image_url", image_url: { url: sourceImage }, role: "first_frame" }
@@ -745,16 +751,16 @@ async function handleGenerateVideo(request, response) {
     await enforceImageSafety(sourceImage);
     const requestedDuration = Math.max(1, Math.min(60, Number(body.duration || config.duration) || 5));
     const clipUnits = Math.ceil(requestedDuration / 5);
+    const payload = buildVideoProviderPayload(config, body, sourceImage, requestedDuration);
     creditReservation = handlePlatformApi.creditManager.reserve(request, response, {
       resource: "videoClips",
       units: clipUnits,
       idempotencyKey: `video:${request.headers["idempotency-key"] || crypto.randomUUID()}`,
       referenceType: "video-generation",
       referenceId: body.projectId,
-      metadata: { model: body.model || config.model, duration: requestedDuration, resolution: body.resolution || config.resolution, squadId: body.squadId || "", cardId: body.cardId || "" },
+      metadata: { model: payload.model, duration: requestedDuration, resolution: body.resolution || config.resolution, squadId: body.squadId || "", cardId: body.cardId || "" },
       payerId
     }).reservation;
-    const payload = buildVideoProviderPayload(config, body, sourceImage, requestedDuration);
     const submissionUrl = config.provider === "VOLCENGINE_ARK" ? config.videoTaskApiUrl : config.openRouterVideoApiUrl;
 
     const upstreamResponse = await fetch(submissionUrl, {
@@ -777,7 +783,7 @@ async function handleGenerateVideo(request, response) {
       jobId: String(upstreamData.id),
       provider: config.provider,
       providerRegion,
-      model: body.model || config.model,
+      model: payload.model,
       ownerId: creditReservation.userId,
       requesterId,
       status: normalizeVideoStatus(upstreamData.status),
@@ -848,8 +854,14 @@ async function downloadCompletedVideo(request, response, job, config, upstreamDa
   if (!contentType.includes("video/") && !contentType.includes("application/octet-stream")) {
     throw new Error("The video provider completed the job without returning video content.");
   }
+  const movie = Buffer.from(await videoResponse.arrayBuffer());
+  try {
+    await reviewVideoOutput(movie, enforceVideoFrameSafety);
+  } catch {
+    throw Object.assign(new Error("The generated video did not pass the required frame review."), { code: "VIDEO_OUTPUT_REVIEW_FAILED" });
+  }
   const storedVideo = await handlePlatformApi.creditManager.storeGeneratedVideo(request, response, {
-    buffer: Buffer.from(await videoResponse.arrayBuffer()),
+    buffer: movie,
     projectId: job.projectId,
     squadId: job.squadId
   });
@@ -871,6 +883,10 @@ async function handleGetVideoJob(request, response, jobId) {
   }
   if ((job.requesterId || job.ownerId) !== handlePlatformApi.creditManager.ownerId(request, response)) {
     sendJson(response, 404, { error: "Video job not found. Please start it again." });
+    return;
+  }
+  if (job.status === "failed") {
+    sendJson(response, 200, { jobId: job.jobId, status: "failed", error: "The video could not be released. Please start a new scene." });
     return;
   }
 
@@ -917,6 +933,13 @@ async function handleGetVideoJob(request, response, jobId) {
       progressMessage: job.status === "in_progress" ? "Generating your scene video..." : "Your video is waiting to start..."
     });
   } catch (error) {
+    if (error.code === "VIDEO_OUTPUT_REVIEW_FAILED") {
+      job.status = "failed";
+      videoJobs.set(job.jobId, job);
+      const released = handlePlatformApi.creditManager.release(job.creditReservationId, "video-output-review-failed");
+      sendJson(response, 200, { jobId: job.jobId, status: "failed", error: "The video could not be released after safety review.", wallet: released.wallet || null });
+      return;
+    }
     console.error("Video job polling failed", job.jobId, error.message);
     sendJson(response, 502, { error: "We could not check the video yet. Please try again shortly." });
   }
