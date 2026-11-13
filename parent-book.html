@@ -238,6 +238,10 @@
           <label class="check"><input type="checkbox" data-ai-movie-consent /><span data-i18n="ai-movie-consent">我是家长或监护人，同意将选中的作品和故事文字发送给网站配置的 AI 视频服务生成电影。</span></label>
           <button class="primary" type="button" data-ai-movie-create data-i18n="ai-movie-create">一键生成 AI 电影</button>
           <p data-ai-movie-progress role="status" aria-live="polite"></p>
+          <div data-ai-movie-first hidden>
+            <p data-i18n="ai-movie-first-ready">第一幕已完成：孩子的画动起来了。其余镜头继续制作中。</p>
+            <video data-ai-movie-first-player controls muted loop playsinline webkit-playsinline></video>
+          </div>
           <div data-ai-movie-result hidden>
             <video data-ai-movie-player controls playsinline webkit-playsinline></video>
             <p><a data-ai-movie-link download data-i18n="ai-movie-download">下载 AI 电影 MP4</a></p>

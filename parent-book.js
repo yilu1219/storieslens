@@ -148,6 +148,7 @@
       "ai-movie-estimate": "约 30 秒竖屏电影，6 个 5 秒镜头；预计消耗 {credits} 个视频点数（每镜头 {perScene} 点）。成功镜头分别扣点；后续失败时，已完成镜头仍保存在私人素材库。",
       "ai-movie-consent": "我是家长或监护人，同意将选中的作品和故事文字发送给网站配置的 AI 视频服务生成电影。",
       "ai-movie-create": "一键生成 AI 电影",
+      "ai-movie-first-ready": "第一幕已完成：孩子的画动起来了。其余镜头继续制作中。",
       "ai-movie-download": "下载 AI 电影 MP4",
       "ai-movie-need-consent": "请先确认作品和故事文字可以用于 AI 视频生成。",
       "ai-movie-need-credit": "视频点数不足，或尚未登录成人账号。请先在“我的故事”中查看点数。",
@@ -400,6 +401,7 @@
       "ai-movie-estimate": "About 30 seconds in 9:16, six 5-second scenes; estimated cost: {credits} video credits ({perScene} per scene). Completed scenes use credits separately and remain in your private library if a later scene fails.",
       "ai-movie-consent": "I am a parent or guardian and agree to send the selected artwork and story text to the configured AI video provider.",
       "ai-movie-create": "Create AI movie in one click",
+      "ai-movie-first-ready": "The first scene is ready: your child's drawing has come to life. The other scenes are still being made.",
       "ai-movie-download": "Download AI movie MP4",
       "ai-movie-need-consent": "Confirm permission to use the artwork and story text for AI video first.",
       "ai-movie-need-credit": "You need more video credits or an adult account. Check My Stories first.",
@@ -588,6 +590,8 @@
     aiMovieEstimate: document.querySelector("[data-ai-movie-estimate]"),
     aiMovieConsent: document.querySelector("[data-ai-movie-consent]"),
     aiMovieProgress: document.querySelector("[data-ai-movie-progress]"),
+    aiMovieFirst: document.querySelector("[data-ai-movie-first]"),
+    aiMovieFirstPlayer: document.querySelector("[data-ai-movie-first-player]"),
     aiMovieResult: document.querySelector("[data-ai-movie-result]"),
     aiMoviePlayer: document.querySelector("[data-ai-movie-player]"),
     aiMovieLink: document.querySelector("[data-ai-movie-link]"),
@@ -2424,7 +2428,9 @@
       const words = shownPhotoText(photo).slice(0, 800);
       return {
         imageUrl: workArtUrl(photo),
-        prompt: `Create one 5-second ${shot} from this child's illustrated story. Keep the visible characters and art style. Follow only the supplied story; do not invent a new plot or add readable text. Full story: ${story}. Scene text: ${words || story.slice(0, 300)}`,
+        prompt: index === 0
+          ? `Open on the supplied child's drawing exactly as it looks. The drawn main subject performs one small action from the story, while one or two background details gently come alive. A smooth camera push reveals the story world. Keep the child's linework, colors, shapes, and character appearance recognizable. No new characters, plot, or readable text. Story opening: ${words || story.slice(0, 300)}`
+          : `Create one 5-second ${shot} from this child's illustrated story. Keep the visible characters and art style. Follow only the supplied story; do not invent a new plot or add readable text. Full story: ${story}. Scene text: ${words || story.slice(0, 300)}`,
         studentWriting: words,
         duration: 5,
         aspectRatio: "9:16",
@@ -2447,6 +2453,10 @@
     if (!scenes.length) return setStatus(state.photos.length ? t("ai-movie-need-story") : t("need-photos"), true);
     state.busy = true;
     els.aiMovieCreate.disabled = true;
+    els.aiMovieFirst.hidden = true;
+    els.aiMovieFirstPlayer.pause();
+    els.aiMovieFirstPlayer.removeAttribute("src");
+    els.aiMovieResult.hidden = true;
     try {
       const videoTier = els.aiMovieTier?.value === "2.5" ? "2.5" : "mini";
       const requiredCredits = videoTier === "2.5" ? 18 : 6;
@@ -2470,6 +2480,11 @@
         }
         if (!job.videoUrl) throw new Error("ai_movie_timeout");
         videoUrls.push(job.videoUrl);
+        if (index === 0) {
+          els.aiMovieFirstPlayer.src = job.videoUrl;
+          els.aiMovieFirst.hidden = false;
+          void els.aiMovieFirstPlayer.play().catch(() => {});
+        }
       }
       els.aiMovieProgress.textContent = t("ai-movie-assembling");
       const finished = await aiMovieJson("/api/family-book/ai-film/assemble", {
@@ -2480,6 +2495,8 @@
       els.aiMoviePlayer.src = finished.movieUrl;
       els.aiMovieLink.href = finished.movieUrl;
       els.aiMovieResult.hidden = false;
+      els.aiMovieFirstPlayer.pause();
+      els.aiMovieFirst.hidden = true;
       els.aiMovieProgress.textContent = t("ai-movie-ready");
     } catch (error) {
       els.aiMovieProgress.textContent = error.status === 402 ? t("ai-movie-need-credit") : `${t("ai-movie-failed")} ${error.message || ""}`;
