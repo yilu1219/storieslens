@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 const { isHeicBuffer, parseHeicDataUrl } = require("../heic-conversion");
 
 test("HEIC fallback accepts real HEIF container signatures and rejects renamed files", () => {
@@ -40,4 +41,15 @@ test("all phone-photo entry points inherit automatic HEIC fallback and fresh PWA
     const html = fs.readFileSync(path.join(__dirname, "..", filename), "utf8");
     assert.match(html, /accept="[^"]*image\/\*/i, `${filename} should accept phone photo libraries`);
   }
+});
+
+test("family-book artwork accepts common camera and scanned image formats", () => {
+  const window = {};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, "..", "artwork-upload-safety.js"), "utf8"), { window });
+  const supports = window.StoriesLensArtworkSafety.isSupportedImage;
+  for (const name of ["work.jpg", "work.png", "work.webp", "work.avif", "work.gif", "work.bmp", "work.heic", "work.heif"]) {
+    assert.equal(supports({ name, type: "" }), true, name);
+  }
+  assert.equal(supports({ name: "scan", type: "image/x-ms-bmp" }), true);
+  assert.equal(supports({ name: "work.svg", type: "image/svg+xml" }), false);
 });

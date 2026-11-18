@@ -2,14 +2,14 @@
   "use strict";
 
   const MAX_DIMENSION = 1800;
-  const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
+  const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/bmp", "image/x-ms-bmp"]);
   const HEIC_TYPES = new Set(["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"]);
   const HEIC_CONVERTER_SRC = "vendor/heic2any-0.0.4.min.js";
   let heicConverterPromise = null;
 
   const fileExtensionMatches = (file, pattern) => pattern.test(String(file?.name || ""));
   const isHeicFile = (file) => Boolean(file) && (HEIC_TYPES.has(String(file.type || "").toLowerCase()) || fileExtensionMatches(file, /\.(heic|heif)$/i));
-  const isSupportedImage = (file) => Boolean(file) && (ALLOWED_TYPES.has(String(file.type || "").toLowerCase()) || isHeicFile(file) || fileExtensionMatches(file, /\.(jpe?g|png|webp|avif|gif)$/i));
+  const isSupportedImage = (file) => Boolean(file) && (ALLOWED_TYPES.has(String(file.type || "").toLowerCase()) || isHeicFile(file) || fileExtensionMatches(file, /\.(jpe?g|png|webp|avif|gif|bmp)$/i));
 
   function ensureHeicConverter() {
     if (typeof window.heic2any === "function") return Promise.resolve(window.heic2any);

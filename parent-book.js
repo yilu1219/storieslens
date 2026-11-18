@@ -121,7 +121,7 @@
       "ready": "书已经准备好。可以翻页、查看建议、免费生成短片，或按价格购买电子版和印刷版。",
       "processing": "正在本机处理照片并删除拍摄信息…",
       "blocked": "这张照片不能使用。请不要上传证件、学生证，或带有电话、地址、邮箱、二维码的画面。",
-      "unsupported": "请选择 JPG、PNG、WEBP、HEIC 或 HEIF 图片。",
+      "unsupported": "请选择 JPG、PNG、WebP、AVIF、GIF、BMP、HEIC 或 HEIF 图片。",
       "too-many": "一本书最多 10 张作品照片；每张都会有故事页和原画页。",
       "need-photos": "请先从相册选择或拍摄至少一张照片。",
       "pdf-working": "正在生成 A5 PDF…",
@@ -374,7 +374,7 @@
       "ready": "Your book is ready. Flip through it, review optional suggestions, make a free short film, or see the prices for the digital and printed editions.",
       "processing": "Preparing photos on this device and removing camera details…",
       "blocked": "That photo cannot be used. Please do not upload identity documents, school IDs, or images with a phone number, address, email, or QR code.",
-      "unsupported": "Please choose a JPG, PNG, WEBP, HEIC, or HEIF image.",
+      "unsupported": "Please choose a JPG, PNG, WebP, AVIF, GIF, BMP, HEIC, or HEIF image.",
       "too-many": "A book holds up to 10 artwork photos; each gets a story page and an original page.",
       "need-photos": "Please choose or take at least one photo first.",
       "pdf-working": "Creating the A5 PDF…",
@@ -1767,7 +1767,7 @@
         }
         const supported = window.StoriesLensArtworkSafety?.isSupportedImage
           ? window.StoriesLensArtworkSafety.isSupportedImage(file)
-          : /image\//.test(file.type || "") || /\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(file.name || "");
+          : /image\//.test(file.type || "") || /\.(jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i.test(file.name || "");
         if (!supported) {
           setStatus(t("unsupported"), true);
           continue;
